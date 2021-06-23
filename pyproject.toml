@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "janelia-emrp"
+version = "0.1.0"
+description = "Pipeline scripts and tools for reconstructing Electron Microscopy volumes."
+authors = ["Eric Trautman <trautmane@janelia.hhmi.org>"]
+license = ''
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fibsem-tools = "^0.2.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

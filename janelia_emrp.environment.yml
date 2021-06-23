@@ -1,0 +1,9 @@
+name: janelia_emrp
+
+channels:
+  - default
+  - conda-forge
+
+dependencies:
+  - python=3.8
+  - urllib3=1.26
