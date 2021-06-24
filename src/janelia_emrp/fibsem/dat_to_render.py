@@ -472,8 +472,12 @@ def patch_layer(previous_layer_specs, spec_from_layer_being_patched):
 
 
 def save_stack(stack_name, render, resolution_xy, resolution_z, tile_specs, num_workers):
+    # explicitly set createTimestamp until render-python bug is fixed
+    # see https://github.com/AllenInstitute/render-python/pull/158
+    create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
     renderapi.stack.create_stack(stack_name,
                                  render=render,
+                                 createTimestamp=create_timestamp,
                                  stackResolutionX=resolution_xy,
                                  stackResolutionY=resolution_xy,
                                  stackResolutionZ=resolution_z)
