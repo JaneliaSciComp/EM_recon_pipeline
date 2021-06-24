@@ -393,16 +393,24 @@ def build_tile_spec(dat_file_name, z, tile_width, tile_height, overlap_pixels, t
 def set_distance_z(all_tile_specs):
     z_resolution = None
     if len(all_tile_specs) > 1:
+
         distance_z_sum = 0
-        previous_working_distance = all_tile_specs[0]["layout"]["workingDistance"]
-        for i in range(1, len(all_tile_specs)):
+
+        # TODO: determine if more robust prior layer comparisons are needed (e.g. after restarts)
+        previous_column_to_working_distance = {}
+        for i in range(0, len(all_tile_specs)):
             tile_spec_layout = all_tile_specs[i]["layout"]
+            image_col = tile_spec_layout["imageCol"]
             working_distance = tile_spec_layout["workingDistance"]
-            distance_z = (working_distance - previous_working_distance) * 1000000
-            tile_spec_layout["distanceZ"] = distance_z
-            distance_z_sum += distance_z
-            previous_working_distance = working_distance
+            if image_col in previous_column_to_working_distance:
+                distance_z = (working_distance - previous_column_to_working_distance[image_col]) * 1000000
+                tile_spec_layout["distanceZ"] = distance_z
+                distance_z_sum += distance_z
+
+            previous_column_to_working_distance[image_col] = working_distance
+
         z_resolution = math.floor((distance_z_sum / len(all_tile_specs)) + 0.5)
+
     return z_resolution
 
 
