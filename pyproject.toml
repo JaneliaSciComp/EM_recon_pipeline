@@ -3,11 +3,13 @@ name = "janelia-emrp"
 version = "0.1.0"
 description = "Pipeline scripts and tools for reconstructing Electron Microscopy volumes."
 authors = ["Eric Trautman <trautmane@janelia.hhmi.org>"]
-license = ''
+license = 'BSD-3-Clause'
 
 [tool.poetry.dependencies]
 python = "^3.8"
 fibsem-tools = "^0.2.2"
+render-python = {git = "https://github.com/AllenInstitute/render-python.git"}
+dask-janelia = "^0.1.4"
 
 [tool.poetry.dev-dependencies]
 
