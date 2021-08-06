@@ -4,6 +4,7 @@ import gzip
 import json
 import sys
 
+import requests
 from bokeh.io import output_file
 from bokeh.models import Range1d
 from bokeh.plotting import figure, show
@@ -66,7 +67,22 @@ def plot_correlations_with_next(title, cc_data_path, plot_width=2400, plot_heigh
     show(p)
 
 
+def get_stack_first_z(owner, project, stack):
+    first_z = 1
+    host = 'tem-services.int.janelia.org:8080'
+    url = f'http://{host}/render-ws/v1/owner/{owner}/project/{project}/stack/{stack}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        stack_metadata = response.json()
+        first_z = stack_metadata["stats"]["stackBounds"]["minZ"]
+    else:
+        print(f'WARNING: status code {response.status_code} returned for {url}, assuming first z is 1')
+
+    return first_z
+
+
 def plot_run(owner, project, stack, run):
+    first_z = get_stack_first_z(owner, project, stack)
     owner_run_sub_path = f'{owner}/{project}/{stack}/{run}'
     run_dir = f'/nrs/flyem/render/z_corr/{owner_run_sub_path}'
     plot_html_name = 'cc_with_next_plot.html'
@@ -75,7 +91,8 @@ def plot_run(owner, project, stack, run):
 
     plot_correlations_with_next(title=f'{owner} : {project} : {stack} correlations with next',
                                 cc_data_path=f'{run_dir}/merged_cc_data.json.gz',
-                                output_file_path=output_file_path)
+                                output_file_path=output_file_path,
+                                first_z=first_z)
     print(f'view plot at {plot_url}')
 
 
