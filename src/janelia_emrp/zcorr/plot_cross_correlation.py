@@ -85,8 +85,8 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
     p.circle(source=data_source)
 
     # open CATMAID when circle glyphs are clicked
-    xp = int( bounds["minX"] + (bounds["maxX"] - bounds["minX"]) / 2) * stack_version["stackResolutionX"]
-    yp = int( bounds["minY"] + (bounds["maxY"] - bounds["minY"]) / 2) * stack_version["stackResolutionY"]
+    xp = int(bounds["minX"] + (bounds["maxX"] - bounds["minX"]) / 2) * stack_version["stackResolutionX"]
+    yp = int(bounds["minY"] + (bounds["maxY"] - bounds["minY"]) / 2) * stack_version["stackResolutionY"]
     catmaid_base_url = 'http://renderer-catmaid.int.janelia.org:8000'
     catmaid_url = f'{catmaid_base_url}/?pid={owner}__{project}&sid0={stack}&tool=navigator&s0=5&xp={xp}&yp={yp}&zp=@zp'
 
