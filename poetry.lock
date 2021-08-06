@@ -78,7 +78,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "bokeh"
-version = "2.3.2"
+version = "2.3.3"
 description = "Interactive plots and applications in the browser from Python"
 category = "main"
 optional = false
@@ -749,7 +749,7 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e97821e916bcd1471168c0ea4de965c24b1446fa8bb6a88f9045d927bf245d4d"
+content-hash = "ee7c2c0c7883f2922f019570b2bda709d5a1e57a9c7b12fd50033de33aa32813"
 
 [metadata.files]
 aiobotocore = [
@@ -810,7 +810,7 @@ attrs = [
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
 ]
 bokeh = [
-    {file = "bokeh-2.3.2.tar.gz", hash = "sha256:fcc0d0a3129ae457cdb0a4f503843a4d13d1f5d07af7748424ea8c7ddfc321f1"},
+    {file = "bokeh-2.3.3.tar.gz", hash = "sha256:a5fdcc181835561447fcc5a371300973fce4114692d5853addec284d1cdeb677"},
 ]
 botocore = [
     {file = "botocore-1.20.49-py2.py3-none-any.whl", hash = "sha256:6a672ba41dd00e5c1c1824ca8143d180d88de8736d78c0b1f96b8d3cb0466561"},
