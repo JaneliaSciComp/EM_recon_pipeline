@@ -77,7 +77,7 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
 
     tooltips = [("z", "@x"), ("correlation with next", "@y"), ("to view in CATMAID", "click point")]
     p = figure(title=title, x_axis_label='z', y_axis_label='correlation with next layer',
-               tooltips=tooltips, tools='tap',
+               tooltips=tooltips, tools='tap,pan,box_zoom,wheel_zoom,save,reset',
                plot_width=plot_width, plot_height=plot_height,
                y_range=Range1d(min_cc, max_cc))
 
