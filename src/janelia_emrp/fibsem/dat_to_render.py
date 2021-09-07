@@ -353,8 +353,8 @@ def build_tile_spec(dat_file_name, z, tile_width, tile_height, overlap_pixels, t
     default_stage_y = margin + round(image_row * (tile_height - overlap_pixels))
 
     working_distance = tile_attributes["WD"]
-    stage_x = tile_attributes.get("FirstX") or default_stage_x
-    stage_y = tile_attributes.get("FirstY") or default_stage_y
+    stage_x = tile_attributes.get("FirstX", default_stage_x)
+    stage_y = tile_attributes.get("FirstY", default_stage_y)
 
     image_path = f'{image_dir}/{os.path.basename(dat_file_name)[:-4]}-InLens.png'
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
