@@ -1,0 +1,32 @@
+name: run_ws_java_client
+description: A module for running Janelia render web services java clients
+keywords:
+  - janelia
+  - render
+tools:
+  - render:
+      description: A collection of Java tools and HTTP services (APIs) for transforming and rendering images
+      homepage: https://github.com/saalfeldlab/render
+      documentation: https://github.com/saalfeldlab/render/blob/master/docs/src/site/markdown/render-ws-java-client.md
+
+input:
+  - client_class
+    type: val
+    description: Fully qualified client class name (e.g. org.janelia.render.client.ValidateTilesClient)
+  - common_client_args
+    type: val
+    description: Client args shared for all executions (e.g. --owner test --project a)
+  - job_specific_client_args
+    type: val
+    description: Client args specific for each execution (e.g. --z 1)
+  - prior_step_succeeded
+    type: val
+    description: An output value from prior blocking workflow step or just specify as true if blocking not needed
+
+output:
+  - client_result:
+      type: tuple
+      description: first element is the error count and second element is the client log path
+
+authors:
+  - "@trautmane"
