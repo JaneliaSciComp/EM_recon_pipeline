@@ -1,0 +1,290 @@
+[
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 50.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.05,
+      "renderWithFilter": true,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": true,
+      "geometricDescriptorParameters": {
+        "fullScaleBlockRadius": 500.0,
+        "fullScaleNonMaxSuppressionRadius": 100.0,
+        "gdStoredMatchWeight": 0.4,
+        "localization": "THREE_D_QUADRATIC",
+        "lookForMinima": true,
+        "numberOfNeighbors": 3,
+        "redundancy": 1,
+        "sigma": 2.04,
+        "significance": 2.0,
+        "similarOrientation": true,
+        "threshold": 0.006
+      },
+      "matchDerivationParameters": {
+        "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+        "matchFullScaleCoverageRadius": 300.0,
+        "matchIterations": 1000,
+        "matchMaxEpsilonFullScale": 5.0,
+        "matchMaxTrust": 3.0,
+        "matchMinInlierRatio": 0.0,
+        "matchMinNumInliers": 20,
+        "matchModelType": "RIGID"
+      },
+      "minCombinedCoveragePercentage": 50.0,
+      "minCombinedInliers": 150,
+      "renderScale": 0.1,
+      "renderWithFilter": false
+    },
+    "maxNeighborDistance": 6,
+    "stageName": "crossPass1"
+  },
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 50.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.1,
+      "renderWithFilter": true,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": true,
+      "geometricDescriptorParameters": {
+        "fullScaleBlockRadius": 500.0,
+        "fullScaleNonMaxSuppressionRadius": 100.0,
+        "gdStoredMatchWeight": 0.39,
+        "localization": "THREE_D_QUADRATIC",
+        "lookForMinima": true,
+        "numberOfNeighbors": 3,
+        "redundancy": 1,
+        "sigma": 2.04,
+        "significance": 2.0,
+        "similarOrientation": true,
+        "threshold": 0.006
+      },
+      "matchDerivationParameters": {
+        "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+        "matchFullScaleCoverageRadius": 300.0,
+        "matchIterations": 1000,
+        "matchMaxEpsilonFullScale": 5.0,
+        "matchMaxTrust": 3.0,
+        "matchMinInlierRatio": 0.0,
+        "matchMinNumInliers": 20,
+        "matchModelType": "RIGID"
+      },
+      "minCombinedCoveragePercentage": 50.0,
+      "minCombinedInliers": 150,
+      "renderScale": 0.15,
+      "renderWithFilter": false
+    },
+    "maxNeighborDistance": 6,
+    "stageName": "crossPass2"
+  },
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 50.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.15,
+      "renderWithFilter": true,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": true,
+      "geometricDescriptorParameters": {
+        "fullScaleBlockRadius": 500.0,
+        "fullScaleNonMaxSuppressionRadius": 100.0,
+        "gdStoredMatchWeight": 0.38,
+        "localization": "THREE_D_QUADRATIC",
+        "lookForMinima": true,
+        "numberOfNeighbors": 3,
+        "redundancy": 1,
+        "sigma": 2.04,
+        "significance": 2.0,
+        "similarOrientation": true,
+        "threshold": 0.006
+      },
+      "matchDerivationParameters": {
+        "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+        "matchFullScaleCoverageRadius": 300.0,
+        "matchIterations": 1000,
+        "matchMaxEpsilonFullScale": 5.0,
+        "matchMaxTrust": 3.0,
+        "matchMinInlierRatio": 0.0,
+        "matchMinNumInliers": 20,
+        "matchModelType": "RIGID"
+      },
+      "minCombinedCoveragePercentage": 50.0,
+      "minCombinedInliers": 150,
+      "renderScale": 0.25,
+      "renderWithFilter": false
+    },
+    "maxNeighborDistance": 6,
+    "stageName": "crossPass3"
+  },
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 30.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 150,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.25,
+      "renderWithFilter": true,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": false
+    },
+    "maxNeighborDistance": 3,
+    "stageName": "crossPass4"
+  },
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 50.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.25,
+      "renderWithFilter": true,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": true,
+      "geometricDescriptorParameters": {
+        "fullScaleBlockRadius": 500.0,
+        "fullScaleNonMaxSuppressionRadius": 50.0,
+        "gdStoredMatchWeight": 0.37,
+        "localization": "THREE_D_QUADRATIC",
+        "lookForMinima": true,
+        "numberOfNeighbors": 3,
+        "redundancy": 1,
+        "sigma": 4.04,
+        "significance": 2.0,
+        "similarOrientation": true,
+        "threshold": 0.006
+      },
+      "matchDerivationParameters": {
+        "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+        "matchFullScaleCoverageRadius": 300.0,
+        "matchIterations": 1000,
+        "matchMaxEpsilonFullScale": 5.0,
+        "matchMaxTrust": 3.0,
+        "matchMinInlierRatio": 0.0,
+        "matchMinNumInliers": 20,
+        "matchModelType": "RIGID"
+      },
+      "minCombinedCoveragePercentage": 0.0,
+      "minCombinedInliers": 75,
+      "renderScale": 0.5,
+      "renderWithFilter": false,
+      "runGeoRegardlessOfSiftResults": true
+    },
+    "maxNeighborDistance": 2,
+    "stageName": "crossPass5"
+  },
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "AGGREGATED_CONSENSUS_SETS",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.25,
+      "renderWithFilter": true,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": false
+    },
+    "maxNeighborDistance": 1,
+    "stageName": "crossPass6"
+  }
+]
