@@ -1,7 +1,6 @@
 # Reconstruction Part 1: Render Import
 ## Common Parameters
 ```bash
-export BSUB_HOST="login1.int.janelia.org"
 export NEARLINE_HOST="e06u14.int.janelia.org" 
 export BASE_WORK_DIR="/groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m"
 ```
