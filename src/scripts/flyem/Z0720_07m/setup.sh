@@ -23,4 +23,7 @@ chmod 775 ${WORK_DIR}
 cp ${BASE_SCRIPTS_DIR}/* ${WORK_DIR}
 cp -r ${BASE_SCRIPTS_DIR}/patch_match ${WORK_DIR}
 
+mkdir ${WORK_DIR}/logs
+chmod 775 ${WORK_DIR}/logs
+
 echo "created ${WORK_DIR}"
