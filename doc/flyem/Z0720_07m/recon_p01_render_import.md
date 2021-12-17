@@ -16,7 +16,7 @@ cd ${BASE_WORK_DIR}
 #   USAGE: ./setup.sh <region> <tab>  ( e.g. ./setup.sh VNC Sec32 )
 ./setup.sh VNC Sec26
 ```
-## Validate and Correct Scope File Transfers
+## Validate and Correct Scope File Transfers (15 minutes for VNC Sec26)
 The Fly EM image transfer process continuously polls the EM scopes for new data 
 and then copies (and converts) that data to centralized network filesystems.
 The process works most of the time, but occasionally files are not transferred.
@@ -85,7 +85,7 @@ su flyem
 exit
 ```
 
-## Import Metadata into Render Web Services
+## Import Metadata into Render Web Services (2 minutes for VNC Sec26)
 ```bash
 # While still on nearline host in ${BASE_WORK_DIR}/${REGION}/${TAB} and as yourself ...
 
