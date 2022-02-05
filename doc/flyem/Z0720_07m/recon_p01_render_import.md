@@ -25,6 +25,7 @@ before deriving and importing metadata into the Render web services.
 
 ### Transfer Process (for context)
 ![FIBSEM transfer flow diagram](fibsem-transfer-flow.png)
+
 ### Validation Steps
 ```bash
 # While still on nearline host ...
@@ -83,6 +84,19 @@ su flyem
 
 # Once everything looks good, exit from the flyem shell.
 exit
+```
+
+### Move Bad dat Files
+
+```bash
+# If dat files are corrupted such that png files cannot be generated for them ...
+NEARLINE_TAB_DIR="/nearline/flyem2/data/Z0720-07m_${REGION}_${TAB}"
+BAD_DAT_FILE="???"
+mkdir ${NEARLINE_TAB_DIR}/dat_bad
+mv ${NEARLINE_TAB_DIR}/dat/${BAD_DAT_FILE} ${NEARLINE_TAB_DIR}/dat_bad
+
+# Note that the render import process will automatically 
+# patch partial layers with tiles from complete adjacent layers.  
 ```
 
 ## Import Metadata into Render Web Services (2 minutes for VNC Sec26)
