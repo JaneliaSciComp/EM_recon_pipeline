@@ -348,13 +348,15 @@ def build_tile_spec(dat_file_name, z, tile_width, tile_height, overlap_pixels, t
     section_id = str(z) + ".0"
     tile_id = f'{base_id}.{section_id}'
 
-    margin = 400  # offset everything a little to help viewers that have trouble with negative space
-    default_stage_x = margin + round(image_col * (tile_width - overlap_pixels))
-    default_stage_y = margin + round(image_row * (tile_height - overlap_pixels))
-
     working_distance = tile_attributes["WD"]
-    stage_x = tile_attributes.get("FirstX", default_stage_x)
-    stage_y = tile_attributes.get("FirstY", default_stage_y)
+    stage_x = tile_attributes.get("FirstX")
+    stage_y = tile_attributes.get("FirstY")
+
+    margin = 400  # offset everything a little to help viewers that have trouble with negative space
+    if stage_x is None:
+        stage_x = margin + round(image_col * (tile_width - overlap_pixels))
+    if stage_y is None:
+        stage_y = margin + round(image_row * (tile_height - overlap_pixels))
 
     image_path = f'{image_dir}/{os.path.basename(dat_file_name)[:-4]}-InLens.png'
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
