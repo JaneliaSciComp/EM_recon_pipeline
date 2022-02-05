@@ -13,7 +13,12 @@ if [[ "${USER}" != "flyem" ]]; then
   exit 1
 fi
 
-echo "checking ${CHECK_TABS_LOG} for missing png names"
+if (( $# > 0 )); then
+  MISSING_PNG="$*"
+else
+  echo "checking ${CHECK_TABS_LOG} for missing png names"
+  MISSING_PNG=$(grep "missing InLens" ${CHECK_TABS_LOG} | cut -f2 -d'[' | sed "s/[]'[,]//g")
+fi
 
 # Z0720-07m_BR_Sec35_jeiss2.hhmi.org_scope_dat.txt
 MISSING_DAT_JSON=`ls ${SCRIPT_DIR}/${FLY_REGION_TAB}*_missing_dat.json`
@@ -25,7 +30,7 @@ DAT_DIR="/nearline/flyem2/data/${FLY_REGION_TAB}/dat"
 # /groups/flyem/data/Z0720-07m_BR_Sec37/InLens/Merlin-6049_20-12-17_142416_0-0-0-InLens.png
 PNG_PARENT_DIR="/groups/flyem/data/${FLY_REGION_TAB}"
 
-for DAT in $(grep "missing InLens" ${CHECK_TABS_LOG} | cut -f2 -d'[' | sed "s/[]'[,]//g"); do
+for DAT in ${MISSING_PNG}; do
 
   FULL_DAT_FILE="${DAT_DIR}/${DAT}.dat"
   if [[ ! -f ${FULL_DAT_FILE} ]]; then
