@@ -6,6 +6,14 @@ ABSOLUTE_SCRIPT=`readlink -m $0`
 SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 source ${SCRIPT_DIR}/00_config.sh
 
+# HACK NOTE: specify any parameter ( e.g. ./01_gen_scope_dat_file_lists.sh nearline )
+#            to generate scope list from /nearline/hess instead of from scope
+if (( $# == 0 )); then
+  FETCH_FROM_SCOPE="Y"
+else
+  unset FETCH_FROM_SCOPE
+fi
+
 WORKING_DIR="${PWD}"
 
 # /groups/flyem/data/Z0720-07m_BR_Sec25/logs
@@ -50,7 +58,7 @@ processing ${DAT_DIR} ...
 
   fi
 
-  if [[ "${USER}" != "flyem" ]]; then
+  if [[ -n ${FETCH_FROM_SCOPE} && "${USER}" != "flyem" ]]; then
     echo "ERROR: must run as 'flyem' user to connect to Jeiss scopes"
     exit 1
   fi
@@ -85,7 +93,11 @@ processing ${DAT_DIR} ...
       IFS="-"
       read -ra YMD <<< "${d}"
       IFS=$'\n'
-      SCOPE_DAT=$(ssh -o StrictHostKeyChecking=no ${JEISS_HOST} find \"/cygdrive/e/Images/Fly Brain/Y${YMD[0]}/M${YMD[1]}/D${YMD[2]}/\" -name=*.dat)
+      if [[ -n ${FETCH_FROM_SCOPE} ]]; then
+        SCOPE_DAT=$(ssh -o StrictHostKeyChecking=no ${JEISS_HOST} find \"/cygdrive/e/Images/Fly Brain/Y${YMD[0]}/M${YMD[1]}/D${YMD[2]}/\" -name=*.dat)
+      else
+        SCOPE_DAT=$(ls -1 /nearline/hess/Images\ Jeiss${JEISS_NUM}/Fly\ Brain/Y${YMD[0]}/M${YMD[1]}/D${YMD[2]}/*.dat)
+      fi
       echo "${SCOPE_DAT}" >> ${SCOPE_DAT_LIST}
       d=$(date -I -d "$d + 1 day")
   done
