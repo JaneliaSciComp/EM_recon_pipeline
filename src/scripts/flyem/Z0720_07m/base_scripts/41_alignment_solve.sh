@@ -76,8 +76,9 @@ ${ARGS}
 
 SHUTDOWN_JOB_ID=$(awk '/PEND.*_sd/ {print $1}' ${LOG_FILE})
 
-echo """
-To launch z corr after solve completes, verify shutdown job id is ${SHUTDOWN_JOB_ID} (see above) and then enter:
+if (( SHUTDOWN_JOB_ID > 1234 )); then
+  echo "Scheduling z correction derivation job upon completion of solve job ${SHUTDOWN_JOB_ID}"
+  echo
 
- bsub -P ${BILL_TO} -J ${RENDER_PROJECT}_launch_z_corr -w \"ended(${SHUTDOWN_JOB_ID})\" -n1 -W 59 ${SCRIPT_DIR}/42_gen_z_corr_run.sh launch
-"""
+  bsub -P ${BILL_TO} -J ${RENDER_PROJECT}_launch_z_corr -w "ended(${SHUTDOWN_JOB_ID})" -n1 -W 59 ${SCRIPT_DIR}/42_gen_z_corr_run.sh launch
+fi
