@@ -86,3 +86,11 @@ MAX_PAIRS_PER_FILE=30
 # - examples: /groups/flyem/data/Z0115-22_Sec27/InLens
 #             /groups/flyem/data/Z0416-04male_Sec10_D07-08
 STACK_DATA_DIR="/groups/flyem/data/${FLY_REGION_TAB}/InLens"
+
+# ============================================================================
+# Common Spark job parameters
+
+# Write spark logs to backed-up flyem filesystem rather than user home so that they are readable by others for analysis.
+# NOTE: must consolidate logs when changing run parent dir
+export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/flyem/data/${USER}/spark_logs"
+export LSF_PROJECT="${BILL_TO}"
