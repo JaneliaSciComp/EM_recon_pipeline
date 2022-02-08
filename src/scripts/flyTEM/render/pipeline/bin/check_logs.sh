@@ -111,5 +111,9 @@ else
 All log files in ${LOG_DIR} look okay.
 """ 
 
-fi
+  POST_CHECK_SCRIPT="${ABSOLUTE_RUN_DIR}/post_check.sh"
+  if [[ -f ${POST_CHECK_SCRIPT} ]]; then
+    ${POST_CHECK_SCRIPT}
+  fi
 
+fi
