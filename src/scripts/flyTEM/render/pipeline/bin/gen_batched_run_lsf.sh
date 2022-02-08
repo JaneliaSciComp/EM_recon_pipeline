@@ -11,9 +11,9 @@ BATCH_AND_QUEUE_PARAMETERS=${BATCH_AND_QUEUE_PARAMETERS:--n 1 -W 59} # default t
 
 ABSOLUTE_SCRIPT=`readlink -m $0`
 
-USAGE_MESSAGE="${ABSOLUTE_SCRIPT} <values URL> <java client class> <work directory> <values per batch> <exclude file> <common client args>"
+USAGE_MESSAGE="${ABSOLUTE_SCRIPT} <values URL> <java client class> <work directory> <values per batch> <common client args>"
 
-if (( $# < 6 )); then
+if (( $# < 5 )); then
   exitWithErrorAndUsage "missing parameters"
 fi
 
@@ -21,11 +21,10 @@ VALUES_URL="$1"
 JAVA_CLASS="$2"
 WORK_DIR="$3"
 VALUES_PER_BATCH="$4"
-EXCLUDE_FILE="$5"
-shift 5
+shift 4
 
 declare -A EXCLUDED_VALUES
-if [[ -f ${EXCLUDE_FILE} ]]; then
+if [[ -n ${EXCLUDE_FILE} && -f ${EXCLUDE_FILE} ]]; then
   for VALUE in `cat ${EXCLUDE_FILE}`; do
     EXCLUDED_VALUES["${VALUE}"]="y"
   done
@@ -95,6 +94,8 @@ fi
 
 BSUB_ARRAY_FILE="${RUN_DIR}/bsub-array.sh"
 echo """#!/bin/bash
+
+umask 0002
 
 bsub -P ${BILL_TO} -J \"${JOB_NAME}_a[1-1]%${MAX_RUNNING_TASKS}\" ${BATCH_AND_QUEUE_PARAMETERS} -o /dev/null ${RENDER_PIPELINE_BIN}/run_array_ws_client_lsf.sh ${RUN_DIR} ${MEMORY} ${JAVA_CLASS}
 

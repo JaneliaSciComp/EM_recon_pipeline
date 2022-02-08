@@ -22,10 +22,8 @@ ARGS="${ARGS} --excludedColumnsJson ${SCRIPT_DIR}/excluded_columns.json"
 ARGS="${ARGS} --keepExisting"
 ARGS="${ARGS} --z"
 
-EXCLUDED_LAYERS_FILE="no-excluded-layers"
-
 # complete stack if check_logs is successful
 export POST_CHECK_COMMAND="curl -v -X PUT \"${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${TO_STACK}/state/COMPLETE\""
 
 # USAGE_MESSAGE="${ABSOLUTE_SCRIPT} <values URL> <java client class> <work directory> <values per batch> <exclude file> <common client args>"
-/groups/flyTEM/flyTEM/render/pipeline/bin/gen_batched_run_lsf.sh "${Z_VALUES_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${LAYERS_PER_BATCH} ${EXCLUDED_LAYERS_FILE} ${ARGS}
+/groups/flyTEM/flyTEM/render/pipeline/bin/gen_batched_run_lsf.sh "${Z_VALUES_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${LAYERS_PER_BATCH} ${ARGS}
