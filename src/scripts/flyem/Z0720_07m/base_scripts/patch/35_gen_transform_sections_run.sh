@@ -29,13 +29,9 @@ JAVA_CLASS="org.janelia.render.client.TransformSectionClient"
 #export MAX_RUNNING_TASKS="150"
 
 # 3000 z per batch for stack with 3 tiles per layer takes about 15 seconds per job
-export Z_PER_BATCH=3000
+Z_PER_BATCH=3000
 
-/groups/flyTEM/flyTEM/render/pipeline/bin/gen_z_based_run_lsf.sh "${Z_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${ARGV}
+# complete stack if check_logs is successful
+export POST_CHECK_COMMAND="curl -v -X PUT \"${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}/state/COMPLETE\""
 
-echo """
-NOTE: Complete the stack when the array jobs finish by running:
-
-curl -v -X PUT --header \"Content-Type: application/json\" --header \"Accept: application/json\" \"${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}/state/COMPLETE\"
-
-"""
+/groups/flyTEM/flyTEM/render/pipeline/bin/gen_batched_run_lsf.sh "${Z_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${Z_PER_BATCH} ${ARGV}

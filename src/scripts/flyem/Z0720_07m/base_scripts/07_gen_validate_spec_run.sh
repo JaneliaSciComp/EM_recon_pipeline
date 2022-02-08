@@ -17,6 +17,6 @@ JAVA_CLASS="org.janelia.render.client.ValidateTilesClient"
 #export MAX_RUNNING_TASKS="150"
 
 # 3000 z per batch for stack with 3 tiles per layer takes about 15 seconds per job
-export Z_PER_BATCH=3000
+Z_PER_BATCH=3000
 
-/groups/flyTEM/flyTEM/render/pipeline/bin/gen_z_based_run_lsf.sh "${Z_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${ARGV}
+/groups/flyTEM/flyTEM/render/pipeline/bin/gen_batched_run_lsf.sh "${Z_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${Z_PER_BATCH} ${ARGV}

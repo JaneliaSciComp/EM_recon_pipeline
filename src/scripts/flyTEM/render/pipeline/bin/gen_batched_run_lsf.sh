@@ -60,12 +60,18 @@ Generating ${JOB_PARAMETERS_FILE}
 
 unset BATCH_VALUES
 BATCH_COUNT=0
-VALUE_COUNT=0
+VALUES_COUNT=0
 for VALUE in ${VALUES}; do
 
   if [ -z ${EXCLUDED_VALUES[${VALUE}]+x} ]; then
 
-    BATCH_VALUES="${BATCH_VALUES} ${VALUE}"
+    if (( VALUES_PER_BATCH > 1 && VALUES_COUNT == 0 )); then
+      echo " ${VALUE}" >> ${JOB_PARAMETERS_FILE}
+      (( BATCH_COUNT += 1 ))
+    else
+      BATCH_VALUES="${BATCH_VALUES} ${VALUE}"
+    fi
+
     (( VALUES_COUNT += 1 ))
 
     if (( VALUES_COUNT % VALUES_PER_BATCH == 0 )); then

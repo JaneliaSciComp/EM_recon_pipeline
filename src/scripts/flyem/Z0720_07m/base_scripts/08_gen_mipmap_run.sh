@@ -24,6 +24,6 @@ export MEMORY="13G" # 15G allocated per slot
 export MAX_RUNNING_TASKS="1000"
 
 # 25 z per batch for stack with 4 tiles per layer takes about 4 minutes per job
-export Z_PER_BATCH=25
+Z_PER_BATCH=25
 
-/groups/flyTEM/flyTEM/render/pipeline/bin/gen_z_based_run_lsf.sh "${Z_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${ARGV}
+/groups/flyTEM/flyTEM/render/pipeline/bin/gen_batched_run_lsf.sh "${Z_URL}" ${JAVA_CLASS} ${SCRIPT_DIR} ${Z_PER_BATCH} ${ARGV}
