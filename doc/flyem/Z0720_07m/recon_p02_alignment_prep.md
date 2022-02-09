@@ -58,7 +58,7 @@ run_20211217_060707_37_ValidateTiles/bsub-array.sh
 
 # Output (including full path to submit script) is similar to validation example above.
 
-# If common parameters look ok (they should), run submit script:
+# If common parameters look ok (they should), run submit script (full path is gen script output):
 run_20211217_063059_153_Mipmap/bsub-array.sh
 
 # Output and 3-chained-job pattern is similar to validation example above.
@@ -109,6 +109,10 @@ run_20211217_063059_153_Mipmap/bsub-array.sh
 | .......................................................................................................................
 | Created bsub array script for 11920 jobs in /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/run_20211217_071529_994_multi_stage_match_cross/bsub-array.sh
 | Logs will be written to /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/run_20211217_071529_994_multi_stage_match_cross/logs
+
+# Run both montage and cross bsub-array.sh scripts (full paths are in gen script output).
+run_20211217_071528_16_multi_stage_match_montage/bsub-array.sh
+run_20211217_071529_994_multi_stage_match_cross/bsub-array.sh
 
 # As with previous array jobs, output from a log check script is emailed to you 
 # for both the same layer (montage) and cross layer match processes.
