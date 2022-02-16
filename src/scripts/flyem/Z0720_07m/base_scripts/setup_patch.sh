@@ -6,19 +6,19 @@ ABSOLUTE_SCRIPT=`readlink -m $0`
 SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 source ${SCRIPT_DIR}/00_config.sh
 
-if (( $# < 1 )); then
-  echo "USAGE: $0 <patch version> [patch z] ..."
-  echo "  e.g. $0 v2 12345"
-  exit 1
-fi
+#  echo "USAGE: $0 [patch z] ..."
 
-PATCH_VERSION="$1"
-shift 1
-
-if [[ -z OLD_ACQUIRE_TRIMMED_STACK ]] || [[ "${OLD_ACQUIRE_TRIMMED_STACK}" == "TBD" ]]; then
+if [[ -z OLD_ACQUIRE_TRIMMED_STACK ]]; then
   echo "ERROR: need to setup OLD_ACQUIRE_TRIMMED_STACK in config"
   exit 1
 fi
+
+OLD_ACQUIRE_TRIMMED_STACK="${ACQUIRE_TRIMMED_STACK}"
+OLD_ACQUIRE_V_NUMBER=$(echo "${OLD_ACQUIRE_TRIMMED_STACK}" | cut -c2)
+STACK_SUFFIX=$(echo "${OLD_ACQUIRE_TRIMMED_STACK}" | cut -c4-)
+ACQUIRE_V_NUMBER=$(( OLD_ACQUIRE_V_NUMBER + 1 ))
+PATCH_VERSION="v${ACQUIRE_V_NUMBER}"
+ACQUIRE_TRIMMED_STACK="${PATCH_VERSION}_${STACK_SUFFIX}"
 
 PATCH_DIR="${SCRIPT_DIR}/${PATCH_VERSION}_patch"
 
@@ -28,6 +28,14 @@ if [[ -d ${PATCH_DIR} ]]; then
 fi
 
 mkdir ${PATCH_DIR}
+
+sed -i "s/^ACQUIRE_TRIMMED_STACK=.*/ACQUIRE_TRIMMED_STACK=\"${ACQUIRE_TRIMMED_STACK}\"/" ${SCRIPT_DIR}/00_config.sh
+sed -i "s/^OLD_ACQUIRE_TRIMMED_STACK=.*/OLD_ACQUIRE_TRIMMED_STACK=\"${OLD_ACQUIRE_TRIMMED_STACK}\"/" ${SCRIPT_DIR}/00_config.sh
+
+echo """
+Updated ${SCRIPT_DIR}/00_config.sh:
+"""
+grep "ACQUIRE_TRIMMED_STACK" ${SCRIPT_DIR}/00_config.sh
 
 PATCH_SOURCE_DIR="/groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/base_scripts/patch"
 cp ${PATCH_SOURCE_DIR}/* ${PATCH_DIR}
@@ -57,6 +65,13 @@ ${PATCH_DIR}/06_patch_tile_specs.py:
   echo """
 After patching, generate match pairs by running:
 ./11_gen_new_pairs.sh $*
+"""
+
+else
+
+  echo """
+Setup patch directory:
+${PATCH_DIR}
 """
 
 fi
