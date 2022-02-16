@@ -121,3 +121,9 @@ ${BSUB_ARRAY_FILE}
 
 Logs will be written to ${LOG_DIR}
 """
+
+if [[ -n ${LAUNCH_BSUB} ]]; then
+  echo """Launching ${BSUB_ARRAY_FILE} ...
+"""
+  ${BSUB_ARRAY_FILE}
+fi
