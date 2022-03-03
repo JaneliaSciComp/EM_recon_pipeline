@@ -5,7 +5,9 @@ export BSUB_HOST="login1.int.janelia.org"
 export BASE_WORK_DIR="/groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m"
 export WORK_DIR="${BASE_WORK_DIR}/VNC/Sec26" # more generically: ${BASE_WORK_DIR}/${REGION}/${TAB}
 ```
-## Validate Tile Specs (1 minute for VNC Sec26)
+## Validate Tile Specs
+<font color="orange">VNC Sec26 Processing Time:</font> 1 minute using 10 cores
+
 ```bash
 # Run on LSF / bsub submit host because most work will be done using LSF cluster.
 ssh ${BSUB_HOST}
@@ -51,7 +53,9 @@ run_20211217_060707_37_ValidateTiles/bsub-array.sh
 | All log files in /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/run_20211217_060707_37_ValidateTiles/logs look okay.
 ```
 
-## Generate Mipmaps (17 minutes for VNC Sec26)
+## Generate Mipmaps
+<font color="orange">VNC Sec26 Processing Time:</font> 17 minutes using 1,036 cores
+
 ```bash
 # Setup work area and parameters for LSF array job to generate down-sampled mipmaps for all source images. 
 ./08_gen_mipmap_run.sh
@@ -65,7 +69,9 @@ run_20211217_063059_153_Mipmap/bsub-array.sh
 # As with validation, output from the log check script is emailed to you.
 ```
 
-## Generate Tile Pairs  (1 minute for VNC Sec26)
+## Generate Tile Pairs
+<font color="orange">VNC Sec26 Processing Time:</font> 1 minute using 1 core
+
 ```bash
 # Create tile pair metadata (JSON files) to be used as input for match.
 # This java process runs directly on the submit host which technically you are not supposed to do.
@@ -89,7 +95,9 @@ run_20211217_063059_153_Mipmap/bsub-array.sh
 | 07:14:59.399 [main] INFO  [org.janelia.render.client.ClientRunner] run: exit, processing completed in 0 hours, 0 minutes, 57 seconds
 ```
 
-## Generate Match Data  (75 minutes for VNC Sec26)
+## Generate Match Data
+<font color="orange">VNC Sec26 Processing Time:</font> 75 minutes using 13,787 cores
+
 ```bash
 # Setup work areas and parameters for LSF array jobs to generate same layer and cross layer matches. 
 ./12_gen_staged_match_run.sh

@@ -5,9 +5,11 @@ export BSUB_HOST="login1.int.janelia.org"
 export BASE_WORK_DIR="/groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m"
 export WORK_DIR="${BASE_WORK_DIR}/VNC/Sec26" # more generically: ${BASE_WORK_DIR}/${REGION}/${TAB}
 ```
-## Generate Connected Tile Cluster Data (5 minutes for VNC Sec26)
+## Generate Connected Tile Cluster Data
+<font color="orange">VNC Sec26 Processing Time:</font> 5 minutes using 1 core
+
 ```bash
-# Start on LSF / bsub submit host because most work will be done using LSF cluster.
+# Continue on LSF / bsub submit host because most work will be done using LSF cluster.
 ssh ${BSUB_HOST}
 cd ${WORK_DIR}
 
@@ -31,7 +33,9 @@ bsub -n 1 -P flyem -Is /bin/bash --login
 exit
 ```
 
-## Trim Unconnected Resin Tiles (15 minutes to several hours depending upon complexity)
+## Trim Unconnected Resin Tiles
+<font color="orange">VNC Sec26 Processing Time:</font> 15 minutes using 1 core (review), 1 minute using 52 cores (create trimmed stack)
+
 Most volumes have some tiles with just resin in them, especially at the beginning and end of an 
 acquisition.  If the resin isn't dirty enough, those tiles won't produce point match correspondences 
 with adjacent tiles creating smaller connected clusters or "islands".  The alignment solve process 
@@ -99,15 +103,14 @@ looks like this:
 
 Once `excluded_columns.json` is ready ...
 ```bash
-# Setup work area and parameters for LSF array job to generate a trimmed (clip) stack. 
-./22_gen_clip_stack_run.sh
-
-# Run bsub-array.sh script (full path is in gen script output).
-run_20220205_204606_7_CopyStack/bsub-array.sh
+# Generate a trimmed (clip) stack by submitting a bsub array job. 
+./22_gen_clip_stack.sh
 ```
 
 ## Review Connectivity for Trimmed Stack
-Once the trimmed stack has been created and completed ...
+<font color="orange">VNC Sec26 Processing Time:</font> 30 minutes using 1 core *(time can vary widely depending upon connection issues)*
+
+Once the trimmed stack has been created and completed (you should receive an email) ...
 ```bash
 # Re-count connected tile clusters for the trimmed stack.
 ./23_count_trimmed_clusters.sh
@@ -142,25 +145,16 @@ be corrupted during acquisition:
 To fix this kind of problem, we usually patch the corrupted tiles with tiles from an adjacent layer.
 
 ## Patch Corrupted Tiles
+<font color="orange">VNC Sec26 Processing Time:</font> 45 minutes using essentially 1 core
 
 The current patch process has several manual steps and is a little messy.  
 
-First, edit `00_config.sh` to properly identify the old and new trimmed acquisition stacks:
+Run `./setup_patch.sh` to create a patch subdirectory with the scripts needed for patching:
 
 ```bash
-...
-# acquire stack with resin tiles trimmed out (removed)
-ACQUIRE_TRIMMED_STACK="v2_acquire_trimmed"                 # originally "${ACQUIRE_STACK}_trimmed"
-OLD_ACQUIRE_TRIMMED_STACK="v1_acquire_trimmed"             # originally "TBD"
-...
-```
-
-Then, run `./setup_patch.sh` to create a patch subdirectory with the scripts needed for patching:
-
-```bash
-# USAGE: ./setup_patch.sh <patch version> [patch z] ...
+# USAGE: ./setup_patch.sh [patch z] ...
 # In this case, the z to patch is 23966 (from unconnected tile info).
-./setup_patch.sh v2 23966
+./setup_patch.sh 23966
 
 | Copy these patch tile id lines into
 | /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/v2_patch/06_patch_tile_specs.py:
@@ -194,14 +188,10 @@ def main():
 
 Copy the `v1_acquire_trimmed` stack to `v2_acquire_trimmed` (with the updated excluded_columns.json):
 ```bash
-./01_gen_new_trimmed_stack_run.sh
+# Create and immediately submit copy job:
+./01_gen_new_trimmed_stack.sh
 
-# Run bsub-array.sh script (full path is in gen script output).
-run_20220206_092803_847_CopyStack/bsub-array.sh
-```
-
-Patch tiles in the `v2_acquire_trimmed` stack:
-```bash
+# Once the copy job completes, patch tiles in the `v2_acquire_trimmed` stack:
 ./06_patch_tile_specs.py
 
 | submitting PUT http://tem-services.int.janelia.org:8080/render-ws/v1/owner/Z0720_07m_VNC/project/Sec26/stack/v2_acquire_trimmed/state/LOADING
@@ -209,10 +199,8 @@ Patch tiles in the `v2_acquire_trimmed` stack:
 | submitting DELETE http://tem-services.int.janelia.org:8080/render-ws/v1/owner/Z0720_07m_VNC/project/Sec26/stack/v2_acquire_trimmed/tile/21-09-13_091915_0-0-2.23966.0
 | submitting PUT http://tem-services.int.janelia.org:8080/render-ws/v1/owner/Z0720_07m_VNC/project/Sec26/stack/v2_acquire_trimmed/resolvedTiles for 2 tile specs
 | submitting PUT http://tem-services.int.janelia.org:8080/render-ws/v1/owner/Z0720_07m_VNC/project/Sec26/stack/v2_acquire_trimmed/state/COMPLETE
-```
 
-Generate matches for the patched tiles:
-```bash
+# Generate matches for the patched tiles:
 ./11_gen_new_pairs.sh 23966
 
 | ... (similar output to when this script was originally run for alignment prep)
