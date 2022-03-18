@@ -7,3 +7,4 @@ channels:
 dependencies:
   - python=3.9
   - urllib3=1.26
+  - poetry

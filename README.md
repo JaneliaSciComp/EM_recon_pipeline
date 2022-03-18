@@ -3,7 +3,6 @@ Pipeline scripts and tools for reconstructing Electron Microscopy volumes.
 
 ### Setup
 1. If necessary, [install miniconda](https://docs.conda.io/en/latest/miniconda.html).
-2. If necessary, [install poetry](https://python-poetry.org/docs/#installation).
 
 ### Create Environment and Install 
 ```bash
