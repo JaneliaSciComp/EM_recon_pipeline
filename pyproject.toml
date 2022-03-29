@@ -11,6 +11,9 @@ fibsem-tools = "^0.2.11"
 render-python = {git = "https://github.com/AllenInstitute/render-python.git"}
 dask-janelia = "^0.1.4"
 bokeh = "^2.3.3"
+h5py = "^3.6.0"
+pytest = "^7.1.1"
+xarray-multiscale = "0.3.1"
 
 [tool.poetry.dev-dependencies]
 
