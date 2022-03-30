@@ -22,93 +22,116 @@ logger = logging.getLogger("dat_converter")
 class DatConverter:
     """
     Converts .dat source data into HDF5 artifacts needed for archival storage and alignment.
+
+    Attributes
+    ----------
+    archive_writer : Optional[DatToH5Writer], default=None
+        writer for archive data, None if archive data should not be produced
+
+    align_writer : Optional[DatToH5Writer], default=None
+        writer for align data, None if align data should not be produced
+
+    skip_existing : bool, default=True
+        indicates whether existing HDF5 data should be left as is (True) or overwritten (False)
     """
-    def __init__(self, volume_transfer_info: VolumeTransferInfo):
+    def __init__(self,
+                 volume_transfer_info: VolumeTransferInfo,
+                 archive_writer: Optional[DatToH5Writer] = None,
+                 align_writer: Optional[DatToH5Writer] = None,
+                 skip_existing: bool = True):
         self.volume_transfer_info = volume_transfer_info
+        self.archive_writer = archive_writer
+        self.align_writer = align_writer
+        self.skip_existing = skip_existing
 
     def __str__(self):
         return f"{self.volume_transfer_info}"
 
-    def convert(self,
-                dat_layers: List[DatPathsForLayer],
-                archive_writer: Optional[DatToH5Writer],
-                align_writer: Optional[DatToH5Writer],
-                skip_existing: bool = True):
+    def convert_layer(self,
+                      dat_paths_for_layer: DatPathsForLayer):
         """
-        Converts specified `dat_layers` into HDF5 artifacts.
+        Converts specified `dat_paths_for_layer` sources into HDF5 artifacts.
 
         Parameters
         ----------
-        dat_layers : List[DatPathsForLayer]
-            list of layers to convert
-
-        archive_writer : Optional[DatToH5Writer]
-            writer for archive data, None if archive data should not be produced
-
-        align_writer : Optional[DatToH5Writer]
-            writer for align data, None if align data should not be produced
-
-        skip_existing : bool, default=True
-            indicates whether existing HDF5 data should be left as is (True) or overwritten (False)
+        dat_paths_for_layer : DatPathsForLayer
+            paths of .dat source files in a single layer
         """
 
-        logger.info(f"{self} convert: entry, processing {len(dat_layers)} layers")
+        logger.info(f"{self} convert_layer: entry, processing {len(dat_paths_for_layer.dat_paths)} dat files "
+                    f"for {dat_paths_for_layer.get_layer_id()}")
 
-        archive_conversion_requested = self.volume_transfer_info.archive_storage_root and archive_writer
-        align_conversion_requested = self.volume_transfer_info.align_storage_root and align_writer
+        archive_conversion_requested = self.volume_transfer_info.archive_storage_root and self.archive_writer
+        align_conversion_requested = self.volume_transfer_info.align_storage_root and self.align_writer
 
-        for dat_paths_for_layer in dat_layers:
+        archive_path = None
+        if archive_conversion_requested:
+            archive_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.archive_storage_root,
+                                                           source_type="raw")
+            archive_path = self.setup_h5_path("archive", archive_path, self.skip_existing)
 
-            archive_path = None
-            if archive_conversion_requested:
-                archive_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.archive_storage_root,
-                                                               source_type="raw")
-                archive_path = self.setup_h5_path("archive", archive_path, skip_existing)
+        align_path = None
+        if align_conversion_requested:
+            align_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.align_storage_root,
+                                                         source_type="uint8")
+            align_path = self.setup_h5_path("align source", align_path, self.skip_existing)
 
-            align_path = None
-            if align_conversion_requested:
-                align_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.align_storage_root,
-                                                             source_type="uint8")
-                align_path = self.setup_h5_path("align source", align_path, skip_existing)
+        with ExitStack() as stack:
+            if archive_path:
+                layer_archive_file = stack.enter_context(self.archive_writer.open_h5_file(str(archive_path)))
+            if align_path:
+                layer_align_file = stack.enter_context(self.align_writer.open_h5_file(str(align_path)))
 
-            with ExitStack() as stack:
-                if archive_path:
-                    layer_archive_file = stack.enter_context(archive_writer.open_h5_file(str(archive_path)))
-                if align_path:
-                    layer_align_file = stack.enter_context(align_writer.open_h5_file(str(align_path)))
+            # TODO: clean-up properly if errors occur during conversion
 
-                # TODO: clean-up properly if errors occur during conversion
-
-                if archive_path or align_path:
-                    for dat_path in dat_paths_for_layer.dat_paths:
-
-                        if not dat_path.file_path.exists():
-                            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), dat_path.file_path)
-
-                        logger.info(f"{self} convert: reading {dat_path.file_path}")
-                        dat_record = read(dat_path.file_path)
-
-                        if archive_path:
-                            archive_writer.create_and_add_data_set(data_set_name=dat_path.tile_key(),
-                                                                   dat_header=dat_record.header,
-                                                                   pixel_array=dat_record,
-                                                                   to_h5_file=layer_archive_file,
-                                                                   dat_file_path_for_raw_header=dat_path.file_path)
-
-                        if align_path:
-                            self.create_and_add_mipmap_data_sets(dat_path=dat_path,
-                                                                 dat_header=dat_record.header,
-                                                                 dat_record=dat_record,
-                                                                 align_writer=align_writer,
-                                                                 layer_align_file=layer_align_file)
-
-            if self.volume_transfer_info.remove_dat_after_archive:
-                # TODO: handle dat removal errors - probably want to just log issue and not disrupt other processing
+            if archive_path or align_path:
                 for dat_path in dat_paths_for_layer.dat_paths:
-                    logger.info(f"{self} convert: removing {dat_path.file_path}")
-                    dat_path.file_path.unlink()
+
+                    if not dat_path.file_path.exists():
+                        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), dat_path.file_path)
+
+                    logger.info(f"{self} convert: reading {dat_path.file_path}")
+                    dat_record = read(dat_path.file_path)
+
+                    if archive_path:
+                        self.archive_writer.create_and_add_data_set(data_set_name=dat_path.tile_key(),
+                                                                    dat_header=dat_record.header,
+                                                                    pixel_array=dat_record,
+                                                                    to_h5_file=layer_archive_file,
+                                                                    dat_file_path_for_raw_header=dat_path.file_path)
+
+                    if align_path:
+                        self.create_and_add_mipmap_data_sets(dat_path=dat_path,
+                                                             dat_header=dat_record.header,
+                                                             dat_record=dat_record,
+                                                             align_writer=self.align_writer,
+                                                             layer_align_file=layer_align_file)
+
+        if self.volume_transfer_info.remove_dat_after_archive:
+            # TODO: handle dat removal errors - probably want to just log issue and not disrupt other processing
+            for dat_path in dat_paths_for_layer.dat_paths:
+                logger.info(f"{self} convert: removing {dat_path.file_path}")
+                dat_path.file_path.unlink()
 
         logger.info(f"{self} convert: exit")
+
+    def convert_layer_list(self,
+                           dat_layer_list: List[DatPathsForLayer]):
+        """
+        Converts specified `dat_layer_list` into HDF5 artifacts.
+
+        Parameters
+        ----------
+        dat_layer_list : List[DatPathsForLayer]
+            list of layers to convert
+        """
+
+        logger.info(f"{self} convert_layer_list: entry, processing {len(dat_layer_list)} layers")
+
+        for dat_paths_for_layer in dat_layer_list:
+            self.convert_layer(dat_paths_for_layer)
+
+        logger.info(f"{self} convert_layer_list: exit")
 
     def setup_h5_path(self,
                       context: str,
