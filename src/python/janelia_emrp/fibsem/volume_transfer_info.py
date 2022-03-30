@@ -1,19 +1,18 @@
 import datetime
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from pydantic import BaseModel
 
-@dataclass
-class VolumeTransferInfo:
+
+class VolumeTransferInfo(BaseModel):
     # """
     # Information for managing the transfer of volume data from a scope to centralized storage.
     #
     # Attributes
     # ----------
     # scope : str
-    #     hostname for scope acquiring data
-    #     (e.g. 'jeiss3.hhmi.org')
+    #     hostname for scope acquiring data (e.g. 'jeiss3.hhmi.org')
     #
     # scope_storage_root : Path
     #     scope root path excluding datetime-based subdirectories for acquired data
@@ -21,10 +20,12 @@ class VolumeTransferInfo:
     #     '/cygdrive/e/Images/Fly Brain/Y2021/M05/D05/Merlin-6257_21-05-05_102654_0-0-0.dat')
     #
     # acquire_start : Optional[datetime.datetime]
-    #     time first volume image was acquired, None if acquisition has not started
+    #     time first volume image was acquired, None if acquisition has not started.
+    #     JSON string representations must use ISO 8601 format (e.g. 2021-05-05T10:26:54).
     #
     # acquire_stop : Optional[datetime.datetime]
     #     time last volume image was acquired, None if acquisition has not completed
+    #     JSON string representations must use ISO 8601 format (e.g. 2021-06-09T13:15:55).
     #
     # dat_storage_root : Path
     #     network storage path for dat files after transfer from scope
