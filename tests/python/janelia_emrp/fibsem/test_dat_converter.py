@@ -126,10 +126,10 @@ if __name__ == "__main__":
         type=int
     )
 
-    # args = parser.parse_args(sys.argv[1:])
-    #
-    # convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
-    #                num_workers=args.num_workers,
-    #                dask_worker_space=args.dask_worker_space,
-    #                min_index=args.min_index,
-    #                max_index=args.max_index)
+    args = parser.parse_args(sys.argv[1:])
+
+    convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
+                   num_workers=args.num_workers,
+                   dask_worker_space=args.dask_worker_space,
+                   min_index=args.min_index,
+                   max_index=args.max_index)
