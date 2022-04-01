@@ -41,7 +41,8 @@ def test_derive_max_mipmap_level():
 
 
 def convert_volume(volume_transfer_info: VolumeTransferInfo,
-                   num_workers: int = 1,
+                   num_workers: int,
+                   num_threads_per_worker: int,
                    dask_worker_space: Optional[str] = None,
                    min_index: Optional[int] = None,
                    max_index: Optional[int] = None):
@@ -76,7 +77,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                              skip_existing=skip_existing)
 
     if num_workers > 1:
-        dask_cluster = get_cluster(threads_per_worker=1,
+        dask_cluster = get_cluster(threads_per_worker=num_threads_per_worker,
                                    local_kwargs={
                                        "local_directory": dask_worker_space
                                    })
@@ -86,9 +87,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
         dask_cluster.scale(num_workers)
         root_logger.info(f'scaled dask cluster to {num_workers} workers')
 
-        # bag = db.from_sequence(layers, npartitions=num_workers).map(converter.convert_layer)
         bag = db.from_sequence(layers, npartitions=num_workers)
-        bag = bag.map(converter.convert_layer)
+        bag = bag.map_partitions(converter.convert_layer)
         bag.compute()
 
     else:
@@ -112,6 +112,12 @@ if __name__ == "__main__":
         default=1
     )
     parser.add_argument(
+        "--num_threads_per_worker",
+        help="The number of threads for each worker",
+        type=int,
+        default=1
+    )
+    parser.add_argument(
         "--dask_worker_space",
         help="Directory for Dask worker data",
     )
@@ -130,6 +136,7 @@ if __name__ == "__main__":
 
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
+                   num_threads_per_worker=args.num_threads_per_worker,
                    dask_worker_space=args.dask_worker_space,
                    min_index=args.min_index,
                    max_index=args.max_index)
