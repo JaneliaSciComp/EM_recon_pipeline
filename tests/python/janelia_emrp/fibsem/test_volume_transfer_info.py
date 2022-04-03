@@ -11,6 +11,8 @@ def test_json():
         scope="jeiss2.hhmi.org",
         scope_storage_root=Path("/cygdrive/e/Images/Renel Cell Carcinoma"),
         dat_storage_root=Path("/nearline/flyem2/data/NIH-J1/dat"),
+        dat_x_and_y_nm_per_pixel=8,
+        dat_z_nm_per_pixel=8,
         acquire_start=datetime.strptime("22-03-08_223009", "%y-%m-%d_%H%M%S"),
         acquire_stop=datetime.strptime("22-03-17_082104", "%y-%m-%d_%H%M%S"),
         archive_storage_root=Path("/nearline/flyem2/data/NIH-J1/h5"),

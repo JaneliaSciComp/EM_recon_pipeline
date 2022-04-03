@@ -88,7 +88,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
         root_logger.info(f'scaled dask cluster to {num_workers} workers')
 
         bag = db.from_sequence(layers, npartitions=num_workers)
-        bag = bag.map_partitions(converter.convert_layer)
+        bag = bag.map_partitions(converter.convert_layer_list)
         bag.compute()
 
     else:

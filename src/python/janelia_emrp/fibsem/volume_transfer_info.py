@@ -40,11 +40,20 @@ class VolumeTransferInfo(BaseModel):
     # dat_storage_root : Path
     #     network storage path for dat files after transfer from scope
     #
-    # remove_dat_after_archive : bool
-    #     indicates whether dat files should be removed from network storage after they are successfully archived
+    # dat_x_and_y_nm_per_pixel : int
+    #     target nm pixel resolution for dat x and y dimensions
+    #
+    # dat_z_nm_per_pixel : int
+    #     target nm pixel resolution for dat z dimension
+    #
+    # dat_tile_overlap_microns : int, default=2
+    #     tile overlap width in microns for older dat volumes without stageX header values
     #
     # archive_storage_root : Optional[Path]
     #     root path for archive HDF5 data, None if archival is not needed
+    #
+    # remove_dat_after_archive : bool
+    #     indicates whether dat files should be removed from network storage after they are successfully archived
     #
     # align_storage_root : Optional[Path]
     #     root path for 8-bit alignment HDF5 data, None if alignment data set is not needed
@@ -59,12 +68,29 @@ class VolumeTransferInfo(BaseModel):
     #
     # render_project : str
     #     project for the render stacks for this volume
+    #
+    # render_restart_context_layer_count : int, default=1
+    #     number of layers to include in the restart stack before and after each restart
+    #
+    # render_connect : Optional[RenderConnect]
+    #     render-python connection information (omit to skip writing to render web services)
+    #
+    # bill_project : Optional[str]
+    #     project to bill cluster time to (omit to use default project)
+    #
+    # mask_storage_root : Optional[Path]
+    #     directory containing mask files (omit if masks are not desired)
+    #
+    # mask_width : int, default=100
+    #     left pixel width of masked area
     # """
     scope: str
     scope_storage_root: Path
     acquire_start: Optional[datetime.datetime]
     acquire_stop: Optional[datetime.datetime]
     dat_storage_root: Path
+    dat_x_and_y_nm_per_pixel: int
+    dat_z_nm_per_pixel: int
     dat_tile_overlap_microns: int = 2
     archive_storage_root: Optional[Path]
     remove_dat_after_archive: bool
@@ -72,9 +98,9 @@ class VolumeTransferInfo(BaseModel):
     max_mipmap_level: Optional[int]
     render_owner: str
     render_project: str
-    render_restart_context_layer_count: Optional[int]
+    render_restart_context_layer_count: int = 1
     render_connect: Optional[RenderConnect]
-    bill_to: Optional[str]
+    bill_project: Optional[str]
     mask_storage_root: Optional[Path]
     mask_width: int = 100
 
