@@ -432,7 +432,7 @@ def save_stack(stack_name: str,
     tiles_per_batch = 5000
     for index in range(0, tile_count, tiles_per_batch):
         stop_index = min(index + tiles_per_batch, tile_count)
-        import_tile_specs(tile_specs=tile_specs[index:stop_index],
+        import_tile_specs(tile_specs=api_tile_specs[index:stop_index],
                           stack=stack_name,
                           render=render)
 
