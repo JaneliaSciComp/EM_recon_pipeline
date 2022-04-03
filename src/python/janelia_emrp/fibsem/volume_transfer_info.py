@@ -69,6 +69,9 @@ class VolumeTransferInfo(BaseModel):
     # render_project : str
     #     project for the render stacks for this volume
     #
+    # render_stack : str, default="v1_acquire"
+    #     name of the first render acquisition stack
+    #
     # render_restart_context_layer_count : int, default=1
     #     number of layers to include in the restart stack before and after each restart
     #
@@ -98,6 +101,7 @@ class VolumeTransferInfo(BaseModel):
     max_mipmap_level: Optional[int]
     render_owner: str
     render_project: str
+    render_stack: str = "v1_acquire"
     render_restart_context_layer_count: int = 1
     render_connect: Optional[RenderConnect]
     bill_project: Optional[str]

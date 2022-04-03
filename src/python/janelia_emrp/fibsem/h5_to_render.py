@@ -509,10 +509,13 @@ def main(arg_list):
 
     if volume_transfer_info.render_connect:
         if len(all_restart_tile_specs) > 0:
-            stack_name = f'{args.stack_name}_restart'
-            save_stack(stack_name, volume_transfer_info, all_restart_tile_specs)
+            save_stack(stack_name=f"{volume_transfer_info.render_stack}_restart",
+                       volume_transfer_info=volume_transfer_info,
+                       tile_specs=all_restart_tile_specs)
 
-        save_stack(args.stack_name, volume_transfer_info, all_tile_specs)
+        save_stack(stack_name=volume_transfer_info.render_stack,
+                   volume_transfer_info=volume_transfer_info,
+                   tile_specs=all_tile_specs)
 
         if mask_builder and len(mask_builder.mask_errors) > 0:
             logger.error(f"mask errors are: {mask_builder.mask_errors}")
