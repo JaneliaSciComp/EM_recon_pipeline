@@ -264,7 +264,10 @@ def build_tile_spec(h5_path: Path,
         if stage_y is None:
             stage_y = margin + round(dat_path.row * (tile_height - overlap_pixels))
 
-    mipmap_level_zero = {"imageUrl": f"file://{str(h5_path)}?dataSet={tile_key}.mipmap.0&z=0"}
+    mipmap_level_zero = {
+        "imageUrl": f"file://{str(h5_path)}?dataSet={tile_key}.mipmap.0&z=0",
+        "imageLoaderType": "H5_SLICE"
+    }
     if mask_path:
         mipmap_level_zero["maskUrl"] = f'file:{mask_path}'
 
@@ -435,6 +438,13 @@ def save_stack(stack_name: str,
         import_tile_specs(tile_specs=api_tile_specs[index:stop_index],
                           stack=stack_name,
                           render=render)
+
+    mipmap_path_builder = {
+        "rootPath": "/not_applicable",
+        "numberOfLevels": volume_transfer_info.max_mipmap_level,
+        "extension": "tif",
+        "imageMipmapPatternString": "(.*dataSet=\\d+-\\d+-\\d+\\.mipmap\\.)\\d+(.*)"
+    }
 
     renderapi.stack.set_stack_state(stack_name, 'COMPLETE', render=render)
 
