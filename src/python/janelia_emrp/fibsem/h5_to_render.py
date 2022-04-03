@@ -121,7 +121,9 @@ def build_all_layers(align_storage_root: Path,
                      num_workers: int,
                      threads_per_worker: int,
                      dask_worker_space: Optional[str],
-                     bill_project: Optional[str]) -> List[LayerInfo]:
+                     bill_project: Optional[str],
+                     min_index: Optional[int],
+                     max_index: Optional[int]) -> List[LayerInfo]:
 
     if not align_storage_root.is_dir():
         raise ValueError(f"missing align storage root directory {align_storage_root}")
@@ -131,6 +133,19 @@ def build_all_layers(align_storage_root: Path,
     layer_h5_paths = sorted(align_storage_root.glob("**/*.h5"))
 
     logger.info(f"build_all_layers: found {len(layer_h5_paths)} .h5 files in {align_storage_root}")
+
+    slice_max = max_index + 1 if max_index else None
+    if min_index:
+        if slice_max:
+            layer_h5_paths = layer_h5_paths[min_index:slice_max]
+        else:
+            layer_h5_paths = layer_h5_paths[min_index:]
+    elif slice_max:
+        layer_h5_paths = layer_h5_paths[0:slice_max]
+
+    if min_index or slice_max:
+        logger.info(f"build_all_layers: processing {len(layer_h5_paths)} .h5 files "
+                    f"in filtered range [{min_index}, {slice_max}]")
 
     if num_workers > 1:
         dask_cluster = get_cluster(threads_per_worker=threads_per_worker,
@@ -431,15 +446,14 @@ def main(arg_list):
         required=True,
     )
     parser.add_argument(
-        "--source_start_index",
-        help="Specify start index for first (sorted) layer to process",
+        "--min_layer_index",
+        help="Reduce layers processed by specifying index of first (sorted) layer to process",
         type=int,
         default=0
     )
     parser.add_argument(
-        "--source_stop_index",
-        help="Specify stop index for first (sorted) layer to exclude from processing "
-             "(omit to include all layers after the start index)",
+        "--max_layer_index",
+        help="Reduce layers processed by specifying index of last (sorted) layer to process",
         type=int
     )
     parser.add_argument(
@@ -467,7 +481,9 @@ def main(arg_list):
                                   num_workers=args.num_workers,
                                   threads_per_worker=args.threads_per_worker,
                                   dask_worker_space=args.dask_worker_space,
-                                  bill_project=volume_transfer_info.bill_project)
+                                  bill_project=volume_transfer_info.bill_project,
+                                  min_index=args.min_layer_index,
+                                  max_index=args.max_layer_index)
 
     logger.info(f"main: generating tile specs and masks for {len(all_layers)} layers")
 
@@ -504,8 +520,8 @@ if __name__ == "__main__":
 
     # test_argv = [
     #     "--volume_transfer_info", "/Users/trautmane/Desktop/volume_transfer_info.json",
-    #     "--source_start_index", "0",
-    #     "--source_stop_index", "10",
+    #     "--min_layer_index", "0",
+    #     "--max_layer_index", "10",
     #     "--num_workers", "1",
     #     "--dask_worker_space", "/Users/trautmane/Desktop/dask-worker-space",
     # ]
