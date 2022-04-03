@@ -479,7 +479,7 @@ def main(arg_list):
 
     all_layers = build_all_layers(align_storage_root=volume_transfer_info.align_storage_root,
                                   num_workers=args.num_workers,
-                                  threads_per_worker=args.threads_per_worker,
+                                  threads_per_worker=args.num_threads_per_worker,
                                   dask_worker_space=args.dask_worker_space,
                                   bill_project=volume_transfer_info.bill_project,
                                   min_index=args.min_layer_index,
