@@ -41,9 +41,16 @@ checked_tile_header_keys = common_tile_header_keys + ["SampleID"]
 def get_dat_path(layer_h5_path: Path,
                  tile_data_set_name: str) -> DatPath:
     # TODO: remove this hack when DatPath info is saved in h5
-    scope_and_time = layer_h5_path.name[:-3]  # Merlin-6049_15-06-16_000059.h5 -> Merlin-6049_15-06-16_000059
-    tile_info = tile_data_set_name[0:tile_data_set_name.index(".mipmap")]  # 0-0-1.mipmap.0 -> 0-0-1
-    dat_name = f"{scope_and_time}_{tile_info}.dat"  # Merlin-6049_15-06-16_000059_0-0-0.dat
+    # Merlin-6049_15-06-16_000059.unit8.h5 -> Merlin-6049_15-06-16_000059
+    first_dot = layer_h5_path.name.find(".")
+    scope_and_time = layer_h5_path.name[0:first_dot]
+
+    # 0-0-1.mipmap.0 -> 0-0-1
+    tile_info = tile_data_set_name[0:tile_data_set_name.index(".mipmap")]
+
+    # Merlin-6049_15-06-16_000059_0-0-0.dat
+    dat_name = f"{scope_and_time}_{tile_info}.dat"
+
     return new_dat_path(Path(dat_name))
 
 
