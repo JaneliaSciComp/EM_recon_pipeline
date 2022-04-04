@@ -247,15 +247,15 @@ def build_tile_spec(h5_path: Path,
     # 20-12-01_224100_0-0-0.1066.0
     tile_id = f"{acquire_time_string}_{tile_key}.{section_id}"
 
-    tile_width = tile_attributes["XResolution"]
-    tile_height = tile_attributes["YResolution"]
+    tile_width = int(tile_attributes["XResolution"])   # convert h5 int64 to int for json encoder
+    tile_height = int(tile_attributes["YResolution"])  # convert h5 int64 to int for json encoder
     working_distance = tile_attributes["WD"]
 
     # stage x and y is not provided for FIB-SEM versions < 9
     stage_x = tile_attributes.get("FirstX")
     stage_y = tile_attributes.get("FirstY")
 
-    if not (stage_x or stage_y):
+    if stage_x is None or stage_y is None:
         nm_per_pixel = tile_attributes["PixelSize"]
         overlap_nm = tile_overlap_in_microns * 1000
         overlap_pixels = overlap_nm / nm_per_pixel
@@ -264,6 +264,9 @@ def build_tile_spec(h5_path: Path,
             stage_x = margin + round(dat_path.column * (tile_width - overlap_pixels))
         if stage_y is None:
             stage_y = margin + round(dat_path.row * (tile_height - overlap_pixels))
+    else:
+        stage_x = int(stage_x)  # convert h5 int64 to int for json encoder
+        stage_y = int(stage_y)  # convert h5 int64 to int for json encoder
 
     mipmap_level_zero = {
         "imageUrl": f"file://{str(h5_path)}?dataSet={tile_key}.mipmap.0&z=0",
