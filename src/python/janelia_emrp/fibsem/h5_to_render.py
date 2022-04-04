@@ -273,7 +273,7 @@ def build_tile_spec(h5_path: Path,
         "imageLoaderType": "H5_SLICE"
     }
     if mask_path:
-        mipmap_level_zero["maskUrl"] = f'file:{mask_path}'
+        mipmap_level_zero["maskUrl"] = f'file:{str(mask_path)}'
 
     transform_data_string = f'1 0 0 1 {stage_x} {stage_y}'
 
