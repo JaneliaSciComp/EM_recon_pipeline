@@ -26,6 +26,8 @@ def test_derive_max_mipmap_level():
         scope="jeiss3.hhmi.org",
         scope_storage_root=Path("/cygdrive/e/Images/Fly Brain"),
         dat_storage_root=Path("/Volumes/flyem2/data/Z0720-07m_BR_Sec18/dat"),
+        dat_x_and_y_nm_per_pixel=8,
+        dat_z_nm_per_pixel=8,
         acquire_start=datetime.strptime("21-05-05_102654", "%y-%m-%d_%H%M%S"),
         acquire_stop=datetime.strptime("21-06-09_131555", "%y-%m-%d_%H%M%S"),
         archive_storage_root=Path("/Users/trautmane/Desktop/fibsem-tests/archive"),

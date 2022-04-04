@@ -60,6 +60,7 @@ class LayerInfo:
         self.h5_path = h5_path
         self.dat_paths: List[DatPath] = []
         self.retained_headers: List[Dict[str, Any]] = []
+        self.group_id : Optional[str] = None
         self.restart_condition_label: Optional[str] = None
 
         with h5py.File(name=str(h5_path), mode="r") as h5_file:
@@ -225,6 +226,7 @@ def set_layer_restart_condition(layer_info: LayerInfo,
 
         if restart_condition:
             logger.info(f'set_layer_restart_condition: found condition: {restart_condition}')
+            layer_info.group_id = "restart"
             layer_info.restart_condition_label = restart_condition[0:restart_condition.index(":")]
             break
 
@@ -331,8 +333,10 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
                                     prior_layer=prior_layer_info,
                                     mask_path=mask_path)
 
-        if layer_info.restart_condition_label:
-            tile_spec["groupId"] = "restart"
+        if layer_info.group_id is not None:
+            tile_spec["groupId"] = layer_info.group_id
+
+        if layer_info.restart_condition_label is not None:
             tile_spec["labels"] = ["restart", layer_info.restart_condition_label]
 
         tile_specs.append(tile_spec)
@@ -374,6 +378,12 @@ def build_all_tile_specs(all_layers: List[LayerInfo],
                                     restart_seconds_threshold)
 
         if layer_info.restart_condition_label is not None:
+
+            # set groupId for layer prior to restart, but exclude labels
+            if prior_layer_info.restart_condition_label is None:
+                prior_layer_info.group_id = "restart"
+                restart_z_values.append(z-1)
+
             restart_z_values.append(z)
 
         prior_layer_info = layer_info
