@@ -18,6 +18,7 @@ def test_json():
         archive_storage_root=Path("/nearline/flyem2/data/NIH-J1/h5"),
         remove_dat_after_archive=False,
         align_storage_root=Path("/nrs/flyem/render/data/test_h5/NIH_J1"),
+        align_mask_mipmap_root=Path("/nrs/flyem/render/mipmaps"),
         max_mipmap_level=7,
         render_owner="test_h5",
         render_project="NIH_J1",

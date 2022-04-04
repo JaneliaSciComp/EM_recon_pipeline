@@ -58,6 +58,9 @@ class VolumeTransferInfo(BaseModel):
     # align_storage_root : Optional[Path]
     #     root path for 8-bit alignment HDF5 data, None if alignment data set is not needed
     #
+    # align_mask_mipmap_root : Optional[Path]
+    #     root path for 8-bit mask mipmap data, None if alignment data set is not needed
+    #
     # max_mipmap_level : Optional[int]
     #     maximum number of down-sampled mipmap levels to produce for each image,
     #     None to produce as many levels as possible,
@@ -98,6 +101,7 @@ class VolumeTransferInfo(BaseModel):
     archive_storage_root: Optional[Path]
     remove_dat_after_archive: bool
     align_storage_root: Optional[Path]
+    align_mask_mipmap_root: Optional[Path]
     max_mipmap_level: Optional[int]
     render_owner: str
     render_project: str

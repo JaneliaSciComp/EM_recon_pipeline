@@ -13,6 +13,7 @@ from dask_janelia import get_cluster
 
 from janelia_emrp.fibsem.dat_path import DatPath, new_dat_path
 from janelia_emrp.fibsem.mask_builder import MaskBuilder
+from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 
 program_name = "h5_to_render.py"
@@ -404,10 +405,17 @@ def build_all_tile_specs(all_layers: List[LayerInfo],
     return all_tile_specs, all_restart_tile_specs
 
 
-def import_tile_specs(tile_specs, stack, render):
+# def import_tile_specs(tile_specs, stack, render):
+#     if len(tile_specs) > 0:
+#         logger.info(f"import_tile_specs: {tile_specs[0].tileId} to {tile_specs[-1].tileId}")
+#         renderapi.client.import_tilespecs(stack, tile_specs, render=render, use_rest=True)
+def import_tile_specs(tile_specs: List[Dict[str, Any]],
+                      stack: str,
+                      render_api: RenderApi):
     if len(tile_specs) > 0:
-        logger.info(f"import_tile_specs: {tile_specs[0].tileId} to {tile_specs[-1].tileId}")
-        renderapi.client.import_tilespecs(stack, tile_specs, render=render, use_rest=True)
+        logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
+        render_api.save_tile_specs(stack=stack,
+                                   tile_specs=tile_specs)
 
 
 def save_stack(stack_name: str,
@@ -429,23 +437,36 @@ def save_stack(stack_name: str,
                                  stackResolutionY=volume_transfer_info.dat_x_and_y_nm_per_pixel,
                                  stackResolutionZ=volume_transfer_info.dat_z_nm_per_pixel)
 
-    api_tile_specs = [renderapi.tilespec.TileSpec(json=tile_spec) for tile_spec in tile_specs]
+    # api_tile_specs = [renderapi.tilespec.TileSpec(json=tile_spec) for tile_spec in tile_specs]
+    #
+    # tile_count = len(api_tile_specs)
+    # tiles_per_batch = 5000
+    # for index in range(0, tile_count, tiles_per_batch):
+    #     stop_index = min(index + tiles_per_batch, tile_count)
+    #     import_tile_specs(tile_specs=api_tile_specs[index:stop_index],
+    #                       stack=stack_name,
+    #                       render=render)
 
-    tile_count = len(api_tile_specs)
+    render_api = RenderApi(render_owner=volume_transfer_info.render_owner,
+                           render_project=volume_transfer_info.render_project,
+                           render_connect=volume_transfer_info.render_connect)
+    tile_count = len(tile_specs)
     tiles_per_batch = 5000
     for index in range(0, tile_count, tiles_per_batch):
         stop_index = min(index + tiles_per_batch, tile_count)
-        import_tile_specs(tile_specs=api_tile_specs[index:stop_index],
+        import_tile_specs(tile_specs=tile_specs[index:stop_index],
                           stack=stack_name,
-                          render=render)
+                          render_api=render_api)
 
     mipmap_path_builder = {
-        "rootPath": "/not_applicable",
+        "rootPath": volume_transfer_info.align_mask_mipmap_root,
         "numberOfLevels": volume_transfer_info.max_mipmap_level,
         "extension": "tif",
         "imageMipmapPatternString": "(.*dataSet=\\d+-\\d+-\\d+\\.mipmap\\.)\\d+(.*)"
     }
-
+    render_api.save_mipmap_path_builder(stack=stack_name,
+                                        mipmap_path_builder=mipmap_path_builder)
+    
     renderapi.stack.set_stack_state(stack_name, 'COMPLETE', render=render)
 
 
