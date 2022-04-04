@@ -142,16 +142,16 @@ def build_all_layers(align_storage_root: Path,
 
     logger.info(f"build_all_layers: found {len(layer_h5_paths)} .h5 files in {align_storage_root}")
 
-    slice_max = max_index + 1 if max_index else None
-    if min_index:
-        if slice_max:
+    slice_max = max_index + 1 if max_index is not None else None
+    if min_index is not None:
+        if slice_max is not None:
             layer_h5_paths = layer_h5_paths[min_index:slice_max]
         else:
             layer_h5_paths = layer_h5_paths[min_index:]
-    elif slice_max:
+    elif slice_max is not None:
         layer_h5_paths = layer_h5_paths[0:slice_max]
 
-    if min_index or slice_max:
+    if min_index is not None or slice_max is not None:
         logger.info(f"build_all_layers: processing {len(layer_h5_paths)} .h5 files "
                     f"in filtered range [{min_index}, {slice_max}]")
 
