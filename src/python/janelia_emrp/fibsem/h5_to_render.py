@@ -106,7 +106,7 @@ class LayerInfo:
     def working_distance_for_column(self, column: int):
         working_distance = None
         tile_index = self.tile_index_for_column(column)
-        if tile_index:
+        if tile_index is not None:
             working_distance = self.retained_headers[tile_index]["WD"]
         return working_distance
 
@@ -272,7 +272,7 @@ def build_tile_spec(h5_path: Path,
         "imageUrl": f"file://{str(h5_path)}?dataSet={tile_key}.mipmap.0&z=0",
         "imageLoaderType": "H5_SLICE"
     }
-    if mask_path:
+    if mask_path is not None:
         mipmap_level_zero["maskUrl"] = f'file:{str(mask_path)}'
 
     transform_data_string = f'1 0 0 1 {stage_x} {stage_y}'
@@ -297,9 +297,9 @@ def build_tile_spec(h5_path: Path,
         }
     }
 
-    if prior_layer:
+    if prior_layer is not None:
         prior_working_distance = prior_layer.working_distance_for_column(dat_path.column)
-        if prior_working_distance:
+        if prior_working_distance is not None:
             distance_z = (working_distance - prior_working_distance) * 1000000
             tile_spec["layout"]["distanceZ"] = distance_z
 
@@ -315,7 +315,7 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
                                tile_overlap_in_microns: int):
 
     mask_path = None
-    if mask_builder:
+    if mask_builder is not None:
         first_tile_attributes = layer_info.retained_headers[0]
         mask_path = mask_builder.create_mask_if_missing(image_width=first_tile_attributes["XResolution"],
                                                         image_height=first_tile_attributes["YResolution"])
@@ -373,7 +373,7 @@ def build_all_tile_specs(all_layers: List[LayerInfo],
                                     prior_layer_info,
                                     restart_seconds_threshold)
 
-        if layer_info.restart_condition_label:
+        if layer_info.restart_condition_label is not None:
             restart_z_values.append(z)
 
         prior_layer_info = layer_info
@@ -531,7 +531,8 @@ def main(arg_list):
     mask_builder: Optional[MaskBuilder] = None
 
     # only build masks if they are needed, and we are writing data to render
-    if volume_transfer_info.mask_storage_root and volume_transfer_info.render_connect:
+    if volume_transfer_info.mask_storage_root is not None and \
+            volume_transfer_info.render_connect is not None:
         mask_builder = MaskBuilder(base_dir=volume_transfer_info.mask_storage_root,
                                    mask_width=volume_transfer_info.mask_width)
 
@@ -541,7 +542,7 @@ def main(arg_list):
                              mask_builder=mask_builder,
                              tile_overlap_in_microns=volume_transfer_info.dat_tile_overlap_microns)
 
-    if volume_transfer_info.render_connect:
+    if volume_transfer_info.render_connect is not None:
         if len(all_restart_tile_specs) > 0:
             save_stack(stack_name=f"{volume_transfer_info.render_stack}_restart",
                        volume_transfer_info=volume_transfer_info,
@@ -551,7 +552,7 @@ def main(arg_list):
                    volume_transfer_info=volume_transfer_info,
                    tile_specs=all_tile_specs)
 
-        if mask_builder and len(mask_builder.mask_errors) > 0:
+        if mask_builder is not None and len(mask_builder.mask_errors) > 0:
             logger.error(f"mask errors are: {mask_builder.mask_errors}")
 
     elapsed_time = time.time() - start_time
