@@ -462,7 +462,7 @@ def save_stack(stack_name: str,
                           render_api=render_api)
 
     mipmap_path_builder = {
-        "rootPath": volume_transfer_info.align_mask_mipmap_root,
+        "rootPath": str(volume_transfer_info.align_mask_mipmap_root),
         "numberOfLevels": volume_transfer_info.max_mipmap_level,
         "extension": "tif",
         "imageMipmapPatternString": "(.*dataSet=\\d+-\\d+-\\d+\\.mipmap\\.)\\d+(.*)"
