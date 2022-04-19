@@ -1,38 +1,12 @@
 #!/usr/bin/env python
 
-import gzip
-import json
 import sys
 
-import requests
 from bokeh.io import output_file
 from bokeh.models import Range1d, ColumnDataSource, TapTool, OpenURL
 from bokeh.plotting import figure, show
 
-
-def load_cross_correlation_file_data(cc_data_path):
-
-    if cc_data_path.endswith('.gz'):
-        with gzip.open(cc_data_path, 'r') as cc_data_file:
-            json_bytes = cc_data_file.read()
-    else:
-        with open(cc_data_path, 'r') as cc_data_file:
-            json_bytes = cc_data_file.read()
-
-    json_str = json_bytes.decode('utf-8')
-    return json.loads(json_str)
-
-
-def get_stack_metadata(owner, project, stack):
-    host = 'tem-services.int.janelia.org:8080'
-    url = f'http://{host}/render-ws/v1/owner/{owner}/project/{project}/stack/{stack}'
-    response = requests.get(url)
-    if response.status_code == 200:
-        stack_metadata = response.json()
-    else:
-        raise Exception(f'status code {response.status_code} returned for {url}')
-
-    return stack_metadata
+from janelia_emrp.zcorr.plot_util import get_stack_metadata, load_json_file_data
 
 
 def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
@@ -45,7 +19,7 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
     # "comparisonRange" : 10,
     # "firstLayerOffset" : 0,
     # "data" : [][]
-    merged_cc_result = load_cross_correlation_file_data(cc_data_path)
+    merged_cc_result = load_json_file_data(cc_data_path)
 
     z_offset = bounds["minZ"] + merged_cc_result["firstLayerOffset"]
     data = merged_cc_result["data"]
