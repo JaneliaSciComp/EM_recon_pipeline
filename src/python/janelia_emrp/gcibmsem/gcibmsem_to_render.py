@@ -5,11 +5,13 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 import renderapi
 from PIL import Image
 
+from janelia_emrp.fibsem.render_api import RenderApi
+from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
 from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo, slab_stack_name
@@ -75,7 +77,7 @@ def build_tile_spec(image_path: Path,
                     min_x: int,
                     min_y: int,
                     scan_fit_parameters: ScanFitParameters,
-                    margin: int):
+                    margin: int) -> dict[str, Any]:
 
     # TODO: need to get and save working distance
 
@@ -106,7 +108,7 @@ def build_tile_spec(image_path: Path,
         }
     }
 
-    return renderapi.tilespec.TileSpec(json=tile_spec)
+    return tile_spec
 
 
 # unix_relative_image_path: 000003/002_000003_001_2022-04-01T1723012239596.png
@@ -114,7 +116,7 @@ unix_relative_image_path_pattern = re.compile(r"^\d+/(\d{3}_\d{6}_(\d{3})_\d{4}-
 
 
 def build_tile_specs_for_slab_scan(slab_scan_path: Path,
-                                   slab_info: SlabInfo):
+                                   slab_info: SlabInfo) -> list[dict[str, Any]]:
 
     scan_fit_parameters = load_scan_fit_parameters(slab_scan_path)
     stage_z = slab_info.first_scan_z + scan_fit_parameters.scan_index
@@ -124,35 +126,39 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     tile_height = None
     min_x = None
     min_y = None
-    full_image_coordinates_path = f'{slab_scan_path}/full_image_coordinates.txt'
-    with open(full_image_coordinates_path, 'r') as data_file:
-        # 000007\020_000007_082_2022-04-03T0154134018404.png	2014641.659	915550.903	0
-        for row in csv.reader(data_file, delimiter="\t"):
-            unix_relative_image_path = row[0].replace('\\', '/')
-            stage_x = int(float(row[1]))
-            stage_y = int(float(row[2]))
-            image_path = Path(slab_scan_path, unix_relative_image_path)
+    full_image_coordinates_path = Path(slab_scan_path, "full_image_coordinates.txt")
 
-            unix_relative_image_path_match = unix_relative_image_path_pattern.match(unix_relative_image_path)
-            if not unix_relative_image_path_match:
-                raise RuntimeError(f"failed to parse unix_relative_image_path {unix_relative_image_path} "
-                                   f"in {full_image_coordinates_path}")
+    if full_image_coordinates_path.exists():
+        with open(full_image_coordinates_path, 'r') as data_file:
+            # 000007\020_000007_082_2022-04-03T0154134018404.png	2014641.659	915550.903	0
+            for row in csv.reader(data_file, delimiter="\t"):
+                unix_relative_image_path = row[0].replace('\\', '/')
+                stage_x = int(float(row[1]))
+                stage_y = int(float(row[2]))
+                image_path = Path(slab_scan_path, unix_relative_image_path)
 
-            single_field_of_view_name = unix_relative_image_path_match.group(1)
-            single_field_of_view_index_string = unix_relative_image_path_match.group(2)
+                unix_relative_image_path_match = unix_relative_image_path_pattern.match(unix_relative_image_path)
+                if not unix_relative_image_path_match:
+                    raise RuntimeError(f"failed to parse unix_relative_image_path {unix_relative_image_path} "
+                                       f"in {full_image_coordinates_path}")
 
-            if not tile_width:
-                image = Image.open(image_path)
-                tile_width = image.width
-                tile_height = image.height
-                min_x = stage_x
-                min_y = stage_y
-            else:
-                min_x = min(min_x, stage_x)
-                min_y = min(min_y, stage_y)
+                single_field_of_view_name = unix_relative_image_path_match.group(1)
+                single_field_of_view_index_string = unix_relative_image_path_match.group(2)
 
-            tile_data.append(
-                (single_field_of_view_name, single_field_of_view_index_string, image_path, stage_x, stage_y))
+                if not tile_width:
+                    image = Image.open(image_path)
+                    tile_width = image.width
+                    tile_height = image.height
+                    min_x = stage_x
+                    min_y = stage_y
+                else:
+                    min_x = min(min_x, stage_x)
+                    min_y = min(min_y, stage_y)
+
+                tile_data.append(
+                    (single_field_of_view_name, single_field_of_view_index_string, image_path, stage_x, stage_y))
+    else:
+        logger.warning(f'{full_image_coordinates_path} not found')
 
     tile_specs = [
         build_tile_spec(image_path=image_path,
@@ -190,6 +196,10 @@ def import_slab_stacks_for_wafer(render_owner: str,
 
     render = renderapi.connect(**render_connect_params)
 
+    render_api = RenderApi(render_owner=render_connect_params["owner"],
+                           render_project=render_connect_params["project"],
+                           render_connect=params_to_render_connect(render_connect_params))
+
     for slab_name in wafer_info.sorted_slab_names():
         stack = slab_stack_name(slab_name)
 
@@ -208,8 +218,9 @@ def import_slab_stacks_for_wafer(render_owner: str,
             slab_scan_path = Path(scan_path, slab_name)
             tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
             if len(tile_specs) > 0:
-                logger.info(f'import_tile_specs: {tile_specs[0].tileId} to {tile_specs[-1].tileId}')
-                renderapi.client.import_tilespecs(stack, tile_specs, render=render, use_rest=True)
+                logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
+                render_api.save_tile_specs(stack=stack,
+                                           tile_specs=tile_specs)
 
         renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
 

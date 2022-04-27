@@ -1,6 +1,6 @@
 import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel
 
@@ -13,6 +13,15 @@ class RenderConnect(BaseModel):
     validate_client: bool
     client_scripts: str
     memGB: str
+
+
+def params_to_render_connect(params: dict[str, Any]) -> RenderConnect:
+    return RenderConnect(host=params["host"],
+                         port=params["port"],
+                         web_only=params["web_only"],
+                         validate_client=params["validate_client"],
+                         client_scripts=params["client__scripts"],
+                         memGB=params["memGB"])
 
 
 class VolumeTransferInfo(BaseModel):
