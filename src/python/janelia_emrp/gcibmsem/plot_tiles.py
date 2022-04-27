@@ -60,6 +60,11 @@ def plot_section(section_name,
 
 
 if __name__ == '__main__':
-    plot_section('Section 4',
-                 '/Volumes/hesslab/render/GCIBMSEM/data/Plate_13_20210525_21-38-12/008_s_4/full_image_coordinates.txt',
-                 output_dir_path='/Users/trautmane/Desktop')
+    # plot_section(
+    #     'Section 4',
+    #     '/Volumes/hesslab/render/GCIBMSEM/data/Plate_13_20210525_21-38-12/008_s_4/full_image_coordinates.txt',
+    #     output_dir_path='/Users/trautmane/Desktop')
+    plot_section(
+        'Wafer 52 Scan 14',
+        '/Volumes/hess/render/raw/wafer_52/wafer_52_scan_014_20220405_09-56-36/039_/full_image_coordinates.txt',
+        output_dir_path='/Users/trautmane/Desktop')
