@@ -20,7 +20,7 @@ def params_to_render_connect(params: dict[str, Any]) -> RenderConnect:
                          port=params["port"],
                          web_only=params["web_only"],
                          validate_client=params["validate_client"],
-                         client_scripts=params["client__scripts"],
+                         client_scripts=params["client_scripts"],
                          memGB=params["memGB"])
 
 
