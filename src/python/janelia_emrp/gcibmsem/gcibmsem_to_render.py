@@ -220,7 +220,8 @@ def import_slab_stacks_for_wafer(render_owner: str,
             if len(tile_specs) > 0:
                 logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
                 render_api.save_tile_specs(stack=stack,
-                                           tile_specs=tile_specs)
+                                           tile_specs=tile_specs,
+                                           derive_data=True)
 
         renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
 

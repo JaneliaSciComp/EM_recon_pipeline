@@ -35,8 +35,9 @@ class RenderApi:
 
     def save_resolved_tiles(self,
                             stack: str,
-                            resolved_tiles: Dict[str, Any]):
-        url = f"{self.get_stack_url(stack)}/resolvedTiles"
+                            resolved_tiles: Dict[str, Any],
+                            derive_data: bool = False):
+        url = f"{self.get_stack_url(stack)}/resolvedTiles?deriveData={derive_data}"
         print(f'submitting PUT {url} for {len(resolved_tiles["tileIdToSpecMap"])} tile specs')
 
         response = requests.put(url, json=resolved_tiles)
@@ -44,7 +45,8 @@ class RenderApi:
 
     def save_tile_specs(self,
                         stack: str,
-                        tile_specs: List[Dict[str, Any]]):
+                        tile_specs: List[Dict[str, Any]],
+                        derive_data: bool = False):
         tile_id_to_spec_map = {}
         for tile_spec in tile_specs:
             tile_id_to_spec_map[tile_spec["tileId"]] = tile_spec
@@ -52,7 +54,8 @@ class RenderApi:
         resolved_tiles = {"tileIdToSpecMap": tile_id_to_spec_map}
 
         self.save_resolved_tiles(stack=stack,
-                                 resolved_tiles=resolved_tiles)
+                                 resolved_tiles=resolved_tiles,
+                                 derive_data=derive_data)
 
     def save_mipmap_path_builder(self,
                                  stack: str,
