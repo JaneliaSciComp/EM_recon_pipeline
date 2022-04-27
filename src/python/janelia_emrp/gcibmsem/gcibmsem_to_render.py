@@ -184,7 +184,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
 def import_slab_stacks_for_wafer(render_owner: str,
                                  wafer_info: WaferInfo):
     render_connect_params = {
-        "host": "tem-services.int.janelia.org",
+        "host": "renderer-dev.int.janelia.org",
         "port": 8080,
         "owner": render_owner,
         "project": wafer_info.name,
