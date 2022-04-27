@@ -1,3 +1,4 @@
+import argparse
 import csv
 import logging
 import re
@@ -216,14 +217,29 @@ def import_slab_stacks_for_wafer(render_owner: str,
         break
 
 
-def main(argv: List[str]):
-    render_owner = argv[1]
-    wafer_info = load_wafer_info(wafer_base_path=Path(argv[2]))
-    import_slab_stacks_for_wafer(render_owner, wafer_info)
+def main(arg_list: List[str]):
+    parser = argparse.ArgumentParser(
+        description="Parse wafer metadata and convert to tile specs that can be saved to render."
+    )
+
+    parser.add_argument(
+        "--render_owner",
+        help="Owner for all created render stacks",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--wafer_base_path",
+        help="Base path for wafer data (e.g. /nrs/hess/render/raw/wafer_52)",
+        required=True,
+    )
+
+    args = parser.parse_args(args=arg_list)
+
+    wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path))
+
+    import_slab_stacks_for_wafer(args.render_owner, wafer_info)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        main(sys.argv)
-    else:
-        print("USAGE: gcibmsem_to_render.py <render_owner> <wafer_base_path>")
+    main(sys.argv)
