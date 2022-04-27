@@ -19,7 +19,7 @@ class WaferInfo:
 
 
 def slab_stack_name(slab_name: str):
-    return f"v1_acquire_{slab_name[0:3]}"
+    return f"v1_acquire_slab_{slab_name[0:3]}"
 
 
 def load_wafer_info(wafer_base_path: Path) -> WaferInfo:
