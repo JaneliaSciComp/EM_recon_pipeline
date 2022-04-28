@@ -12,6 +12,8 @@ from PIL import Image
 
 from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
+from janelia_emrp.gcibmsem.field_of_view_layout \
+    import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, SEVEN_MFOV_COLUMN_GROUPS
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
 from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo, slab_stack_name
@@ -30,40 +32,7 @@ render_api_logger = logging.getLogger("renderapi")
 render_api_logger.setLevel(logging.DEBUG)
 render_api_logger.addHandler(c_handler)
 
-
-#     column:  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20
-# row:
-#   0                            072 --- 071 --- 070 --- 069 --- 068 --- 067
-#   1                        073 --- 046 --- 045 --- 044 --- 043 --- 042 --- 066
-#   2                    074 --- 047 --- 026 --- 025 --- 024 --- 023 --- 041 --- 065
-#   3                075 --- 048 --- 027 --- 012 --- 011 --- 010 --- 022 --- 040 --- 064
-#   4            076 --- 049 --- 028 --- 013 --- 004 --- 003 --- 009 --- 021 --- 039 --- 063
-#   5        077 --- 050 --- 029 --- 014 --- 005 --- 001 --- 002 --- 008 --- 020 --- 038 --- 062
-#   6            078 --- 051 --- 030 --- 015 --- 006 --- 007 --- 019 --- 037 --- 061 --- 091
-#   7                079 --- 052 --- 031 --- 016 --- 017 --- 018 --- 036 --- 060 --- 090
-#   8                    080 --- 053 --- 032 --- 033 --- 034 --- 035 --- 059 --- 089
-#   9                        081 --- 054 --- 055 --- 056 --- 057 --- 058 --- 088
-#  10                            082 --- 083 --- 084 --- 085 --- 086 --- 087
-single_field_of_view_index_string_to_row_and_column = {
-    "072": (0, 5), "071": (0, 7), "070": (0, 9), "069": (0, 11), "068": (0, 13), "067": (0, 15),
-    "073": (1, 4), "046": (1, 6), "045": (1, 8), "044": (1, 10), "043": (1, 12), "042": (1, 14), "066": (1, 16),
-    "074": (2, 3), "047": (2, 5), "026": (2, 7), "025": (2, 9),
-    "024": (2, 11), "023": (2, 13), "041": (2, 15), "065": (2, 17),
-    "075": (3, 2), "048": (3, 4), "027": (3, 6), "012": (3, 8), "011": (3, 10),
-    "010": (3, 12), "022": (3, 14), "040": (3, 16), "064": (3, 18),
-    "076": (4, 1), "049": (4, 3), "028": (4, 5), "013": (4, 7), "004": (4, 9),
-    "003": (4, 11), "009": (4, 13), "021": (4, 15), "039": (4, 17), "063": (4, 19),
-    "077": (5, 0), "050": (5, 2), "029": (5, 4), "014": (5, 6), "005": (5, 8), "001": (5, 10),
-    "002": (5, 12), "008": (5, 14), "020": (5, 16), "038": (5, 18), "062": (5, 20),
-    "078": (6, 1), "051": (6, 3), "030": (6, 5), "015": (6, 7), "006": (6, 9),
-    "007": (6, 11), "019": (6, 13), "037": (6, 15), "061": (6, 17), "091": (6, 19),
-    "079": (7, 2), "052": (7, 4), "031": (7, 6), "016": (7, 8), "017": (7, 10),
-    "018": (7, 12), "036": (7, 14), "060": (7, 16), "090": (7, 18),
-    "080": (8, 3), "053": (8, 5), "032": (8, 7), "033": (8, 9),
-    "034": (8, 11), "035": (8, 13), "059": (8, 15), "089": (8, 17),
-    "081": (9, 4), "054": (9, 6), "055": (9, 8), "056": (9, 10), "057": (9, 12), "058": (9, 14), "088": (9, 16),
-    "082": (10, 5), "083": (10, 7), "084": (10, 9), "085": (10, 11), "086": (10, 13), "087": (10, 15)
-}
+WAFER_52_LAYOUT = FieldOfViewLayout(SEVEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
 
 def build_tile_spec(image_path: Path,
@@ -73,7 +42,8 @@ def build_tile_spec(image_path: Path,
                     tile_id: str,
                     tile_width: int,
                     tile_height: int,
-                    single_field_of_view_index_string: str,
+                    mfov_name: str,
+                    sfov_index_name: str,
                     min_x: int,
                     min_y: int,
                     scan_fit_parameters: ScanFitParameters,
@@ -82,7 +52,7 @@ def build_tile_spec(image_path: Path,
     # TODO: need to get and save working distance
 
     section_id = f'{stage_z}.0'
-    image_row, image_col = single_field_of_view_index_string_to_row_and_column[single_field_of_view_index_string]
+    image_row, image_col = WAFER_52_LAYOUT.row_and_col(mfov_name, sfov_index_name)
 
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
 
@@ -112,7 +82,7 @@ def build_tile_spec(image_path: Path,
 
 
 # unix_relative_image_path: 000003/002_000003_001_2022-04-01T1723012239596.png
-unix_relative_image_path_pattern = re.compile(r"^\d+/(\d{3}_\d{6}_(\d{3})_\d{4}-\d{2}-\d{2}T\d{13}).png$")
+unix_relative_image_path_pattern = re.compile(r"(^\d+)/(\d{3}_\d{6}_(\d{3})_\d{4}-\d{2}-\d{2}T\d{13}).png$")
 
 
 def build_tile_specs_for_slab_scan(slab_scan_path: Path,
@@ -142,8 +112,16 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                     raise RuntimeError(f"failed to parse unix_relative_image_path {unix_relative_image_path} "
                                        f"in {full_image_coordinates_path}")
 
-                single_field_of_view_name = unix_relative_image_path_match.group(1)
-                single_field_of_view_index_string = unix_relative_image_path_match.group(2)
+                mfov_name = unix_relative_image_path_match.group(1)
+
+                # Slightly shorten/simplify tile id so that it works better with web UIs.
+                # Technically, scan timestamp could be completely removed because stage_z gets appended to tile_id.
+                # Decided to keep scan time with truncated microseconds in the id because it is nice context to have.
+                # Example shortening: 020_000007_082_2022-04-03T0154134018404 => 020_000007_082_20220403_015413
+                short_sfov_name = unix_relative_image_path_match.group(2).replace("-", "").replace("T", "_")[:-7]
+                tile_id = f"{short_sfov_name}.{stage_z}.0"
+
+                sfov_index_name = unix_relative_image_path_match.group(3)
 
                 if not tile_width:
                     image = Image.open(image_path)
@@ -156,7 +134,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                     min_y = min(min_y, stage_y)
 
                 tile_data.append(
-                    (single_field_of_view_name, single_field_of_view_index_string, image_path, stage_x, stage_y))
+                    (tile_id, mfov_name, sfov_index_name, image_path, stage_x, stage_y))
     else:
         logger.warning(f'{full_image_coordinates_path} not found')
 
@@ -165,15 +143,16 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                         stage_x=stage_x,
                         stage_y=stage_y,
                         stage_z=stage_z,
-                        tile_id=f"{single_field_of_view_name}.{stage_z}.0",
+                        tile_id=tile_id,
                         tile_width=tile_width,
                         tile_height=tile_height,
-                        single_field_of_view_index_string=single_field_of_view_index_string,
+                        mfov_name=mfov_name,
+                        sfov_index_name=sfov_index_name,
                         min_x=min_x,
                         min_y=min_y,
                         scan_fit_parameters=scan_fit_parameters,
                         margin=400)
-        for (single_field_of_view_name, single_field_of_view_index_string, image_path, stage_x, stage_y) in tile_data
+        for (tile_id, mfov_name, sfov_index_name, image_path, stage_x, stage_y) in tile_data
     ]
 
     logger.info(f'loaded {len(tile_specs)} tile specs from {slab_scan_path}')
