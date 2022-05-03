@@ -161,12 +161,13 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
 
 
 def import_slab_stacks_for_wafer(render_owner: str,
+                                 render_project: str,
                                  wafer_info: WaferInfo):
     render_connect_params = {
         "host": "renderer-dev.int.janelia.org",
         "port": 8080,
         "owner": render_owner,
-        "project": wafer_info.name,
+        "project": render_project,
         "web_only": True,
         "validate_client": False,
         "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
@@ -220,6 +221,12 @@ def main(arg_list: List[str]):
     )
 
     parser.add_argument(
+        "--render_project",
+        help="Project for all created render stacks",
+        required=True,
+    )
+
+    parser.add_argument(
         "--wafer_base_path",
         help="Base path for wafer data (e.g. /nrs/hess/render/raw/wafer_52)",
         required=True,
@@ -229,7 +236,7 @@ def main(arg_list: List[str]):
 
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path))
 
-    import_slab_stacks_for_wafer(args.render_owner, wafer_info)
+    import_slab_stacks_for_wafer(args.render_owner, args.render_project, wafer_info)
 
 
 if __name__ == '__main__':
