@@ -154,7 +154,7 @@ def add_raw_header_to_data_set(data_set_name: str,
         data_set.attrs["RawHeader"] = np.frombuffer(raw_bytes, dtype='u1')
 
 
-# TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
+# TODO: remove or fix element_size_um attribute if/when ImageJ plug-in is updated
 def add_element_size_um_attributes_to_data_set(dat_header: Dict[str, Any],
                                                data_set: Dataset,
                                                z_nm_per_pixel: Optional[int] = None):
@@ -181,7 +181,7 @@ def add_element_size_um_attributes_to_data_set(dat_header: Dict[str, Any],
     nm_per_pixel = int(float(dat_header.__dict__["PixelSize"]) + 0.5)
     um_per_pixel = nm_per_pixel / 1000.0
 
-    # TODO: does -1 make sense for undefined z element_size_um attribute?
+    # for 2D data, specify z as -1 because Davis agrees that -1 is more impossible than 0
     z_um_per_pixel = z_nm_per_pixel / 1000.0 if z_nm_per_pixel else -1
 
     data_set.attrs["element_size_um"] = [z_um_per_pixel, um_per_pixel, um_per_pixel]
