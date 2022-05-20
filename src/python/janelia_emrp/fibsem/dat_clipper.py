@@ -1,4 +1,6 @@
 import argparse
+import logging
+
 import sys
 from pathlib import Path
 
@@ -6,6 +8,9 @@ import numpy as np
 from fibsem_tools.io.fibsem import OFFSET
 
 from janelia_emrp.fibsem.dat_to_scheffer_8_bit import compress_and_save
+from janelia_emrp.root_logger import init_logger
+
+logger = logging.getLogger(__name__)
 
 
 def clip_dat(source_path: Path,
@@ -59,7 +64,7 @@ def clip_dat(source_path: Path,
         raw_target_file.write(header)
         raw_target_file.write(clipped_data)
 
-    print(f"saved {str(target_path)}")
+    logger.info(f"saved {str(target_path)}")
 
 
 def main():
@@ -120,7 +125,9 @@ def main():
 
 if __name__ == "__main__":
     # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
-    
+
+    init_logger(__file__)
+
     # --dat_path /Users/trautmane/Desktop/pytest/Merlin-6284_21-07-31_152727_0-0-1.dat
     # --clipped_path /Users/trautmane/Desktop/pytest/small.dat
     # --compressed_path /Users/trautmane/Desktop/pytest/small.png

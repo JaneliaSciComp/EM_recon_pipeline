@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from fibsem_tools.io import read
 
-logger = logging.getLogger("dat_to_scheffer_8_bit")
+logger = logging.getLogger(__name__)
 
 
 def compress_compute(dat_record: np.ndarray,
@@ -122,9 +122,9 @@ def compress_and_save(dat_path: Path,
         compressed output path.
     """
     dat_record = read(dat_path)
-    print(f"loaded {dat_record.header.XResolution}x{dat_record.header.YResolution} {str(dat_path)}")
+    logger.info(f"compress_and_save: loaded {dat_record.header.XResolution}x{dat_record.header.YResolution} {str(dat_path)}")
 
     compressed_record = compress_compute(dat_record)
     im = Image.fromarray(compressed_record[0, :, :])
     im.save(compressed_path)
-    print(f"saved {str(compressed_path)}")
+    logger.info(f"compress_and_save: saved {str(compressed_path)}")
