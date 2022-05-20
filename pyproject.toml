@@ -21,3 +21,14 @@ pydantic = "^1.9.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# see https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:::dask_jobqueue[.*]",
+    "ignore:::distutils[.*]",
+    "ignore:::fibsem_tools[.*]",
+    "ignore:::pandas[.*]",
+    "ignore:::tensorstore",        # TODO: why does tensorstore filter not work?
+    "ignore:DeprecationWarning::"  # TODO: remove when tensorstore filter is fixed
+]

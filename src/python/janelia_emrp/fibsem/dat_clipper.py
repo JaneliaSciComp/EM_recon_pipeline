@@ -129,7 +129,7 @@ if __name__ == "__main__":
     init_logger(__file__)
 
     # --dat_path /Users/trautmane/Desktop/pytest/Merlin-6284_21-07-31_152727_0-0-1.dat
-    # --clipped_path /Users/trautmane/Desktop/pytest/small.dat
+    # --clipped_path /Users/trautmane/Desktop/pytest/small_21-07-31_152727_0-0-1.dat
     # --compressed_path /Users/trautmane/Desktop/pytest/small.png
     # --x 560 --y 2160 --width 100 --height 100
     main()

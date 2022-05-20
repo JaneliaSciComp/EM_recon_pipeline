@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, Tuple, Union
 import h5py
 import numpy as np
 from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
-from h5py import Dataset
+from h5py import Dataset, Group
 
 logger = logging.getLogger("dat_to_h5_writer")
 
@@ -50,11 +50,9 @@ class DatToH5Writer:
 
     def create_and_add_data_set(self,
                                 data_set_name: str,
-                                dat_header: Optional[Dict[str, Any]],
                                 pixel_array: np.ndarray,
                                 to_h5_file: h5py.File,
-                                dat_file_path_for_raw_header: Optional[Path] = None,
-                                z_nm_per_pixel: Optional[int] = None) -> Dataset:
+                                group_name: Optional[str] = None) -> Dataset:
         """
         Creates a new data set and adds it to the `to_h5_file`.
 
@@ -63,46 +61,64 @@ class DatToH5Writer:
         data_set_name : str
             name for the data set.
 
-        dat_header : Optional[Dict[str, Any]]
-            parsed header information from .dat file to include as data set attributes or None to skip.
-
         pixel_array : np.ndarray
             pixel array for data set.
 
         to_h5_file : h5py.File
             HDF5 container for data set.
 
-        dat_file_path_for_raw_header : Optional[Path]
-            path of source .dat file or None to skip storing RawHeader data in data set.
-
-        z_nm_per_pixel : Optional[int]
-            nm per pixel for z dimension or None if unknown.
+        group_name : Optional[str]
+            name for the group or None to use the file's root group.
 
         Returns
         -------
         Dataset
             The created data set.
         """
-        logger.info(f"create_and_add_data_set: entry, adding {data_set_name} to {to_h5_file.filename}")
+        logger.info(f"create_and_add_data_set: entry, adding {data_set_name} "
+                    f"to group {group_name} in {to_h5_file.filename}")
 
         valid_chunks = build_safe_chunk_shape(self.chunk_shape, pixel_array.shape)
 
-        data_set = to_h5_file.create_dataset(name=data_set_name,
-                                             data=pixel_array[:],
-                                             chunks=valid_chunks,
-                                             compression=self.compression,
-                                             compression_opts=self.compression_opts)
-        if dat_header:
-            for key, value in dat_header.__dict__.items():
-                data_set.attrs[key] = value
-            add_element_size_um_attributes_to_data_set(dat_header, data_set, z_nm_per_pixel)
+        if group_name is None:
+            group = to_h5_file
+        else:
+            group = to_h5_file.require_group(group_name)
 
-        if dat_file_path_for_raw_header:
-            add_raw_header_to_data_set(data_set_name, dat_file_path_for_raw_header, data_set)
+        return group.create_dataset(name=data_set_name,
+                                    data=pixel_array[:],
+                                    chunks=valid_chunks,
+                                    compression=self.compression,
+                                    compression_opts=self.compression_opts)
 
-        logger.info(f"create_and_add_data_set: exit")
 
-        return data_set
+def add_dat_header_attributes(dat_header: Optional[Dict[str, Any]],
+                              dat_file_path_for_raw_header: Optional[Path],
+                              to_group_or_dataset: [Group, Dataset]) -> None:
+    """
+    Adds header data to the specified group or dataset.
+
+    Parameters
+    ----------
+    dat_header : Optional[Dict[str, Any]]
+        parsed header information from .dat file to include as attributes or None to skip.
+
+    dat_file_path_for_raw_header : Optional[Path]
+        path of source .dat file or None to skip storing RawHeader data as an attribute.
+
+    to_group_or_dataset : [Group, Dataset]
+        container for the header attributes.
+    """
+    if dat_header:
+        for key, value in dat_header.__dict__.items():
+            to_group_or_dataset.attrs[key] = value
+
+    if dat_file_path_for_raw_header:
+        with open(dat_file_path_for_raw_header, "rb") as raw_file:
+            raw_bytes = raw_file.read(OFFSET)
+
+            assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
+            to_group_or_dataset.attrs["RawHeader"] = np.frombuffer(raw_bytes, dtype='u1')
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],
@@ -138,29 +154,12 @@ def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None
     return safe_shape
 
 
-def add_raw_header_to_data_set(data_set_name: str,
-                               dat_file_path: Path,
-                               data_set: Dataset):
-    """
-    Reads the raw header bytes from `dat_file_path` and saves them as a 'RawHeader' attribute in the `data_set`.
-    This enables byte-comparable dat files to be reconstructed from HDF5 archives.
-    """
-    logger.info(f"add_raw_header_to_data_set: entry, data set {data_set_name}")
-
-    with open(dat_file_path, "rb") as raw_file:
-        raw_bytes = raw_file.read(OFFSET)
-
-        assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
-        data_set.attrs["RawHeader"] = np.frombuffer(raw_bytes, dtype='u1')
-
-
 # TODO: remove or fix element_size_um attribute if/when ImageJ plug-in is updated
-def add_element_size_um_attributes_to_data_set(dat_header: Dict[str, Any],
-                                               data_set: Dataset,
-                                               z_nm_per_pixel: Optional[int] = None):
+def add_element_size_um_attributes(dat_header: Dict[str, Any],
+                                   z_nm_per_pixel: Optional[int],
+                                   to_dataset: Dataset) -> list[float]:
     """
-    Adds element_size_um attribute to `data_set` to supress error messages when loading
-    HDF5 archives in ImageJ.
+    Adds element_size_um attribute to supress error messages when loading HDF5 archives in ImageJ.
 
     From https://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html
     The (ImageJ) HDF5 plugin saves and loads the pixel/voxel size in
@@ -172,11 +171,16 @@ def add_element_size_um_attributes_to_data_set(dat_header: Dict[str, Any],
     dat_header : Dict[str, Any]
         header dict.
 
-    data_set : Dataset
-        data set to modify.
-
     z_nm_per_pixel: Optional[int]
         nm per pixel for z dimension or None if unknown.
+
+    to_dataset : Dataset
+        data set to modify.
+
+    Returns
+    -------
+    list[float]
+        the element_size_um values.
     """
     nm_per_pixel = int(float(dat_header.__dict__["PixelSize"]) + 0.5)
     um_per_pixel = nm_per_pixel / 1000.0
@@ -184,4 +188,7 @@ def add_element_size_um_attributes_to_data_set(dat_header: Dict[str, Any],
     # for 2D data, specify z as -1 because Davis agrees that -1 is more impossible than 0
     z_um_per_pixel = z_nm_per_pixel / 1000.0 if z_nm_per_pixel else -1
 
-    data_set.attrs["element_size_um"] = [z_um_per_pixel, um_per_pixel, um_per_pixel]
+    element_size_um = [z_um_per_pixel, um_per_pixel, um_per_pixel]
+    to_dataset.attrs["element_size_um"] = element_size_um
+
+    return element_size_um

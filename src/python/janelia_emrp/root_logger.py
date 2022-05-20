@@ -5,6 +5,8 @@ Example usage::
 
     from janelia_emrp.root_logger import init_logger
     ...
+    logger = logging.getLogger(__name__)
+    ...
     if __name__ == "__main__":
         init_logger(__file__)
 """
