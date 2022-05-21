@@ -4,7 +4,7 @@ import math
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple, Final
 
 import dask.bag as db
 import h5py
@@ -12,47 +12,21 @@ import renderapi
 from dask_janelia import get_cluster
 
 from janelia_emrp.fibsem.dat_path import DatPath, new_dat_path
+from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY
 from janelia_emrp.fibsem.mask_builder import MaskBuilder
 from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
+from janelia_emrp.root_logger import init_logger, console_handler
 
-program_name = "h5_to_render.py"
+logger = logging.getLogger(__name__)
 
-# set up logging
-logger = logging.getLogger(program_name)
-c_handler = logging.StreamHandler(sys.stdout)
-c_formatter = logging.Formatter("%(asctime)s [%(threadName)s] [%(name)s] [%(levelname)s] %(message)s")
-c_handler.setFormatter(c_formatter)
-logger.addHandler(c_handler)
-logger.setLevel(logging.INFO)
-
-render_api_logger = logging.getLogger("renderapi")
-render_api_logger.setLevel(logging.DEBUG)
-render_api_logger.addHandler(c_handler)
-
-common_tile_header_keys = [
+COMMON_TILE_HEADER_KEYS: Final = [
     "XResolution", "YResolution", "PixelSize", "EightBit", "ChanNum", "SWdate",
     "StageX", "StageY", "StageZ", "StageR"
 ]
-unique_tile_header_keys = ["WD", "Restart", "StageMove", "FirstX", "FirstY"]
-retained_tile_header_keys = common_tile_header_keys + unique_tile_header_keys
-checked_tile_header_keys = common_tile_header_keys + ["SampleID"]
-
-
-def get_dat_path(layer_h5_path: Path,
-                 tile_data_set_name: str) -> DatPath:
-    # TODO: remove this hack when DatPath info is saved in h5
-    # Merlin-6049_15-06-16_000059.unit8.h5 -> Merlin-6049_15-06-16_000059
-    first_dot = layer_h5_path.name.find(".")
-    scope_and_time = layer_h5_path.name[0:first_dot]
-
-    # 0-0-1.mipmap.0 -> 0-0-1
-    tile_info = tile_data_set_name[0:tile_data_set_name.index(".mipmap")]
-
-    # Merlin-6049_15-06-16_000059_0-0-0.dat
-    dat_name = f"{scope_and_time}_{tile_info}.dat"
-
-    return new_dat_path(Path(dat_name))
+UNIQUE_TILE_HEADER_KEYS: Final = ["WD", "Restart", "StageMove", "FirstX", "FirstY"]
+RETAINED_TILE_HEADER_KEYS: Final = COMMON_TILE_HEADER_KEYS + UNIQUE_TILE_HEADER_KEYS
+CHECKED_TILE_HEADER_KEYS: Final = COMMON_TILE_HEADER_KEYS + ["SampleID"]
 
 
 class LayerInfo:
@@ -60,23 +34,26 @@ class LayerInfo:
         self.h5_path = h5_path
         self.dat_paths: List[DatPath] = []
         self.retained_headers: List[Dict[str, Any]] = []
-        self.group_id : Optional[str] = None
+        self.group_id: Optional[str] = None
         self.restart_condition_label: Optional[str] = None
 
         with h5py.File(name=str(h5_path), mode="r") as h5_file:
-            level_zero_mipmap_data_set_names = [name for name in h5_file.keys() if name.endswith(".mipmap.0")]
-            for tile_data_set_name in sorted(level_zero_mipmap_data_set_names):
-                tile_data_set = h5_file[tile_data_set_name]
-                tile_dat_path = get_dat_path(h5_path, tile_data_set_name)
-                self.append_tile(tile_dat_path, tile_data_set.attrs)
+            for group_name in sorted(h5_file.keys()):
+                group = h5_file.get(group_name)
+                if DAT_FILE_NAME_KEY in group.attrs:
+                    self.append_tile(group.attrs)
+                else:
+                    logger.warning(f"skipping group {group_name} in {h5_path} "
+                                   f"because it does not have '{DAT_FILE_NAME_KEY}' attribute")
 
     def append_tile(self,
-                    dat_path: DatPath,
                     full_header: Dict[str, Any]) -> None:
 
         retained_header = {}
 
-        for key in retained_tile_header_keys:
+        dat_path = new_dat_path(Path(full_header[DAT_FILE_NAME_KEY]))
+
+        for key in RETAINED_TILE_HEADER_KEYS:
             if key in full_header:
                 retained_header[key] = full_header[key]
 
@@ -206,7 +183,7 @@ def set_layer_restart_condition(layer_info: LayerInfo,
                                     f"instead of {prior_layer_info.tile_count()} tiles"
 
         if not restart_condition:
-            for k in common_tile_header_keys:
+            for k in COMMON_TILE_HEADER_KEYS:
                 if header[k] != prior_header[k]:
 
                     # From Shan:
@@ -271,7 +248,7 @@ def build_tile_spec(h5_path: Path,
         stage_y = int(stage_y)  # convert h5 int64 to int for json encoder
 
     mipmap_level_zero = {
-        "imageUrl": f"file://{str(h5_path)}?dataSet={tile_key}.mipmap.0&z=0",
+        "imageUrl": f"file://{str(h5_path)}?dataSet=/{tile_key}/mipmap.0&z=0",
         "imageLoaderType": "H5_SLICE"
     }
     if mask_path is not None:
@@ -475,7 +452,7 @@ def save_stack(stack_name: str,
         "rootPath": str(volume_transfer_info.align_mask_mipmap_root),
         "numberOfLevels": volume_transfer_info.max_mipmap_level,
         "extension": "tif",
-        "imageMipmapPatternString": "(.*dataSet=\\d+-\\d+-\\d+\\.mipmap\\.)\\d+(.*)"
+        "imageMipmapPatternString": "(.*dataSet=.*mipmap\\.)\\d+(.*)"
     }
     render_api.save_mipmap_path_builder(stack=stack_name,
                                         mipmap_path_builder=mipmap_path_builder)
@@ -484,6 +461,12 @@ def save_stack(stack_name: str,
 
 
 def main(arg_list):
+
+    init_logger(__file__)
+
+    render_api_logger = logging.getLogger("renderapi")
+    render_api_logger.setLevel(logging.DEBUG)
+    render_api_logger.addHandler(console_handler)
 
     start_time = time.time()
 

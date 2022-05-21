@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, Union
+from typing import Dict, Any, Optional, Tuple, Union, Final
 
 import h5py
 import numpy as np
@@ -8,6 +8,11 @@ from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
 from h5py import Dataset, Group
 
 logger = logging.getLogger("dat_to_h5_writer")
+
+
+DAT_FILE_NAME_KEY: Final = "dat_file_name"
+ELEMENT_SIZE_UM_KEY: Final = "element_size_um"
+RAW_HEADER_KEY: Final = "raw_header"
 
 
 class DatToH5Writer:
@@ -92,19 +97,23 @@ class DatToH5Writer:
                                     compression_opts=self.compression_opts)
 
 
-def add_dat_header_attributes(dat_header: Optional[Dict[str, Any]],
-                              dat_file_path_for_raw_header: Optional[Path],
+def add_dat_header_attributes(dat_file_path: Path,
+                              dat_header: Dict[str, Any],
+                              include_raw_header: bool,
                               to_group_or_dataset: [Group, Dataset]) -> None:
     """
     Adds header data to the specified group or dataset.
 
     Parameters
     ----------
-    dat_header : Optional[Dict[str, Any]]
-        parsed header information from .dat file to include as attributes or None to skip.
-
-    dat_file_path_for_raw_header : Optional[Path]
+    dat_file_path : Path
         path of source .dat file or None to skip storing RawHeader data as an attribute.
+
+    dat_header : Dict[str, Any]
+        parsed header information from .dat file to include as attributes.
+
+    include_raw_header : bool
+        indicates whether to store raw header data as an attribute.
 
     to_group_or_dataset : [Group, Dataset]
         container for the header attributes.
@@ -113,12 +122,14 @@ def add_dat_header_attributes(dat_header: Optional[Dict[str, Any]],
         for key, value in dat_header.__dict__.items():
             to_group_or_dataset.attrs[key] = value
 
-    if dat_file_path_for_raw_header:
-        with open(dat_file_path_for_raw_header, "rb") as raw_file:
+    to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = str(dat_file_path.name)
+
+    if include_raw_header:
+        with open(dat_file_path, "rb") as raw_file:
             raw_bytes = raw_file.read(OFFSET)
 
             assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
-            to_group_or_dataset.attrs["RawHeader"] = np.frombuffer(raw_bytes, dtype='u1')
+            to_group_or_dataset.attrs[RAW_HEADER_KEY] = np.frombuffer(raw_bytes, dtype='u1')
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],
@@ -189,6 +200,6 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
     z_um_per_pixel = z_nm_per_pixel / 1000.0 if z_nm_per_pixel else -1
 
     element_size_um = [z_um_per_pixel, um_per_pixel, um_per_pixel]
-    to_dataset.attrs["element_size_um"] = element_size_um
+    to_dataset.attrs[ELEMENT_SIZE_UM_KEY] = element_size_um
 
     return element_size_um

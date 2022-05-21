@@ -103,8 +103,9 @@ class DatConverter:
                         data_set = self.archive_writer.create_and_add_data_set(data_set_name=dat_path.tile_key(),
                                                                                pixel_array=dat_record,
                                                                                to_h5_file=layer_archive_file)
-                        add_dat_header_attributes(dat_header=dat_record.header,
-                                                  dat_file_path_for_raw_header=dat_path.file_path,
+                        add_dat_header_attributes(dat_file_path=dat_path.file_path,
+                                                  dat_header=dat_record.header,
+                                                  include_raw_header=True,
                                                   to_group_or_dataset=data_set)
                         add_element_size_um_attributes(dat_header=dat_record.header,
                                                        z_nm_per_pixel=None,
@@ -204,8 +205,9 @@ class DatConverter:
                                                                    to_h5_file=layer_align_file)
         group = level_zero_data_set.parent
 
-        add_dat_header_attributes(dat_header=dat_header,
-                                  dat_file_path_for_raw_header=None,
+        add_dat_header_attributes(dat_file_path=dat_path.file_path,
+                                  dat_header=dat_header,
+                                  include_raw_header=False,
                                   to_group_or_dataset=group)
 
         # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?

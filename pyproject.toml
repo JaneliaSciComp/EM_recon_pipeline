@@ -29,6 +29,8 @@ filterwarnings = [
     "ignore:::distutils[.*]",
     "ignore:::fibsem_tools[.*]",
     "ignore:::pandas[.*]",
+    "ignore:::renderapi[.*]",
+    "ignore:::requests[.*]",
     "ignore:::tensorstore",        # TODO: why does tensorstore filter not work?
     "ignore:DeprecationWarning::"  # TODO: remove when tensorstore filter is fixed
 ]
