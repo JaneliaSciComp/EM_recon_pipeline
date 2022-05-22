@@ -12,7 +12,7 @@ fi
 
 # Z0720-07m_BR_Sec35_jeiss2.hhmi.org_scope_dat.txt
 MISSING_DAT_JSON=`ls ${SCRIPT_DIR}/${FLY_REGION_TAB}*_missing_dat.json`
-JEISS_HOST=`basename ${MISSING_DAT_JSON} | cut -d'_' -f4`
+JEISS_HOST=`basename ${MISSING_DAT_JSON} | sed 's/.*jeiss/jeiss/;s/org.*/org/'`
 
 #DAT_DIR="/groups/flyem/data/${FLY_REGION_TAB}/dat"
 DAT_DIR="/nearline/flyem2/data/${FLY_REGION_TAB}/dat"
@@ -37,7 +37,7 @@ for DAT in `cat ${SCRIPT_DIR}/${FLY_REGION_TAB}*_missing_dat.json | sed 's/[][",
     echo "copying ${JEISS_HOST}:${SCOPE_DATE_DAT} to ${DAT_DIR}"
 
     # on newer OS, might need -T flag to avoid protocol error: filename does not match request
-    scp -o StrictHostKeyChecking=no ${JEISS_HOST}:\"/cygdrive/e/Images/Fly\ Brain/${SCOPE_DATE_DAT}\" ${DAT_DIR}
+    scp -o StrictHostKeyChecking=no ${JEISS_HOST}:\"${SCOPE_STORAGE_ROOT}/${SCOPE_DATE_DAT}\" ${DAT_DIR}
 
   fi
 

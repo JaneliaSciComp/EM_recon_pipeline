@@ -14,6 +14,7 @@ TAB_DIR=$(echo "${REGION_DIR}" | sed 's@.*'"${REGION}"'/@@')
 TAB=$(echo ${TAB_DIR} | sed 's@/.*@@')
 
 FLY_REGION_TAB="${FLY}_${REGION}_${TAB}"
+SCOPE_STORAGE_ROOT="/cygdrive/e/Images/Fly Brain"
 
 # owner of the render stacks and match collections
 # - must only contain alphanumeric or underscore characters 

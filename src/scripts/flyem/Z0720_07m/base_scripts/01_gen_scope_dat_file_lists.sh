@@ -94,7 +94,7 @@ processing ${DAT_DIR} ...
       read -ra YMD <<< "${d}"
       IFS=$'\n'
       if [[ -n ${FETCH_FROM_SCOPE} ]]; then
-        SCOPE_DAT=$(ssh -o StrictHostKeyChecking=no ${JEISS_HOST} find \"/cygdrive/e/Images/Fly Brain/Y${YMD[0]}/M${YMD[1]}/D${YMD[2]}/\" -name=*.dat)
+        SCOPE_DAT=$(ssh -o StrictHostKeyChecking=no ${JEISS_HOST} find \"${SCOPE_STORAGE_ROOT}/Y${YMD[0]}/M${YMD[1]}/D${YMD[2]}/\" -name=*.dat)
       else
         SCOPE_DAT=$(ls -1 /nearline/hess/Images\ Jeiss${JEISS_NUM}/Fly\ Brain/Y${YMD[0]}/M${YMD[1]}/D${YMD[2]}/*.dat)
       fi
