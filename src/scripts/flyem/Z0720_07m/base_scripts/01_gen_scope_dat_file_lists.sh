@@ -48,7 +48,7 @@ processing ${DAT_DIR} ...
     MM="${BASH_REMATCH[3]}"
     DD="${BASH_REMATCH[4]}"
 
-    JEISS_NUM=$(/groups/flyem/data/render/bin/print_dat_header.sh all ${DAT_DIR}/${ONE_DAT_FILE} | grep MachineID | sed -r 's@.*Jeiss([1-9])/.*@\1@')
+    JEISS_NUM=$(/groups/flyem/data/render/bin/print_dat_header.sh --key MachineID --file ${DAT_DIR}/${ONE_DAT_FILE} | grep MachineID | sed -r 's@.*Jeiss([1-9])/.*@\1@')
     JEISS_HOST="jeiss${JEISS_NUM}.hhmi.org"
 
   else
