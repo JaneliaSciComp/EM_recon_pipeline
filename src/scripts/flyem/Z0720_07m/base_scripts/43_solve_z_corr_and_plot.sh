@@ -49,7 +49,7 @@ ${RENDER_CLIENT_SCRIPT} ${RENDER_CLIENT_HEAP} ${JAVA_CLASS} ${ARGS}
 # ---------------------------
 # merge cc data
 
-CC_BATCHES_DIR="/nrs/flyem/render/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}/${RUN_NAME}/cc_batches"
+CC_BATCHES_DIR="${RENDER_NRS_ROOT}/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}/${RUN_NAME}/cc_batches"
 
 if [[ ! -d ${CC_BATCHES_DIR} ]]; then
   echo "ERROR: ${CC_BATCHES_DIR} not found"

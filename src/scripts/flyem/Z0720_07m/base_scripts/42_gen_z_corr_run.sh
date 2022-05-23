@@ -55,7 +55,7 @@ echo """Generating ${COMMON_PARAMETERS_FILE}
 ARGS="--baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --stack ${ALIGN_STACK}"
-ARGS="${ARGS} --rootDirectory /nrs/flyem/render/z_corr"
+ARGS="${ARGS} --rootDirectory ${RENDER_NRS_ROOT}/z_corr"
 ARGS="${ARGS} --runName ${JOB_NAME}"
 ARGS="${ARGS} --scale 0.22" # important that this forces us away from a mipmap boundary (e.g. 0.25 was bad)
 

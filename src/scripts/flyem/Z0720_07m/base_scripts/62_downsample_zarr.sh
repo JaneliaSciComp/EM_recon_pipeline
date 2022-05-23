@@ -16,7 +16,6 @@ fi
 N_NODES="${1}"        # 30 11-slot workers takes 2+ hours
 
 BASE_ZARR_COST_DIR="/nrs/flyem/bukharih"
-N5_FIELD_PATH="/nrs/flyem/render/n5/${RENDER_OWNER}"
 
 if [[ ! -d ${BASE_ZARR_COST_DIR} ]]; then
   echo "ERROR: ${BASE_ZARR_COST_DIR} not found"

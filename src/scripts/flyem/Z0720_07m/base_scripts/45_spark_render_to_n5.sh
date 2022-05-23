@@ -33,7 +33,7 @@ RUN_TIME=`date +"%Y%m%d_%H%M%S"`
 
 ARGS="--baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STACK}"
-ARGS="${ARGS} --n5Path /nrs/flyem/render/n5/${RENDER_OWNER}"
+ARGS="${ARGS} --n5Path ${N5_PATH}"
 ARGS="${ARGS} --n5Dataset /render/${RENDER_PROJECT}/${STACK}___${RUN_TIME}"
 ARGS="${ARGS} --tileWidth 4096 --tileHeight 4096 --blockSize 128,128,64 --factors 2,2,2"
 

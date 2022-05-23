@@ -7,7 +7,7 @@ SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 source ${SCRIPT_DIR}/00_config.sh
 
 # root directory for all acquisition tile mipmaps
-MIPMAP_ROOT_DIR="/nrs/flyem/render/mipmaps"
+MIPMAP_ROOT_DIR="${RENDER_NRS_ROOT}/mipmaps"
 
 if [[ ! -d ${MIPMAP_ROOT_DIR} ]]; then
   mkdir -p ${MIPMAP_ROOT_DIR}

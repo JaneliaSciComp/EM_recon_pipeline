@@ -15,6 +15,7 @@ TAB=$(echo ${TAB_DIR} | sed 's@/.*@@')
 
 FLY_REGION_TAB="${FLY}_${REGION}_${TAB}"
 SCOPE_STORAGE_ROOT="/cygdrive/e/Images/Fly Brain"
+RENDER_NRS_ROOT="/nrs/flyem/render"
 
 # owner of the render stacks and match collections
 # - must only contain alphanumeric or underscore characters 
@@ -39,7 +40,8 @@ export BILL_TO="flyem"
 # number of Dask workers for dat_to_render process
 DASK_DAT_TO_RENDER_WORKERS="32"
 
-SCAPES_ROOT_DIR="/nrs/flyem/render/scapes"
+SCAPES_ROOT_DIR="${RENDER_NRS_ROOT}/scapes"
+N5_PATH="${RENDER_NRS_ROOT}/n5/${RENDER_OWNER}.n5"
 
 # ============================================================================
 # The following parameters are either derived from ones above or have static

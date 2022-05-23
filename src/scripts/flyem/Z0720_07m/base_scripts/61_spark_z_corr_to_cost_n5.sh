@@ -15,7 +15,6 @@ fi
 
 N_NODES="${1}"        # 30 11-slot workers takes 2+ hours
 
-N5_PATH="/nrs/flyem/render/n5/${RENDER_OWNER}"
 PROJECT_Z_CORR_DIR="${N5_PATH}/z_corr/${RENDER_PROJECT}"
 
 # /nrs/flyem/render/n5/Z0720_07m_BR/z_corr/Sec39/v1_acquire_trimmed_sp1___20210410_220552

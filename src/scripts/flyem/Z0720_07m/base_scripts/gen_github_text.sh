@@ -12,7 +12,7 @@ DAT_DIR="/nearline/flyem2/data/${FLY_REGION_TAB}/dat"
 # Thickness Correction paths
 
 # /nrs/flyem/render/z_corr/Z0720_07m_BR/Sec14/v4_acquire_trimmed_align/run_20210827_101623_480_z_corr/solve_20210827_104130/Zcoords.txt
-STACK_Z_CORR_DIR="/nrs/flyem/render/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
+STACK_Z_CORR_DIR="${RENDER_NRS_ROOT}/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
 
 if [[ ! -d ${STACK_Z_CORR_DIR} ]]; then
   echo "ERROR: ${STACK_Z_CORR_DIR} not found"
@@ -60,7 +60,6 @@ BASE_PLOT_URL="http://renderer-data4.int.janelia.org:8080/z_corr_plots/${RENDER_
 # ----------------------------------------------
 # N5 paths
 
-N5_PATH="/nrs/flyem/render/n5/${RENDER_OWNER}"
 N5_DATASET_ROOT="/z_corr/${RENDER_PROJECT}/${ALIGN_STACK}"
 
 unset Z_CORR_N5_PATH
