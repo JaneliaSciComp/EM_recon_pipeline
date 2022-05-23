@@ -37,7 +37,7 @@ for DAT in `cat ${SCRIPT_DIR}/${FLY_REGION_TAB}*_missing_dat.json | sed 's/[][",
     echo "copying ${JEISS_HOST}:${SCOPE_DATE_DAT} to ${DAT_DIR}"
 
     # on newer OS, might need -T flag to avoid protocol error: filename does not match request
-    scp -o StrictHostKeyChecking=no ${JEISS_HOST}:\"${SCOPE_STORAGE_ROOT}/${SCOPE_DATE_DAT}\" ${DAT_DIR}
+    scp -o StrictHostKeyChecking=no ${JEISS_HOST}:"${SCOPE_STORAGE_ROOT}/${SCOPE_DATE_DAT}" ${DAT_DIR}
 
   fi
 
