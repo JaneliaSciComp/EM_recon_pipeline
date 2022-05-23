@@ -48,7 +48,6 @@ if [[ ! -d ${Z_CORR_PATH} ]]; then
 fi
 
 # must export this for flintstone
-export LSF_PROJECT="flyem"
 #export RUNTIME="3:59"
 
 #-----------------------------------------------------------

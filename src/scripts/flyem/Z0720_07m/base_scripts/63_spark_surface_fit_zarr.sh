@@ -62,8 +62,7 @@ if [[ -d ${N5_FIELD_PATH}${HEIGHT_FIELDS_DATASET} ]]; then
 fi
 
 # must export this for flintstone
-export LSF_PROJECT="flyem"
-export RUNTIME="3:59" # less than 4 hour max runtime maximizes available cluster nodes 
+export RUNTIME="3:59" # less than 4 hour max runtime maximizes available cluster nodes
 
 #-----------------------------------------------------------
 # Spark executor setup with 11 cores per worker ...

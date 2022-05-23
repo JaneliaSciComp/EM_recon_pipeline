@@ -35,7 +35,6 @@ export N_OVERHEAD_CORES_PER_WORKER=1
 #N_CORES_PER_WORKER=$(( (N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR) + N_OVERHEAD_CORES_PER_WORKER ))
 export N_CORES_DRIVER=1
 
-export LSF_PROJECT="flyem"
 export RUNTIME="3:59"
 
 #-----------------------------------------------------------

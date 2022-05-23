@@ -42,7 +42,6 @@ export N_OVERHEAD_CORES_PER_WORKER=1
 export N_CORES_DRIVER=1
 
 # must export this for flintstone
-export LSF_PROJECT="flyem"
 export RUNTIME="3:59"
 
 #-----------------------------------------------------------

@@ -69,7 +69,6 @@ for f in 4,1,4 3,1,3 3,1,3 3,1,3 1,4,1 1,4,1; do
 done
 
 # must export this for flintstone
-export LSF_PROJECT="flyem"
 export RUNTIME="3:59"
 
 #-----------------------------------------------------------

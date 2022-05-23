@@ -23,7 +23,6 @@ ARGS="${ARGS} --correctionMethod GLOBAL_PER_SLICE"
 #ARGS="${ARGS} --minZ 5000 --maxZ 5029"
 
 # must export this for flintstone
-export LSF_PROJECT="flyem"
 export RUNTIME="3:59"
 
 #-----------------------------------------------------------

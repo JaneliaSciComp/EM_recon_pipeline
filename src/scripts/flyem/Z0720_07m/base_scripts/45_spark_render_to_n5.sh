@@ -46,9 +46,6 @@ if (( $# > 2 )); then
   fi
 fi
 
-# must export this for flintstone
-export LSF_PROJECT="flyem"
-
 #-----------------------------------------------------------
 JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
 CLASS="org.janelia.render.client.spark.n5.N5Client"

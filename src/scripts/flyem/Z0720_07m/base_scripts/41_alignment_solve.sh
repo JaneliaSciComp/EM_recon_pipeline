@@ -51,7 +51,6 @@ ARGS="${ARGS} --threadsGlobal ${N_CORES_DRIVER}"
 # --serializeMatches
 
 # must export this for flintstone
-export LSF_PROJECT="${BILL_TO}"
 export RUNTIME="3:59"
 
 #-----------------------------------------------------------
