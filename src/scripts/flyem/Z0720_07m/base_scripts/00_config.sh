@@ -14,7 +14,7 @@ TAB_DIR=$(echo "${REGION_DIR}" | sed 's@.*'"${REGION}"'/@@')
 TAB=$(echo ${TAB_DIR} | sed 's@/.*@@')
 
 FLY_REGION_TAB="${FLY}_${REGION}_${TAB}"
-SCOPE_STORAGE_ROOT="/cygdrive/e/Images/Fly Brain"
+SCOPE_STORAGE_ROOT="/cygdrive/e/Images/Fly\ Brain"
 RENDER_NRS_ROOT="/nrs/flyem/render"
 
 # owner of the render stacks and match collections
@@ -96,4 +96,10 @@ STACK_DATA_DIR="/groups/flyem/data/${FLY_REGION_TAB}/InLens"
 # Write spark logs to backed-up flyem filesystem rather than user home so that they are readable by others for analysis.
 # NOTE: must consolidate logs when changing run parent dir
 export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/flyem/data/${USER}/spark_logs"
+
+# Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
+# (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
+H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/flyem/data/render/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
+export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
+
 export LSF_PROJECT="${BILL_TO}"
