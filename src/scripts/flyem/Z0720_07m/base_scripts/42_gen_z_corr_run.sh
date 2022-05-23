@@ -38,6 +38,9 @@ JOB_NAME=`getRunDirectory z_corr`
 RUN_DIR="${SCRIPT_DIR}/${JOB_NAME}"
 LOG_DIR=`createLogDirectory "${RUN_DIR}"`
 
+# need to create tmp directory so that run_array_ws_client_lsf.sh sets JAVA_IO_TMPDIR (for HDF5)
+mkdir -p ${RUN_DIR}/tmp
+
 echo """
 ------------------------------------------------------------------------
 Setting up job for ${JOB_NAME} ...
