@@ -105,7 +105,7 @@ class DatConverter:
                                                                                to_h5_file=layer_archive_file)
                         add_dat_header_attributes(dat_file_path=dat_path.file_path,
                                                   dat_header=dat_record.header,
-                                                  include_raw_header=True,
+                                                  include_raw_header_and_recipe=True,
                                                   to_group_or_dataset=data_set)
                         add_element_size_um_attributes(dat_header=dat_record.header,
                                                        z_nm_per_pixel=None,
@@ -207,7 +207,7 @@ class DatConverter:
 
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
                                   dat_header=dat_header,
-                                  include_raw_header=False,
+                                  include_raw_header_and_recipe=False,
                                   to_group_or_dataset=group)
 
         # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?

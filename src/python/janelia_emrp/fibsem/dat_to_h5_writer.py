@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, Union, Final
 
@@ -12,7 +13,9 @@ logger = logging.getLogger("dat_to_h5_writer")
 
 DAT_FILE_NAME_KEY: Final = "dat_file_name"
 ELEMENT_SIZE_UM_KEY: Final = "element_size_um"
+FILE_LENGTH_KEY: Final = "FileLength"
 RAW_HEADER_KEY: Final = "raw_header"
+RECIPE_KEY: Final = "recipe"
 
 
 class DatToH5Writer:
@@ -99,7 +102,7 @@ class DatToH5Writer:
 
 def add_dat_header_attributes(dat_file_path: Path,
                               dat_header: Dict[str, Any],
-                              include_raw_header: bool,
+                              include_raw_header_and_recipe: bool,
                               to_group_or_dataset: [Group, Dataset]) -> None:
     """
     Adds header data to the specified group or dataset.
@@ -112,24 +115,29 @@ def add_dat_header_attributes(dat_file_path: Path,
     dat_header : Dict[str, Any]
         parsed header information from .dat file to include as attributes.
 
-    include_raw_header : bool
-        indicates whether to store raw header data as an attribute.
+    include_raw_header_and_recipe : bool
+        indicates whether to store raw header and recipe data as attributes.
 
     to_group_or_dataset : [Group, Dataset]
         container for the header attributes.
     """
-    if dat_header:
-        for key, value in dat_header.__dict__.items():
-            to_group_or_dataset.attrs[key] = value
+    for key, value in dat_header.__dict__.items():
+        to_group_or_dataset.attrs[key] = value
 
     to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = str(dat_file_path.name)
 
-    if include_raw_header:
+    if include_raw_header_and_recipe:
+        source_size = os.path.getsize(dat_file_path)
         with open(dat_file_path, "rb") as raw_file:
             raw_bytes = raw_file.read(OFFSET)
 
             assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
             to_group_or_dataset.attrs[RAW_HEADER_KEY] = np.frombuffer(raw_bytes, dtype='u1')
+
+            file_length = to_group_or_dataset.attrs[FILE_LENGTH_KEY]
+            raw_file.seek(file_length)
+            recipe_size = source_size - file_length
+            to_group_or_dataset.attrs[RECIPE_KEY] = bytearray(raw_file.read(recipe_size))
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],

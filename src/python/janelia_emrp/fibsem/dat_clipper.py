@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 
 import sys
 from pathlib import Path
@@ -24,8 +25,14 @@ def clip_dat(source_path: Path,
     Clips a dat file to create a smaller version useful for testing.
     """
 
+    source_size = os.path.getsize(source_path)
+
     with open(source_path, "rb") as raw_source_file:
         header = bytearray(raw_source_file.read(OFFSET))
+        original_file_length = int.from_bytes(header[1000:1008], "big")  # 'FileLength': 115501024
+        raw_source_file.seek(original_file_length)
+        recipe_size = source_size - original_file_length
+        recipe = bytearray(raw_source_file.read(recipe_size))
 
     # stole locations of header values from fibsem_tools.io.fibsem
     number_of_channels = int.from_bytes(header[32:33], "big")  # 'ChanNum': 2
@@ -33,21 +40,25 @@ def clip_dat(source_path: Path,
     original_width = int.from_bytes(header[100:104], "big")    # 'XResolution': 8250
     original_height = int.from_bytes(header[104:108], "big")   # 'YResolution': 3500
 
-    # The FileLength header does not seem to be used and did not have a value that made sense to me,
-    # so I chose to leave it alone even though clipping reduces file length.
-    # file_length = int.from_bytes(data[1000:1008], "big")     # 'FileLength': 115501024
+    # set numpy data type and recalculate FileLength header value
+    file_length = width * height * number_of_channels
+    if eight_bit == 1:
+        data_type = ">u1"
+    else:
+        data_type = ">i2"
+        file_length = file_length * 2
+    file_length = file_length + OFFSET
 
     # Update XResolution and YResolution with clipped values
     header[100:104] = width.to_bytes(4, "big")
     header[104:108] = height.to_bytes(4, "big")
+    header[1000:1008] = file_length.to_bytes(8, "big")
 
     shape = (
         original_height,
         original_width,
         number_of_channels,
     )
-
-    data_type = ">u1" if eight_bit == 1 else ">i2"
 
     raw_data = np.memmap(
         str(source_path),
@@ -63,6 +74,7 @@ def clip_dat(source_path: Path,
     with open(target_path, "wb") as raw_target_file:
         raw_target_file.write(header)
         raw_target_file.write(clipped_data)
+        raw_target_file.write(recipe)
 
     logger.info(f"saved {str(target_path)}")
 
