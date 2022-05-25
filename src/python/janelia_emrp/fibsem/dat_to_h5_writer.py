@@ -8,7 +8,7 @@ import numpy as np
 from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
 from h5py import Dataset, Group
 
-logger = logging.getLogger("dat_to_h5_writer")
+logger = logging.getLogger(__name__)
 
 
 DAT_FILE_NAME_KEY: Final = "dat_file_name"
