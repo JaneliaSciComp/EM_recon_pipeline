@@ -205,7 +205,11 @@ def add_dat_header_attributes(dat_file_path: Path,
         container for the header attributes.
     """
     for key, value in dat_header.__dict__.items():
-        to_group_or_dataset.attrs[key] = value
+        try:
+            to_group_or_dataset.attrs[key] = value
+        except ValueError as valueError:
+            logger.warning(f"add_dat_header_attributes: skipping value for key='{key}' in {dat_file_path}",
+                           exc_info=valueError)
 
     to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = str(dat_file_path.name)
 
