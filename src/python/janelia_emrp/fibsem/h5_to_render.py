@@ -38,13 +38,22 @@ class LayerInfo:
         self.restart_condition_label: Optional[str] = None
 
         with h5py.File(name=str(h5_path), mode="r") as h5_file:
-            for group_name in sorted(h5_file.keys()):
+
+            sorted_group_names = sorted(h5_file.keys())
+            if len(sorted_group_names) < 1:
+                raise RuntimeError(f"possible corrupt file {h5_path}, no group names found")
+
+            for group_name in sorted(sorted_group_names):
                 group = h5_file.get(group_name)
                 if DAT_FILE_NAME_KEY in group.attrs:
                     self.append_tile(group.attrs)
                 else:
                     logger.warning(f"skipping group {group_name} in {h5_path} "
                                    f"because it does not have '{DAT_FILE_NAME_KEY}' attribute")
+
+            if len(self.dat_paths) == 0:
+                raise RuntimeError(f"possible corrupt file {h5_path}, "
+                                   f"no dat file names found in groups {sorted_group_names}")
 
     def append_tile(self,
                     full_header: Dict[str, Any]) -> None:
