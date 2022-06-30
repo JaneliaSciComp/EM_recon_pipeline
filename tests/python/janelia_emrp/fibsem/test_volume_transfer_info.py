@@ -10,7 +10,7 @@ def test_json():
     volume_transfer_info = VolumeTransferInfo(
         scope="jeiss2.hhmi.org",
         scope_storage_root=Path("/cygdrive/e/Images/Renel Cell Carcinoma"),
-        dat_storage_root=Path("/nearline/flyem2/data/NIH-J1/dat"),
+        dat_storage_roots=[Path("/nearline/flyem2/data/NIH-J1/dat")],
         dat_x_and_y_nm_per_pixel=8,
         dat_z_nm_per_pixel=8,
         acquire_start=datetime.strptime("22-03-08_223009", "%y-%m-%d_%H%M%S"),

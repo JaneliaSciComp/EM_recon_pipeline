@@ -46,7 +46,7 @@ class VolumeTransferInfo(BaseModel):
     #     time last volume image was acquired, None if acquisition has not completed
     #     JSON string representations must use ISO 8601 format (e.g. 2021-06-09T13:15:55).
     #
-    # dat_storage_root : Path
+    # dat_storage_roots : list[Path]
     #     network storage path for dat files after transfer from scope
     #
     # dat_x_and_y_nm_per_pixel : int
@@ -103,7 +103,7 @@ class VolumeTransferInfo(BaseModel):
     scope_storage_root: Path
     acquire_start: Optional[datetime.datetime]
     acquire_stop: Optional[datetime.datetime]
-    dat_storage_root: Path
+    dat_storage_roots: list[Path]
     dat_x_and_y_nm_per_pixel: int
     dat_z_nm_per_pixel: int
     dat_tile_overlap_microns: int = 2

@@ -168,8 +168,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
     logger.info(f"convert_volume: loading dat file paths ...")
 
-    dat_file_paths = [volume_transfer_info.dat_storage_root]
-    layers = split_into_layers(dat_file_paths)
+    layers = split_into_layers(volume_transfer_info.dat_storage_roots)
 
     logger.info(f"convert_volume: found {len(layers)} layers")
 

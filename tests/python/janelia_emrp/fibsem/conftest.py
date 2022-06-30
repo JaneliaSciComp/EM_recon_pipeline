@@ -22,7 +22,7 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
     return VolumeTransferInfo(
         scope="jeiss8.hhmi.org",
         scope_storage_root=Path("/cygdrive/e/Images/Fly Brain"),
-        dat_storage_root=Path("/nearline/flyem2/data/Z0720-07m_VNC_Sec06/dat"),
+        dat_storage_roots=[Path("/nearline/flyem2/data/Z0720-07m_VNC_Sec06/dat")],
         dat_x_and_y_nm_per_pixel=8,
         dat_z_nm_per_pixel=8,
         acquire_start=datetime.strptime("21-07-27_201550", "%y-%m-%d_%H%M%S"),
