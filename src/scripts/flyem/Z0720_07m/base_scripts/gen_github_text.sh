@@ -15,9 +15,20 @@ DAT_DIR="/nearline/flyem2/data/${FLY_REGION_TAB}/dat"
 STACK_Z_CORR_DIR="${RENDER_NRS_ROOT}/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
 
 if [[ ! -d ${STACK_Z_CORR_DIR} ]]; then
-  echo "ERROR: ${STACK_Z_CORR_DIR} not found"
-  exit 1
+  ORIGINAL_Z_CORR_DIR="${STACK_Z_CORR_DIR}"
+
+  # look for un-straightened z_corr if default z_corr could not be found
+  ALIGN_STACK="${ALIGN_STACK%_straightened}"
+  STACK_Z_CORR_DIR="/nrs/flyem/render/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
+  if [[ ! -d ${STACK_Z_CORR_DIR} ]]; then
+    echo "ERROR: ${ORIGINAL_Z_CORR_DIR} not found"
+    if [ "${ORIGINAL_Z_CORR_DIR}" != "${STACK_Z_CORR_DIR}" ]; then
+      echo "ERROR: ${STACK_Z_CORR_DIR} not found"
+    fi
+    exit 1
+  fi
 fi
+
 shopt -s nullglob
 Z_COORDS_FILES=("${STACK_Z_CORR_DIR}"/*/*/Zcoords.txt)
 shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
@@ -104,6 +115,25 @@ else
   N5_DATASET_AND_OFFSET="-d TBD -o TBD"
 fi
 
+HF_PATHS="Surface Finding Height Fields (--n5FieldPath ${N5_PATH}):"
+BASE_HF_DIR="${N5_PATH}/heightfields/${RENDER_PROJECT}"
+if [ -d "${BASE_HF_DIR}" ]; then
+  for HF_DIR in "${BASE_HF_DIR}"/*/s1/min; do
+    if [ -d "${HF_DIR}" ]; then
+      HF_REL_DIR="${HF_DIR#${N5_PATH}}"
+      HF_PATHS="${HF_PATHS}
+  min: --n5Field ${HF_REL_DIR}"
+    fi
+  done
+  for HF_DIR in "${BASE_HF_DIR}"/*/s1/max; do
+    if [ -d "${HF_DIR}" ]; then
+      HF_REL_DIR="${HF_DIR#${N5_PATH}}"
+      HF_PATHS="${HF_PATHS}
+  max: --n5Field ${HF_REL_DIR}"
+    fi
+  done
+fi
+
 VIEW_URL="http://tem-services.int.janelia.org:8080/render-ws/view"
 VIEW_STACKS_URL="${VIEW_URL}/stacks.html"
 VIEW_PME_URL="${VIEW_URL}/point-match-explorer.html"
@@ -130,9 +160,7 @@ Thickness Correction Data:
 N5 Volumes:
   intensity and z corrected: -i ${N5_PATH} ${N5_DATASET_AND_OFFSET}
 
-Surface Finding Height Fields (--n5FieldPath ${N5_PATH}):
-  min: --n5Field /heightfields/${RENDER_PROJECT}/<TBD>/s1/min
-  max: --n5Field /heightfields/${RENDER_PROJECT}/<TBD>/s1/max
+${HF_PATHS}
 \`\`\`
 
 ## Render Data
