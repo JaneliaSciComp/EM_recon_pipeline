@@ -5,12 +5,6 @@ from janelia_emrp.fibsem.dat_path import new_dat_path, new_dat_layer
 from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer, RAW_HEADER_KEY, ELEMENT_SIZE_UM_KEY
 
 
-def test_derive_max_mipmap_level(volume_transfer_info):
-    converter = DatConverter(volume_transfer_info)
-    assert converter.derive_max_mipmap_level(3) == 3, "actual mipmap level should be selected"
-    assert converter.derive_max_mipmap_level(12) == 7, "volume max mipmap level should be selected"
-
-
 def test_create_and_add_mipmap_data_sets(volume_transfer_info,
                                          small_dat_path):
     align_writer = DatToH5Writer(chunk_shape=(1, 20, 20))
@@ -28,11 +22,11 @@ def test_create_and_add_mipmap_data_sets(volume_transfer_info,
     align_path = converter.setup_h5_path("align source", align_path, True)
 
     with align_writer.open_h5_file(str(align_path)) as layer_align_file:
-        converter.create_and_add_mipmap_data_sets(dat_path=dat_path,
-                                                  dat_header=dat_record.header,
-                                                  dat_record=dat_record,
-                                                  align_writer=align_writer,
-                                                  layer_align_file=layer_align_file)
+        align_writer.create_and_add_mipmap_data_sets(dat_path=dat_path,
+                                                     dat_header=dat_record.header,
+                                                     dat_record=dat_record,
+                                                     max_mipmap_level=volume_transfer_info.max_mipmap_level,
+                                                     to_h5_file=layer_align_file)
         
         assert align_path.exists(), f"{str(align_path)} not created"
 

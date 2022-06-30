@@ -68,8 +68,7 @@ def clip_dat(source_path: Path,
         shape=shape,
     )
 
-    clipped_data = raw_data[y:y+height, x:x+width, :]
-    clipped_data = clipped_data.copy(order='C')
+    clipped_data = raw_data[y:y+height, x:x+width, :].tobytes()
 
     with open(target_path, "wb") as raw_target_file:
         raw_target_file.write(header)

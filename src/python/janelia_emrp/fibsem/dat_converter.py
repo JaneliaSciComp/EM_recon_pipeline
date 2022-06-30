@@ -1,24 +1,18 @@
 import argparse
 import logging
 import os
-import sys
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 import dask.bag as dask_bag
 import errno
-import numpy as np
+import sys
 from dask_janelia import get_cluster
 from fibsem_tools.io import read
-from h5py import File
-from xarray_multiscale import multiscale
-from xarray_multiscale.reducers import windowed_mean
 
-from janelia_emrp.fibsem.dat_path import DatPathsForLayer, DatPath, split_into_layers
-from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer, add_dat_header_attributes, \
-    add_element_size_um_attributes
-from janelia_emrp.fibsem.dat_to_scheffer_8_bit import compress_compute
+from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers
+from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 from janelia_emrp.root_logger import init_logger
 
@@ -100,23 +94,18 @@ class DatConverter:
                     dat_record = read(dat_path.file_path)
 
                     if archive_path:
-                        data_set = self.archive_writer.create_and_add_data_set(data_set_name=dat_path.tile_key(),
-                                                                               pixel_array=dat_record,
-                                                                               to_h5_file=layer_archive_file)
-                        add_dat_header_attributes(dat_file_path=dat_path.file_path,
-                                                  dat_header=dat_record.header,
-                                                  include_raw_header_and_recipe=True,
-                                                  to_group_or_dataset=data_set)
-                        add_element_size_um_attributes(dat_header=dat_record.header,
-                                                       z_nm_per_pixel=None,
-                                                       to_dataset=data_set)
+                        self.archive_writer.create_and_add_archive_data_set(dat_path=dat_path,
+                                                                            dat_header=dat_record.header,
+                                                                            dat_record=dat_record,
+                                                                            to_h5_file=layer_archive_file)
 
                     if align_path:
-                        self.create_and_add_mipmap_data_sets(dat_path=dat_path,
-                                                             dat_header=dat_record.header,
-                                                             dat_record=dat_record,
-                                                             align_writer=self.align_writer,
-                                                             layer_align_file=layer_align_file)
+                        self.align_writer.create_and_add_mipmap_data_sets(
+                            dat_path=dat_path,
+                            dat_header=dat_record.header,
+                            dat_record=dat_record,
+                            max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
+                            to_h5_file=layer_align_file)
 
         if self.volume_transfer_info.remove_dat_after_archive:
             # TODO: handle dat removal errors - probably want to just log issue and not disrupt other processing
@@ -167,75 +156,6 @@ class DatConverter:
             valid_path = h5_path
 
         return valid_path
-
-    def derive_max_mipmap_level(self,
-                                actual_max_mipmap_level: int) -> int:
-        """
-        Returns
-        -------
-        int
-            The actual mipmap level or a reduced value as needed
-        """
-        if self.volume_transfer_info.max_mipmap_level is None:
-            derived_max = actual_max_mipmap_level
-        else:
-            derived_max = min(self.volume_transfer_info.max_mipmap_level, actual_max_mipmap_level)
-        return derived_max
-
-    def create_and_add_mipmap_data_sets(self,
-                                        dat_path: DatPath,
-                                        dat_header: Dict[str, Any],
-                                        dat_record: np.ndarray,
-                                        align_writer: DatToH5Writer,
-                                        layer_align_file: File):
-        """
-        Compresses the specified `dat_record` into an 8 bit level 0 mipmap and down-samples that for subsequent levels.
-        The `align_writer` is used to save each mipmap as a data set within the specified `layer_align_file`.
-        Data sets are named as <section>-<row>-<column>.mipmap.<level> (e.g. 0-0-1.mipmap.3).
-        """
-
-        logger.info(f"{self} create_and_add_mipmap_data_sets: create level 0 by compressing {dat_path.file_path}")
-
-        compressed_record = compress_compute(dat_record)
-
-        tile_key = dat_path.tile_key()
-        level_zero_data_set = align_writer.create_and_add_data_set(group_name=tile_key,
-                                                                   data_set_name="mipmap.0",
-                                                                   pixel_array=compressed_record,
-                                                                   to_h5_file=layer_align_file)
-        group = level_zero_data_set.parent
-
-        add_dat_header_attributes(dat_file_path=dat_path.file_path,
-                                  dat_header=dat_header,
-                                  include_raw_header_and_recipe=False,
-                                  to_group_or_dataset=group)
-
-        # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
-        scaled_element_size = add_element_size_um_attributes(dat_header=dat_header,
-                                                             z_nm_per_pixel=None,
-                                                             to_dataset=level_zero_data_set)
-
-        lazy_mipmaps = multiscale(compressed_record, windowed_mean, (1, 2, 2))
-        actual_max_mipmap_level = len(lazy_mipmaps) - 1
-
-        max_level = self.derive_max_mipmap_level(actual_max_mipmap_level)
-
-        for mipmap_level in range(1, max_level + 1):
-
-            logger.info(f"{self} create_and_add_mipmap_data_sets: create level {mipmap_level}")
-
-            scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
-            level_data_set = align_writer.create_and_add_data_set(group_name=tile_key,
-                                                                  data_set_name=f"mipmap.{mipmap_level}",
-                                                                  pixel_array=scaled_bytes,
-                                                                  to_h5_file=layer_align_file)
-
-            scaled_element_size = [
-                scaled_element_size[0], scaled_element_size[1] * 2.0, scaled_element_size[2] * 2.0
-            ]
-            level_data_set.attrs["element_size_um"] = scaled_element_size
-
-        logger.info(f"{self} create_and_add_mipmap_data_sets: exit")
 
 
 def convert_volume(volume_transfer_info: VolumeTransferInfo,

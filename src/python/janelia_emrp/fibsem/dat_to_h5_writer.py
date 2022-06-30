@@ -1,12 +1,21 @@
+import argparse
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, Union, Final
 
 import h5py
 import numpy as np
+from fibsem_tools.io import read
 from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
 from h5py import Dataset, Group
+from xarray_multiscale import multiscale
+from xarray_multiscale.reducers import windowed_mean
+
+from janelia_emrp.fibsem.dat_path import split_into_layers, DatPath
+from janelia_emrp.fibsem.dat_to_scheffer_8_bit import compress_compute
+from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +107,80 @@ class DatToH5Writer:
                                     chunks=valid_chunks,
                                     compression=self.compression,
                                     compression_opts=self.compression_opts)
+
+    def create_and_add_archive_data_set(self,
+                                        dat_path: DatPath,
+                                        dat_header: Dict[str, Any],
+                                        dat_record: np.ndarray,
+                                        to_h5_file: h5py.File):
+        data_set = self.create_and_add_data_set(data_set_name=dat_path.tile_key(),
+                                                pixel_array=dat_record,
+                                                to_h5_file=to_h5_file)
+        add_dat_header_attributes(dat_file_path=dat_path.file_path,
+                                  dat_header=dat_header,
+                                  include_raw_header_and_recipe=True,
+                                  to_group_or_dataset=data_set)
+        add_element_size_um_attributes(dat_header=dat_header,
+                                       z_nm_per_pixel=None,
+                                       to_dataset=data_set)
+        return data_set
+
+    def create_and_add_mipmap_data_sets(self,
+                                        dat_path: DatPath,
+                                        dat_header: Dict[str, Any],
+                                        dat_record: np.ndarray,
+                                        max_mipmap_level: Optional[int],
+                                        to_h5_file: h5py.File):
+        """
+        Compresses the specified `dat_record` into an 8 bit level 0 mipmap and down-samples that for subsequent levels.
+        The `align_writer` is used to save each mipmap as a data set within the specified `layer_align_file`.
+        Data sets are named as <section>-<row>-<column>.mipmap.<level> (e.g. 0-0-1.mipmap.3).
+        """
+        logger.info(f"create_and_add_mipmap_data_sets: create level 0 by compressing {dat_path.file_path}")
+
+        compressed_record = compress_compute(dat_record)
+
+        tile_key = dat_path.tile_key()
+        level_zero_data_set = self.create_and_add_data_set(group_name=tile_key,
+                                                           data_set_name="mipmap.0",
+                                                           pixel_array=compressed_record,
+                                                           to_h5_file=to_h5_file)
+        group = level_zero_data_set.parent
+
+        add_dat_header_attributes(dat_file_path=dat_path.file_path,
+                                  dat_header=dat_header,
+                                  include_raw_header_and_recipe=False,
+                                  to_group_or_dataset=group)
+
+        # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
+        scaled_element_size = add_element_size_um_attributes(dat_header=dat_header,
+                                                             z_nm_per_pixel=None,
+                                                             to_dataset=level_zero_data_set)
+
+        lazy_mipmaps = multiscale(compressed_record, windowed_mean, (1, 2, 2))
+        actual_max_mipmap_level = len(lazy_mipmaps) - 1
+
+        if max_mipmap_level is None:
+            derived_max_mipmap_level = actual_max_mipmap_level
+        else:
+            derived_max_mipmap_level = min(max_mipmap_level, actual_max_mipmap_level)
+
+        for mipmap_level in range(1, derived_max_mipmap_level + 1):
+
+            logger.info(f"{self} create_and_add_mipmap_data_sets: create level {mipmap_level}")
+
+            scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
+            level_data_set = self.create_and_add_data_set(group_name=tile_key,
+                                                          data_set_name=f"mipmap.{mipmap_level}",
+                                                          pixel_array=scaled_bytes,
+                                                          to_h5_file=to_h5_file)
+
+            scaled_element_size = [
+                scaled_element_size[0], scaled_element_size[1] * 2.0, scaled_element_size[2] * 2.0
+            ]
+            level_data_set.attrs["element_size_um"] = scaled_element_size
+
+        logger.info(f"create_and_add_mipmap_data_sets: exit")
 
 
 def add_dat_header_attributes(dat_file_path: Path,
@@ -211,3 +294,52 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
     to_dataset.attrs[ELEMENT_SIZE_UM_KEY] = element_size_um
 
     return element_size_um
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Converts dat files to HDF5 files."
+    )
+    parser.add_argument(
+        "--dat_path",
+        help="Path(s) of source dat file(s)",
+        required=True,
+        nargs='+'
+    )
+    parser.add_argument(
+        "--h5_parent_path",
+        help="Path of parent directory for h5 files",
+        required=True,
+    )
+
+    args = parser.parse_args(sys.argv[1:])
+
+    h5_root_path = Path(args.h5_parent_path)
+    archive_writer = DatToH5Writer(chunk_shape=None)
+
+    layers = split_into_layers(path_list=[Path(p) for p in args.dat_path])
+
+    logger.info(f"found {len(layers)} layers")
+
+    for layer in layers:
+
+        archive_path = layer.get_h5_path(h5_root_path=h5_root_path,
+                                         append_acquisition_based_subdirectories=False,
+                                         source_type="raw")
+
+        with archive_writer.open_h5_file(str(archive_path)) as layer_archive_file:
+            for dat_path in layer.dat_paths:
+                logger.info(f"reading {dat_path.file_path}")
+                dat_record = read(dat_path.file_path)
+
+                archive_writer.create_and_add_archive_data_set(dat_path=dat_path,
+                                                               dat_header=dat_record.header,
+                                                               dat_record=dat_record,
+                                                               to_h5_file=layer_archive_file)
+
+
+if __name__ == "__main__":
+    # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    init_logger(__file__)
+    main()
