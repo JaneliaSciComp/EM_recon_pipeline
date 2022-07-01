@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 
 import sys
 
@@ -70,9 +71,9 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
     show(p)
 
 
-def plot_run(owner, project, stack, run):
+def plot_run(base_dir, owner, project, stack, run):
     owner_run_sub_path = f'{owner}/{project}/{stack}/{run}'
-    run_dir = f'/nrs/flyem/render/z_corr/{owner_run_sub_path}'
+    run_dir = f'{base_dir}/{owner_run_sub_path}'
     plot_html_name = 'cc_with_next_plot.html'
     output_file_path = f'{run_dir}/{plot_html_name}'
     plot_url = f'http://renderer-data4.int.janelia.org:8080/z_corr_plots/{owner_run_sub_path}/{plot_html_name}'
@@ -84,13 +85,22 @@ def plot_run(owner, project, stack, run):
     print(f'view plot at {plot_url}')
 
 
-if __name__ == '__main__':
-    if len(sys.argv) != 5:
-        print(f'USAGE: {sys.argv[0]} <owner> <project> <stack> <run>')
+def main(arg_list):
+    parser = argparse.ArgumentParser(description="Build plot of cross correlation values.")
+    parser.add_argument("--owner", required=True)
+    parser.add_argument("--project", required=True)
+    parser.add_argument("--stack", required=True)
+    parser.add_argument("--run", required=True)
+    parser.add_argument("--base_dir", default="/nrs/flyem/render/z_corr")
 
-    else:
-        plot_run(owner=sys.argv[1],
-                 project=sys.argv[2],
-                 stack=sys.argv[3],
-                 run=sys.argv[4])
-        
+    args = parser.parse_args(arg_list)
+
+    plot_run(base_dir=args.base_dir,
+             owner=args.owner,
+             project=args.project,
+             stack=args.stack,
+             run=args.run)
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

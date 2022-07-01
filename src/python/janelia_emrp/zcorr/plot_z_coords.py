@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import argparse
 import glob
 import os
 import sys
@@ -123,9 +123,9 @@ def plot_delta_z(title, data_paths, ignore_margin=35, plot_width=2400, plot_heig
     show(p)
 
 
-def plot_run(owner, project, stack, run, solve_labels=None):
+def plot_run(base_dir, owner, project, stack, run, solve_labels=None):
     owner_run_sub_path = f'{owner}/{project}/{stack}/{run}'
-    run_dir = f'/nrs/flyem/render/z_corr/{owner_run_sub_path}'
+    run_dir = f'{base_dir}/{owner_run_sub_path}'
     plot_html_name = 'delta_z_plot.html'
     output_file_path = f'{run_dir}/{plot_html_name}'
     plot_url = f'http://renderer-data4.int.janelia.org:8080/z_corr_plots/{owner_run_sub_path}/{plot_html_name}'
@@ -157,13 +157,24 @@ def plot_run(owner, project, stack, run, solve_labels=None):
         print(f'ERROR: no solve data to plot in {run_dir}')
 
 
+def main(arg_list):
+    parser = argparse.ArgumentParser(description="Build plot of thickness correction delta values.")
+    parser.add_argument("--owner", required=True)
+    parser.add_argument("--project", required=True)
+    parser.add_argument("--stack", required=True)
+    parser.add_argument("--run", required=True)
+    parser.add_argument("--base_dir", default="/nrs/flyem/render/z_corr")
+    parser.add_argument("--label", nargs="+")
+
+    args = parser.parse_args(arg_list)
+
+    plot_run(base_dir=args.base_dir,
+             owner=args.owner,
+             project=args.project,
+             stack=args.stack,
+             run=args.run,
+             solve_labels=[] if args.label is None else args.label)
+
+
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print(f'USAGE: {sys.argv[0]} <owner> <project> <stack> <run> [label ...]')
-    else:
-        plot_run(owner=sys.argv[1],
-                 project=sys.argv[2],
-                 stack=sys.argv[3],
-                 run=sys.argv[4],
-                 solve_labels=[] if len(sys.argv) == 4 else sys.argv[5:])
-        
+    main(sys.argv[1:])
