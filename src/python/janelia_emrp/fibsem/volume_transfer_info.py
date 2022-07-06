@@ -59,13 +59,13 @@ class VolumeTransferInfo(BaseModel):
     #         maximum number of down-sampled mipmap levels to produce for each image,
     #         None to produce as many levels as possible,
     #         ignored if align_storage_root is None
-    #     render_owner : str
+    #     render_owner:
     #         owner of the render stacks for this volume
-    #     render_project : str
+    #     render_project:
     #         project for the render stacks for this volume
-    #     render_stack : str, default="v1_acquire"
+    #     render_stack:
     #         name of the first render acquisition stack
-    #     render_restart_context_layer_count : int, default=1
+    #     render_restart_context_layer_count:
     #         number of layers to include in the restart stack before and after each restart
     #     render_connect:
     #         render-python connection information (omit to skip writing to render web services)
