@@ -120,6 +120,7 @@ class VolumeTransferInfo(BaseModel):
     bill_project: Optional[str]
     mask_storage_root: Optional[Path]
     mask_width: int = 100
+    include_fibsem_correction_transform: bool = False
 
     def __str__(self):
         return f"{self.render_owner}::{self.render_project}::{self.scope}"

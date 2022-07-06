@@ -28,6 +28,13 @@ UNIQUE_TILE_HEADER_KEYS: Final = ["WD", "Restart", "StageMove", "FirstX", "First
 RETAINED_TILE_HEADER_KEYS: Final = COMMON_TILE_HEADER_KEYS + UNIQUE_TILE_HEADER_KEYS
 CHECKED_TILE_HEADER_KEYS: Final = COMMON_TILE_HEADER_KEYS + ["SampleID"]
 
+FIBSEM_CORRECTION_TRANSFORM_ID: Final = "FIBSEM_correct"
+FIBSEM_CORRECTION_TRANSFORM: Final = {
+    "id": FIBSEM_CORRECTION_TRANSFORM_ID,
+    "className": "org.janelia.alignment.transform.SEMDistortionTransformA",
+    "dataString": "19.4 64.8 24.4 972.0 0"
+}
+
 
 class LayerInfo:
     def __init__(self, h5_path: Path) -> None:
@@ -226,7 +233,8 @@ def build_tile_spec(h5_path: Path,
                     tile_overlap_in_microns: int,
                     tile_attributes: Dict[str, Any],
                     prior_layer: Optional[LayerInfo],
-                    mask_path: Optional[Path]):
+                    mask_path: Optional[Path],
+                    pre_stage_transform_spec_list: list[Dict[str, str]]):
 
     acquire_time_string = dat_path.acquire_time.strftime("%y-%m-%d_%H%M%S")
     tile_key = dat_path.tile_key()
@@ -263,8 +271,11 @@ def build_tile_spec(h5_path: Path,
     if mask_path is not None:
         mipmap_level_zero["maskUrl"] = f'file:{str(mask_path)}'
 
-    transform_data_string = f'1 0 0 1 {stage_x} {stage_y}'
-
+    transform_spec_list = []
+    transform_spec_list.extend(pre_stage_transform_spec_list)
+    transform_spec_list.append({"type": "leaf",
+                                "className": "mpicbg.trakem2.transform.AffineModel2D",
+                                "dataString": f'1 0 0 1 {stage_x} {stage_y}'})
     tile_spec = {
         "tileId": tile_id, "z": z,
         "minX": stage_x, "minY": stage_y, "maxX": stage_x + tile_width, "maxY": stage_y + tile_height,
@@ -279,9 +290,7 @@ def build_tile_spec(h5_path: Path,
         },
         "transforms": {
             "type": "list",
-            "specList": [{"type": "leaf",
-                          "className": "mpicbg.trakem2.transform.AffineModel2D",
-                          "dataString": transform_data_string}]
+            "specList": transform_spec_list
         }
     }
 
@@ -300,7 +309,8 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
                                z: int,
                                prior_layer_info: Optional[LayerInfo],
                                mask_builder: Optional[MaskBuilder],
-                               tile_overlap_in_microns: int):
+                               tile_overlap_in_microns: int,
+                               pre_stage_transform_spec_list: list[Dict[str, str]]):
 
     mask_path = None
     if mask_builder is not None:
@@ -317,7 +327,8 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
                                     tile_overlap_in_microns=tile_overlap_in_microns,
                                     tile_attributes=layer_info.retained_headers[tile_index],
                                     prior_layer=prior_layer_info,
-                                    mask_path=mask_path)
+                                    mask_path=mask_path,
+                                    pre_stage_transform_spec_list=pre_stage_transform_spec_list)
 
         if layer_info.group_id is not None:
             tile_spec["groupId"] = layer_info.group_id
@@ -333,13 +344,18 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
 def build_all_tile_specs(all_layers: List[LayerInfo],
                          restart_context_layer_count: int,
                          mask_builder: Optional[MaskBuilder],
-                         tile_overlap_in_microns: int) -> Tuple[list[Any], list[Any]]:
+                         tile_overlap_in_microns: int,
+                         pre_stage_transform_ids: list[str]) -> Tuple[list[Any], list[Any]]:
     layer_count = len(all_layers)
 
     logger.info(f"build_all_tile_specs: entry, processing {layer_count} layers")
 
     if layer_count == 0:
         raise ValueError("no layers specified")
+
+    pre_stage_transform_spec_list = []
+    for transform_id in pre_stage_transform_ids:
+        pre_stage_transform_spec_list.append({"type": "ref", "refId": transform_id})
 
     all_tile_specs = []
     all_restart_tile_specs = []
@@ -349,7 +365,8 @@ def build_all_tile_specs(all_layers: List[LayerInfo],
                                    z=1,
                                    prior_layer_info=None,
                                    mask_builder=mask_builder,
-                                   tile_overlap_in_microns=tile_overlap_in_microns))
+                                   tile_overlap_in_microns=tile_overlap_in_microns,
+                                   pre_stage_transform_spec_list=pre_stage_transform_spec_list))
 
     # flag restart if more than 15 minutes elapses between layer acquisitions
     restart_seconds_threshold = 15 * 60
@@ -385,7 +402,8 @@ def build_all_tile_specs(all_layers: List[LayerInfo],
                                                       z=z,
                                                       prior_layer_info=prior_layer_info,
                                                       mask_builder=mask_builder,
-                                                      tile_overlap_in_microns=tile_overlap_in_microns)
+                                                      tile_overlap_in_microns=tile_overlap_in_microns,
+                                                      pre_stage_transform_spec_list=pre_stage_transform_spec_list)
 
         all_tile_specs.extend(layer_tile_specs)
 
@@ -408,18 +426,39 @@ def build_all_tile_specs(all_layers: List[LayerInfo],
 #     if len(tile_specs) > 0:
 #         logger.info(f"import_tile_specs: {tile_specs[0].tileId} to {tile_specs[-1].tileId}")
 #         renderapi.client.import_tilespecs(stack, tile_specs, render=render, use_rest=True)
-def import_tile_specs(tile_specs: List[Dict[str, Any]],
+def import_tile_specs(tile_specs: list[Dict[str, Any]],
+                      transform_specs: list[Dict[str, str]],
                       stack: str,
                       render_api: RenderApi):
     if len(tile_specs) > 0:
         logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
-        render_api.save_tile_specs(stack=stack,
-                                   tile_specs=tile_specs)
+
+        transform_id_to_spec_map = {}
+        for transform_spec in transform_specs:
+            transform_id_to_spec_map[transform_spec["id"]] = transform_spec
+
+        tile_id_to_spec_map = {}
+        for tile_spec in tile_specs:
+            tile_id_to_spec_map[tile_spec["tileId"]] = tile_spec
+
+        resolved_tiles = {
+            "transformIdToSpecMap": transform_id_to_spec_map,
+            "tileIdToSpecMap": tile_id_to_spec_map
+        }
+
+        # Derive bounding box server-side when "lens correction" transforms are used
+        # (not necessary when tile specs only contain stage transforms).
+        derive_data = len(transform_specs) > 0
+
+        render_api.save_resolved_tiles(stack=stack,
+                                       resolved_tiles=resolved_tiles,
+                                       derive_data=derive_data)
 
 
 def save_stack(stack_name: str,
                volume_transfer_info: VolumeTransferInfo,
-               tile_specs: List[Dict]):
+               tile_specs: list[Dict],
+               transform_specs: list[Dict]):
 
     render_connect_params = volume_transfer_info.get_render_connect_params()
 
@@ -454,6 +493,7 @@ def save_stack(stack_name: str,
     for index in range(0, tile_count, tiles_per_batch):
         stop_index = min(index + tiles_per_batch, tile_count)
         import_tile_specs(tile_specs=tile_specs[index:stop_index],
+                          transform_specs=transform_specs,
                           stack=stack_name,
                           render_api=render_api)
 
@@ -538,21 +578,30 @@ def main(arg_list):
         mask_builder = MaskBuilder(base_dir=volume_transfer_info.mask_storage_root,
                                    mask_width=volume_transfer_info.mask_width)
 
+    pre_stage_transform_ids = []
+    transform_specs = []
+    if volume_transfer_info.include_fibsem_correction_transform:
+        pre_stage_transform_ids.append(FIBSEM_CORRECTION_TRANSFORM["id"])
+        transform_specs.append(FIBSEM_CORRECTION_TRANSFORM)
+
     all_tile_specs, all_restart_tile_specs = \
         build_all_tile_specs(all_layers=all_layers,
                              restart_context_layer_count=volume_transfer_info.render_restart_context_layer_count,
                              mask_builder=mask_builder,
-                             tile_overlap_in_microns=volume_transfer_info.dat_tile_overlap_microns)
+                             tile_overlap_in_microns=volume_transfer_info.dat_tile_overlap_microns,
+                             pre_stage_transform_ids=pre_stage_transform_ids)
 
     if volume_transfer_info.render_connect is not None:
         if len(all_restart_tile_specs) > 0:
             save_stack(stack_name=f"{volume_transfer_info.render_stack}_restart",
                        volume_transfer_info=volume_transfer_info,
-                       tile_specs=all_restart_tile_specs)
+                       tile_specs=all_restart_tile_specs,
+                       transform_specs=transform_specs)
 
         save_stack(stack_name=volume_transfer_info.render_stack,
                    volume_transfer_info=volume_transfer_info,
-                   tile_specs=all_tile_specs)
+                   tile_specs=all_tile_specs,
+                   transform_specs=transform_specs)
 
         if mask_builder is not None and len(mask_builder.mask_errors) > 0:
             logger.error(f"mask errors are: {mask_builder.mask_errors}")

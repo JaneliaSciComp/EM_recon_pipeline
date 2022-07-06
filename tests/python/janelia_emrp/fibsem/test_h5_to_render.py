@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from janelia_emrp.fibsem.h5_to_render import build_tile_spec, build_layers
+from janelia_emrp.fibsem.h5_to_render import build_tile_spec, build_layers, FIBSEM_CORRECTION_TRANSFORM_ID
 
 
 def test_build_tile_spec():
@@ -17,7 +17,10 @@ def test_build_tile_spec():
                                 tile_overlap_in_microns=10,
                                 tile_attributes=first_layer.retained_headers[0],
                                 prior_layer=None,
-                                mask_path=None)
+                                mask_path=None,
+                                pre_stage_transform_spec_list=[
+                                    {"type": "ref", "refId": FIBSEM_CORRECTION_TRANSFORM_ID}
+                                ])
 
     # print(json.dumps(tile_spec, indent=True))
 
