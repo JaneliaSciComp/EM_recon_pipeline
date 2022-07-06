@@ -233,7 +233,8 @@ def build_tile_spec(h5_path: Path,
                     tile_overlap_in_microns: int,
                     tile_attributes: Dict[str, Any],
                     prior_layer: Optional[LayerInfo],
-                    mask_path: Optional[Path],
+                    mask_uri_string: Optional[str],
+                    mask_loader_type: Optional[str],
                     pre_stage_transform_spec_list: list[Dict[str, str]]):
 
     acquire_time_string = dat_path.acquire_time.strftime("%y-%m-%d_%H%M%S")
@@ -268,8 +269,10 @@ def build_tile_spec(h5_path: Path,
         "imageUrl": f"file://{str(h5_path)}?dataSet=/{tile_key}/mipmap.0&z=0",
         "imageLoaderType": "H5_SLICE"
     }
-    if mask_path is not None:
-        mipmap_level_zero["maskUrl"] = f'file:{str(mask_path)}'
+    if mask_uri_string is not None:
+        mipmap_level_zero["maskUrl"] = mask_uri_string
+        if mask_loader_type is not None:
+            mipmap_level_zero["maskLoaderType"] = mask_loader_type
 
     transform_spec_list = []
     transform_spec_list.extend(pre_stage_transform_spec_list)
@@ -312,11 +315,13 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
                                tile_overlap_in_microns: int,
                                pre_stage_transform_spec_list: list[Dict[str, str]]):
 
-    mask_path = None
+    mask_uri_string = None
+    mask_loader_type = None
     if mask_builder is not None:
         first_tile_attributes = layer_info.retained_headers[0]
-        mask_path = mask_builder.create_mask_if_missing(image_width=first_tile_attributes["XResolution"],
-                                                        image_height=first_tile_attributes["YResolution"])
+        mask_uri_string = mask_builder.create_mask_if_missing(image_width=first_tile_attributes["XResolution"],
+                                                              image_height=first_tile_attributes["YResolution"])
+        mask_loader_type = mask_builder.get_mask_loader_type()
 
     tile_specs = []
     for tile_index in range(0, layer_info.tile_count()):
@@ -327,7 +332,8 @@ def build_tile_specs_for_layer(layer_info: LayerInfo,
                                     tile_overlap_in_microns=tile_overlap_in_microns,
                                     tile_attributes=layer_info.retained_headers[tile_index],
                                     prior_layer=prior_layer_info,
-                                    mask_path=mask_path,
+                                    mask_uri_string=mask_uri_string,
+                                    mask_loader_type=mask_loader_type,
                                     pre_stage_transform_spec_list=pre_stage_transform_spec_list)
 
         if layer_info.group_id is not None:
@@ -572,10 +578,20 @@ def main(arg_list):
 
     mask_builder: Optional[MaskBuilder] = None
 
-    # only build masks if they are needed, and we are writing data to render
     if volume_transfer_info.mask_storage_root is not None and \
             volume_transfer_info.render_connect is not None:
+
+        # only write masks to file system if they are needed, and we are writing data to render
+        if volume_transfer_info.mask_width is None:
+            raise RuntimeError(f"mask_width must be specified when mask_storage_root is specified")
+
         mask_builder = MaskBuilder(base_dir=volume_transfer_info.mask_storage_root,
+                                   mask_width=volume_transfer_info.mask_width)
+
+    elif volume_transfer_info.mask_width is not None:
+
+        # if only mask_width is defined, setup builder to produce dynamic mask URIs
+        mask_builder = MaskBuilder(base_dir=None,
                                    mask_width=volume_transfer_info.mask_width)
 
     pre_stage_transform_ids = []

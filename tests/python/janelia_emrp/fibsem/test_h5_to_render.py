@@ -17,7 +17,8 @@ def test_build_tile_spec():
                                 tile_overlap_in_microns=10,
                                 tile_attributes=first_layer.retained_headers[0],
                                 prior_layer=None,
-                                mask_path=None,
+                                mask_uri_string=None,
+                                mask_loader_type=None,
                                 pre_stage_transform_spec_list=[
                                     {"type": "ref", "refId": FIBSEM_CORRECTION_TRANSFORM_ID}
                                 ])

@@ -96,7 +96,7 @@ class VolumeTransferInfo(BaseModel):
     render_connect: Optional[RenderConnect]
     bill_project: Optional[str]
     mask_storage_root: Optional[Path]
-    mask_width: int = 100
+    mask_width: Optional[int]
     include_fibsem_correction_transform: bool = False
 
     def __str__(self):
