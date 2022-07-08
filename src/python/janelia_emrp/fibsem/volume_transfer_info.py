@@ -97,6 +97,7 @@ class VolumeTransferInfo(BaseModel):
     bill_project: Optional[str]
     mask_storage_root: Optional[Path]
     mask_width: Optional[int]
+    mask_height: Optional[int]
     include_fibsem_correction_transform: bool = False
 
     def __str__(self):

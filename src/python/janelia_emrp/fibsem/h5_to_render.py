@@ -586,13 +586,15 @@ def main(arg_list):
             raise RuntimeError(f"mask_width must be specified when mask_storage_root is specified")
 
         mask_builder = MaskBuilder(base_dir=volume_transfer_info.mask_storage_root,
-                                   mask_width=volume_transfer_info.mask_width)
+                                   mask_width=volume_transfer_info.mask_width,
+                                   mask_height=volume_transfer_info.mask_height)
 
-    elif volume_transfer_info.mask_width is not None:
+    elif volume_transfer_info.mask_width is not None or volume_transfer_info.mask_height is not None:
 
-        # if only mask_width is defined, setup builder to produce dynamic mask URIs
+        # if only mask_width and/or mask_height is defined, setup builder to produce dynamic mask URIs
         mask_builder = MaskBuilder(base_dir=None,
-                                   mask_width=volume_transfer_info.mask_width)
+                                   mask_width=volume_transfer_info.mask_width,
+                                   mask_height=volume_transfer_info.mask_height)
 
     pre_stage_transform_ids = []
     transform_specs = []

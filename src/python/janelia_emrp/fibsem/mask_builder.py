@@ -12,7 +12,8 @@ logger = logging.getLogger("mask_builder")
 @dataclass
 class MaskBuilder:
     base_dir: Optional[Path]
-    mask_width: int
+    mask_width: Optional[int]
+    mask_height: Optional[int]
     existing_masks: set[Path] = field(compare=False, default_factory=set)
     mask_errors: Dict[Path, list[str]] = field(compare=False, default_factory=dict)
 
@@ -21,7 +22,9 @@ class MaskBuilder:
                                image_height: int) -> str:
 
         if self.base_dir is None:
-            mask_uri_string = f"mask://outside-box?minX={self.mask_width}&minY=0&" \
+            min_x = 0 if self.mask_width is None else self.mask_width
+            min_y = 0 if self.mask_height is None else self.mask_height
+            mask_uri_string = f"mask://outside-box?minX={min_x}&minY={min_y}&" \
                               f"maxX={image_width}&maxY={image_height}&" \
                               f"width={image_width}&height={image_height}"
         else:
