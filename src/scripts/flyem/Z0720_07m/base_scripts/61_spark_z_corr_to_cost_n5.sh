@@ -8,12 +8,18 @@ source ${SCRIPT_DIR}/00_config.sh
 
 umask 0002
 
-if (( $# < 1 )); then
-  echo "USAGE $0 <number of nodes> [filter]"
+if (( $# < 2 )); then
+  echo "USAGE $0 <number of nodes> <filter y or n> [band size]"
+  echo "  Examples:"
+  echo "      $0 30 n"
+  echo "      $0 30 y 50"
+  echo "      $0 30 n 400"
   exit 1
 fi
 
 N_NODES="${1}"        # 30 11-slot workers takes 2+ hours
+FILTER_Y_OR_N="${2}"
+BAND_SIZE="${3:-50}"
 
 PROJECT_Z_CORR_DIR="${N5_PATH}/z_corr/${RENDER_PROJECT}"
 
@@ -68,8 +74,8 @@ CLASS=org.janelia.saalfeldlab.hotknife.SparkComputeCost
 
 # /nrs/flyem/render/n5/Z0720_07m_BR/z_corr/Sec39/v1_acquire_trimmed_sp1___20210410_220552
 Z_CORR_DATASET=$(echo "${Z_CORR_PATH}" | sed 's@.*\(/z_corr/.*\)@\1@')
-COST_DATASET="$(echo "${Z_CORR_DATASET}" | sed 's@/z_corr/@/cost_new/@')_gauss"
-if (( $# > 1 )); then
+COST_DATASET="$(echo "${Z_CORR_DATASET}" | sed 's@/z_corr/@/cost_new/@')_gauss_band_${BAND_SIZE}"
+if [ "$FILTER_Y_OR_N" == "y" ]; then
   COST_DATASET="${COST_DATASET}_w_filter"
 fi
 
@@ -94,7 +100,7 @@ ARGV="\
 --costSteps=1,4,1 \
 --costSteps=1,4,1 \
 --axisMode=2 \
---bandSize=50 \
+--bandSize=${BAND_SIZE} \
 --maxSlope=0.04 \
 --slopeCorrBandFactor=5.5 \
 --slopeCorrXRange=20 \
@@ -107,7 +113,7 @@ ARGV="\
 --surfaceMinDistance=2000 \
 --surfaceMaxDistance=4000"
 
-if (( $# > 1 )); then
+if [ "$FILTER_Y_OR_N" == "y" ]; then
   ARGV="${ARGV} --normalizeImage"
 fi
 
