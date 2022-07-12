@@ -72,11 +72,12 @@ COST_DATASET="$(echo "${Z_CORR_DATASET}" | sed 's@/z_corr/@/cost_new/@')_gauss"
 if (( $# > 1 )); then
   COST_DATASET="${COST_DATASET}_w_filter"
 fi
-HEIGHT_FIELDS_DATASET=$(echo "${COST_DATASET}" | sed 's@/cost_new/@/heightfields/@')
 
 if [[ -d ${N5_PATH}${COST_DATASET} ]]; then
   COST_DATASET="${COST_DATASET}__${RUN_TIME}"
 fi
+
+HEIGHT_FIELDS_DATASET=$(echo "${COST_DATASET}" | sed 's@/cost_new/@/heightfields/@')
 
 ARGV="\
 --inputN5Path=${N5_PATH} \
