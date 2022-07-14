@@ -35,7 +35,7 @@ def get_keep_file_list(host: Optional[str],
                        keep_file_root: str) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
-    args.append(f"ls {keep_file_root}")
+    args.append(f'ls "{keep_file_root}"')
 
     completed_process = subprocess.run(args,
                                        capture_output=True,
@@ -58,7 +58,7 @@ def copy_dat_file(keep_file: KeepFile,
         "scp",
         "-o", "ConnectTimeout=1800",
         "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
-        f"{keep_file.host_prefix()}{keep_file.dat_path}",
+        f'{keep_file.host_prefix()}"{keep_file.dat_path}"',
         str(dat_storage_root)
     ]
 
@@ -67,7 +67,7 @@ def copy_dat_file(keep_file: KeepFile,
 
 def remove_keep_file(keep_file: KeepFile):
     args = get_base_ssh_args(keep_file.host)
-    args.append(f"rm {keep_file.keep_path}")
+    args.append(f'rm "{keep_file.keep_path}"')
 
     subprocess.run(args, check=True)
 
