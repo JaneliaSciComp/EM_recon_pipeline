@@ -56,6 +56,7 @@ def copy_dat_file(keep_file: KeepFile,
     # see https://man.openbsd.org/ssh_config.5 for descriptions of ssh -o args
     args = [
         "scp",
+        "-T"                               # needed to avoid protocol error: filename does not match request
         "-o", "ConnectTimeout=10",
         "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
         f'{keep_file.host_prefix()}"{keep_file.dat_path}"',
