@@ -99,7 +99,6 @@ def main(arg_list):
 
     args = parser.parse_args(args=arg_list)
 
-    scope_context = "" if args.scope is None else f" for scope {args.scope}"
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
     volume_transfer_dir_path = Path(args.volume_transfer_dir)
@@ -128,7 +127,8 @@ def main(arg_list):
         keep_file_list = get_keep_file_list(host=volume_transfer_info.scope,
                                             keep_file_root=volume_transfer_info.scope_keep_file_root)
 
-        logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope}{scope_context}")
+        logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope} "
+                    f"to copy to {volume_transfer_info.dat_storage_root}")
 
         for keep_file in keep_file_list:
 
