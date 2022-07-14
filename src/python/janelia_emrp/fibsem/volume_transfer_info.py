@@ -33,13 +33,16 @@ class VolumeTransferInfo(BaseModel):
     #         scope root path excluding datetime-based subdirectories for acquired data
     #         (e.g. '/cygdrive/e/Images/Fly Brain' for full paths like
     #         '/cygdrive/e/Images/Fly Brain/Y2021/M05/D05/Merlin-6257_21-05-05_102654_0-0-0.dat')
+    #     scope_keep_file_root:
+    #         scope root path excluding datetime-based subdirectories for dat keep files
+    #         (e.g. '/cygdrive/d/UploadFlags')
     #     acquire_start:
     #         time first volume image was acquired, None if acquisition has not started.
     #         JSON string representations must use ISO 8601 format (e.g. 2021-05-05T10:26:54).
     #     acquire_stop:
     #         time last volume image was acquired, None if acquisition has not completed
     #         JSON string representations must use ISO 8601 format (e.g. 2021-06-09T13:15:55).
-    #     dat_storage_roots:
+    #     dat_storage_root:
     #         network storage path for dat files after transfer from scope
     #     dat_x_and_y_nm_per_pixel:
     #         target nm pixel resolution for dat x and y dimensions
@@ -47,18 +50,18 @@ class VolumeTransferInfo(BaseModel):
     #         target nm pixel resolution for dat z dimension
     #     dat_tile_overlap_microns:
     #         tile overlap width in microns for older dat volumes without stageX header values
-    #     archive_storage_root:
+    #     h5_archive_storage_root:
     #         root path for archive HDF5 data, None if archival is not needed
-    #     remove_dat_after_archive:
+    #     remove_dat_after_h5_archive:
     #         indicates whether dat files should be removed from network storage after they are successfully archived
-    #     align_storage_root:
+    #     h5_align_storage_root:
     #         root path for 8-bit alignment HDF5 data, None if alignment data set is not needed
     #     align_mask_mipmap_root:
     #         root path for 8-bit mask mipmap data, None if alignment data set is not needed
     #     max_mipmap_level:
     #         maximum number of down-sampled mipmap levels to produce for each image,
     #         None to produce as many levels as possible,
-    #         ignored if align_storage_root is None
+    #         ignored if h5_align_storage_root is None
     #     render_owner:
     #         owner of the render stacks for this volume
     #     render_project:
@@ -76,17 +79,19 @@ class VolumeTransferInfo(BaseModel):
     #     mask_width:
     #         left pixel width of masked area
     # """
-    scope: str
-    scope_storage_root: Path
+    scope: Optional[str]
+    scope_storage_root: str
+    scope_keep_file_root: str
     acquire_start: Optional[datetime.datetime]
     acquire_stop: Optional[datetime.datetime]
-    dat_storage_roots: list[Path]
+    dat_storage_root: Path
     dat_x_and_y_nm_per_pixel: int
     dat_z_nm_per_pixel: int
     dat_tile_overlap_microns: int = 2
-    archive_storage_root: Optional[Path]
-    remove_dat_after_archive: bool
-    align_storage_root: Optional[Path]
+    dat_archive_storage_root: Optional[Path]
+    h5_archive_storage_root: Optional[Path]
+    remove_dat_after_h5_archive: bool
+    h5_align_storage_root: Optional[Path]
     align_mask_mipmap_root: Optional[Path]
     max_mipmap_level: Optional[int]
     render_owner: str
@@ -117,3 +122,15 @@ class VolumeTransferInfo(BaseModel):
             "client_scripts": self.render_connect.client_scripts,
             "memGB": self.render_connect.memGB
         }
+
+    def acquisition_started(self,
+                            before: Optional[datetime.datetime] = None) -> bool:
+        if before is None:
+            before = datetime.datetime.now()
+        return self.acquire_start is not None and self.acquire_start < before
+
+    def acquisition_stopped(self,
+                            before: Optional[datetime.datetime] = None) -> bool:
+        if before is None:
+            before = datetime.datetime.now()
+        return self.acquire_stop is not None and self.acquire_stop < before

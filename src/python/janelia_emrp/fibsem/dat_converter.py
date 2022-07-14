@@ -61,18 +61,18 @@ class DatConverter:
         logger.info(f"{self} convert_layer: entry, processing {len(dat_paths_for_layer.dat_paths)} dat files "
                     f"for {dat_paths_for_layer.get_layer_id()}")
 
-        archive_conversion_requested = self.volume_transfer_info.archive_storage_root and self.archive_writer
-        align_conversion_requested = self.volume_transfer_info.align_storage_root and self.align_writer
+        archive_conversion_requested = self.volume_transfer_info.h5_archive_storage_root and self.archive_writer
+        align_conversion_requested = self.volume_transfer_info.h5_align_storage_root and self.align_writer
 
         archive_path = None
         if archive_conversion_requested:
-            archive_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.archive_storage_root,
+            archive_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.h5_archive_storage_root,
                                                            source_type="raw")
             archive_path = self.setup_h5_path("archive", archive_path, self.skip_existing)
 
         align_path = None
         if align_conversion_requested:
-            align_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.align_storage_root,
+            align_path = dat_paths_for_layer.get_h5_path(self.volume_transfer_info.h5_align_storage_root,
                                                          source_type="uint8")
             align_path = self.setup_h5_path("align source", align_path, self.skip_existing)
 
@@ -107,10 +107,11 @@ class DatConverter:
                             max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
                             to_h5_file=layer_align_file)
 
-        if self.volume_transfer_info.remove_dat_after_archive:
+        if archive_conversion_requested and self.volume_transfer_info.remove_dat_after_h5_archive:
             # TODO: handle dat removal errors - probably want to just log issue and not disrupt other processing
             for dat_path in dat_paths_for_layer.dat_paths:
                 logger.info(f"{self} convert: removing {dat_path.file_path}")
+                # TODO: validate dat and h5 equivalence before removing dat
                 dat_path.file_path.unlink()
 
         logger.info(f"{self} convert: exit")
@@ -168,7 +169,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
     logger.info(f"convert_volume: loading dat file paths ...")
 
-    layers = split_into_layers(volume_transfer_info.dat_storage_roots)
+    layers = split_into_layers([volume_transfer_info.dat_storage_root])
 
     logger.info(f"convert_volume: found {len(layers)} layers")
 

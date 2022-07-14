@@ -566,7 +566,7 @@ def main(arg_list):
 
     volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(args.volume_transfer_info)
 
-    all_layers = build_all_layers(align_storage_root=volume_transfer_info.align_storage_root,
+    all_layers = build_all_layers(align_storage_root=volume_transfer_info.h5_align_storage_root,
                                   num_workers=args.num_workers,
                                   threads_per_worker=args.num_threads_per_worker,
                                   dask_worker_space=args.dask_worker_space,
