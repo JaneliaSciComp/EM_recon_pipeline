@@ -23,7 +23,6 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
         scope="jeiss8.hhmi.org",
         scope_storage_root="/cygdrive/e/Images/Fly Brain",
         scope_keep_file_root="/cygdrive/d/UploadFlags",
-        scope_data_set="Z0720-07m_VNC_Sec06",
         dat_storage_root="/nearline/flyem2/data/Z0720-07m_VNC_Sec06/dat",
         dat_x_and_y_nm_per_pixel=8,
         dat_z_nm_per_pixel=8,

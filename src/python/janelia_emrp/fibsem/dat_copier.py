@@ -32,8 +32,7 @@ def get_base_ssh_args(host: Optional[str]):
 
 
 def get_keep_file_list(host: Optional[str],
-                       keep_file_root: str,
-                       scope_data_set: Optional[str]) -> list[KeepFile]:
+                       keep_file_root: str) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
     args.append(f'ls "{keep_file_root}"')
@@ -46,8 +45,7 @@ def get_keep_file_list(host: Optional[str],
         if name.endswith("^keep"):
             keep_file = build_keep_file(host, keep_file_root, name)
             if keep_file is not None:
-                if scope_data_set is None or scope_data_set == keep_file.data_set:
-                    keep_file_list.append(keep_file)
+                keep_file_list.append(keep_file)
 
     return keep_file_list
 
@@ -127,8 +125,7 @@ def main(arg_list):
         logger.info(f"main: checking on recently acquired data for {volume_transfer_info}")
 
         keep_file_list = get_keep_file_list(host=volume_transfer_info.scope,
-                                            keep_file_root=volume_transfer_info.scope_keep_file_root,
-                                            scope_data_set=args.scope)
+                                            keep_file_root=volume_transfer_info.scope_keep_file_root)
 
         logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope}{scope_context}")
 

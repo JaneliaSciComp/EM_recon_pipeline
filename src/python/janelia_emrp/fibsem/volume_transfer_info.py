@@ -36,8 +36,6 @@ class VolumeTransferInfo(BaseModel):
     #     scope_keep_file_root:
     #         scope root path excluding datetime-based subdirectories for dat keep files
     #         (e.g. '/cygdrive/d/UploadFlags')
-    #     scope_data_set:
-    #         data set as defined by scope keep file (e.g. 'Z0422-17_VNC_1')
     #     acquire_start:
     #         time first volume image was acquired, None if acquisition has not started.
     #         JSON string representations must use ISO 8601 format (e.g. 2021-05-05T10:26:54).
@@ -84,7 +82,6 @@ class VolumeTransferInfo(BaseModel):
     scope: Optional[str]
     scope_storage_root: str
     scope_keep_file_root: str
-    scope_data_set: str
     acquire_start: Optional[datetime.datetime]
     acquire_stop: Optional[datetime.datetime]
     dat_storage_root: Path
