@@ -11,6 +11,7 @@ def test_json():
         scope="jeiss2.hhmi.org",
         scope_storage_root="/cygdrive/e/Images/Fly Brain",
         scope_keep_file_root="/cygdrive/d/UploadFlags",
+        scope_data_set="Z0422-17_VNC_1",
         dat_storage_root=Path("/nearline/flyem2/data/Z0422-17_VNC_1/dat"),
         dat_x_and_y_nm_per_pixel=8,
         dat_z_nm_per_pixel=8,

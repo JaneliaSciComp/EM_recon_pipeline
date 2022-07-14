@@ -32,7 +32,8 @@ def get_base_ssh_args(host: Optional[str]):
 
 
 def get_keep_file_list(host: Optional[str],
-                       keep_file_root: str) -> list[KeepFile]:
+                       keep_file_root: str,
+                       scope_data_set: Optional[str]) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
     args.append(f'ls "{keep_file_root}"')
@@ -45,7 +46,8 @@ def get_keep_file_list(host: Optional[str],
         if name.endswith("^keep"):
             keep_file = build_keep_file(host, keep_file_root, name)
             if keep_file is not None:
-                keep_file_list.append(keep_file)
+                if scope_data_set is None or scope_data_set == keep_file.data_set:
+                    keep_file_list.append(keep_file)
 
     return keep_file_list
 
@@ -82,9 +84,13 @@ def main(arg_list):
         description="Copies dat files identified by keep files on remote scope."
     )
     parser.add_argument(
-        "--volume_transfer_info",
-        help="Path of volume_transfer_info.json file",
+        "--volume_transfer_dir",
+        help="Path of directory containing volume_transfer_info.json files",
         required=True,
+    )
+    parser.add_argument(
+        "--scope",
+        help="If specified, only process volumes being acquired on this scope"
     )
     parser.add_argument(
         "--max_transfer_minutes",
@@ -94,40 +100,58 @@ def main(arg_list):
 
     args = parser.parse_args(args=arg_list)
 
-    volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(args.volume_transfer_info)
-
-    if not volume_transfer_info.dat_storage_root.exists():
-        logger.info(f"main: creating dat storage root {str(volume_transfer_info.dat_storage_root)}")
-        volume_transfer_info.dat_storage_root.mkdir()
-
-    if not volume_transfer_info.dat_storage_root.is_dir():
-        raise ValueError(f"dat storage root {str(volume_transfer_info.dat_storage_root)} is not a directory")
-
+    scope_context = "" if args.scope is None else f" for scope {args.scope}"
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
-    logger.info(f"main: checking on recently acquired data for {volume_transfer_info}")
+    volume_transfer_dir_path = Path(args.volume_transfer_dir)
+    volume_transfer_list: list[VolumeTransferInfo] = []
+    if volume_transfer_dir_path.is_dir():
+        for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
+            volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
+            if args.scope is None or args.scope == volume_transfer_info.scope:
+                if volume_transfer_info.acquisition_started():
+                    volume_transfer_list.append(volume_transfer_info)
+    else:
+        raise ValueError(f"volume_transfer_dir {args.volume_transfer_dir} is not a directory")
 
-    keep_file_list = get_keep_file_list(host=volume_transfer_info.scope,
-                                        keep_file_root=volume_transfer_info.scope_keep_file_root)
+    stop_processing = False
+    for volume_transfer_info in volume_transfer_list:
 
-    logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope}")
+        if not volume_transfer_info.dat_storage_root.exists():
+            logger.info(f"main: creating dat storage root {str(volume_transfer_info.dat_storage_root)}")
+            volume_transfer_info.dat_storage_root.mkdir()
 
-    for keep_file in keep_file_list:
+        if not volume_transfer_info.dat_storage_root.is_dir():
+            raise ValueError(f"dat storage root {str(volume_transfer_info.dat_storage_root)} is not a directory")
 
-        logger.info(f"main: copying {keep_file.dat_path}")
+        logger.info(f"main: checking on recently acquired data for {volume_transfer_info}")
 
-        copy_dat_file(keep_file=keep_file,
-                      dat_storage_root=volume_transfer_info.dat_storage_root)
+        keep_file_list = get_keep_file_list(host=volume_transfer_info.scope,
+                                            keep_file_root=volume_transfer_info.scope_keep_file_root,
+                                            scope_data_set=args.scope)
 
-        logger.info(f"main: removing {keep_file.keep_path}")
+        logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope}{scope_context}")
 
-        remove_keep_file(keep_file)
+        for keep_file in keep_file_list:
 
-        if max_transfer_seconds is not None:
-            elapsed_seconds = time.time() - start_time
-            if elapsed_seconds > max_transfer_seconds:
-                logger.info(f"main: stopping because elapsed time exceeds {args.max_transfer_minutes} minutes")
-                break
+            logger.info(f"main: copying {keep_file.dat_path}")
+
+            copy_dat_file(keep_file=keep_file,
+                          dat_storage_root=volume_transfer_info.dat_storage_root)
+
+            logger.info(f"main: removing {keep_file.keep_path}")
+
+            remove_keep_file(keep_file)
+
+            if max_transfer_seconds is not None:
+                elapsed_seconds = time.time() - start_time
+                if elapsed_seconds > max_transfer_seconds:
+                    logger.info(f"main: stopping because elapsed time exceeds {max_transfer_seconds / 60} minutes")
+                    stop_processing = True
+                    break
+
+        if stop_processing:
+            break
 
     elapsed_seconds = time.time() - start_time
     logger.info(f"main: processing completed in {elapsed_seconds} seconds")
