@@ -123,6 +123,9 @@ class VolumeTransferInfo(BaseModel):
             "memGB": self.render_connect.memGB
         }
 
+    def scope_defined(self):
+        return self.scope is not None and len(self.scope) > 0
+
     def acquisition_started(self,
                             before: Optional[datetime.datetime] = None) -> bool:
         if before is None:

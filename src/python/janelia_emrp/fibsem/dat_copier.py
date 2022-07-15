@@ -31,7 +31,7 @@ def get_base_ssh_args(host: Optional[str]):
     return args
 
 
-def get_keep_file_list(host: Optional[str],
+def get_keep_file_list(host: str,
                        keep_file_root: str) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
@@ -107,8 +107,13 @@ def main(arg_list):
         for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
             volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
             if args.scope is None or args.scope == volume_transfer_info.scope:
-                if volume_transfer_info.acquisition_started():
+                if not volume_transfer_info.acquisition_started():
+                    logger.info(f"main: ignoring {volume_transfer_info} because acquisition has not started")
+                elif not volume_transfer_info.scope_defined():
+                    logger.info(f"main: ignoring {volume_transfer_info} because scope is not defined")
+                else:
                     volume_transfer_list.append(volume_transfer_info)
+
     else:
         raise ValueError(f"volume_transfer_dir {args.volume_transfer_dir} is not a directory")
 

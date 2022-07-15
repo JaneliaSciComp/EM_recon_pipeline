@@ -13,7 +13,7 @@ KEEP_NAME_PATTERN: Final = re.compile(r"([^\^]+)\^([^\^]+)\^\^(.*\.dat)\^keep$")
 
 
 class KeepFile(BaseModel):
-    host: Optional[str]
+    host: str
     keep_path: str
     data_set: str
     dat_path: str
@@ -22,7 +22,7 @@ class KeepFile(BaseModel):
         return "" if self.host is None or len(self.host) == 0 else f"{self.host}:"
 
 
-def build_keep_file(host: Optional[str],
+def build_keep_file(host:str,
                     keep_file_root: str,
                     keep_file_name: str) -> Optional[KeepFile]:
 
