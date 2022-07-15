@@ -112,6 +112,8 @@ def main(arg_list):
     else:
         raise ValueError(f"volume_transfer_dir {args.volume_transfer_dir} is not a directory")
 
+    copy_count = 0
+
     stop_processing = False
     for volume_transfer_info in volume_transfer_list:
 
@@ -141,6 +143,8 @@ def main(arg_list):
 
             remove_keep_file(keep_file)
 
+            copy_count += 1
+
             if max_transfer_seconds is not None:
                 elapsed_seconds = time.time() - start_time
                 if elapsed_seconds > max_transfer_seconds:
@@ -151,8 +155,8 @@ def main(arg_list):
         if stop_processing:
             break
 
-    elapsed_seconds = time.time() - start_time
-    logger.info(f"main: processing completed in {elapsed_seconds} seconds")
+    elapsed_seconds = int(time.time() - start_time)
+    logger.info(f"main: transferred {copy_count} dat files in {elapsed_seconds} seconds")
 
     return 0
 
