@@ -504,7 +504,7 @@ def save_stack(stack_name: str,
                           render_api=render_api)
 
     mipmap_path_builder = {
-        "rootPath": str(volume_transfer_info.align_mask_mipmap_root),
+        "rootPath": "not_applicable",
         "numberOfLevels": volume_transfer_info.max_mipmap_level,
         "extension": "tif",
         "imageMipmapPatternString": "(.*dataSet=.*mipmap\\.)\\d+(.*)"
@@ -577,21 +577,9 @@ def main(arg_list):
     logger.info(f"main: generating tile specs and masks for {len(all_layers)} layers")
 
     mask_builder: Optional[MaskBuilder] = None
+    if volume_transfer_info.mask_width is not None or volume_transfer_info.mask_height is not None:
 
-    if volume_transfer_info.mask_storage_root is not None and \
-            volume_transfer_info.render_connect is not None:
-
-        # only write masks to file system if they are needed, and we are writing data to render
-        if volume_transfer_info.mask_width is None:
-            raise RuntimeError(f"mask_width must be specified when mask_storage_root is specified")
-
-        mask_builder = MaskBuilder(base_dir=volume_transfer_info.mask_storage_root,
-                                   mask_width=volume_transfer_info.mask_width,
-                                   mask_height=volume_transfer_info.mask_height)
-
-    elif volume_transfer_info.mask_width is not None or volume_transfer_info.mask_height is not None:
-
-        # if only mask_width and/or mask_height is defined, setup builder to produce dynamic mask URIs
+        # if mask_width and/or mask_height is defined, setup builder to produce dynamic mask URIs
         mask_builder = MaskBuilder(base_dir=None,
                                    mask_width=volume_transfer_info.mask_width,
                                    mask_height=volume_transfer_info.mask_height)

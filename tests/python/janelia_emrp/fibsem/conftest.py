@@ -31,7 +31,6 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
         h5_archive_storage_root=h5_archive_storage_root,
         remove_dat_after_h5_archive=False,
         h5_align_storage_root=h5_align_storage_root,
-        align_mask_mipmap_root=Path("/nrs/flyem/render/mipmaps"),
         max_mipmap_level=7,
         render_owner="test_h5",
         render_project="VNC_Sec06",

@@ -56,8 +56,6 @@ class VolumeTransferInfo(BaseModel):
     #         indicates whether dat files should be removed from network storage after they are successfully archived
     #     h5_align_storage_root:
     #         root path for 8-bit alignment HDF5 data, None if alignment data set is not needed
-    #     align_mask_mipmap_root:
-    #         root path for 8-bit mask mipmap data, None if alignment data set is not needed
     #     max_mipmap_level:
     #         maximum number of down-sampled mipmap levels to produce for each image,
     #         None to produce as many levels as possible,
@@ -74,10 +72,10 @@ class VolumeTransferInfo(BaseModel):
     #         render-python connection information (omit to skip writing to render web services)
     #     bill_project:
     #         project to bill cluster time to (omit to use default project)
-    #     mask_storage_root:
-    #         directory containing mask files (omit if masks are not desired)
     #     mask_width:
     #         left pixel width of masked area
+    #     mask_height:
+    #         top pixel height of masked area
     # """
     scope: Optional[str]
     scope_storage_root: str
@@ -92,7 +90,6 @@ class VolumeTransferInfo(BaseModel):
     h5_archive_storage_root: Optional[Path]
     remove_dat_after_h5_archive: bool
     h5_align_storage_root: Optional[Path]
-    align_mask_mipmap_root: Optional[Path]
     max_mipmap_level: Optional[int]
     render_owner: str
     render_project: str
@@ -100,7 +97,6 @@ class VolumeTransferInfo(BaseModel):
     render_restart_context_layer_count: int = 1
     render_connect: Optional[RenderConnect]
     bill_project: Optional[str]
-    mask_storage_root: Optional[Path]
     mask_width: Optional[int]
     mask_height: Optional[int]
     include_fibsem_correction_transform: bool = False
