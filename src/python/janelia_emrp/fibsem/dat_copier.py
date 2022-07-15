@@ -1,11 +1,9 @@
 import argparse
 import logging
 import subprocess
-from typing import Optional
-
-import sys
 from pathlib import Path
 
+import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
@@ -15,20 +13,15 @@ from janelia_emrp.root_logger import init_logger
 logger = logging.getLogger(__name__)
 
 
-def get_base_ssh_args(host: Optional[str]):
-    if host is not None and len(host) > 0:
-        # see https://man.openbsd.org/ssh_config.5 for descriptions of ssh -o args
-        args = [
-            "ssh",
-            "-o", "ConnectTimeout=10",
-            "-o", "ServerAliveCountMax=2",
-            "-o", "ServerAliveInterval=5",
-            "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
-            host
-        ]
-    else:
-        args = []
-    return args
+def get_base_ssh_args(host: str):
+    return [
+        "ssh",                             # see https://man.openbsd.org/ssh_config.5 for descriptions of ssh -o args
+        "-o", "ConnectTimeout=10",
+        "-o", "ServerAliveCountMax=2",
+        "-o", "ServerAliveInterval=5",
+        "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
+        host
+    ]
 
 
 def get_keep_file_list(host: str,
