@@ -7,6 +7,7 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
+from janelia_emrp.fibsem.dat_path import new_dat_path
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 from janelia_emrp.root_logger import init_logger
 
@@ -46,14 +47,18 @@ def get_keep_file_list(host: str,
 def copy_dat_file(keep_file: KeepFile,
                   dat_storage_root: Path):
 
-    # see https://man.openbsd.org/ssh_config.5 for descriptions of ssh -o args
+    dat_path = new_dat_path(Path(keep_file.dat_path))
+    time_based_relative_path_str = dat_path.acquire_time.strftime("%Y%m/%d")
+    target_dir = dat_storage_root / time_based_relative_path_str
+    target_dir.mkdir(parents=True, exist_ok=True)
+
     args = [
         "scp",
         "-T",                              # needed to avoid protocol error: filename does not match request
         "-o", "ConnectTimeout=10",
         "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
         f'{keep_file.host_prefix()}"{keep_file.dat_path}"',
-        str(dat_storage_root)
+        str(target_dir)
     ]
 
     subprocess.run(args, check=True)
@@ -117,7 +122,7 @@ def main(arg_list):
 
         if not volume_transfer_info.dat_storage_root.exists():
             logger.info(f"main: creating dat storage root {str(volume_transfer_info.dat_storage_root)}")
-            volume_transfer_info.dat_storage_root.mkdir()
+            volume_transfer_info.dat_storage_root.mkdir(parents=True)
 
         if not volume_transfer_info.dat_storage_root.is_dir():
             raise ValueError(f"dat storage root {str(volume_transfer_info.dat_storage_root)} is not a directory")
