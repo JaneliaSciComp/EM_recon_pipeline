@@ -127,8 +127,8 @@ def main(arg_list):
         keep_file_list = get_keep_file_list(host=volume_transfer_info.scope,
                                             keep_file_root=volume_transfer_info.scope_keep_file_root)
 
-        logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope} "
-                    f"to copy to {volume_transfer_info.dat_storage_root}")
+        logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope}, "
+                    f"will copy dat files to {volume_transfer_info.dat_storage_root}")
 
         for keep_file in keep_file_list:
 
