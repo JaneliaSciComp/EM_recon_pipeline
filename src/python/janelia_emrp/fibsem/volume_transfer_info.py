@@ -139,7 +139,7 @@ class RenderDataSet(BaseModel):
         }
 
 
-class VolumeTransferInfo2(BaseModel):
+class VolumeTransferInfo(BaseModel):
     """Information for managing the transfer of volume data from a scope to centralized storage.
     #
     # Attributes:

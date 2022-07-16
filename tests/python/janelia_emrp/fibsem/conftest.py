@@ -5,14 +5,14 @@ from pathlib import Path
 import pytest
 from _pytest.tmpdir import TempPathFactory
 
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, RenderConnect, VolumeTransferTask, \
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, RenderConnect, VolumeTransferTask, \
     ScopeDataSet, ClusterRootDirectoryPaths, ArchiveRootDirectoryPaths, RenderDataSet
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo2:
+def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
     # see https://docs.pytest.org/en/6.2.x/tmpdir.html
     h5_archive_storage_root: Path = tmpdir_factory.mktemp(basename='raw')
     logger.debug(f"volume_transfer_info: created {str(h5_archive_storage_root)}")
@@ -20,7 +20,7 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo2
     h5_align_storage_root: Path = tmpdir_factory.mktemp(basename='align')
     logger.debug(f"volume_transfer_info: created {str(h5_align_storage_root)}")
 
-    return VolumeTransferInfo2(
+    return VolumeTransferInfo(
         transfer_id="test_owner::test_project::test_scope",
         scope_data_set=ScopeDataSet(
             host="jeiss8.hhmi.org",
@@ -52,7 +52,7 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo2
                                   memGB="1G"),
         ),
         transfer_tasks=[VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER],
-        cluster_job_project_for_billing="scicompsw"
+        cluster_job_project_for_billing="scicompsoft"
     )
 
 

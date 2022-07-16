@@ -8,7 +8,7 @@ import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
 from janelia_emrp.fibsem.dat_path import new_dat_path
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, VolumeTransferTask
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -100,11 +100,11 @@ def main(arg_list):
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
     volume_transfer_dir_path = Path(args.volume_transfer_dir)
-    volume_transfer_list: list[VolumeTransferInfo2] = []
+    volume_transfer_list: list[VolumeTransferInfo] = []
     if volume_transfer_dir_path.is_dir():
         for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
 
-            transfer_info: VolumeTransferInfo2 = VolumeTransferInfo2.parse_file(path)
+            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
 
             if transfer_info.includes_task(VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER):
                 if transfer_info.cluster_root_paths is None:

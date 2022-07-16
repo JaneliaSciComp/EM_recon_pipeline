@@ -15,7 +15,7 @@ from janelia_emrp.fibsem.dat_path import DatPath, new_dat_path
 from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY
 from janelia_emrp.fibsem.mask_builder import MaskBuilder
 from janelia_emrp.fibsem.render_api import RenderApi
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, RenderDataSet, ScopeDataSet, \
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, RenderDataSet, ScopeDataSet, \
     VolumeTransferTask
 from janelia_emrp.root_logger import init_logger, console_handler
 
@@ -568,7 +568,7 @@ def main(arg_list):
 
     args = parser.parse_args(args=arg_list)
 
-    volume_transfer_info: VolumeTransferInfo2 = VolumeTransferInfo2.parse_file(args.volume_transfer_info)
+    volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(args.volume_transfer_info)
 
     if volume_transfer_info.cluster_root_paths is None:
         raise ValueError(f"cluster_root_paths not defined in {args.volume_transfer_info}")

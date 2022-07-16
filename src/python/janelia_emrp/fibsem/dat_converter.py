@@ -13,7 +13,7 @@ from fibsem_tools.io import read
 
 from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers
 from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, VolumeTransferTask
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class DatConverter:
         indicates whether existing HDF5 data should be left as is (True) or overwritten (False)
     """
     def __init__(self,
-                 volume_transfer_info: VolumeTransferInfo2,
+                 volume_transfer_info: VolumeTransferInfo,
                  raw_writer: Optional[DatToH5Writer] = None,
                  align_writer: Optional[DatToH5Writer] = None,
                  skip_existing: bool = True):
@@ -166,7 +166,7 @@ class DatConverter:
         return valid_path
 
 
-def convert_volume(volume_transfer_info: VolumeTransferInfo2,
+def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    num_workers: int,
                    num_threads_per_worker: int,
                    dask_worker_space: Optional[str] = None,
@@ -266,7 +266,7 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
 
-    convert_volume(volume_transfer_info=VolumeTransferInfo2.parse_file(args.volume_transfer_info),
+    convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
                    num_threads_per_worker=args.num_threads_per_worker,
                    dask_worker_space=args.dask_worker_space,
