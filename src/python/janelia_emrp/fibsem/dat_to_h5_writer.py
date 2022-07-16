@@ -157,28 +157,25 @@ class DatToH5Writer:
                                                              z_nm_per_pixel=None,
                                                              to_dataset=level_zero_data_set)
 
-        lazy_mipmaps = multiscale(compressed_record, windowed_mean, (1, 2, 2))
-        actual_max_mipmap_level = len(lazy_mipmaps) - 1
-
-        if max_mipmap_level is None:
-            derived_max_mipmap_level = actual_max_mipmap_level
-        else:
+        if max_mipmap_level is not None:
+            lazy_mipmaps = multiscale(compressed_record, windowed_mean, (1, 2, 2))
+            actual_max_mipmap_level = len(lazy_mipmaps) - 1
             derived_max_mipmap_level = min(max_mipmap_level, actual_max_mipmap_level)
 
-        for mipmap_level in range(1, derived_max_mipmap_level + 1):
+            for mipmap_level in range(1, derived_max_mipmap_level + 1):
 
-            logger.info(f"{self} create_and_add_mipmap_data_sets: create level {mipmap_level}")
+                logger.info(f"{self} create_and_add_mipmap_data_sets: create level {mipmap_level}")
 
-            scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
-            level_data_set = self.create_and_add_data_set(group_name=tile_key,
-                                                          data_set_name=f"mipmap.{mipmap_level}",
-                                                          pixel_array=scaled_bytes,
-                                                          to_h5_file=to_h5_file)
+                scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
+                level_data_set = self.create_and_add_data_set(group_name=tile_key,
+                                                              data_set_name=f"mipmap.{mipmap_level}",
+                                                              pixel_array=scaled_bytes,
+                                                              to_h5_file=to_h5_file)
 
-            scaled_element_size = [
-                scaled_element_size[0], scaled_element_size[1] * 2.0, scaled_element_size[2] * 2.0
-            ]
-            level_data_set.attrs["element_size_um"] = scaled_element_size
+                scaled_element_size = [
+                    scaled_element_size[0], scaled_element_size[1] * 2.0, scaled_element_size[2] * 2.0
+                ]
+                level_data_set.attrs["element_size_um"] = scaled_element_size
 
         logger.info(f"create_and_add_mipmap_data_sets: exit")
 

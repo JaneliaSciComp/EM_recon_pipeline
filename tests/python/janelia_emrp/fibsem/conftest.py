@@ -5,41 +5,54 @@ from pathlib import Path
 import pytest
 from _pytest.tmpdir import TempPathFactory
 
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, RenderConnect
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, RenderConnect, VolumeTransferTask, \
+    ScopeDataSet, ClusterRootDirectoryPaths, ArchiveRootDirectoryPaths, RenderDataSet
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
+def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo2:
     # see https://docs.pytest.org/en/6.2.x/tmpdir.html
-    h5_archive_storage_root = tmpdir_factory.mktemp(basename='raw')
+    h5_archive_storage_root: Path = tmpdir_factory.mktemp(basename='raw')
     logger.debug(f"volume_transfer_info: created {str(h5_archive_storage_root)}")
 
-    h5_align_storage_root = tmpdir_factory.mktemp(basename='align')
+    h5_align_storage_root: Path = tmpdir_factory.mktemp(basename='align')
     logger.debug(f"volume_transfer_info: created {str(h5_align_storage_root)}")
 
-    return VolumeTransferInfo(
-        scope="jeiss8.hhmi.org",
-        scope_storage_root="/cygdrive/e/Images/Fly Brain",
-        scope_keep_file_root="/cygdrive/d/UploadFlags",
-        dat_storage_root="/nearline/flyem2/data/Z0720-07m_VNC_Sec06/dat",
-        dat_x_and_y_nm_per_pixel=8,
-        dat_z_nm_per_pixel=8,
-        acquire_start=datetime.strptime("21-07-27_201550", "%y-%m-%d_%H%M%S"),
-        acquire_stop=datetime.strptime("21-08-04_213050", "%y-%m-%d_%H%M%S"),
-        h5_archive_storage_root=h5_archive_storage_root,
-        remove_dat_after_h5_archive=False,
-        h5_align_storage_root=h5_align_storage_root,
+    return VolumeTransferInfo2(
+        transfer_id="test_owner::test_project::test_scope",
+        scope_data_set=ScopeDataSet(
+            host="jeiss8.hhmi.org",
+            root_dat_path=Path("/cygdrive/e/Images/Fly Brain"),
+            root_keep_path=Path("/cygdrive/d/UploadFlags"),
+            acquire_start=datetime.strptime("21-07-27_201550", "%y-%m-%d_%H%M%S"),
+            acquire_stop=datetime.strptime("21-08-04_213050", "%y-%m-%d_%H%M%S"),
+            dat_x_and_y_nm_per_pixel=8,
+            dat_z_nm_per_pixel=8
+        ),
+        cluster_root_paths=ClusterRootDirectoryPaths(
+            align_h5=h5_align_storage_root
+        ),
+        archive_root_paths=ArchiveRootDirectoryPaths(
+            raw_dat=Path("/nearline/flyem2/data/Z0720-07m_VNC_Sec06/dat"),
+            raw_h5=h5_archive_storage_root
+        ),
         max_mipmap_level=7,
-        render_owner="test_h5",
-        render_project="VNC_Sec06",
-        render_connect=RenderConnect(host="renderer-dev.int.janelia.org",
-                                     port=8080,
-                                     web_only=True,
-                                     validate_client=False,
-                                     client_scripts="/groups/flyTEM/flyTEM/render/bin",
-                                     memGB="1G")
+        render_data_set=RenderDataSet(
+            owner="test_h5",
+            project="VNC_Sec06",
+            stack="v1_acquire",
+            restart_context_layer_count=1,
+            connect=RenderConnect(host="renderer-dev.int.janelia.org",
+                                  port=8080,
+                                  web_only=True,
+                                  validate_client=False,
+                                  client_scripts="/groups/flyTEM/flyTEM/render/bin",
+                                  memGB="1G"),
+        ),
+        transfer_tasks=[VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER],
+        cluster_job_project_for_billing="scicompsw"
     )
 
 

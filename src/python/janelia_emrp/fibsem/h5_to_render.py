@@ -15,7 +15,8 @@ from janelia_emrp.fibsem.dat_path import DatPath, new_dat_path
 from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY
 from janelia_emrp.fibsem.mask_builder import MaskBuilder
 from janelia_emrp.fibsem.render_api import RenderApi
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, RenderDataSet, ScopeDataSet, \
+    VolumeTransferTask
 from janelia_emrp.root_logger import init_logger, console_handler
 
 logger = logging.getLogger(__name__)
@@ -462,11 +463,13 @@ def import_tile_specs(tile_specs: list[Dict[str, Any]],
 
 
 def save_stack(stack_name: str,
-               volume_transfer_info: VolumeTransferInfo,
+               scope_data_set: ScopeDataSet,
+               render_data_set: RenderDataSet,
+               max_mipmap_level: Optional[int],
                tile_specs: list[Dict],
                transform_specs: list[Dict]):
 
-    render_connect_params = volume_transfer_info.get_render_connect_params()
+    render_connect_params = render_data_set.get_render_connect_params()
 
     render = renderapi.connect(**render_connect_params)
 
@@ -477,9 +480,9 @@ def save_stack(stack_name: str,
     renderapi.stack.create_stack(stack=stack_name,
                                  render=render,
                                  createTimestamp=create_timestamp,
-                                 stackResolutionX=volume_transfer_info.dat_x_and_y_nm_per_pixel,
-                                 stackResolutionY=volume_transfer_info.dat_x_and_y_nm_per_pixel,
-                                 stackResolutionZ=volume_transfer_info.dat_z_nm_per_pixel)
+                                 stackResolutionX=scope_data_set.dat_x_and_y_nm_per_pixel,
+                                 stackResolutionY=scope_data_set.dat_x_and_y_nm_per_pixel,
+                                 stackResolutionZ=scope_data_set.dat_z_nm_per_pixel)
 
     # api_tile_specs = [renderapi.tilespec.TileSpec(json=tile_spec) for tile_spec in tile_specs]
     #
@@ -491,9 +494,9 @@ def save_stack(stack_name: str,
     #                       stack=stack_name,
     #                       render=render)
 
-    render_api = RenderApi(render_owner=volume_transfer_info.render_owner,
-                           render_project=volume_transfer_info.render_project,
-                           render_connect=volume_transfer_info.render_connect)
+    render_api = RenderApi(render_owner=render_data_set.owner,
+                           render_project=render_data_set.project,
+                           render_connect=render_data_set.connect)
     tile_count = len(tile_specs)
     tiles_per_batch = 5000
     for index in range(0, tile_count, tiles_per_batch):
@@ -503,14 +506,15 @@ def save_stack(stack_name: str,
                           stack=stack_name,
                           render_api=render_api)
 
-    mipmap_path_builder = {
-        "rootPath": "not_applicable",
-        "numberOfLevels": volume_transfer_info.max_mipmap_level,
-        "extension": "tif",
-        "imageMipmapPatternString": "(.*dataSet=.*mipmap\\.)\\d+(.*)"
-    }
-    render_api.save_mipmap_path_builder(stack=stack_name,
-                                        mipmap_path_builder=mipmap_path_builder)
+    if max_mipmap_level is not None:
+        mipmap_path_builder = {
+            "rootPath": "not_applicable",
+            "numberOfLevels": max_mipmap_level,
+            "extension": "tif",
+            "imageMipmapPatternString": "(.*dataSet=.*mipmap\\.)\\d+(.*)"
+        }
+        render_api.save_mipmap_path_builder(stack=stack_name,
+                                            mipmap_path_builder=mipmap_path_builder)
     
     renderapi.stack.set_stack_state(stack_name, 'COMPLETE', render=render)
 
@@ -564,48 +568,67 @@ def main(arg_list):
 
     args = parser.parse_args(args=arg_list)
 
-    volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(args.volume_transfer_info)
+    volume_transfer_info: VolumeTransferInfo2 = VolumeTransferInfo2.parse_file(args.volume_transfer_info)
 
-    all_layers = build_all_layers(align_storage_root=volume_transfer_info.h5_align_storage_root,
+    if volume_transfer_info.cluster_root_paths is None:
+        raise ValueError(f"cluster_root_paths not defined in {args.volume_transfer_info}")
+
+    align_h5_root: Path = volume_transfer_info.cluster_root_paths.align_h5
+    if align_h5_root is None:
+        raise ValueError(f"cluster_root_paths.align_h5 not defined in {args.volume_transfer_info}")
+
+    scope_data_set: ScopeDataSet = volume_transfer_info.scope_data_set
+    if scope_data_set is None:
+        raise ValueError(f"scope_data_set not defined in {args.volume_transfer_info}")
+
+    render_data_set: RenderDataSet = volume_transfer_info.render_data_set
+    if render_data_set is None:
+        raise ValueError(f"render_data_set not defined in {args.volume_transfer_info}")
+
+    all_layers = build_all_layers(align_storage_root=align_h5_root,
                                   num_workers=args.num_workers,
                                   threads_per_worker=args.num_threads_per_worker,
                                   dask_worker_space=args.dask_worker_space,
-                                  bill_project=volume_transfer_info.bill_project,
+                                  bill_project=volume_transfer_info.cluster_job_project_for_billing,
                                   min_index=args.min_layer_index,
                                   max_index=args.max_layer_index)
 
     logger.info(f"main: generating tile specs and masks for {len(all_layers)} layers")
 
     mask_builder: Optional[MaskBuilder] = None
-    if volume_transfer_info.mask_width is not None or volume_transfer_info.mask_height is not None:
+    if render_data_set.mask_width is not None or render_data_set.mask_height is not None:
 
         # if mask_width and/or mask_height is defined, setup builder to produce dynamic mask URIs
         mask_builder = MaskBuilder(base_dir=None,
-                                   mask_width=volume_transfer_info.mask_width,
-                                   mask_height=volume_transfer_info.mask_height)
+                                   mask_width=render_data_set.mask_width,
+                                   mask_height=render_data_set.mask_height)
 
     pre_stage_transform_ids = []
     transform_specs = []
-    if volume_transfer_info.include_fibsem_correction_transform:
+    if volume_transfer_info.includes_task(VolumeTransferTask.APPLY_FIBSEM_CORRECTION_TRANSFORM):
         pre_stage_transform_ids.append(FIBSEM_CORRECTION_TRANSFORM["id"])
         transform_specs.append(FIBSEM_CORRECTION_TRANSFORM)
 
     all_tile_specs, all_restart_tile_specs = \
         build_all_tile_specs(all_layers=all_layers,
-                             restart_context_layer_count=volume_transfer_info.render_restart_context_layer_count,
+                             restart_context_layer_count=render_data_set.restart_context_layer_count,
                              mask_builder=mask_builder,
-                             tile_overlap_in_microns=volume_transfer_info.dat_tile_overlap_microns,
+                             tile_overlap_in_microns=scope_data_set.dat_tile_overlap_microns,
                              pre_stage_transform_ids=pre_stage_transform_ids)
 
-    if volume_transfer_info.render_connect is not None:
+    if render_data_set.connect is not None:
         if len(all_restart_tile_specs) > 0:
-            save_stack(stack_name=f"{volume_transfer_info.render_stack}_restart",
-                       volume_transfer_info=volume_transfer_info,
+            save_stack(stack_name=f"{render_data_set.stack}_restart",
+                       scope_data_set=scope_data_set,
+                       render_data_set=render_data_set,
+                       max_mipmap_level=volume_transfer_info.max_mipmap_level,
                        tile_specs=all_restart_tile_specs,
                        transform_specs=transform_specs)
 
-        save_stack(stack_name=volume_transfer_info.render_stack,
-                   volume_transfer_info=volume_transfer_info,
+        save_stack(stack_name=render_data_set.stack,
+                   scope_data_set=scope_data_set,
+                   render_data_set=render_data_set,
+                   max_mipmap_level=volume_transfer_info.max_mipmap_level,
                    tile_specs=all_tile_specs,
                    transform_specs=transform_specs)
 

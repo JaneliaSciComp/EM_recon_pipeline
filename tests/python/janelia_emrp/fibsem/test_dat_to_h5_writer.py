@@ -9,7 +9,7 @@ def test_create_and_add_mipmap_data_sets(volume_transfer_info,
                                          small_dat_path):
     align_writer = DatToH5Writer(chunk_shape=(1, 20, 20))
     converter = DatConverter(volume_transfer_info=volume_transfer_info,
-                             archive_writer=None,
+                             raw_writer=None,
                              align_writer=align_writer,
                              skip_existing=True)
 
@@ -17,7 +17,7 @@ def test_create_and_add_mipmap_data_sets(volume_transfer_info,
     dat_paths_for_layer = new_dat_layer(dat_path)
 
     dat_record = read(small_dat_path)
-    align_path = dat_paths_for_layer.get_h5_path(volume_transfer_info.h5_align_storage_root,
+    align_path = dat_paths_for_layer.get_h5_path(volume_transfer_info.cluster_root_paths.align_h5,
                                                  source_type="uint8")
     align_path = converter.setup_h5_path("align source", align_path, True)
 

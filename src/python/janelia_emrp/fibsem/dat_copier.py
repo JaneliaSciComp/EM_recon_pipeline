@@ -8,7 +8,7 @@ import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
 from janelia_emrp.fibsem.dat_path import new_dat_path
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo2, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def get_base_ssh_args(host: str):
 
 
 def get_keep_file_list(host: str,
-                       keep_file_root: str) -> list[KeepFile]:
+                       keep_file_root: Path) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
     args.append(f'ls "{keep_file_root}"')
@@ -37,7 +37,7 @@ def get_keep_file_list(host: str,
     for name in completed_process.stdout.decode("utf-8").split("\n"):
         name = name.strip()
         if name.endswith("^keep"):
-            keep_file = build_keep_file(host, keep_file_root, name)
+            keep_file = build_keep_file(host, str(keep_file_root), name)
             if keep_file is not None:
                 keep_file_list.append(keep_file)
 
@@ -48,8 +48,8 @@ def copy_dat_file(keep_file: KeepFile,
                   dat_storage_root: Path):
 
     dat_path = new_dat_path(Path(keep_file.dat_path))
-    time_based_relative_path_str = dat_path.acquire_time.strftime("%Y%m/%d")
-    target_dir = dat_storage_root / time_based_relative_path_str
+    hourly_relative_path_string = dat_path.acquire_time.strftime("%Y/%m/%d/%H")
+    target_dir = dat_storage_root / hourly_relative_path_string
     target_dir.mkdir(parents=True, exist_ok=True)
 
     args = [
@@ -100,47 +100,51 @@ def main(arg_list):
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
     volume_transfer_dir_path = Path(args.volume_transfer_dir)
-    volume_transfer_list: list[VolumeTransferInfo] = []
+    volume_transfer_list: list[VolumeTransferInfo2] = []
     if volume_transfer_dir_path.is_dir():
         for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
-            volume_transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
-            if args.scope is None or args.scope == volume_transfer_info.scope:
-                if not volume_transfer_info.acquisition_started():
-                    logger.info(f"main: ignoring {volume_transfer_info} because acquisition has not started")
-                elif not volume_transfer_info.scope_defined():
-                    logger.info(f"main: ignoring {volume_transfer_info} because scope is not defined")
-                else:
-                    volume_transfer_list.append(volume_transfer_info)
 
+            transfer_info: VolumeTransferInfo2 = VolumeTransferInfo2.parse_file(path)
+
+            if transfer_info.includes_task(VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER):
+                if transfer_info.cluster_root_paths is None:
+                    logger.info(f"main: ignoring {transfer_info} because cluster_root_paths not defined")
+                elif transfer_info.acquisition_started_for_scope(args.scope):
+                    volume_transfer_list.append(transfer_info)
+                else:
+                    logger.info(f"main: ignoring {transfer_info} because scope differs or acquisition has not started")
+            else:
+                logger.info(f"main: ignoring {transfer_info} because it does not include copy task")
     else:
         raise ValueError(f"volume_transfer_dir {args.volume_transfer_dir} is not a directory")
 
     copy_count = 0
 
     stop_processing = False
-    for volume_transfer_info in volume_transfer_list:
+    for transfer_info in volume_transfer_list:
 
-        if not volume_transfer_info.dat_storage_root.exists():
-            logger.info(f"main: creating dat storage root {str(volume_transfer_info.dat_storage_root)}")
-            volume_transfer_info.dat_storage_root.mkdir(parents=True)
+        logger.info(f"main: start processing for {transfer_info}")
 
-        if not volume_transfer_info.dat_storage_root.is_dir():
-            raise ValueError(f"dat storage root {str(volume_transfer_info.dat_storage_root)} is not a directory")
+        raw_dat_path = transfer_info.cluster_root_paths.raw_dat
+        if not raw_dat_path.exists():
+            logger.info(f"main: creating cluster_root_paths.raw_dat directory {raw_dat_path}")
+            raw_dat_path.mkdir(parents=True)
 
-        logger.info(f"main: checking on recently acquired data for {volume_transfer_info}")
+        if not raw_dat_path.is_dir():
+            raise ValueError(f"cluster_root_paths.raw_dat {raw_dat_path} is not a directory")
 
-        keep_file_list = get_keep_file_list(host=volume_transfer_info.scope,
-                                            keep_file_root=volume_transfer_info.scope_keep_file_root)
+        keep_file_list = get_keep_file_list(host=transfer_info.scope_data_set.host,
+                                            keep_file_root=transfer_info.scope_data_set.root_keep_path)
 
-        logger.info(f"main: found {len(keep_file_list)} keep files on {volume_transfer_info.scope}, "
-                    f"will copy dat files to {volume_transfer_info.dat_storage_root}")
+        logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host}, "
+                    f"will copy dat files to {raw_dat_path}")
 
         for keep_file in keep_file_list:
 
             logger.info(f"main: copying {keep_file.dat_path}")
 
             copy_dat_file(keep_file=keep_file,
-                          dat_storage_root=volume_transfer_info.dat_storage_root)
+                          dat_storage_root=raw_dat_path)
 
             logger.info(f"main: removing {keep_file.keep_path}")
 
