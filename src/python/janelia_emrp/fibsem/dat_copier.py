@@ -175,4 +175,5 @@ if __name__ == "__main__":
         main(sys.argv[1:])
     except Exception as e:
         traceback.print_exc()
+        print("calling sys.exit(1)")
         sys.exit(1)
