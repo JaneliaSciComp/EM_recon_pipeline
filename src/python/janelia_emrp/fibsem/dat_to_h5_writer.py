@@ -318,7 +318,8 @@ def main():
     h5_root_path = Path(args.h5_parent_path)
     archive_writer = DatToH5Writer(chunk_shape=None)
 
-    layers = split_into_layers(path_list=[Path(p) for p in args.dat_path])
+    layers = split_into_layers(path_list=[Path(p) for p in args.dat_path],
+                               exclude_files_modified_after=None)
 
     logger.info(f"found {len(layers)} layers")
 

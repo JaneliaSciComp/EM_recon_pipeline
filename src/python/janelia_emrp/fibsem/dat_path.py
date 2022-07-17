@@ -1,8 +1,11 @@
 import datetime
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePath
-from typing import List
+from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 # pattern for parsing dat files named with standard convention (e.g. Merlin-6049_15-06-16_000059_0-0-0.dat)
 base_name_pattern = re.compile(r"(.*)_(\d\d-\d\d-\d\d_\d{6})_(\d+)-(\d+)-(\d+).*")
@@ -98,7 +101,8 @@ def new_dat_layer(dat_path: DatPath) -> DatPathsForLayer:
     return DatPathsForLayer(dat_paths=[dat_path])
 
 
-def get_sorted_dat_file_paths(path_list: List[Path]) -> List[Path]:
+def get_sorted_dat_file_paths(path_list: List[Path],
+                              exclude_files_modified_after: Optional[datetime.datetime]) -> List[Path]:
     """
     Builds a sorted list of explicit dat file paths from the specified path list.
     Specified directories are searched recursively for dat files, whose explicit paths are added to the returned list.
@@ -116,13 +120,24 @@ def get_sorted_dat_file_paths(path_list: List[Path]) -> List[Path]:
         else:
             dat_file_paths.append(path)
 
+    if exclude_files_modified_after is not None:
+        path_count_before_mod_filter = len(dat_file_paths)
+        exclude_timestamp = datetime.datetime.timestamp(exclude_files_modified_after)
+        dat_file_paths = [dat for dat in dat_file_paths if dat.stat().st_mtime <= exclude_timestamp]
+        path_count_after_mod_filter = len(dat_file_paths)
+        removed_count = path_count_before_mod_filter - path_count_after_mod_filter
+        if removed_count > 0:
+            logger.info(f"get_sorted_dat_file_paths: removed {removed_count} "
+                        f"files modified after {exclude_files_modified_after}")
+
     if len(dat_file_paths) > 0:
         dat_file_paths = sorted(dat_file_paths)
 
     return dat_file_paths
 
 
-def split_into_layers(path_list: List[Path]) -> List[DatPathsForLayer]:
+def split_into_layers(path_list: List[Path],
+                      exclude_files_modified_after: Optional[datetime.datetime]) -> List[DatPathsForLayer]:
     """
     Converts the specified path list into a sorted list of explicit dat file paths
     and then aggregates the dat paths by z layer, returning a list of layers.
@@ -133,7 +148,7 @@ def split_into_layers(path_list: List[Path]) -> List[DatPathsForLayer]:
         A list of layer instances.
     """
     layers = []
-    sorted_dat_file_paths = get_sorted_dat_file_paths(path_list)
+    sorted_dat_file_paths = get_sorted_dat_file_paths(path_list, exclude_files_modified_after)
     if len(sorted_dat_file_paths) > 0:
         dat_path = new_dat_path(sorted_dat_file_paths[0])
         paths_for_layer = new_dat_layer(dat_path)

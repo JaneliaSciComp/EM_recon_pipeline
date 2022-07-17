@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import os
 import traceback
@@ -173,7 +174,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    dask_worker_space: Optional[str],
                    min_index: Optional[int],
                    max_index: Optional[int],
-                   skip_existing: bool):
+                   skip_existing: bool,
+                   exclude_files_modified_after: Optional[datetime.datetime]):
 
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
 
@@ -186,7 +188,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
 
     logger.info(f"convert_volume: loading dat file paths ...")
 
-    layers = split_into_layers([dat_root])
+    layers = split_into_layers(path_list=[dat_root],
+                               exclude_files_modified_after=exclude_files_modified_after)
 
     logger.info(f"convert_volume: found {len(layers)} layers")
 
@@ -269,8 +272,18 @@ def main(arg_list: list[str]):
         help="Convert all dat files even if converted result files already exist",
         action=argparse.BooleanOptionalAction
     )
+    parser.add_argument(
+        "--exclude_mod_minutes",
+        help="Exclude dat files modified within this number of minutes from the current time "
+             "to prevent processing partially transferred files",
+        type=int
+    )
 
     args = parser.parse_args(arg_list)
+
+    exclude_files_modified_after = None
+    if args.exclude_mod_minutes is not None:
+        exclude_files_modified_after = datetime.datetime.now() - datetime.timedelta(minutes=args.exclude_mod_minutes)
 
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
@@ -278,7 +291,8 @@ def main(arg_list: list[str]):
                    dask_worker_space=args.dask_worker_space,
                    min_index=args.min_index,
                    max_index=args.max_index,
-                   skip_existing=(not args.force))
+                   skip_existing=(not args.force),
+                   exclude_files_modified_after=exclude_files_modified_after)
 
 
 if __name__ == "__main__":
