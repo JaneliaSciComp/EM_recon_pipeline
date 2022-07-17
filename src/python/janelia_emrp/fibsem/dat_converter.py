@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import traceback
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Optional, List
@@ -169,9 +170,10 @@ class DatConverter:
 def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    num_workers: int,
                    num_threads_per_worker: int,
-                   dask_worker_space: Optional[str] = None,
-                   min_index: Optional[int] = None,
-                   max_index: Optional[int] = None):
+                   dask_worker_space: Optional[str],
+                   min_index: Optional[int],
+                   max_index: Optional[int],
+                   skip_existing: bool):
 
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
 
@@ -202,7 +204,6 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
 
     raw_writer = DatToH5Writer(chunk_shape=(2, 256, 256))
     align_writer = DatToH5Writer(chunk_shape=(1, 256, 256))
-    skip_existing = True
 
     converter = DatConverter(volume_transfer_info=volume_transfer_info,
                              raw_writer=raw_writer,
@@ -228,7 +229,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
         converter.convert_layer_list(layers)
 
 
-def main():
+def main(arg_list: list[str]):
     parser = argparse.ArgumentParser(
         description="Convert volume .dat files to HDF5 artifacts."
     )
@@ -263,19 +264,33 @@ def main():
         help="Index of last layer to be converted",
         type=int
     )
+    parser.add_argument(
+        "--force",
+        help="Convert all dat files even if converted result files already exist",
+        action=argparse.BooleanOptionalAction
+    )
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args(arg_list)
 
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
                    num_threads_per_worker=args.num_threads_per_worker,
                    dask_worker_space=args.dask_worker_space,
                    min_index=args.min_index,
-                   max_index=args.max_index)
+                   max_index=args.max_index,
+                   skip_existing=(not args.force))
 
 
 if __name__ == "__main__":
     # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
 
+    # setup logger since this module is the main program
     init_logger(__file__)
-    main()
+
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)
