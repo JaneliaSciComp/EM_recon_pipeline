@@ -72,10 +72,7 @@ def remove_keep_file(keep_file: KeepFile):
     subprocess.run(args, check=True)
 
 
-def main(arg_list):
-
-    init_logger(__file__)
-
+def main(arg_list: list[str]):
     start_time = time.time()
 
     parser = argparse.ArgumentParser(
@@ -170,10 +167,15 @@ def main(arg_list):
 
 
 if __name__ == "__main__":
+    # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    # setup logger since this module is the main program
+    init_logger(__file__)
+
     # noinspection PyBroadException
     try:
         main(sys.argv[1:])
     except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
-        print("calling sys.exit(1)")
         sys.exit(1)
