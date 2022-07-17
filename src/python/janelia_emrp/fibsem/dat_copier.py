@@ -1,6 +1,7 @@
 import argparse
 import logging
 import subprocess
+import traceback
 from pathlib import Path
 
 import sys
@@ -169,4 +170,9 @@ def main(arg_list):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        traceback.print_exc()
+        sys.exit(1)
