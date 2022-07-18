@@ -19,8 +19,7 @@ def test_dat_path_parsing():
         Path("/flyem2/data/Z0720-07m_BR_Sec18/dat/Merlin-6257_21-05-20_125749_0-0-3.dat"),
     ]
 
-    dat_layers = split_into_layers(path_list=dat_file_paths,
-                                   exclude_files_modified_after=None)
+    dat_layers = split_into_layers(path_list=dat_file_paths)
 
     expected_layer_ids = [
         "Merlin-6257_21-05-20_125416",
