@@ -181,13 +181,17 @@ class VolumeTransferInfo(BaseModel):
                       task: VolumeTransferTask):
         return task in self.transfer_tasks
 
-    def acquisition_started_for_scope(self,
-                                      scope: Optional[str]):
+    def acquisition_started(self):
         started_for_scope = False
         if self.scope_data_set is not None:
-            if scope is None or scope == self.scope_data_set.host:
-                started_for_scope = self.scope_data_set.acquisition_started()
+            started_for_scope = self.scope_data_set.acquisition_started()
         return started_for_scope
+
+    def acquisition_stopped(self):
+        stopped_for_scope = False
+        if self.scope_data_set is not None:
+            stopped_for_scope = self.scope_data_set.acquisition_stopped()
+        return stopped_for_scope
 
     def get_dat_root_for_conversion(self):
         dat_root = None

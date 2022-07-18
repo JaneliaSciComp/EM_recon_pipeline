@@ -174,8 +174,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    dask_worker_space: Optional[str],
                    min_index: Optional[int],
                    max_index: Optional[int],
-                   skip_existing: bool,
-                   exclude_files_modified_after: Optional[datetime.datetime]):
+                   skip_existing: bool):
 
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
 
@@ -188,12 +187,22 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
 
     logger.info(f"convert_volume: loading dat file paths ...")
 
-    layers = split_into_layers(path_list=[dat_root],
-                               exclude_files_modified_after=exclude_files_modified_after)
+    layers: list[DatPathsForLayer] = split_into_layers(path_list=[dat_root])
 
-    logger.info(f"convert_volume: found {len(layers)} layers")
+    # ensure last layer is excluded from conversion
+    total_layer_count = len(layers)
+    slice_max = total_layer_count if max_index is None else min(total_layer_count, (max_index + 1))
 
-    slice_max = max_index + 1 if max_index else None
+    # unless acquisition has stopped and last dat file of last layer is not recently modified
+    if len(layers) > 0 and volume_transfer_info.acquisition_stopped():
+        one_hour_ago = datetime.datetime.now() - datetime.timedelta(hours=1)
+        exclude_timestamp = datetime.datetime.timestamp(one_hour_ago)
+        last_layer: DatPathsForLayer = layers[-1]
+        last_dat: Path = last_layer.dat_paths[-1].file_path
+        if (last_dat.stat().st_mtime <= exclude_timestamp) and (slice_max >= total_layer_count):
+            logger.info("convert_volume: including last layer because "
+                        "acquisition stopped and last dat is not recently modified")
+            slice_max = None
 
     if min_index:
         if slice_max:
@@ -272,18 +281,8 @@ def main(arg_list: list[str]):
         help="Convert all dat files even if converted result files already exist",
         action=argparse.BooleanOptionalAction
     )
-    parser.add_argument(
-        "--exclude_mod_minutes",
-        help="Exclude dat files modified within this number of minutes from the current time "
-             "to prevent processing partially transferred files",
-        type=int
-    )
 
     args = parser.parse_args(arg_list)
-
-    exclude_files_modified_after = None
-    if args.exclude_mod_minutes is not None:
-        exclude_files_modified_after = datetime.datetime.now() - datetime.timedelta(minutes=args.exclude_mod_minutes)
 
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
@@ -291,8 +290,7 @@ def main(arg_list: list[str]):
                    dask_worker_space=args.dask_worker_space,
                    min_index=args.min_index,
                    max_index=args.max_index,
-                   skip_existing=(not args.force),
-                   exclude_files_modified_after=exclude_files_modified_after)
+                   skip_existing=(not args.force))
 
 
 if __name__ == "__main__":

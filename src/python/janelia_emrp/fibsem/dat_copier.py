@@ -107,10 +107,13 @@ def main(arg_list: list[str]):
             if transfer_info.includes_task(VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER):
                 if transfer_info.cluster_root_paths is None:
                     logger.info(f"main: ignoring {transfer_info} because cluster_root_paths not defined")
-                elif transfer_info.acquisition_started_for_scope(args.scope):
-                    volume_transfer_list.append(transfer_info)
+                elif transfer_info.acquisition_started():
+                    if args.scope is None or args.scope == transfer_info.scope_data_set.host:
+                        volume_transfer_list.append(transfer_info)
+                    else:
+                        logger.info(f"main: ignoring {transfer_info} because scope differs")
                 else:
-                    logger.info(f"main: ignoring {transfer_info} because scope differs or acquisition has not started")
+                    logger.info(f"main: ignoring {transfer_info} because acquisition has not started")
             else:
                 logger.info(f"main: ignoring {transfer_info} because it does not include copy task")
     else:
