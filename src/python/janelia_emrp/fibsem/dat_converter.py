@@ -189,6 +189,21 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
 
     layers: list[DatPathsForLayer] = split_into_layers(path_list=[dat_root])
 
+    logger.info(f"convert_volume: found {len(layers)} layers to convert")
+
+    if skip_existing:
+        logger.info(f"convert_volume: filtering out existing layers")
+        new_layers = []
+        raw_h5_root_path = volume_transfer_info.get_raw_h5_root_for_conversion()
+        align_h5_root = volume_transfer_info.get_align_h5_root_for_conversion()
+        for layer in layers:
+            if not layer.h5_exists(h5_root_path=raw_h5_root_path, source_type="raw") and \
+                    not layer.h5_exists(h5_root_path=align_h5_root, source_type="uint8"):
+                new_layers.append(layer)
+        if len(new_layers) < len(layers):
+            layers = new_layers
+            logger.info(f"convert_volume: after filtering, {len(layers)} remain to be converted")
+
     # ensure last layer is excluded from conversion
     total_layer_count = len(layers)
     slice_max = total_layer_count if max_index is None else min(total_layer_count, (max_index + 1))

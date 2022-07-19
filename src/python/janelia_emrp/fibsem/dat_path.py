@@ -93,6 +93,17 @@ class DatPathsForLayer:
 
         return h5_root_path / relative_path
 
+    def h5_exists(self,
+                  h5_root_path: Path,
+                  append_acquisition_based_subdirectories: bool = True,
+                  source_type="raw") -> bool:
+        exists = False
+        if h5_root_path is not None:
+            exists = self.get_h5_path(h5_root_path=h5_root_path,
+                                      append_acquisition_based_subdirectories=append_acquisition_based_subdirectories,
+                                      source_type=source_type).exists()
+        return exists
+
 
 def new_dat_layer(dat_path: DatPath) -> DatPathsForLayer:
     """
