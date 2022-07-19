@@ -118,7 +118,7 @@ class DatConverter:
                 # TODO: validate dat and h5 equivalence before removing dat
                 # dat_path.file_path.unlink()
 
-        logger.info(f"{self} convert: exit")
+        logger.info(f"{self} convert: exit, converted {dat_paths_for_layer.get_layer_id()}")
 
     def convert_layer_list(self,
                            dat_layer_list: List[DatPathsForLayer]):

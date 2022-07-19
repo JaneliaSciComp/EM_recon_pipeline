@@ -136,8 +136,9 @@ class DatToH5Writer:
         The `align_writer` is used to save each mipmap as a data set within the specified `layer_align_file`.
         Data sets are named as <section>-<row>-<column>.mipmap.<level> (e.g. 0-0-1.mipmap.3).
         """
-        log_context = f"create_and_add_mipmap_data_sets: {dat_path.layer_and_tile()}"
-        logger.info(f"{log_context} create level 0 by compressing {dat_path.file_path}")
+        func_name = "create_and_add_mipmap_data_sets:"
+        layer_and_tile = dat_path.layer_and_tile()
+        logger.info(f"{func_name} create level 0 by compressing {dat_path.file_path} for {layer_and_tile}")
 
         compressed_record = compress_compute(dat_record)
 
@@ -165,7 +166,7 @@ class DatToH5Writer:
 
             for mipmap_level in range(1, derived_max_mipmap_level + 1):
 
-                logger.info(f"{log_context} create level {mipmap_level}")
+                logger.info(f"{func_name} create level {mipmap_level} for {layer_and_tile}")
 
                 scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
                 level_data_set = self.create_and_add_data_set(group_name=tile_key,
@@ -178,7 +179,7 @@ class DatToH5Writer:
                 ]
                 level_data_set.attrs["element_size_um"] = scaled_element_size
 
-        logger.info(f"{log_context} exit")
+        logger.info(f"{func_name} exit for {layer_and_tile}")
 
 
 def add_dat_header_attributes(dat_file_path: Path,
