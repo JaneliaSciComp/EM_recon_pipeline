@@ -97,7 +97,7 @@ class DatConverter:
                     if not dat_path.file_path.exists():
                         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), dat_path.file_path)
 
-                    logger.info(f"{self} convert: reading {dat_path.file_path}")
+                    logger.info(f"{self} convert_layer: reading {dat_path.file_path}")
                     dat_record = read(dat_path.file_path)
 
                     if archive_path:
@@ -118,13 +118,13 @@ class DatConverter:
                 self.volume_transfer_info.includes_task(VolumeTransferTask.REMOVE_DAT_AFTER_H5_CONVERSION):
             # TODO: handle dat removal errors - probably want to just log issue and not disrupt other processing
             for dat_path in dat_paths_for_layer.dat_paths:
-                logger.info(f"{self} convert: validation and removal of {dat_path.file_path} is TBD")
+                logger.info(f"{self} convert_layer: validation and removal of {dat_path.file_path} is TBD")
                 # TODO: validate dat and h5 equivalence before removing dat
                 # dat_path.file_path.unlink()
 
         elapsed_seconds = int(time.time() - start_time)
 
-        logger.info(f"{self} convert: exit, layer {dat_paths_for_layer.get_layer_id()} conversion "
+        logger.info(f"{self} convert_layer: exit, layer {dat_paths_for_layer.get_layer_id()} conversion "
                     f"took {elapsed_seconds} seconds")
 
     def convert_layer_list(self,
