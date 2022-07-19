@@ -25,6 +25,9 @@ class DatPath:
     def tile_key(self) -> str:
         return f"{self.section}-{self.row}-{self.column}"
 
+    def layer_and_tile(self):
+        return f"{self.layer_id}::{self.tile_key()}"
+
 
 def new_dat_path(file_path: Path) -> DatPath:
     """
