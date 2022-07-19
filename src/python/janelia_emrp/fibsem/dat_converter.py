@@ -2,6 +2,9 @@ import argparse
 import datetime
 import logging
 import os
+
+import math
+import time
 import traceback
 from contextlib import ExitStack
 from pathlib import Path
@@ -65,9 +68,10 @@ class DatConverter:
         align_h5_root_path:
             root path for align h5 output or None if align conversion is not desired
         """
+        start_time = time.time()
 
         logger.info(f"{self} convert_layer: entry, processing {len(dat_paths_for_layer.dat_paths)} dat files "
-                    f"for {dat_paths_for_layer.get_layer_id()}")
+                    f"for layer {dat_paths_for_layer.get_layer_id()}")
 
         archive_path = None
         if raw_h5_root_path is not None:
@@ -118,7 +122,10 @@ class DatConverter:
                 # TODO: validate dat and h5 equivalence before removing dat
                 # dat_path.file_path.unlink()
 
-        logger.info(f"{self} convert: exit, converted {dat_paths_for_layer.get_layer_id()}")
+        elapsed_seconds = int(time.time() - start_time)
+
+        logger.info(f"{self} convert: exit, layer {dat_paths_for_layer.get_layer_id()} conversion "
+                    f"took {elapsed_seconds} seconds")
 
     def convert_layer_list(self,
                            dat_layer_list: List[DatPathsForLayer]):
@@ -174,7 +181,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    dask_worker_space: Optional[str],
                    min_index: Optional[int],
                    max_index: Optional[int],
-                   skip_existing: bool):
+                   skip_existing: bool,
+                   min_layers_per_worker: int):
 
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
 
@@ -219,41 +227,48 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                         "acquisition stopped and last dat is not recently modified")
             slice_max = None
 
-    if min_index:
+    slice_min = None if min_index is None else max(min_index, 0)
+    if slice_min:
         if slice_max:
-            layers = layers[min_index:slice_max]
+            layers = layers[slice_min:slice_max]
         else:
-            layers = layers[min_index:]
+            layers = layers[slice_min:]
     elif slice_max:
         layers = layers[0:slice_max]
 
-    logger.info(f"convert_volume: {len(layers)} layers remain with index range {min_index}:{slice_max}")
+    if len(layers) > 0:
+        logger.info(f"convert_volume: {len(layers)} layers remain with index range {slice_min}:{slice_max}")
 
-    raw_writer = DatToH5Writer(chunk_shape=(2, 256, 256))
-    align_writer = DatToH5Writer(chunk_shape=(1, 256, 256))
+        raw_writer = DatToH5Writer(chunk_shape=(2, 256, 256))
+        align_writer = DatToH5Writer(chunk_shape=(1, 256, 256))
 
-    converter = DatConverter(volume_transfer_info=volume_transfer_info,
-                             raw_writer=raw_writer,
-                             align_writer=align_writer,
-                             skip_existing=skip_existing)
+        converter = DatConverter(volume_transfer_info=volume_transfer_info,
+                                 raw_writer=raw_writer,
+                                 align_writer=align_writer,
+                                 skip_existing=skip_existing)
 
-    if num_workers > 1:
-        dask_cluster = get_cluster(threads_per_worker=num_threads_per_worker,
-                                   local_kwargs={
-                                       "local_directory": dask_worker_space
-                                   })
+        if num_workers > 1:
+            dask_cluster = get_cluster(threads_per_worker=num_threads_per_worker,
+                                       local_kwargs={
+                                           "local_directory": dask_worker_space
+                                       })
 
-        logger.info(f'convert_volume: observe dask cluster information at {dask_cluster.dashboard_link}')
+            logger.info(f'convert_volume: observe dask cluster information at {dask_cluster.dashboard_link}')
 
-        dask_cluster.scale(num_workers)
-        logger.info(f'convert_volume: scaled dask cluster to {num_workers} workers')
+            adjusted_num_workers = min(math.ceil(len(layers) / min_layers_per_worker), num_workers)
+            dask_cluster.scale(adjusted_num_workers)
 
-        bag = dask_bag.from_sequence(layers, npartitions=num_workers)
-        bag = bag.map_partitions(converter.convert_layer_list)
-        bag.compute()
+            logger.info(f'convert_volume: scaled dask cluster to {adjusted_num_workers} workers')
+
+            bag = dask_bag.from_sequence(layers, npartitions=num_workers)
+            bag = bag.map_partitions(converter.convert_layer_list)
+            bag.compute()
+
+        else:
+            converter.convert_layer_list(layers)
 
     else:
-        converter.convert_layer_list(layers)
+        logger.info(f"convert_volume: no layers remain to process")
 
 
 def main(arg_list: list[str]):
@@ -274,6 +289,12 @@ def main(arg_list: list[str]):
     parser.add_argument(
         "--num_threads_per_worker",
         help="The number of threads for each worker",
+        type=int,
+        default=1
+    )
+    parser.add_argument(
+        "--min_layers_per_worker",
+        help="If necessary, reduce the number of workers so that each worker processes at least this many layers",
         type=int,
         default=1
     )
@@ -305,7 +326,8 @@ def main(arg_list: list[str]):
                    dask_worker_space=args.dask_worker_space,
                    min_index=args.min_index,
                    max_index=args.max_index,
-                   skip_existing=(not args.force))
+                   skip_existing=(not args.force),
+                   min_layers_per_worker=args.min_layers_per_worker)
 
 
 if __name__ == "__main__":
