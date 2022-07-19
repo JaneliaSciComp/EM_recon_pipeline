@@ -177,7 +177,6 @@ class DatConverter:
 
 def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    num_workers: int,
-                   num_threads_per_worker: int,
                    dask_worker_space: Optional[str],
                    min_index: Optional[int],
                    max_index: Optional[int],
@@ -248,7 +247,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                                  skip_existing=skip_existing)
 
         if num_workers > 1:
-            dask_cluster = get_cluster(threads_per_worker=num_threads_per_worker,
+            dask_cluster = get_cluster(threads_per_worker=1,
                                        local_kwargs={
                                            "local_directory": dask_worker_space
                                        })
@@ -256,9 +255,10 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
             logger.info(f'convert_volume: observe dask cluster information at {dask_cluster.dashboard_link}')
 
             adjusted_num_workers = min(math.ceil(len(layers) / min_layers_per_worker), num_workers)
-            dask_cluster.scale(adjusted_num_workers)
+            dask_cluster.scale(n=adjusted_num_workers)
 
-            logger.info(f'convert_volume: scaled dask cluster to {adjusted_num_workers} workers')
+            logger.info(f"convert_volume: requested {adjusted_num_workers} worker dask cluster, " 
+                        f"scaled count is {len(dask_cluster.worker_spec)}")
 
             bag = dask_bag.from_sequence(layers, npartitions=num_workers)
             bag = bag.map_partitions(converter.convert_layer_list)
@@ -283,12 +283,6 @@ def main(arg_list: list[str]):
     parser.add_argument(
         "--num_workers",
         help="The number of workers to use for distributed processing",
-        type=int,
-        default=1
-    )
-    parser.add_argument(
-        "--num_threads_per_worker",
-        help="The number of threads for each worker",
         type=int,
         default=1
     )
@@ -322,7 +316,6 @@ def main(arg_list: list[str]):
 
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
-                   num_threads_per_worker=args.num_threads_per_worker,
                    dask_worker_space=args.dask_worker_space,
                    min_index=args.min_index,
                    max_index=args.max_index,
