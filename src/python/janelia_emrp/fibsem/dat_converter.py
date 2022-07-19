@@ -14,6 +14,7 @@ import dask.bag as dask_bag
 import errno
 import sys
 from dask_janelia import get_cluster
+from distributed import Client
 from fibsem_tools.io import read
 
 from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers
@@ -177,11 +178,12 @@ class DatConverter:
 
 def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    num_workers: int,
-                   dask_worker_space: Optional[str],
+                   parent_work_dir: Optional[str],
                    min_index: Optional[int],
                    max_index: Optional[int],
                    skip_existing: bool,
-                   min_layers_per_worker: int):
+                   min_layers_per_worker: int,
+                   lsf_runtime_limit: Optional[str]):
 
     logger.info(f"convert_volume: entry, processing {volume_transfer_info} with {num_workers} worker(s)")
 
@@ -247,22 +249,35 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                                  skip_existing=skip_existing)
 
         if num_workers > 1:
-            dask_cluster = get_cluster(threads_per_worker=1,
-                                       local_kwargs={
-                                           "local_directory": dask_worker_space
-                                       })
+            local_kwargs = {}
+            lsf_kwargs = {
+                "project": volume_transfer_info.cluster_job_project_for_billing
+            }
 
-            logger.info(f'convert_volume: observe dask cluster information at {dask_cluster.dashboard_link}')
+            if parent_work_dir is not None:
+                local_kwargs["local_directory"] = parent_work_dir
+                lsf_kwargs["local_directory"] = parent_work_dir
+                lsf_kwargs["log_directory"] = parent_work_dir
 
-            adjusted_num_workers = min(math.ceil(len(layers) / min_layers_per_worker), num_workers)
-            dask_cluster.scale(n=adjusted_num_workers)
+            if lsf_runtime_limit is not None:
+                lsf_kwargs["walltime"] = lsf_runtime_limit
 
-            logger.info(f"convert_volume: requested {adjusted_num_workers} worker dask cluster, " 
-                        f"scaled count is {len(dask_cluster.worker_spec)}")
+            with get_cluster(threads_per_worker=1,
+                             local_kwargs=local_kwargs,
+                             lsf_kwargs=lsf_kwargs) as dask_cluster, Client(dask_cluster) as dask_client:
 
-            bag = dask_bag.from_sequence(layers, npartitions=adjusted_num_workers)
-            bag = bag.map_partitions(converter.convert_layer_list)
-            bag.compute()
+                dask_client.cluster.scale(n=num_workers)
+                logger.info(f'convert_volume: observe dask cluster information at {dask_cluster.dashboard_link}')
+
+                adjusted_num_workers = min(math.ceil(len(layers) / min_layers_per_worker), num_workers)
+                dask_cluster.scale(n=adjusted_num_workers)
+
+                logger.info(f"convert_volume: requested {adjusted_num_workers} worker dask cluster, " 
+                            f"scaled count is {len(dask_cluster.worker_spec)}")
+
+                bag = dask_bag.from_sequence(layers, npartitions=adjusted_num_workers)
+                bag = bag.map_partitions(converter.convert_layer_list)
+                dask_client.compute(bag, sync=True)
 
         else:
             converter.convert_layer_list(layers)
@@ -293,8 +308,12 @@ def main(arg_list: list[str]):
         default=1
     )
     parser.add_argument(
-        "--dask_worker_space",
-        help="Directory for Dask worker data",
+        "--parent_work_dir",
+        help="Parent directory for Dask logs and worker data",
+    )
+    parser.add_argument(
+        "--lsf_runtime_limit",
+        help="Runtime limit in minutes when using LSF (e.g. [hour:]minute)",
     )
     parser.add_argument(
         "--min_index",
@@ -316,11 +335,12 @@ def main(arg_list: list[str]):
 
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
-                   dask_worker_space=args.dask_worker_space,
+                   parent_work_dir=args.parent_work_dir,
                    min_index=args.min_index,
                    max_index=args.max_index,
                    skip_existing=(not args.force),
-                   min_layers_per_worker=args.min_layers_per_worker)
+                   min_layers_per_worker=args.min_layers_per_worker,
+                   lsf_runtime_limit=args.lsf_runtime_limit)
 
 
 if __name__ == "__main__":
