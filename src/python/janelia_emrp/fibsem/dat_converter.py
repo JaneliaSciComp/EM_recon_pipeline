@@ -260,7 +260,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
             logger.info(f"convert_volume: requested {adjusted_num_workers} worker dask cluster, " 
                         f"scaled count is {len(dask_cluster.worker_spec)}")
 
-            bag = dask_bag.from_sequence(layers, npartitions=num_workers)
+            bag = dask_bag.from_sequence(layers, npartitions=adjusted_num_workers)
             bag = bag.map_partitions(converter.convert_layer_list)
             bag.compute()
 
