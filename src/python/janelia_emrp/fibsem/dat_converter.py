@@ -205,8 +205,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
             logger.info(f"convert_volume: after filtering, {len(layers)} remain to be converted")
 
     # ensure last layer is excluded from conversion
-    total_layer_count = len(layers)
-    slice_max = total_layer_count if max_index is None else min(total_layer_count, (max_index + 1))
+    layer_count_minus_one = len(layers) - 1
+    slice_max = layer_count_minus_one if max_index is None else min(layer_count_minus_one, (max_index + 1))
 
     # unless acquisition has stopped and last dat file of last layer is not recently modified
     if len(layers) > 0 and volume_transfer_info.acquisition_stopped():
@@ -214,7 +214,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
         exclude_timestamp = datetime.datetime.timestamp(one_hour_ago)
         last_layer: DatPathsForLayer = layers[-1]
         last_dat: Path = last_layer.dat_paths[-1].file_path
-        if (last_dat.stat().st_mtime <= exclude_timestamp) and (slice_max >= total_layer_count):
+        if (last_dat.stat().st_mtime <= exclude_timestamp) and (slice_max >= layer_count_minus_one):
             logger.info("convert_volume: including last layer because "
                         "acquisition stopped and last dat is not recently modified")
             slice_max = None
