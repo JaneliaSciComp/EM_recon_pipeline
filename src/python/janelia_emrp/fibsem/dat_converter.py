@@ -19,6 +19,7 @@ from fibsem_tools.io import read
 
 from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers
 from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer
+from janelia_emrp.fibsem.h5_to_dat import validate_original_dat_bytes_match
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
@@ -74,10 +75,10 @@ class DatConverter:
         logger.info(f"{self} convert_layer: entry, processing {len(dat_paths_for_layer.dat_paths)} dat files "
                     f"for layer {dat_paths_for_layer.get_layer_id()}")
 
-        archive_path = None
+        raw_path = None
         if raw_h5_root_path is not None:
-            archive_path = dat_paths_for_layer.get_h5_path(raw_h5_root_path, source_type="raw")
-            archive_path = self.setup_h5_path("archive", archive_path, self.skip_existing)
+            raw_path = dat_paths_for_layer.get_h5_path(raw_h5_root_path, source_type="raw")
+            raw_path = self.setup_h5_path("archive", raw_path, self.skip_existing)
 
         align_path = None
         if align_h5_root_path is not None:
@@ -85,14 +86,14 @@ class DatConverter:
             align_path = self.setup_h5_path("align source", align_path, self.skip_existing)
 
         with ExitStack() as stack:
-            if archive_path:
-                layer_archive_file = stack.enter_context(self.raw_writer.open_h5_file(str(archive_path)))
+            if raw_path:
+                layer_raw_file = stack.enter_context(self.raw_writer.open_h5_file(str(raw_path)))
             if align_path:
                 layer_align_file = stack.enter_context(self.align_writer.open_h5_file(str(align_path)))
 
             # TODO: clean-up properly if errors occur during conversion
 
-            if archive_path or align_path:
+            if raw_path or align_path:
                 for dat_path in dat_paths_for_layer.dat_paths:
 
                     if not dat_path.file_path.exists():
@@ -101,11 +102,11 @@ class DatConverter:
                     logger.info(f"{self} convert_layer: reading {dat_path.file_path}")
                     dat_record = read(dat_path.file_path)
 
-                    if archive_path:
-                        self.raw_writer.create_and_add_archive_data_set(dat_path=dat_path,
-                                                                        dat_header=dat_record.header,
-                                                                        dat_record=dat_record,
-                                                                        to_h5_file=layer_archive_file)
+                    if raw_path:
+                        self.raw_writer.create_and_add_raw_data_set(dat_path=dat_path,
+                                                                    dat_header=dat_record.header,
+                                                                    dat_record=dat_record,
+                                                                    to_h5_file=layer_raw_file)
 
                     if align_path:
                         self.align_writer.create_and_add_mipmap_data_sets(
@@ -115,13 +116,21 @@ class DatConverter:
                             max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
                             to_h5_file=layer_align_file)
 
-        if raw_h5_root_path is not None and \
+        if raw_path is not None and \
                 self.volume_transfer_info.includes_task(VolumeTransferTask.REMOVE_DAT_AFTER_H5_CONVERSION):
-            # TODO: handle dat removal errors - probably want to just log issue and not disrupt other processing
-            for dat_path in dat_paths_for_layer.dat_paths:
-                logger.info(f"{self} convert_layer: validation and removal of {dat_path.file_path} is TBD")
-                # TODO: validate dat and h5 equivalence before removing dat
-                # dat_path.file_path.unlink()
+
+            dat_parent_path = dat_paths_for_layer.dat_paths[0].file_path.parent
+
+            try:
+                matched_dat_file_paths = validate_original_dat_bytes_match(h5_path=raw_path,
+                                                                           dat_parent_path=dat_parent_path)
+                for dat_path in matched_dat_file_paths:
+                    logger.info(f"{self} convert_layer: removing {dat_path}")
+                    dat_path.unlink()
+
+            except ValueError:
+                traceback.print_exc()
+                logger.error(f"{self} convert_layer: skipped dat removal because h5 validation failed for {raw_path}")
 
         elapsed_seconds = int(time.time() - start_time)
 

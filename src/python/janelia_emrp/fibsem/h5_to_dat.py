@@ -1,5 +1,6 @@
 import argparse
 import logging
+import traceback
 from pathlib import Path
 
 import h5py
@@ -108,7 +109,7 @@ def validate_original_dat_bytes_match(h5_path: Path,
     return matched_dat_file_paths
 
 
-def main():
+def main(arg_list: list[str]):
     parser = argparse.ArgumentParser(
         description="Validate that byte contents of HDF5 and dat files match or restore dat files to disk."
     )
@@ -129,7 +130,7 @@ def main():
         action="store_true",
     )
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args(arg_list)
 
     h5_path_list = [Path(p) for p in args.h5_path]
     dat_parent_path = Path(args.dat_parent_path)
@@ -149,5 +150,13 @@ def main():
 if __name__ == "__main__":
     # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
 
+    # setup logger since this module is the main program
     init_logger(__file__)
-    main()
+
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)

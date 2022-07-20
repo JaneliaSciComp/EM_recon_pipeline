@@ -1,6 +1,8 @@
 import argparse
 import logging
 import os
+import traceback
+
 import sys
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, Union, Final
@@ -108,11 +110,11 @@ class DatToH5Writer:
                                     compression=self.compression,
                                     compression_opts=self.compression_opts)
 
-    def create_and_add_archive_data_set(self,
-                                        dat_path: DatPath,
-                                        dat_header: Dict[str, Any],
-                                        dat_record: np.ndarray,
-                                        to_h5_file: h5py.File):
+    def create_and_add_raw_data_set(self,
+                                    dat_path: DatPath,
+                                    dat_header: Dict[str, Any],
+                                    dat_record: np.ndarray,
+                                    to_h5_file: h5py.File):
         data_set = self.create_and_add_data_set(data_set_name=dat_path.tile_key(),
                                                 pixel_array=dat_record,
                                                 to_h5_file=to_h5_file)
@@ -299,7 +301,7 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
     return element_size_um
 
 
-def main():
+def main(arg_list: list[str]):
     parser = argparse.ArgumentParser(
         description="Converts dat files to HDF5 files."
     )
@@ -315,7 +317,7 @@ def main():
         required=True,
     )
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args(arg_list)
 
     h5_root_path = Path(args.h5_parent_path)
     archive_writer = DatToH5Writer(chunk_shape=None)
@@ -335,14 +337,22 @@ def main():
                 logger.info(f"reading {dat_path.file_path}")
                 dat_record = read(dat_path.file_path)
 
-                archive_writer.create_and_add_archive_data_set(dat_path=dat_path,
-                                                               dat_header=dat_record.header,
-                                                               dat_record=dat_record,
-                                                               to_h5_file=layer_archive_file)
+                archive_writer.create_and_add_raw_data_set(dat_path=dat_path,
+                                                           dat_header=dat_record.header,
+                                                           dat_record=dat_record,
+                                                           to_h5_file=layer_archive_file)
 
 
 if __name__ == "__main__":
     # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
 
+    # setup logger since this module is the main program
     init_logger(__file__)
-    main()
+
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)
