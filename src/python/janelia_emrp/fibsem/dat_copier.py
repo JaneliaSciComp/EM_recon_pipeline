@@ -27,7 +27,8 @@ def get_base_ssh_args(host: str):
 
 
 def get_keep_file_list(host: str,
-                       keep_file_root: Path) -> list[KeepFile]:
+                       keep_file_root: Path,
+                       data_set_id: str) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
     args.append(f'ls "{keep_file_root}"')
@@ -39,7 +40,7 @@ def get_keep_file_list(host: str,
         name = name.strip()
         if name.endswith("^keep"):
             keep_file = build_keep_file(host, str(keep_file_root), name)
-            if keep_file is not None:
+            if keep_file is not None and keep_file.data_set == data_set_id:
                 keep_file_list.append(keep_file)
 
     return keep_file_list
@@ -135,7 +136,8 @@ def main(arg_list: list[str]):
             raise ValueError(f"cluster_root_paths.raw_dat {raw_dat_path} is not a directory")
 
         keep_file_list = get_keep_file_list(host=transfer_info.scope_data_set.host,
-                                            keep_file_root=transfer_info.scope_data_set.root_keep_path)
+                                            keep_file_root=transfer_info.scope_data_set.root_keep_path,
+                                            data_set_id=transfer_info.scope_data_set.data_set_id)
 
         logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host}, "
                     f"will copy dat files to {raw_dat_path}")

@@ -32,6 +32,8 @@ class ScopeDataSet(BaseModel):
     #     root_keep_path:
     #         root path excluding datetime-based subdirectories for dat keep files
     #         (e.g. '/cygdrive/d/UploadFlags')
+    #     data_set_id:
+    #         data set identifier included in keep file name and in SampleId and Notes dat header fields
     #     acquire_start:
     #         time first volume image was acquired, None if acquisition has not started.
     #         JSON string representations must use ISO 8601 format (e.g. 2021-05-05T10:26:54).
@@ -49,6 +51,7 @@ class ScopeDataSet(BaseModel):
     host: str
     root_dat_path: Path
     root_keep_path: Path
+    data_set_id: str
     acquire_start: Optional[datetime.datetime]
     acquire_stop: Optional[datetime.datetime]
     dat_x_and_y_nm_per_pixel: int
