@@ -21,6 +21,7 @@ def test_json(volume_transfer_info):
   "host": "jeiss8.hhmi.org",
   "root_dat_path": "/cygdrive/e/Images/Fly Brain",
   "root_keep_path": "/cygdrive/d/UploadFlags",
+  "data_set_id": "Z0720-07m_VNC_Sec06",
   "acquire_start": "2021-07-27T20:15:50",
   "acquire_stop": null,
   "dat_x_and_y_nm_per_pixel": 8,

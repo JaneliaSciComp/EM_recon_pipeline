@@ -26,6 +26,7 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
             host="jeiss8.hhmi.org",
             root_dat_path=Path("/cygdrive/e/Images/Fly Brain"),
             root_keep_path=Path("/cygdrive/d/UploadFlags"),
+            data_set_id="Z0720-07m_VNC_Sec06",
             acquire_start=datetime.strptime("21-07-27_201550", "%y-%m-%d_%H%M%S"),
             acquire_stop=datetime.strptime("21-08-04_213050", "%y-%m-%d_%H%M%S"),
             dat_x_and_y_nm_per_pixel=8,
