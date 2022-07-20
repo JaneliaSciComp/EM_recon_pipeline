@@ -5,6 +5,8 @@ from typing import Optional, Any
 
 from pydantic import BaseModel
 
+from janelia_emrp.fibsem.dat_path import new_dat_path
+
 
 class VolumeTransferTask(Enum):
     """Tasks supported by volume transfer functions."""
@@ -34,12 +36,11 @@ class ScopeDataSet(BaseModel):
     #         (e.g. '/cygdrive/d/UploadFlags')
     #     data_set_id:
     #         data set identifier included in keep file name and in SampleId and Notes dat header fields
-    #     acquire_start:
-    #         time first volume image was acquired, None if acquisition has not started.
-    #         JSON string representations must use ISO 8601 format (e.g. 2021-05-05T10:26:54).
-    #     acquire_stop:
-    #         time last volume image was acquired, None if acquisition has not completed
-    #         JSON string representations must use ISO 8601 format (e.g. 2021-06-09T13:15:55).
+    #     first_dat_name:
+    #         base name of the first dat file in the volume or null if imaging has yet to start
+    #         (e.g. Merlin-6257_21-05-05_102654_0-0-0.dat)
+    #     last_dat_name:
+    #         base name of the last dat file in the volume or null if imaging is not complete
     #     dat_x_and_y_nm_per_pixel:
     #         target nm pixel resolution for dat x and y dimensions
     #     dat_z_nm_per_pixel:
@@ -52,23 +53,21 @@ class ScopeDataSet(BaseModel):
     root_dat_path: Path
     root_keep_path: Path
     data_set_id: str
-    acquire_start: Optional[datetime.datetime]
-    acquire_stop: Optional[datetime.datetime]
+    first_dat_name: Optional[str]
+    last_dat_name: Optional[str]
     dat_x_and_y_nm_per_pixel: int
     dat_z_nm_per_pixel: int
     dat_tile_overlap_microns: int = 2
 
     def acquisition_started(self,
                             before: Optional[datetime.datetime] = None) -> bool:
-        if before is None:
-            before = datetime.datetime.now()
-        return self.acquire_start is not None and self.acquire_start < before
+        return False if self.first_dat_name is None \
+            else new_dat_path(file_path=Path(self.first_dat_name)).acquired_before(before)
 
     def acquisition_stopped(self,
                             before: Optional[datetime.datetime] = None) -> bool:
-        if before is None:
-            before = datetime.datetime.now()
-        return self.acquire_stop is not None and self.acquire_stop < before
+        return False if self.last_dat_name is None \
+            else new_dat_path(file_path=Path(self.last_dat_name)).acquired_before(before)
 
 
 class ClusterRootDirectoryPaths(BaseModel):

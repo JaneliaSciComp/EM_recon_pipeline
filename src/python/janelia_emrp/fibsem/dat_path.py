@@ -3,7 +3,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePath
-from typing import List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,12 @@ class DatPath:
 
     def layer_and_tile(self):
         return f"{self.layer_id}::{self.tile_key()}"
+
+    def acquired_before(self,
+                        before: Optional[datetime.datetime] = None) -> bool:
+        if before is None:
+            before = datetime.datetime.now()
+        return self.acquire_time < before
 
 
 def new_dat_path(file_path: Path) -> DatPath:

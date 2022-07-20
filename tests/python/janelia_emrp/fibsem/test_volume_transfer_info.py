@@ -22,8 +22,8 @@ def test_json(volume_transfer_info):
   "root_dat_path": "/cygdrive/e/Images/Fly Brain",
   "root_keep_path": "/cygdrive/d/UploadFlags",
   "data_set_id": "Z0720-07m_VNC_Sec06",
-  "acquire_start": "2021-07-27T20:15:50",
-  "acquire_stop": null,
+  "first_dat_name": "Merlin-6284_21-07-27_201550_0-0-0.dat",
+  "last_dat_name": null,
   "dat_x_and_y_nm_per_pixel": 8,
   "dat_z_nm_per_pixel": 8,
   "dat_tile_overlap_microns": 2
@@ -36,6 +36,6 @@ def test_json(volume_transfer_info):
 }"""
     parsed_info = VolumeTransferInfo.parse_raw(json_string_with_null_values)
 
-    assert parsed_info.scope_data_set.acquire_stop is None, "failed to parse null acquire_stop value"
+    assert parsed_info.scope_data_set.last_dat_name is None, "failed to parse null last_dat_name value"
     assert parsed_info.render_data_set is None, "failed to parse missing render_data_set value"
 
