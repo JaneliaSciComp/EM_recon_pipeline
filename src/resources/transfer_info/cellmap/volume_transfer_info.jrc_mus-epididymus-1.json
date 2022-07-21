@@ -1,27 +1,28 @@
 {
-    "transfer_id": "cellmap::zonation1::jeiss6",
+    "transfer_id": "cellmap::jrc_mus-epididymus-1::jeiss7",
     "scope_data_set": {
-        "host": "jeiss6.hhmi.org",
-        "root_dat_path": "/cygdrive/e/Images/Mouse",
+        "host": "jeiss7.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/CellMap",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "zonation1",
-        "first_dat_name": "Merlin-6281_22-04-07_000042_0-0-0.dat",
-        "last_dat_name": null,
+        "data_set_id": "epididymis",
+        "first_dat_name": "Merlin-6282_22-07-14_000138_0-0-0.dat",
+        "last_dat_name": "Merlin-6282_22-07-17_021207_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 8,
         "dat_z_nm_per_pixel": 8,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/cellmap/render/dat/jrc_mus-liv-zon-1",
-        "align_h5": "/nrs/cellmap/render/h5/jrc_mus-liv-zon-1/align"
+        "raw_dat": "/nrs/cellmap/render/dat/jrc_mus-epididymus-1",
+        "raw_h5": "/nrs/cellmap/render/h5/jrc_mus-epididymus-1/raw",
+        "align_h5": "/nrs/cellmap/render/h5/jrc_mus-epididymus-1/align"
     },
     "archive_root_paths": {
-        "raw_dat": "/nearline/cellmap/data/jrc_mus-liv-zon-1/dat"
+        "raw_h5": "/nearline/cellmap/data/jrc_mus-epididymus-1/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "cellmap",
-        "project": "jrc_mus_liv_zon_1",
+        "project": "jrc_mus_epididymus_1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
