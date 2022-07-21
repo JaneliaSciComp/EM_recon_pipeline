@@ -7,8 +7,8 @@
         "data_set_id": "Epididymis_epi-plt",
         "first_dat_name": "Merlin-6284_22-07-15_000050_0-0-0.dat",
         "last_dat_name": "Merlin-6284_22-07-18_011508_0-0-0.dat",
-        "dat_x_and_y_nm_per_pixel": 8,
-        "dat_z_nm_per_pixel": 8,
+        "dat_x_and_y_nm_per_pixel": 4,
+        "dat_z_nm_per_pixel": 4,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
