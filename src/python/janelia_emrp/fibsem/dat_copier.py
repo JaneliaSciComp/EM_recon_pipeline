@@ -140,7 +140,12 @@ def main(arg_list: list[str]):
                                             data_set_id=transfer_info.scope_data_set.data_set_id)
 
         logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host} for the "
-                    f"{transfer_info.scope_data_set.data_set_id} data set, will copy dat files to {raw_dat_path}")
+                    f"{transfer_info.scope_data_set.data_set_id} data set")
+
+        if len(keep_file_list) > 0:
+            logger.info(f"main: start copying dat files to {raw_dat_path}")
+            logger.info(f"first keep file is {keep_file_list[0].keep_path}")
+            logger.info(f"last keep file is {keep_file_list[-1].keep_path}")
 
         for keep_file in keep_file_list:
 
