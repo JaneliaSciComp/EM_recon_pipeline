@@ -18,9 +18,6 @@ class KeepFile(BaseModel):
     data_set: str
     dat_path: str
 
-    def host_prefix(self):
-        return "" if self.host is None or len(self.host) == 0 else f"{self.host}:"
-
 
 def build_keep_file(host:str,
                     keep_file_root: str,

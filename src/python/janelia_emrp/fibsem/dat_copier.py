@@ -56,12 +56,14 @@ def copy_dat_file(scope_host: str,
     target_dir: Path = dat_to_target_path(scope_dat_path, dat_storage_root).parent
     target_dir.mkdir(parents=True, exist_ok=True)
 
+    host_prefix = "" if scope_host is None or len(scope_host) == 0 else f"{scope_host}:"
+
     args = [
         "scp",
         "-T",                              # needed to avoid protocol error: filename does not match request
         "-o", "ConnectTimeout=10",
         "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
-        f'{scope_host}"{scope_dat_path}"',
+        f'{host_prefix}"{scope_dat_path}"',
         str(target_dir)
     ]
 
@@ -171,7 +173,7 @@ def main(arg_list: list[str]):
             logger.info(f"main: last keep file is {keep_file_list[-1].keep_path}")
 
         for keep_file in keep_file_list:
-            copy_dat_file(scope_host=keep_file.host_prefix(),
+            copy_dat_file(scope_host=keep_file.host,
                           scope_dat_path=keep_file.dat_path,
                           dat_storage_root=cluster_root_dat_path)
 
