@@ -75,6 +75,7 @@ class DatConverter:
         logger.info(f"{self} convert_layer: entry, processing {len(dat_paths_for_layer.dat_paths)} dat files "
                     f"for layer {dat_paths_for_layer.get_layer_id()}")
 
+        h5_write_mode = "x" if self.skip_existing else "a"
         raw_path = None
         if raw_h5_root_path is not None:
             raw_path = dat_paths_for_layer.get_h5_path(raw_h5_root_path, source_type="raw")
@@ -87,9 +88,11 @@ class DatConverter:
 
         with ExitStack() as stack:
             if raw_path:
-                layer_raw_file = stack.enter_context(self.raw_writer.open_h5_file(str(raw_path)))
+                layer_raw_file = stack.enter_context(self.raw_writer.open_h5_file(output_path=str(raw_path),
+                                                                                  mode=h5_write_mode))
             if align_path:
-                layer_align_file = stack.enter_context(self.align_writer.open_h5_file(str(align_path)))
+                layer_align_file = stack.enter_context(self.align_writer.open_h5_file(output_path=str(align_path),
+                                                                                      mode=h5_write_mode))
 
             # TODO: clean-up properly if errors occur during conversion
 

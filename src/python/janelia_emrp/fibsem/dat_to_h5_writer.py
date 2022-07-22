@@ -64,7 +64,7 @@ class DatToH5Writer:
 
     def open_h5_file(self,
                      output_path: str,
-                     mode: str = "w-") -> h5py.File:
+                     mode: str = "x") -> h5py.File:
         return h5py.File(name=output_path, mode=mode, driver=self.driver)
 
     def create_and_add_data_set(self,
@@ -103,6 +103,11 @@ class DatToH5Writer:
             group = to_h5_file
         else:
             group = to_h5_file.require_group(group_name)
+
+        if data_set_name in group:
+            logger.info(f"create_and_add_data_set: removing old {data_set_name} "
+                        f"from group {group_name} in {to_h5_file.filename}")
+            del group[data_set_name]
 
         return group.create_dataset(name=data_set_name,
                                     data=pixel_array[:],
