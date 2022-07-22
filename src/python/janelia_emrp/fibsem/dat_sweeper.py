@@ -145,12 +145,7 @@ if __name__ == "__main__":
 
     # noinspection PyBroadException
     try:
-        # main(sys.argv[1:])
-        main([
-            "--volume_transfer_dir",
-            "/Users/trautmane/projects/git/EM_recon_pipeline/src/resources/transfer_info/cellmap",
-            "--scope", "jeiss7.hhmi.org"
-        ])
+        main(sys.argv[1:])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
