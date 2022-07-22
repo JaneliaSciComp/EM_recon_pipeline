@@ -3,12 +3,13 @@ import logging
 import subprocess
 import traceback
 from pathlib import Path
+from typing import Optional
 
 import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
-from janelia_emrp.fibsem.dat_path import new_dat_path
+from janelia_emrp.fibsem.dat_path import dat_to_target_path
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
@@ -46,12 +47,13 @@ def get_keep_file_list(host: str,
     return keep_file_list
 
 
-def copy_dat_file(keep_file: KeepFile,
+def copy_dat_file(scope_host: str,
+                  scope_dat_path: [Path, str],
                   dat_storage_root: Path):
 
-    dat_path = new_dat_path(Path(keep_file.dat_path))
-    hourly_relative_path_string = dat_path.acquire_time.strftime("%Y/%m/%d/%H")
-    target_dir = dat_storage_root / hourly_relative_path_string
+    logger.info(f"copy_dat_file: copying {scope_dat_path}")
+
+    target_dir: Path = dat_to_target_path(scope_dat_path, dat_storage_root).parent
     target_dir.mkdir(parents=True, exist_ok=True)
 
     args = [
@@ -59,7 +61,7 @@ def copy_dat_file(keep_file: KeepFile,
         "-T",                              # needed to avoid protocol error: filename does not match request
         "-o", "ConnectTimeout=10",
         "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
-        f'{keep_file.host_prefix()}"{keep_file.dat_path}"',
+        f'{scope_host}"{scope_dat_path}"',
         str(target_dir)
     ]
 
@@ -67,10 +69,50 @@ def copy_dat_file(keep_file: KeepFile,
 
 
 def remove_keep_file(keep_file: KeepFile):
+    logger.info(f"remove_keep_file: removing {keep_file.keep_path}")
+
     args = get_base_ssh_args(keep_file.host)
     args.append(f'rm "{keep_file.keep_path}"')
 
     subprocess.run(args, check=True)
+
+
+def build_volume_transfer_list(volume_transfer_dir_path: Path,
+                               scope: Optional[str]):
+    volume_transfer_list: list[VolumeTransferInfo] = []
+
+    f_name = "build_volume_transfer_list"
+
+    if volume_transfer_dir_path.is_dir():
+        for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
+
+            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
+
+            if transfer_info.includes_task(VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER):
+                if transfer_info.cluster_root_paths is None:
+                    logger.info(f"{f_name}: ignoring {transfer_info} because cluster_root_paths not defined")
+                elif transfer_info.acquisition_started():
+                    if scope is None or scope == transfer_info.scope_data_set.host:
+                        volume_transfer_list.append(transfer_info)
+                    else:
+                        logger.info(f"{f_name}: ignoring {transfer_info} because scope differs")
+                else:
+                    logger.info(f"{f_name}: ignoring {transfer_info} because acquisition has not started")
+            else:
+                logger.info(f"{f_name}: ignoring {transfer_info} because it does not include copy task")
+    else:
+        raise ValueError(f"volume_transfer_dir {volume_transfer_dir_path} is not a directory")
+
+    return volume_transfer_list
+
+
+def max_transfer_seconds_exceeded(max_transfer_seconds: int,
+                                  start_time: float):
+    result = False
+    if max_transfer_seconds is not None:
+        elapsed_seconds = time.time() - start_time
+        result = elapsed_seconds > max_transfer_seconds
+    return result
 
 
 def main(arg_list: list[str]):
@@ -99,27 +141,8 @@ def main(arg_list: list[str]):
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
     volume_transfer_dir_path = Path(args.volume_transfer_dir)
-    volume_transfer_list: list[VolumeTransferInfo] = []
-    if volume_transfer_dir_path.is_dir():
-        for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
-
-            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
-
-            if transfer_info.includes_task(VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER):
-                if transfer_info.cluster_root_paths is None:
-                    logger.info(f"main: ignoring {transfer_info} because cluster_root_paths not defined")
-                elif transfer_info.acquisition_started():
-                    if args.scope is None or args.scope == transfer_info.scope_data_set.host:
-                        volume_transfer_list.append(transfer_info)
-                    else:
-                        logger.info(f"main: ignoring {transfer_info} because scope differs")
-                else:
-                    logger.info(f"main: ignoring {transfer_info} because acquisition has not started")
-            else:
-                logger.info(f"main: ignoring {transfer_info} because it does not include copy task")
-    else:
-        raise ValueError(f"volume_transfer_dir {args.volume_transfer_dir} is not a directory")
-
+    volume_transfer_list: list[VolumeTransferInfo] = build_volume_transfer_list(volume_transfer_dir_path,
+                                                                                args.scope)
     copy_count = 0
 
     stop_processing = False
@@ -127,13 +150,13 @@ def main(arg_list: list[str]):
 
         logger.info(f"main: start processing for {transfer_info}")
 
-        raw_dat_path = transfer_info.cluster_root_paths.raw_dat
-        if not raw_dat_path.exists():
-            logger.info(f"main: creating cluster_root_paths.raw_dat directory {raw_dat_path}")
-            raw_dat_path.mkdir(parents=True)
+        cluster_root_dat_path = transfer_info.cluster_root_paths.raw_dat
+        if not cluster_root_dat_path.exists():
+            logger.info(f"main: creating cluster_root_paths.raw_dat directory {cluster_root_dat_path}")
+            cluster_root_dat_path.mkdir(parents=True)
 
-        if not raw_dat_path.is_dir():
-            raise ValueError(f"cluster_root_paths.raw_dat {raw_dat_path} is not a directory")
+        if not cluster_root_dat_path.is_dir():
+            raise ValueError(f"cluster_root_paths.raw_dat {cluster_root_dat_path} is not a directory")
 
         keep_file_list = get_keep_file_list(host=transfer_info.scope_data_set.host,
                                             keep_file_root=transfer_info.scope_data_set.root_keep_path,
@@ -143,32 +166,28 @@ def main(arg_list: list[str]):
                     f"{transfer_info.scope_data_set.data_set_id} data set")
 
         if len(keep_file_list) > 0:
-            logger.info(f"main: start copying dat files to {raw_dat_path}")
+            logger.info(f"main: start copying dat files to {cluster_root_dat_path}")
             logger.info(f"main: first keep file is {keep_file_list[0].keep_path}")
             logger.info(f"main: last keep file is {keep_file_list[-1].keep_path}")
 
         for keep_file in keep_file_list:
-
-            logger.info(f"main: copying {keep_file.dat_path}")
-
-            copy_dat_file(keep_file=keep_file,
-                          dat_storage_root=raw_dat_path)
-
-            logger.info(f"main: removing {keep_file.keep_path}")
+            copy_dat_file(scope_host=keep_file.host_prefix(),
+                          scope_dat_path=keep_file.dat_path,
+                          dat_storage_root=cluster_root_dat_path)
 
             remove_keep_file(keep_file)
 
             copy_count += 1
 
-            if max_transfer_seconds is not None:
-                elapsed_seconds = time.time() - start_time
-                if elapsed_seconds > max_transfer_seconds:
-                    logger.info(f"main: stopping because elapsed time exceeds {max_transfer_seconds / 60} minutes")
-                    stop_processing = True
-                    break
+            if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
+                stop_processing = True
+                break
 
         if stop_processing:
             break
+
+    if stop_processing:
+        logger.info(f"main: stopping because elapsed time exceeds {max_transfer_seconds / 60} minutes")
 
     elapsed_seconds = int(time.time() - start_time)
     logger.info(f"main: transferred {copy_count} dat files in {elapsed_seconds} seconds")

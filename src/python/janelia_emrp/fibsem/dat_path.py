@@ -57,6 +57,13 @@ def new_dat_path(file_path: Path) -> DatPath:
     return DatPath(file_path, scope, layer_id, acquire_time, section, row, column)
 
 
+def dat_to_target_path(from_dat_path: [Path, str],
+                       to_root_path: Path) -> Path:
+    dat_path = new_dat_path(Path(from_dat_path))
+    hourly_relative_path_string = dat_path.acquire_time.strftime("%Y/%m/%d/%H")
+    return to_root_path / hourly_relative_path_string / dat_path.file_path.name
+
+
 @dataclass
 class DatPathsForLayer:
     # Container for list of dat paths comprising one layer of a volume.

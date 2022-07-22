@@ -69,6 +69,18 @@ class ScopeDataSet(BaseModel):
         return False if self.last_dat_name is None \
             else new_dat_path(file_path=Path(self.last_dat_name)).acquired_before(before)
 
+    def first_dat_acquire_time(self):
+        acquire_time = None
+        if self.acquisition_started():
+            acquire_time = new_dat_path(file_path=Path(self.first_dat_name)).acquire_time
+        return acquire_time
+
+    def last_dat_acquire_time(self):
+        acquire_time = None
+        if self.acquisition_stopped():
+            acquire_time = new_dat_path(file_path=Path(self.last_dat_name)).acquire_time
+        return acquire_time
+
 
 class ClusterRootDirectoryPaths(BaseModel):
     """Cluster accessible (e.g. dm11 or nrs) paths for data."""
