@@ -144,8 +144,8 @@ def main(arg_list: list[str]):
 
         if len(keep_file_list) > 0:
             logger.info(f"main: start copying dat files to {raw_dat_path}")
-            logger.info(f"first keep file is {keep_file_list[0].keep_path}")
-            logger.info(f"last keep file is {keep_file_list[-1].keep_path}")
+            logger.info(f"main: first keep file is {keep_file_list[0].keep_path}")
+            logger.info(f"main: last keep file is {keep_file_list[-1].keep_path}")
 
         for keep_file in keep_file_list:
 
