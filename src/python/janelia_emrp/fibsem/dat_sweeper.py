@@ -21,13 +21,13 @@ def get_dats_acquired_on_day(host: str,
                              dat_storage_root: Path,
                              acquisition_date: datetime.datetime) -> list[Path]:
     # /cygdrive/E/Images/Mouse/Y2022/M07/D13/Merlin-6281_22-07-13_232559_0-0-0.dat
-    relative_day_path = acquisition_date.strftime("Y%Y/M%m/D%d")
+    day_path = dat_storage_root / acquisition_date.strftime("Y%Y/M%m/D%d")
 
-    logger.info(f"get_dats_acquired_on_day: checking {dat_storage_root}/{relative_day_path} on {host}")
+    logger.info(f"get_dats_acquired_on_day: checking {day_path} on {host}")
 
     dat_list: list[Path] = []
     args = get_base_ssh_args(host)
-    args.append(f'ls "{dat_storage_root}/{relative_day_path}"')
+    args.append(f'ls "{day_path}"')
 
     completed_process = subprocess.run(args,
                                        capture_output=True,
@@ -35,7 +35,7 @@ def get_dats_acquired_on_day(host: str,
     for name in completed_process.stdout.decode("utf-8").split("\n"):
         name = name.strip()
         if name.endswith(".dat"):
-            dat_list.append(Path(name))
+            dat_list.append(day_path / name)
 
     return dat_list
 
