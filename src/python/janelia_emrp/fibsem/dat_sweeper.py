@@ -23,6 +23,8 @@ def get_dats_acquired_on_day(host: str,
     # /cygdrive/E/Images/Mouse/Y2022/M07/D13/Merlin-6281_22-07-13_232559_0-0-0.dat
     relative_day_path = acquisition_date.strftime("Y%Y/M%m/D%d")
 
+    logger.info(f"get_dats_acquired_on_day: checking {dat_storage_root}/{relative_day_path} on {host}")
+
     dat_list: list[Path] = []
     args = get_base_ssh_args(host)
     args.append(f'ls "{dat_storage_root}/{relative_day_path}"')
