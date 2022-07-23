@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def get_dats_acquired_on_day(host: str,
                              dat_storage_root: Path,
                              acquisition_date: datetime.datetime) -> list[Path]:
-    # /cygdrive/E/Images/Mouse/Y2022/M07/D13/Merlin-6281_22-07-13_232559_0-0-0.dat
+    # /cygdrive/E/Images/Mouse/Y2022/M07/D13
     day_path = dat_storage_root / acquisition_date.strftime("Y%Y/M%m/D%d")
 
     logger.info(f"get_dats_acquired_on_day: checking {day_path} on {host}")
@@ -133,8 +133,8 @@ def main(arg_list: list[str]):
         logger.info(f"main: stopping because elapsed time exceeds {max_transfer_seconds / 60} minutes")
 
     elapsed_seconds = int(time.time() - start_time)
-    logger.info(f"main: found {missing_count} missing dat files and restored {copy_count} of them "
-                f"in {elapsed_seconds} seconds")
+    copy_msg = f"and restored {copy_count} of them in" if copy_count > 0 else "in"
+    logger.info(f"main: found {missing_count} missing dat files {copy_msg} {elapsed_seconds} seconds")
 
     return 0
 
