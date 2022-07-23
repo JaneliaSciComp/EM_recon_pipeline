@@ -147,12 +147,7 @@ def max_transfer_seconds_exceeded(max_transfer_seconds: int,
     return result
 
 
-def main(arg_list: list[str]):
-    start_time = time.time()
-
-    parser = argparse.ArgumentParser(
-        description="Copies dat files identified by keep files on remote scope."
-    )
+def add_dat_copy_arguments(parser):
     parser.add_argument(
         "--volume_transfer_dir",
         help="Path of directory containing volume_transfer_info.json files",
@@ -167,7 +162,20 @@ def main(arg_list: list[str]):
         type=int,
         help="If specified, stop copying after this number of minutes has elapsed",
     )
+    parser.add_argument(
+        "--copy_missing",
+        help="Copy (restore) any missing dat files to cluster dat storage",
+        action=argparse.BooleanOptionalAction
+    )
 
+
+def main(arg_list: list[str]):
+    start_time = time.time()
+
+    parser = argparse.ArgumentParser(
+        description="Copies dat files identified by keep files on remote scope."
+    )
+    add_dat_copy_arguments(parser)
     args = parser.parse_args(args=arg_list)
 
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60

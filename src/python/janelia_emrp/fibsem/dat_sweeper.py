@@ -8,7 +8,7 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_copier import build_volume_transfer_list, \
-    max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day
+    max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day, add_dat_copy_arguments
 from janelia_emrp.fibsem.dat_path import dat_to_target_path
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 from janelia_emrp.root_logger import init_logger
@@ -22,26 +22,7 @@ def main(arg_list: list[str]):
     parser = argparse.ArgumentParser(
         description="Finds scope dat files that are missing from network storage."
     )
-    parser.add_argument(
-        "--volume_transfer_dir",
-        help="Path of directory containing volume_transfer_info.json files",
-        required=True,
-    )
-    parser.add_argument(
-        "--scope",
-        help="If specified, only process volumes being acquired on this scope"
-    )
-    parser.add_argument(
-        "--max_transfer_minutes",
-        type=int,
-        help="If specified, stop copying after this number of minutes has elapsed",
-    )
-    parser.add_argument(
-        "--copy_missing",
-        help="Copy (restore) any missing dat files to cluster dat storage",
-        action=argparse.BooleanOptionalAction
-    )
-
+    add_dat_copy_arguments(parser)
     args = parser.parse_args(args=arg_list)
 
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
