@@ -1,49 +1,19 @@
 import argparse
 import datetime
 import logging
-import subprocess
 import traceback
 from pathlib import Path
 
 import sys
 import time
 
-from janelia_emrp.fibsem.dat_copier import get_base_ssh_args, build_volume_transfer_list, \
-    max_transfer_seconds_exceeded, copy_dat_file
+from janelia_emrp.fibsem.dat_copier import build_volume_transfer_list, \
+    max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day
 from janelia_emrp.fibsem.dat_path import dat_to_target_path
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
-
-
-def get_dats_acquired_on_day(host: str,
-                             dat_storage_root: Path,
-                             acquisition_date: datetime.datetime) -> list[Path]:
-    # /cygdrive/E/Images/Mouse/Y2022/M07/D13
-    day_path = dat_storage_root / acquisition_date.strftime("Y%Y/M%m/D%d")
-
-    logger.info(f"get_dats_acquired_on_day: checking {day_path} on {host}")
-
-    dat_list: list[Path] = []
-    args = get_base_ssh_args(host)
-    args.append(f'ls "{day_path}"')
-
-    completed_process = subprocess.run(args,
-                                       capture_output=True,
-                                       check=True)
-    for name in completed_process.stdout.decode("utf-8").split("\n"):
-        name = name.strip()
-        if name.endswith(".dat"):
-            dat_list.append(day_path / name)
-
-    return dat_list
-
-
-def day_range(start_date: datetime.datetime,
-              end_date: datetime.datetime):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + datetime.timedelta(n)
 
 
 def main(arg_list: list[str]):
