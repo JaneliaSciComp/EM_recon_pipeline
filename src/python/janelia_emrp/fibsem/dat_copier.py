@@ -147,6 +147,39 @@ def max_transfer_seconds_exceeded(max_transfer_seconds: int,
     return result
 
 
+def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
+                                    cluster_root_dat_path: Path,
+                                    start_time: datetime.datetime,
+                                    stop_time: datetime.datetime,
+                                    time_to_keep_files: Dict[datetime.datetime, list[KeepFile]]):
+
+    missing_scope_dats: list[Path] = []
+
+    keep_layer_times = time_to_keep_files.keys()
+
+    for scope_dat in scope_dat_paths:
+        is_missing = True
+
+        dat_path = new_dat_path(dat_to_target_path(scope_dat, cluster_root_dat_path))
+
+        if start_time <= dat_path.acquire_time <= stop_time:
+            if dat_path.acquire_time in keep_layer_times:
+                for keep_file in time_to_keep_files[dat_path.acquire_time]:
+                    if keep_file.dat_path == str(scope_dat):
+                        is_missing = False
+                        break
+            else:
+                is_missing = not dat_path.file_path.exists()
+        else:
+            is_missing = False
+
+        if is_missing:
+            logger.info(f"find_missing_scope_dats_for_day: {scope_dat} is missing")
+            missing_scope_dats.append(scope_dat)
+
+    return missing_scope_dats
+
+
 def find_missing_scope_dats(keep_file_list: list[KeepFile],
                             nothing_missing_before: datetime.datetime,
                             scope_data_set: ScopeDataSet,
@@ -165,32 +198,17 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
     for keep_file in keep_file_list:
         keep_files_for_time = time_to_keep_files.setdefault(keep_file.acquire_time(), [])
         keep_files_for_time.append(keep_file)
-    keep_layer_times = time_to_keep_files.keys()
 
     for day in day_range(nothing_missing_before, day_after_last_keep_time):
-        dat_files = get_dats_acquired_on_day(scope_data_set.host,
-                                             scope_data_set.root_dat_path,
-                                             day)
-        for scope_dat in dat_files:
-            is_missing = True
-
-            dat_path = new_dat_path(dat_to_target_path(scope_dat, cluster_root_dat_path))
-
-            if nothing_missing_before <= dat_path.acquire_time <= last_keep_time:
-                if dat_path.acquire_time in keep_layer_times:
-                    for keep_file in time_to_keep_files[dat_path.acquire_time]:
-                        if keep_file.dat_path == scope_dat:
-                            is_missing = False
-                            break
-                else:
-                    is_missing = not dat_path.file_path.exists()
-            else:
-                is_missing = False
-
-            if is_missing:
-                logger.info(f"find_missing_scope_dats: {scope_dat} is missing")
-                missing_scope_dats.append(scope_dat)
-
+        scope_dat_paths = get_dats_acquired_on_day(scope_data_set.host,
+                                                   scope_data_set.root_dat_path,
+                                                   day)
+        missing_scope_dats.extend(
+            find_missing_scope_dats_for_day(scope_dat_paths=scope_dat_paths,
+                                            cluster_root_dat_path=cluster_root_dat_path,
+                                            start_time=nothing_missing_before,
+                                            stop_time=last_keep_time,
+                                            time_to_keep_files=time_to_keep_files))
     return missing_scope_dats
 
 
