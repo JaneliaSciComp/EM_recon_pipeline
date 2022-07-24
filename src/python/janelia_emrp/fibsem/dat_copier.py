@@ -237,7 +237,7 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
         if month is None or day.month != month:
             day_numbers = get_scope_day_numbers_with_dats(scope_data_set.host,
                                                           scope_data_set.root_dat_path,
-                                                          nothing_missing_before)
+                                                          day)
             month = day.month
             
         if day.day not in day_numbers:
