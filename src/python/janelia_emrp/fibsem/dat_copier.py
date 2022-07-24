@@ -165,7 +165,8 @@ def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
         if start_time <= dat_path.acquire_time <= stop_time:
             if dat_path.acquire_time in keep_layer_times:
                 for keep_file in time_to_keep_files[dat_path.acquire_time]:
-                    if keep_file.dat_path == str(scope_dat):
+                    # use case-insensitive comparison for Windows paths
+                    if keep_file.dat_path.casefold() == str(scope_dat).casefold():
                         is_missing = False
                         break
             else:
