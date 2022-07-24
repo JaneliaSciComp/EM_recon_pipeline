@@ -175,11 +175,14 @@ def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
                                     start_time: datetime.datetime,
                                     stop_time: datetime.datetime,
                                     first_keep_file: KeepFile,
+                                    last_keep_file: KeepFile,
                                     time_to_keep_files: Dict[datetime.datetime, list[KeepFile]]):
 
     missing_scope_dats: list[Path] = []
 
     first_keep_file_name = Path(first_keep_file.dat_path).name
+    last_keep_file_name = Path(last_keep_file.dat_path).name
+
     keep_layer_times = time_to_keep_files.keys()
 
     for scope_dat in scope_dat_paths:
@@ -194,9 +197,12 @@ def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
                     if keep_file.dat_path.casefold() == str(scope_dat).casefold():
                         is_missing = False
                         break
-                # check dats in same layer as first keep file
-                if is_missing and dat_path.file_path.name < first_keep_file_name:
-                    is_missing = not dat_path.file_path.exists()
+                if is_missing:
+                    # check for dats in same layer as first or last keep files
+                    if dat_path.file_path.name < first_keep_file_name:
+                        is_missing = not dat_path.file_path.exists()
+                    elif dat_path.file_path.name > last_keep_file_name:
+                        is_missing = False
 
             else:
                 is_missing = not dat_path.file_path.exists()
@@ -253,6 +259,7 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
                                             start_time=nothing_missing_before,
                                             stop_time=last_keep_time,
                                             first_keep_file=keep_file_list[0],
+                                            last_keep_file=keep_file_list[-1],
                                             time_to_keep_files=time_to_keep_files))
     return missing_scope_dats
 

@@ -48,6 +48,7 @@ def test_find_missing_scope_dats_for_day(tmp_path):
                                                              start_time,
                                                              stop_time,
                                                              keep_file_list[0],
+                                                             keep_file_list[-1],
                                                              time_to_keep_files)
 
     assert len(result) == 5, "incorrect number of missing dat files found"
