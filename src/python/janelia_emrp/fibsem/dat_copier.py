@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import json
 import logging
 import subprocess
 import traceback
@@ -283,7 +282,7 @@ def main(arg_list: list[str]):
             if previous_keep_file is not None and keep_file.acquire_time() > previous_keep_file.acquire_time():
                 with open(missing_check_path, 'w', encoding='utf-8') as missing_check_file:
                     logger.info(f"main: {previous_keep_file.keep_path} is last in layer, saving {missing_check_path}")
-                    json.dump(previous_keep_file.json(), missing_check_file, indent=4)
+                    missing_check_file.write(keep_file.json())
 
             copy_dat_file(scope_host=keep_file.host,
                           scope_dat_path=keep_file.dat_path,
