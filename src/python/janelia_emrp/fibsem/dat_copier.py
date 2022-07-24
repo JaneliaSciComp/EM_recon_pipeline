@@ -335,7 +335,8 @@ def main(arg_list: list[str]):
                                                          cluster_root_dat_path=cluster_root_dat_path)
             if len(missing_scope_dats) > 0:
                 logger.info(f"main: adding {len(missing_scope_dats)} missing dat files to processing list")
-                # TODO: uncomment insertion of missing dat info when ready
+                # TODO: remove exception and uncomment insertion of missing dat info when ready
+                raise FileNotFoundError(f"missing dat {missing_scope_dats[0]}")
                 # for scope_dat in missing_scope_dats:
                 #     keep_file_list.append(KeepFile(host=transfer_info.scope_data_set.host,
                 #                                    keep_path=missing_value,
