@@ -48,6 +48,29 @@ def get_keep_file_list(host: str,
     return keep_file_list
 
 
+def get_scope_day_numbers_with_dats(host: str,
+                                    dat_storage_root: Path,
+                                    for_month_of: datetime.datetime) -> list[int]:
+    # /cygdrive/E/Images/Mouse/Y2022/M07
+    month_path = dat_storage_root / for_month_of.strftime("Y%Y/M%m")
+
+    logger.info(f"get_scope_day_numbers_with_dats: checking {month_path} on {host}")
+
+    day_numbers: list[int] = []
+    args = get_base_ssh_args(host)
+    args.append(f'ls "{month_path}"')
+
+    completed_process = subprocess.run(args,
+                                       capture_output=True,
+                                       check=True)
+    for name in completed_process.stdout.decode("utf-8").split("\n"):
+        name = name.strip()
+        if name.startswith("D"):
+            day_numbers.append(int(name[1:]))
+
+    return day_numbers
+
+
 def get_dats_acquired_on_day(host: str,
                              dat_storage_root: Path,
                              acquisition_date: datetime.datetime) -> list[Path]:
@@ -206,7 +229,19 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
         keep_files_for_time = time_to_keep_files.setdefault(keep_file.acquire_time(), [])
         keep_files_for_time.append(keep_file)
 
+    month = None
+    day_numbers = []
+
     for day in day_range(nothing_missing_before, day_after_last_keep_time):
+
+        if month is None or day.month != month:
+            day_numbers = get_scope_day_numbers_with_dats(scope_data_set.host,
+                                                          scope_data_set.root_dat_path,
+                                                          nothing_missing_before)
+        if day.day not in day_numbers:
+            logger.info(f'find_missing_scope_dats: no dats imaged on {day.strftime("%y-%m-%d")}, skipping day')
+            continue
+
         scope_dat_paths = get_dats_acquired_on_day(scope_data_set.host,
                                                    scope_data_set.root_dat_path,
                                                    day)
