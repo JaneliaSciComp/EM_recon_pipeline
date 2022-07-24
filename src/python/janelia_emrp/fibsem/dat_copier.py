@@ -238,6 +238,8 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
             day_numbers = get_scope_day_numbers_with_dats(scope_data_set.host,
                                                           scope_data_set.root_dat_path,
                                                           nothing_missing_before)
+            month = day.month
+            
         if day.day not in day_numbers:
             logger.info(f'find_missing_scope_dats: no dats imaged on {day.strftime("%y-%m-%d")}, skipping day')
             continue
