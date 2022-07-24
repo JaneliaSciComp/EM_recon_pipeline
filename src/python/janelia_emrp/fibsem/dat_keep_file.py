@@ -1,13 +1,16 @@
+import datetime
 import logging
 import re
+from pathlib import Path
 from typing import Final, Optional
 
 from pydantic import BaseModel
 
+from janelia_emrp.fibsem.dat_path import new_dat_path
+
 logger = logging.getLogger(__name__)
 
 
-# 0522-09_ZF-Card^E^^Images^Zebrafish^Y2022^M07^D12^Merlin-6257_22-07-12_153254_0-0-1.dat^keep
 # Z0422-17_VNC_1^E^^Images^Fly Brain^Y2022^M07^D12^Merlin-6049_22-07-12_171723_0-0-1.dat^keep
 KEEP_NAME_PATTERN: Final = re.compile(r"([^\^]+)\^([^\^]+)\^\^(.*\.dat)\^keep$")
 
@@ -18,8 +21,11 @@ class KeepFile(BaseModel):
     data_set: str
     dat_path: str
 
+    def acquire_time(self) -> datetime.datetime:
+        return new_dat_path(Path(self.dat_path)).acquire_time
 
-def build_keep_file(host:str,
+
+def build_keep_file(host: str,
                     keep_file_root: str,
                     keep_file_name: str) -> Optional[KeepFile]:
 

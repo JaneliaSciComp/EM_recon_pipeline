@@ -23,6 +23,12 @@ def main(arg_list: list[str]):
         description="Finds scope dat files that are missing from network storage."
     )
     add_dat_copy_arguments(parser)
+    parser.add_argument(
+        "--copy_missing",
+        help="Copy (restore) any missing dat files to cluster dat storage",
+        action=argparse.BooleanOptionalAction
+    )
+
     args = parser.parse_args(args=arg_list)
 
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60

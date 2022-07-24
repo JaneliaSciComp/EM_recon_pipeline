@@ -1,17 +1,18 @@
 import argparse
 import datetime
+import json
 import logging
 import subprocess
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
-from janelia_emrp.fibsem.dat_path import dat_to_target_path
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, ScopeDataSet
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -147,6 +148,55 @@ def max_transfer_seconds_exceeded(max_transfer_seconds: int,
     return result
 
 
+def find_missing_scope_dats(keep_file_list: list[KeepFile],
+                            nothing_missing_before: datetime.datetime,
+                            scope_data_set: ScopeDataSet,
+                            cluster_root_dat_path: Path) -> list[Path]:
+
+    missing_scope_dats: list[Path] = []
+
+    last_keep_time = keep_file_list[-1].acquire_time()
+    day_after_last_keep_time = last_keep_time + datetime.timedelta(days=1)
+
+    formatted_start = nothing_missing_before.strftime("%y-%m-%d %H:%M:%S")
+    formatted_stop = last_keep_time.strftime("%y-%m-%d %H:%M:%S")
+    logger.info(f"find_missing_scope_dats: checking {formatted_start} to {formatted_stop}")
+
+    time_to_keep_files: Dict[datetime.datetime, list[KeepFile]] = {}
+    for keep_file in keep_file_list:
+        keep_files_for_time = time_to_keep_files.setdefault(keep_file.acquire_time(), [])
+        keep_files_for_time.append(keep_file)
+
+    for day in day_range(nothing_missing_before, day_after_last_keep_time):
+        formatted_day = day.strftime("%y-%m-%d")
+        logger.info(f"find_missing_scope_dats: checking {formatted_day}")
+
+        dat_files = get_dats_acquired_on_day(scope_data_set.host,
+                                             scope_data_set.root_dat_path,
+                                             day)
+        for scope_dat in dat_files:
+            is_missing = True
+
+            dat_path = new_dat_path(dat_to_target_path(scope_dat, cluster_root_dat_path))
+
+            if nothing_missing_before <= dat_path.acquire_time <= last_keep_time:
+                if dat_path.acquire_time in time_to_keep_files:
+                    for keep_file in time_to_keep_files[dat_path.acquire_time]:
+                        if keep_file.dat_path == scope_dat:
+                            is_missing = False
+                            break
+                else:
+                    is_missing = not dat_path.file_path.exists()
+            else:
+                is_missing = False
+
+            if is_missing:
+                logger.info(f"find_missing_scope_dats: {scope_dat} is missing")
+                missing_scope_dats.append(scope_dat)
+
+    return missing_scope_dats
+
+
 def add_dat_copy_arguments(parser):
     parser.add_argument(
         "--volume_transfer_dir",
@@ -161,11 +211,6 @@ def add_dat_copy_arguments(parser):
         "--max_transfer_minutes",
         type=int,
         help="If specified, stop copying after this number of minutes has elapsed",
-    )
-    parser.add_argument(
-        "--copy_missing",
-        help="Copy (restore) any missing dat files to cluster dat storage",
-        action=argparse.BooleanOptionalAction
     )
 
 
@@ -205,19 +250,50 @@ def main(arg_list: list[str]):
         logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host} for the "
                     f"{transfer_info.scope_data_set.data_set_id} data set")
 
+        missing_value = "missing"
+        missing_check_path: Path = cluster_root_dat_path / "last_missing_check.json"
+        if missing_check_path.exists():
+            nothing_missing_before = KeepFile.parse_file(missing_check_path).acquire_time()
+        else:
+            nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
+
         if len(keep_file_list) > 0:
             logger.info(f"main: start copying dat files to {cluster_root_dat_path}")
             logger.info(f"main: first keep file is {keep_file_list[0].keep_path}")
             logger.info(f"main: last keep file is {keep_file_list[-1].keep_path}")
 
+            missing_scope_dats = find_missing_scope_dats(keep_file_list=keep_file_list,
+                                                         nothing_missing_before=nothing_missing_before,
+                                                         scope_data_set=transfer_info.scope_data_set,
+                                                         cluster_root_dat_path=cluster_root_dat_path)
+            if len(missing_scope_dats) > 0:
+                logger.info(f"main: adding {len(missing_scope_dats)} missing dat files to processing list")
+                # TODO: uncomment insertion of missing dat info when ready
+                # for scope_dat in missing_scope_dats:
+                #     keep_file_list.append(KeepFile(host=transfer_info.scope_data_set.host,
+                #                                    keep_path=missing_value,
+                #                                    data_set=missing_value,
+                #                                    dat_path=str(scope_dat)))
+                # keep_file_list.sort(key=lambda kf: kf.dat_path)
+
+        previous_keep_file: Optional[KeepFile] = None
         for keep_file in keep_file_list:
+
+            # if previous keep file was last in layer, save previous keep info to missing_check_path
+            if previous_keep_file is not None and keep_file.acquire_time() > previous_keep_file.acquire_time():
+                with open(missing_check_path, 'w', encoding='utf-8') as missing_check_file:
+                    logger.info(f"main: {previous_keep_file.keep_path} is last in layer, saving {missing_check_path}")
+                    json.dump(previous_keep_file.json(), missing_check_file, indent=4)
+
             copy_dat_file(scope_host=keep_file.host,
                           scope_dat_path=keep_file.dat_path,
                           dat_storage_root=cluster_root_dat_path)
 
-            remove_keep_file(keep_file)
+            if keep_file.keep_path != missing_value:
+                remove_keep_file(keep_file)
 
             copy_count += 1
+            previous_keep_file = keep_file
 
             if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
                 stop_processing = True
