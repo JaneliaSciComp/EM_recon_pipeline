@@ -37,8 +37,10 @@
     },
     "transfer_tasks": [
         "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
         "GENERATE_CLUSTER_H5_ALIGN",
-        "ARCHIVE_DAT",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
         "IMPORT_H5_ALIGN_INTO_RENDER",
         "APPLY_FIBSEM_CORRECTION_TRANSFORM"
     ],
