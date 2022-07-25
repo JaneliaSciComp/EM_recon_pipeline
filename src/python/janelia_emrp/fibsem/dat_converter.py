@@ -263,7 +263,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
         if num_workers > 1:
             local_kwargs = {}
             lsf_kwargs = {
-                "project": volume_transfer_info.cluster_job_project_for_billing
+                "project": volume_transfer_info.cluster_job_project_for_billing,
+                "memory": "14GB"
             }
 
             if parent_work_dir is not None:
