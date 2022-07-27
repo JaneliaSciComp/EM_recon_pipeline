@@ -1,5 +1,5 @@
 {
-    "transfer_id": "sternd::Z0422_17_VNC_1::jeiss5",
+    "transfer_id": "fibsem::Z0422_17_VNC_1::jeiss5",
     "scope_data_set": {
         "host": "jeiss5.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Fly Brain",
@@ -12,17 +12,17 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/flyem/render/dat/Z0422-17_VNC_1",
-        "align_h5": "/nrs/flyem/render/h5/Z0422-17_VNC_1/align"
+        "raw_dat": "/nrs/fibsem/render/dat/Z0422-17_VNC_1",
+        "align_h5": "/nrs/fibsem/render/h5/Z0422-17_VNC_1/align"
     },
     "archive_root_paths": {
-        "raw_dat": "/nearline/flyem2/data/Z0422-17_VNC_1/dat"
+        "raw_h5": "/nearline/fibsem/data/Z0422-17_VNC_1/raw_h5"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
-        "owner": "flyem",
+        "owner": "fibsem",
         "project": "Z0422_17_VNC_1",
-        "stack": "v8_acquire_preview",
+        "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
         "mask_height": 30,
@@ -38,9 +38,8 @@
     "transfer_tasks": [
         "COPY_SCOPE_DAT_TO_CLUSTER",
         "GENERATE_CLUSTER_H5_ALIGN",
-        "ARCHIVE_DAT",
         "IMPORT_H5_ALIGN_INTO_RENDER",
         "APPLY_FIBSEM_CORRECTION_TRANSFORM"
     ],
-    "cluster_job_project_for_billing": "scicompsoft"
+    "cluster_job_project_for_billing": "fibsem"
 }
