@@ -17,7 +17,7 @@ from dask_janelia import get_cluster
 from distributed import Client
 from fibsem_tools.io import read
 
-from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers
+from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers, new_dat_path, DatPath
 from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer
 from janelia_emrp.fibsem.h5_to_dat import validate_original_dat_bytes_match
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask
@@ -188,11 +188,24 @@ class DatConverter:
         return valid_path
 
 
+def get_layer_index_for_dat(layers: list[DatPathsForLayer],
+                            start_index: Optional[int],
+                            dat_path: DatPath) -> Optional[int]:
+    layer_index = None
+    if dat_path is not None:
+        start = 0 if start_index is None else start_index
+        for i in range(start, len(layers)):
+            if layers[i].get_layer_id() == dat_path.layer_id:
+                layer_index = i
+                break
+    return layer_index
+
+
 def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    num_workers: int,
                    parent_work_dir: Optional[str],
-                   min_index: Optional[int],
-                   max_index: Optional[int],
+                   first_dat: Optional[str],
+                   last_dat: Optional[str],
                    skip_existing: bool,
                    min_layers_per_worker: int,
                    lsf_runtime_limit: Optional[str]):
@@ -225,12 +238,27 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
             layers = new_layers
             logger.info(f"convert_volume: after filtering, {len(layers)} remain to be converted")
 
+    first_dat_path = None if first_dat is None else new_dat_path(Path(first_dat))
+    last_dat_path = None if last_dat is None else new_dat_path(Path(last_dat))
+    if first_dat_path is not None and last_dat_path is not None:
+        if first_dat_path.layer_id > last_dat_path.layer_id:
+            raise ValueError(f"first dat layer {first_dat_path.layer_id} "
+                             f"is after last dat layer {last_dat_path.layer_id}")
+
+    min_index = get_layer_index_for_dat(layers=layers,
+                                        start_index=0,
+                                        dat_path=first_dat_path)
+    max_index = get_layer_index_for_dat(layers=layers,
+                                        start_index=min_index,
+                                        dat_path=last_dat_path)
+
     # ensure last layer is excluded from conversion
+    # unless last dat file of last layer is not recently modified and
+    # acquisition has stopped or last dat path was explicitly specified
     layer_count_minus_one = len(layers) - 1
     slice_max = layer_count_minus_one if max_index is None else min(layer_count_minus_one, (max_index + 1))
 
-    # unless acquisition has stopped and last dat file of last layer is not recently modified
-    if len(layers) > 0 and volume_transfer_info.acquisition_stopped():
+    if len(layers) > 0 and (volume_transfer_info.acquisition_stopped() or last_dat_path is not None):
         one_hour_ago = datetime.datetime.now() - datetime.timedelta(hours=1)
         exclude_timestamp = datetime.datetime.timestamp(one_hour_ago)
         last_layer: DatPathsForLayer = layers[-1]
@@ -241,12 +269,9 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
             slice_max = None
 
     slice_min = None if min_index is None else max(min_index, 0)
-    if slice_min:
-        if slice_max:
-            layers = layers[slice_min:slice_max]
-        else:
-            layers = layers[slice_min:]
-    elif slice_max:
+    if slice_min is not None:
+        layers = layers[slice_min:] if slice_max is None else layers[slice_min:slice_max]
+    elif slice_max is not None:
         layers = layers[0:slice_max]
 
     if len(layers) > 0:
@@ -329,14 +354,12 @@ def main(arg_list: list[str]):
         help="Runtime limit in minutes when using LSF (e.g. [hour:]minute)",
     )
     parser.add_argument(
-        "--min_index",
-        help="Index of first layer to be converted",
-        type=int
+        "--first_dat",
+        help="File name of dat in first layer to be converted (omit to convert all layers)",
     )
     parser.add_argument(
-        "--max_index",
-        help="Index of last layer to be converted",
-        type=int
+        "--last_dat",
+        help="File name of dat in last layer to be converted (omit to convert all layers)",
     )
     parser.add_argument(
         "--force",
@@ -349,8 +372,8 @@ def main(arg_list: list[str]):
     convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
                    num_workers=args.num_workers,
                    parent_work_dir=args.parent_work_dir,
-                   min_index=args.min_index,
-                   max_index=args.max_index,
+                   first_dat=args.first_dat,
+                   last_dat=args.last_dat,
                    skip_existing=(not args.force),
                    min_layers_per_worker=args.min_layers_per_worker,
                    lsf_runtime_limit=args.lsf_runtime_limit)
