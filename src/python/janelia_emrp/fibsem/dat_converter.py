@@ -195,7 +195,7 @@ def get_layer_index_for_dat(layers: list[DatPathsForLayer],
     if dat_path is not None:
         start = 0 if start_index is None else start_index
         for i in range(start, len(layers)):
-            if layers[i].get_layer_id() == dat_path.layer_id:
+            if layers[i].get_layer_id() >= dat_path.layer_id:
                 layer_index = i
                 break
     return layer_index
