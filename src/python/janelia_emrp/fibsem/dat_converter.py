@@ -222,6 +222,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
     logger.info(f"convert_volume: loading dat file paths ...")
 
     layers: list[DatPathsForLayer] = split_into_layers(path_list=[dat_root])
+    if len(layers) == 0:
+        raise ValueError(f"no layers to convert")
 
     logger.info(f"convert_volume: found {len(layers)} layers to convert")
 
@@ -244,6 +246,12 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
         if first_dat_path.layer_id > last_dat_path.layer_id:
             raise ValueError(f"first dat layer {first_dat_path.layer_id} "
                              f"is after last dat layer {last_dat_path.layer_id}")
+        if first_dat_path.layer_id > layers[-1].get_layer_id():
+            raise ValueError(f"first dat layer {first_dat_path.layer_id} "
+                             f"is after last found layer {layers[-1].get_layer_id()}")
+        if last_dat_path.layer_id < layers[0].get_layer_id():
+            raise ValueError(f"last dat layer {last_dat_path.layer_id} "
+                             f"is before first found layer {layers[0].get_layer_id()}")
 
     min_index = get_layer_index_for_dat(layers=layers,
                                         start_index=0,
