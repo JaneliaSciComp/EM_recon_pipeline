@@ -304,16 +304,17 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                              local_kwargs=local_kwargs,
                              lsf_kwargs=lsf_kwargs) as dask_cluster, Client(dask_cluster) as dask_client:
 
-                dask_client.cluster.scale(n=num_workers)
                 logger.info(f'convert_volume: observe dask cluster information at {dask_cluster.dashboard_link}')
 
                 adjusted_num_workers = min(math.ceil(len(layers) / min_layers_per_worker), num_workers)
-                dask_cluster.scale(n=adjusted_num_workers)
+                dask_client.cluster.scale(n=adjusted_num_workers)
+                number_of_partitions = adjusted_num_workers * 3
 
                 logger.info(f"convert_volume: requested {adjusted_num_workers} worker dask cluster, " 
-                            f"scaled count is {len(dask_cluster.worker_spec)}")
+                            f"scaled count is {len(dask_cluster.worker_spec)}, "
+                            f"number_of_partitions is {number_of_partitions}")
 
-                bag = dask_bag.from_sequence(layers, npartitions=adjusted_num_workers)
+                bag = dask_bag.from_sequence(layers, npartitions=number_of_partitions)
                 bag = bag.map_partitions(converter.convert_layer_list)
                 dask_client.compute(bag, sync=True)
 
