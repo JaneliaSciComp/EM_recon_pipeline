@@ -316,7 +316,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
 
                 adjusted_num_workers = min(math.ceil(len(layers) / min_layers_per_worker), num_workers)
                 dask_client.cluster.scale(n=adjusted_num_workers)
-                number_of_partitions = adjusted_num_workers * 3
+                number_of_partitions = adjusted_num_workers
 
                 logger.info(f"convert_volume: requested {adjusted_num_workers} worker dask cluster, " 
                             f"scaled count is {len(dask_cluster.worker_spec)}, "
