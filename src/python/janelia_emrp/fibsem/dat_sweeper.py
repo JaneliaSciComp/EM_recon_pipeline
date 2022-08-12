@@ -69,7 +69,7 @@ def main(arg_list: list[str]):
                 month = day.month
 
             if day.day not in day_numbers:
-                logger.info(f'find_missing_scope_dats: no dats imaged on {day.strftime("%y-%m-%d")}, skipping day')
+                logger.info(f'main: no dats imaged on {day.strftime("%y-%m-%d")}, skipping day')
                 continue
 
             dat_list = get_dats_acquired_on_day(transfer_info.scope_data_set.host,
