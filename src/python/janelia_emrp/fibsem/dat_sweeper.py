@@ -8,7 +8,8 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_copier import build_volume_transfer_list, \
-    max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day, add_dat_copy_arguments
+    max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day, add_dat_copy_arguments, \
+    get_scope_day_numbers_with_dats
 from janelia_emrp.fibsem.dat_path import dat_to_target_path
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 from janelia_emrp.root_logger import init_logger
@@ -56,10 +57,24 @@ def main(arg_list: list[str]):
         else:
             end_date = end_date + datetime.timedelta(days=1)
 
-        for acquisition_date in day_range(start_date, end_date):
+        month = None
+        day_numbers = []
+
+        for day in day_range(start_date, end_date):
+
+            if month is None or day.month != month:
+                day_numbers = get_scope_day_numbers_with_dats(transfer_info.scope_data_set.host,
+                                                              transfer_info.scope_data_set.root_dat_path,
+                                                              day)
+                month = day.month
+
+            if day.day not in day_numbers:
+                logger.info(f'find_missing_scope_dats: no dats imaged on {day.strftime("%y-%m-%d")}, skipping day')
+                continue
+
             dat_list = get_dats_acquired_on_day(transfer_info.scope_data_set.host,
                                                 transfer_info.scope_data_set.root_dat_path,
-                                                acquisition_date)
+                                                day)
 
             for scope_dat_path in dat_list:
                 cluster_dat_path = dat_to_target_path(scope_dat_path, cluster_root_dat_path)
