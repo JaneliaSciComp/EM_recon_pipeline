@@ -10,7 +10,7 @@ import time
 from janelia_emrp.fibsem.dat_copier import build_volume_transfer_list, \
     max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day, add_dat_copy_arguments, \
     get_scope_day_numbers_with_dats
-from janelia_emrp.fibsem.dat_path import dat_to_target_path
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
 from janelia_emrp.root_logger import init_logger
 
@@ -50,17 +50,20 @@ def main(arg_list: list[str]):
         if not cluster_root_dat_path.is_dir():
             raise ValueError(f"cluster_root_paths.raw_dat {cluster_root_dat_path} is not a directory")
 
-        start_date = transfer_info.scope_data_set.first_dat_acquire_time()
-        end_date = transfer_info.scope_data_set.last_dat_acquire_time()
-        if end_date is None:
-            end_date = datetime.datetime.now() + datetime.timedelta(days=1)
-        else:
-            end_date = end_date + datetime.timedelta(days=1)
+        first_dat_acquire_time = transfer_info.scope_data_set.first_dat_acquire_time()
+        last_dat_acquire_time = transfer_info.scope_data_set.last_dat_acquire_time()
+        if last_dat_acquire_time is None:
+            last_dat_acquire_time = datetime.datetime.now()
+
+        end_date = last_dat_acquire_time + datetime.timedelta(days=1)
+        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
         month = None
         day_numbers = []
 
-        for day in day_range(start_date, end_date):
+        logger.info(f"main: checking dats imaged between {first_dat_acquire_time} and {end_date}")
+
+        for day in day_range(first_dat_acquire_time, end_date):
 
             if month is None or day.month != month:
                 day_numbers = get_scope_day_numbers_with_dats(transfer_info.scope_data_set.host,
@@ -77,21 +80,22 @@ def main(arg_list: list[str]):
                                                 day)
 
             for scope_dat_path in dat_list:
-                cluster_dat_path = dat_to_target_path(scope_dat_path, cluster_root_dat_path)
+                dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
 
-                if not cluster_dat_path.exists():
-                    logger.info(f"main: {cluster_dat_path} is missing")
-                    missing_count += 1
+                if first_dat_acquire_time <= dat_path.acquire_time <= last_dat_acquire_time:
+                    if not dat_path.file_path.exists():
+                        logger.info(f"main: {dat_path.file_path} is missing")
+                        missing_count += 1
 
-                    if args.copy_missing:
-                        copy_dat_file(scope_host=transfer_info.scope_data_set.host,
-                                      scope_dat_path=scope_dat_path,
-                                      dat_storage_root=cluster_root_dat_path)
-                        copy_count += 1
+                        if args.copy_missing:
+                            copy_dat_file(scope_host=transfer_info.scope_data_set.host,
+                                          scope_dat_path=scope_dat_path,
+                                          dat_storage_root=cluster_root_dat_path)
+                            copy_count += 1
 
-                        if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
-                            stop_processing = True
-                            break
+                            if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
+                                stop_processing = True
+                                break
 
             if stop_processing or max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
                 stop_processing = True

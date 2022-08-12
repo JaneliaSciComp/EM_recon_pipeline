@@ -225,6 +225,7 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
 
     last_keep_time = keep_file_list[-1].acquire_time()
     day_after_last_keep_time = last_keep_time + datetime.timedelta(days=1)
+    day_after_last_keep_time = day_after_last_keep_time.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     formatted_start = nothing_missing_before.strftime("%y-%m-%d %H:%M:%S")
     formatted_stop = last_keep_time.strftime("%y-%m-%d %H:%M:%S")
