@@ -8,13 +8,13 @@ import numpy as np
 import sys
 from h5py import Dataset
 
-from janelia_emrp.fibsem.dat_to_h5_writer import RAW_HEADER_KEY, RECIPE_KEY, DAT_FILE_NAME_KEY
+from janelia_emrp.fibsem.dat_to_h5_writer import RAW_HEADER_KEY, RAW_FOOTER_KEY, DAT_FILE_NAME_KEY
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
 
-REQUIRED_HEADER_KEYS = [RAW_HEADER_KEY, RECIPE_KEY]
+REQUIRED_HEADER_KEYS = [RAW_HEADER_KEY, RAW_FOOTER_KEY]
 
 
 def validate_required_key_exists(key: str,
@@ -33,7 +33,7 @@ def restore_dat_bytes(data_set: Dataset,
     dat_bytes = bytearray(data_set.attrs[RAW_HEADER_KEY])
     pixel_data = np.array(data_set)
     dat_bytes += bytearray(np.moveaxis(pixel_data, 0, -1).tobytes())
-    dat_bytes += bytearray(data_set.attrs[RECIPE_KEY])
+    dat_bytes += bytearray(data_set.attrs[RAW_FOOTER_KEY])
 
     return dat_bytes
 

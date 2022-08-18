@@ -24,9 +24,8 @@ logger = logging.getLogger(__name__)
 
 DAT_FILE_NAME_KEY: Final = "dat_file_name"
 ELEMENT_SIZE_UM_KEY: Final = "element_size_um"
-FILE_LENGTH_KEY: Final = "FileLength"
 RAW_HEADER_KEY: Final = "raw_header"
-RECIPE_KEY: Final = "recipe"
+RAW_FOOTER_KEY: Final = "raw_footer"
 
 
 class DatToH5Writer:
@@ -120,13 +119,13 @@ class DatToH5Writer:
                                     dat_header: Dict[str, Any],
                                     dat_record: np.ndarray,
                                     to_h5_file: h5py.File):
-        validate_file_length_header(dat_header, dat_record)
         data_set = self.create_and_add_data_set(data_set_name=dat_path.tile_key(),
                                                 pixel_array=dat_record,
                                                 to_h5_file=to_h5_file)
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
                                   dat_header=dat_header,
-                                  include_raw_header_and_recipe=True,
+                                  include_raw_header_and_footer=True,
+                                  total_number_of_image_bytes=dat_record.nbytes,
                                   to_group_or_dataset=data_set)
         add_element_size_um_attributes(dat_header=dat_header,
                                        z_nm_per_pixel=None,
@@ -159,7 +158,8 @@ class DatToH5Writer:
 
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
                                   dat_header=dat_header,
-                                  include_raw_header_and_recipe=False,
+                                  include_raw_header_and_footer=False,
+                                  total_number_of_image_bytes=dat_record.nbytes,
                                   to_group_or_dataset=group)
 
         # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
@@ -192,7 +192,8 @@ class DatToH5Writer:
 
 def add_dat_header_attributes(dat_file_path: Path,
                               dat_header: Dict[str, Any],
-                              include_raw_header_and_recipe: bool,
+                              include_raw_header_and_footer: bool,
+                              total_number_of_image_bytes: int,
                               to_group_or_dataset: [Group, Dataset]) -> None:
     """
     Adds header data to the specified group or dataset.
@@ -205,8 +206,11 @@ def add_dat_header_attributes(dat_file_path: Path,
     dat_header : Dict[str, Any]
         parsed header information from .dat file to include as attributes.
 
-    include_raw_header_and_recipe : bool
-        indicates whether to store raw header and recipe data as attributes.
+    include_raw_header_and_footer : bool
+        indicates whether to store raw header and footer data as attributes.
+
+    total_number_of_image_bytes : int
+        total number of bytes for the image pixel data (used to determine where footer starts).
 
     to_group_or_dataset : [Group, Dataset]
         container for the header attributes.
@@ -220,7 +224,7 @@ def add_dat_header_attributes(dat_file_path: Path,
 
     to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = str(dat_file_path.name)
 
-    if include_raw_header_and_recipe:
+    if include_raw_header_and_footer:
         source_size = os.path.getsize(dat_file_path)
         with open(dat_file_path, "rb") as raw_file:
             raw_bytes = raw_file.read(OFFSET)
@@ -228,10 +232,10 @@ def add_dat_header_attributes(dat_file_path: Path,
             assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
             to_group_or_dataset.attrs[RAW_HEADER_KEY] = np.frombuffer(raw_bytes, dtype='u1')
 
-            file_length = to_group_or_dataset.attrs[FILE_LENGTH_KEY]
-            raw_file.seek(file_length)
-            recipe_size = source_size - file_length
-            to_group_or_dataset.attrs[RECIPE_KEY] = bytearray(raw_file.read(recipe_size))
+            footer_start = OFFSET + total_number_of_image_bytes
+            raw_file.seek(footer_start)
+            footer_size = source_size - footer_start
+            to_group_or_dataset.attrs[RAW_FOOTER_KEY] = bytearray(raw_file.read(footer_size))
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],
@@ -305,19 +309,6 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
     to_dataset.attrs[ELEMENT_SIZE_UM_KEY] = element_size_um
 
     return element_size_um
-
-
-def validate_file_length_header(dat_header: Dict[str, Any],
-                                dat_record: np.ndarray):
-    h = dat_header.__dict__
-    expected_pixel_count = h["XResolution"] * h["YResolution"] * h["ChanNum"]
-    expected_file_length = OFFSET + (expected_pixel_count * dat_record.dtype.itemsize)
-    if h["FileLength"] != expected_file_length:
-        error_msg = f'FileLength={h["FileLength"]} but expected {expected_file_length} based upon ' \
-                    f'XResolution={h["XResolution"]}, YResolution={h["YResolution"]}, ChanNum={h["ChanNum"]}, ' \
-                    f'shape={dat_record.shape}, dtype={dat_record.dtype}, ' \
-                    f'dtype.itemsize={dat_record.dtype.itemsize}, OFFSET={OFFSET}'
-        assert h["FileLength"] == expected_file_length, error_msg
 
 
 def main(arg_list: list[str]):
