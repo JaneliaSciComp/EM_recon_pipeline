@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 DAT_FILE_NAME_KEY: Final = "dat_file_name"
 ELEMENT_SIZE_UM_KEY: Final = "element_size_um"
 RAW_HEADER_KEY: Final = "raw_header"
-RAW_FOOTER_KEY: Final = "raw_footer"
+RAW_FOOTER_BLOCK_NAMES_KEY: Final = "raw_footer_block_names"
 
 
 class DatToH5Writer:
@@ -234,8 +234,17 @@ def add_dat_header_attributes(dat_file_path: Path,
 
             footer_start = OFFSET + total_number_of_image_bytes
             raw_file.seek(footer_start)
-            footer_size = source_size - footer_start
-            to_group_or_dataset.attrs[RAW_FOOTER_KEY] = bytearray(raw_file.read(footer_size))
+            footer_bytes = source_size - footer_start
+            footer_block_names = []
+            while footer_bytes > 0:
+                block_name = f"raw_footer_block_{len(footer_block_names):03}"
+                block_size = min(footer_bytes, 64000)
+                to_group_or_dataset.attrs[block_name] = bytearray(raw_file.read(block_size))
+                footer_block_names.append(block_name)
+                footer_bytes = footer_bytes - block_size
+
+        logger.info(f"add_dat_header_attributes: added {RAW_HEADER_KEY} and {footer_block_names}")
+        to_group_or_dataset.attrs[RAW_FOOTER_BLOCK_NAMES_KEY] = footer_block_names
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],
