@@ -104,17 +104,18 @@ class DatConverter:
 
                     logger.info(f"{self} convert_layer: reading {dat_path.file_path}")
                     dat_record = read(dat_path.file_path)
+                    dat_header_dict = dat_record.header.__dict__
 
                     if raw_path:
                         self.raw_writer.create_and_add_raw_data_set(dat_path=dat_path,
-                                                                    dat_header=dat_record.header,
+                                                                    dat_header_dict=dat_header_dict,
                                                                     dat_record=dat_record,
                                                                     to_h5_file=layer_raw_file)
 
                     if align_path:
                         self.align_writer.create_and_add_mipmap_data_sets(
                             dat_path=dat_path,
-                            dat_header=dat_record.header,
+                            dat_header_dict=dat_header_dict,
                             dat_record=dat_record,
                             max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
                             to_h5_file=layer_align_file)

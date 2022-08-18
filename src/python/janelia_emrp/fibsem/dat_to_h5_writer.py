@@ -2,13 +2,12 @@ import argparse
 import logging
 import os
 import traceback
-
-import sys
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, Union, Final
+from typing import Any, Optional, Tuple, Union, Final
 
 import h5py
 import numpy as np
+import sys
 from fibsem_tools.io import read
 from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
 from h5py import Dataset, Group
@@ -116,25 +115,25 @@ class DatToH5Writer:
 
     def create_and_add_raw_data_set(self,
                                     dat_path: DatPath,
-                                    dat_header: Dict[str, Any],
+                                    dat_header_dict: dict[str, Any],
                                     dat_record: np.ndarray,
                                     to_h5_file: h5py.File):
         data_set = self.create_and_add_data_set(data_set_name=dat_path.tile_key(),
                                                 pixel_array=dat_record,
                                                 to_h5_file=to_h5_file)
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
-                                  dat_header=dat_header,
+                                  dat_header_dict=dat_header_dict,
                                   include_raw_header_and_footer=True,
                                   total_number_of_image_bytes=dat_record.nbytes,
                                   to_group_or_dataset=data_set)
-        add_element_size_um_attributes(dat_header=dat_header,
+        add_element_size_um_attributes(dat_header_dict=dat_header_dict,
                                        z_nm_per_pixel=None,
                                        to_dataset=data_set)
         return data_set
 
     def create_and_add_mipmap_data_sets(self,
                                         dat_path: DatPath,
-                                        dat_header: Dict[str, Any],
+                                        dat_header_dict: dict[str, Any],
                                         dat_record: np.ndarray,
                                         max_mipmap_level: Optional[int],
                                         to_h5_file: h5py.File):
@@ -157,13 +156,13 @@ class DatToH5Writer:
         group = level_zero_data_set.parent
 
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
-                                  dat_header=dat_header,
+                                  dat_header_dict=dat_header_dict,
                                   include_raw_header_and_footer=False,
                                   total_number_of_image_bytes=dat_record.nbytes,
                                   to_group_or_dataset=group)
 
         # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
-        scaled_element_size = add_element_size_um_attributes(dat_header=dat_header,
+        scaled_element_size = add_element_size_um_attributes(dat_header_dict=dat_header_dict,
                                                              z_nm_per_pixel=None,
                                                              to_dataset=level_zero_data_set)
 
@@ -191,7 +190,7 @@ class DatToH5Writer:
 
 
 def add_dat_header_attributes(dat_file_path: Path,
-                              dat_header: Dict[str, Any],
+                              dat_header_dict: dict[str, Any],
                               include_raw_header_and_footer: bool,
                               total_number_of_image_bytes: int,
                               to_group_or_dataset: [Group, Dataset]) -> None:
@@ -203,8 +202,8 @@ def add_dat_header_attributes(dat_file_path: Path,
     dat_file_path : Path
         path of source .dat file or None to skip storing RawHeader data as an attribute.
 
-    dat_header : Dict[str, Any]
-        parsed header information from .dat file to include as attributes.
+    dat_header_dict : dict[str, Any]
+        parsed header dictionary from .dat file to include as attributes.
 
     include_raw_header_and_footer : bool
         indicates whether to store raw header and footer data as attributes.
@@ -215,7 +214,7 @@ def add_dat_header_attributes(dat_file_path: Path,
     to_group_or_dataset : [Group, Dataset]
         container for the header attributes.
     """
-    for key, value in dat_header.__dict__.items():
+    for key, value in dat_header_dict.items():
         try:
             to_group_or_dataset.attrs[key] = value
         except ValueError as valueError:
@@ -281,7 +280,7 @@ def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None
 
 
 # TODO: remove or fix element_size_um attribute if/when ImageJ plug-in is updated
-def add_element_size_um_attributes(dat_header: Dict[str, Any],
+def add_element_size_um_attributes(dat_header_dict: dict[str, Any],
                                    z_nm_per_pixel: Optional[int],
                                    to_dataset: Dataset) -> list[float]:
     """
@@ -294,7 +293,7 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
 
     Parameters
     ----------
-    dat_header : Dict[str, Any]
+    dat_header_dict : dict[str, Any]
         header dict.
 
     z_nm_per_pixel: Optional[int]
@@ -308,7 +307,7 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
     list[float]
         the element_size_um values.
     """
-    nm_per_pixel = int(float(dat_header.__dict__["PixelSize"]) + 0.5)
+    nm_per_pixel = int(float(dat_header_dict["PixelSize"]) + 0.5)
     um_per_pixel = nm_per_pixel / 1000.0
 
     # for 2D data, specify z as -1 because Davis agrees that -1 is more impossible than 0
@@ -357,7 +356,7 @@ def main(arg_list: list[str]):
                 dat_record = read(dat_path.file_path)
 
                 archive_writer.create_and_add_raw_data_set(dat_path=dat_path,
-                                                           dat_header=dat_record.header,
+                                                           dat_header_dict=dat_record.header.__dict__,
                                                            dat_record=dat_record,
                                                            to_h5_file=layer_archive_file)
 

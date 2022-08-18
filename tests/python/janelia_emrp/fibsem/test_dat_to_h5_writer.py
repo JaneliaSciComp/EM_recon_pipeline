@@ -17,13 +17,15 @@ def test_create_and_add_mipmap_data_sets(volume_transfer_info,
     dat_paths_for_layer = new_dat_layer(dat_path)
 
     dat_record = read(small_dat_path)
+    dat_header_dict = dat_record.header.__dict__
+
     align_path = dat_paths_for_layer.get_h5_path(volume_transfer_info.cluster_root_paths.align_h5,
                                                  source_type="uint8")
     align_path = converter.setup_h5_path("align source", align_path, True)
 
     with align_writer.open_h5_file(str(align_path)) as layer_align_file:
         align_writer.create_and_add_mipmap_data_sets(dat_path=dat_path,
-                                                     dat_header=dat_record.header,
+                                                     dat_header_dict=dat_header_dict,
                                                      dat_record=dat_record,
                                                      max_mipmap_level=volume_transfer_info.max_mipmap_level,
                                                      to_h5_file=layer_align_file)
