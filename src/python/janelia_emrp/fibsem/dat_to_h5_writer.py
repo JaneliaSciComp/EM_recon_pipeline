@@ -120,6 +120,7 @@ class DatToH5Writer:
                                     dat_header: Dict[str, Any],
                                     dat_record: np.ndarray,
                                     to_h5_file: h5py.File):
+        validate_file_length_header(dat_header, dat_record)
         data_set = self.create_and_add_data_set(data_set_name=dat_path.tile_key(),
                                                 pixel_array=dat_record,
                                                 to_h5_file=to_h5_file)
@@ -304,6 +305,19 @@ def add_element_size_um_attributes(dat_header: Dict[str, Any],
     to_dataset.attrs[ELEMENT_SIZE_UM_KEY] = element_size_um
 
     return element_size_um
+
+
+def validate_file_length_header(dat_header: Dict[str, Any],
+                                dat_record: np.ndarray):
+    h = dat_header.__dict__
+    expected_pixel_count = h["XResolution"] * h["YResolution"] * h["ChanNum"]
+    expected_file_length = OFFSET + (expected_pixel_count * dat_record.dtype.itemsize)
+    if h["FileLength"] != expected_file_length:
+        error_msg = f'FileLength={h["FileLength"]} but expected {expected_file_length} based upon ' \
+                    f'XResolution={h["XResolution"]}, YResolution={h["YResolution"]}, ChanNum={h["ChanNum"]}, ' \
+                    f'shape={dat_record.shape}, dtype={dat_record.dtype}, ' \
+                    f'dtype.itemsize={dat_record.dtype.itemsize}, OFFSET={OFFSET}'
+        assert h["FileLength"] == expected_file_length, error_msg
 
 
 def main(arg_list: list[str]):
