@@ -1,0 +1,49 @@
+{
+    "transfer_id": "cellmap::0522-09_ZF-Card::jeiss3",
+    "scope_data_set": {
+        "host": "jeiss3.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/Zebrafish",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "0522-09_ZF-Card",
+        "first_dat_name": "Merlin-6257_22-07-07_073250_0-0-0.dat",
+        "last_dat_name": null,
+        "dat_x_and_y_nm_per_pixel": 8,
+        "dat_z_nm_per_pixel": 8,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/groups/cellmap/cellmap/render/dat/jrc_zf-cardiac-1",
+        "raw_h5": "/groups/cellmap/cellmap/render/h5/jrc_zf-cardiac-1/raw",
+        "align_h5": "/nrs/cellmap/render/h5/jrc_zf-cardiac-1/align"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/cellmap/data/jrc_zf-cardiac-1/raw"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "cellmap",
+        "project": "jrc_zf_cardiac_1",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "mask_height": 30,
+        "connect": {
+            "host": "10.40.3.162",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_ARCHIVE_H5_RAW",
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM"
+    ],
+    "cluster_job_project_for_billing": "cellmap"
+}
