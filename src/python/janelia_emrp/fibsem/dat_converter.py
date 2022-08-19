@@ -107,10 +107,10 @@ class DatConverter:
                     dat_header_dict = dat_record.header.__dict__
 
                     if raw_path:
-                        self.raw_writer.create_and_add_raw_data_set(dat_path=dat_path,
-                                                                    dat_header_dict=dat_header_dict,
-                                                                    dat_record=dat_record,
-                                                                    to_h5_file=layer_raw_file)
+                        self.raw_writer.create_and_add_raw_data_group(dat_path=dat_path,
+                                                                      dat_header_dict=dat_header_dict,
+                                                                      dat_record=dat_record,
+                                                                      to_h5_file=layer_raw_file)
 
                     if align_path:
                         self.align_writer.create_and_add_mipmap_data_sets(

@@ -23,8 +23,9 @@ logger = logging.getLogger(__name__)
 
 DAT_FILE_NAME_KEY: Final = "dat_file_name"
 ELEMENT_SIZE_UM_KEY: Final = "element_size_um"
-RAW_HEADER_KEY: Final = "raw_header"
-RAW_FOOTER_BLOCK_NAMES_KEY: Final = "raw_footer_block_names"
+RAW_HEADER_DATASET_NAME: Final = "header"
+RAW_PIXELS_DATASET_NAME: Final = "pixels"
+RAW_FOOTER_DATASET_NAME: Final = "footer"
 
 
 class DatToH5Writer:
@@ -113,23 +114,53 @@ class DatToH5Writer:
                                     compression=self.compression,
                                     compression_opts=self.compression_opts)
 
-    def create_and_add_raw_data_set(self,
-                                    dat_path: DatPath,
-                                    dat_header_dict: dict[str, Any],
-                                    dat_record: np.ndarray,
-                                    to_h5_file: h5py.File):
-        data_set = self.create_and_add_data_set(data_set_name=dat_path.tile_key(),
-                                                pixel_array=dat_record,
-                                                to_h5_file=to_h5_file)
+    def create_and_add_raw_data_group(self,
+                                      dat_path: DatPath,
+                                      dat_header_dict: dict[str, Any],
+                                      dat_record: np.ndarray,
+                                      to_h5_file: h5py.File):
+        raw_data_group_name = dat_path.tile_key()
+        group_context = f"group {raw_data_group_name} in {to_h5_file.filename}"
+
+        logger.info(f"create_and_add_raw_data_group: entry, creating {group_context}")
+        raw_data_group = to_h5_file.require_group(raw_data_group_name)
+
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
                                   dat_header_dict=dat_header_dict,
-                                  include_raw_header_and_footer=True,
-                                  total_number_of_image_bytes=dat_record.nbytes,
-                                  to_group_or_dataset=data_set)
+                                  to_group_or_dataset=raw_data_group)
+
+        raw_pixels_data_set = self.create_and_add_data_set(group_name=raw_data_group_name,
+                                                           data_set_name=RAW_PIXELS_DATASET_NAME,
+                                                           pixel_array=dat_record,
+                                                           to_h5_file=to_h5_file)
+
         add_element_size_um_attributes(dat_header_dict=dat_header_dict,
                                        z_nm_per_pixel=None,
-                                       to_dataset=data_set)
-        return data_set
+                                       to_dataset=raw_pixels_data_set)
+
+        data_set_names = f"{RAW_HEADER_DATASET_NAME} and {RAW_FOOTER_DATASET_NAME}"
+        logger.info(f"create_and_add_raw_data_group: adding {data_set_names} to {group_context}")
+
+        source_size = os.path.getsize(dat_path.file_path)
+        with open(dat_path.file_path, "rb") as raw_file:
+            raw_bytes = raw_file.read(OFFSET)
+
+            assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
+
+            raw_data_group.create_dataset(name=RAW_HEADER_DATASET_NAME,
+                                          data=np.frombuffer(raw_bytes, dtype='u1'),
+                                          chunks=None,
+                                          compression=self.compression,
+                                          compression_opts=self.compression_opts)
+
+            footer_start = OFFSET + dat_record.nbytes
+            raw_file.seek(footer_start)
+            footer_size = source_size - footer_start
+            raw_data_group.create_dataset(name=RAW_FOOTER_DATASET_NAME,
+                                          data=bytearray(raw_file.read(footer_size)),
+                                          chunks=None,
+                                          compression=self.compression,
+                                          compression_opts=self.compression_opts)
 
     def create_and_add_mipmap_data_sets(self,
                                         dat_path: DatPath,
@@ -157,8 +188,6 @@ class DatToH5Writer:
 
         add_dat_header_attributes(dat_file_path=dat_path.file_path,
                                   dat_header_dict=dat_header_dict,
-                                  include_raw_header_and_footer=False,
-                                  total_number_of_image_bytes=dat_record.nbytes,
                                   to_group_or_dataset=group)
 
         # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
@@ -191,8 +220,6 @@ class DatToH5Writer:
 
 def add_dat_header_attributes(dat_file_path: Path,
                               dat_header_dict: dict[str, Any],
-                              include_raw_header_and_footer: bool,
-                              total_number_of_image_bytes: int,
                               to_group_or_dataset: [Group, Dataset]) -> None:
     """
     Adds header data to the specified group or dataset.
@@ -200,16 +227,10 @@ def add_dat_header_attributes(dat_file_path: Path,
     Parameters
     ----------
     dat_file_path : Path
-        path of source .dat file or None to skip storing RawHeader data as an attribute.
+        path of source .dat file.
 
     dat_header_dict : dict[str, Any]
         parsed header dictionary from .dat file to include as attributes.
-
-    include_raw_header_and_footer : bool
-        indicates whether to store raw header and footer data as attributes.
-
-    total_number_of_image_bytes : int
-        total number of bytes for the image pixel data (used to determine where footer starts).
 
     to_group_or_dataset : [Group, Dataset]
         container for the header attributes.
@@ -222,28 +243,6 @@ def add_dat_header_attributes(dat_file_path: Path,
                            exc_info=valueError)
 
     to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = str(dat_file_path.name)
-
-    if include_raw_header_and_footer:
-        source_size = os.path.getsize(dat_file_path)
-        with open(dat_file_path, "rb") as raw_file:
-            raw_bytes = raw_file.read(OFFSET)
-
-            assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
-            to_group_or_dataset.attrs[RAW_HEADER_KEY] = np.frombuffer(raw_bytes, dtype='u1')
-
-            footer_start = OFFSET + total_number_of_image_bytes
-            raw_file.seek(footer_start)
-            footer_bytes = source_size - footer_start
-            footer_block_names = []
-            while footer_bytes > 0:
-                block_name = f"raw_footer_block_{len(footer_block_names):03}"
-                block_size = min(footer_bytes, 64000)
-                to_group_or_dataset.attrs[block_name] = bytearray(raw_file.read(block_size))
-                footer_block_names.append(block_name)
-                footer_bytes = footer_bytes - block_size
-
-        logger.info(f"add_dat_header_attributes: added {RAW_HEADER_KEY} and {footer_block_names}")
-        to_group_or_dataset.attrs[RAW_FOOTER_BLOCK_NAMES_KEY] = footer_block_names
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],
@@ -355,10 +354,10 @@ def main(arg_list: list[str]):
                 logger.info(f"reading {dat_path.file_path}")
                 dat_record = read(dat_path.file_path)
 
-                archive_writer.create_and_add_raw_data_set(dat_path=dat_path,
-                                                           dat_header_dict=dat_record.header.__dict__,
-                                                           dat_record=dat_record,
-                                                           to_h5_file=layer_archive_file)
+                archive_writer.create_and_add_raw_data_group(dat_path=dat_path,
+                                                             dat_header_dict=dat_record.header.__dict__,
+                                                             dat_record=dat_record,
+                                                             to_h5_file=layer_archive_file)
 
 
 if __name__ == "__main__":

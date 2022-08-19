@@ -6,67 +6,55 @@ from pathlib import Path
 import h5py
 import numpy as np
 import sys
-from h5py import Dataset
+from h5py import Group
 
-from janelia_emrp.fibsem.dat_to_h5_writer import RAW_HEADER_KEY, RAW_FOOTER_BLOCK_NAMES_KEY, DAT_FILE_NAME_KEY
+from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY, RAW_HEADER_DATASET_NAME, RAW_PIXELS_DATASET_NAME, \
+    RAW_FOOTER_DATASET_NAME
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
 
-REQUIRED_HEADER_KEYS = [RAW_HEADER_KEY, RAW_FOOTER_BLOCK_NAMES_KEY]
+def restore_dat_bytes(raw_data_group: Group) -> bytes:
 
-
-def validate_required_key_exists(key: str,
-                                 data_set: Dataset,
-                                 h5_path: Path) -> None:
-    if key not in data_set.attrs:
-        raise ValueError(f"data set {data_set.name} in {str(h5_path)} is missing required attribute '{key}'")
-
-
-def restore_dat_bytes(data_set: Dataset,
-                      h5_path: Path) -> bytes:
-
-    for key in REQUIRED_HEADER_KEYS:
-        validate_required_key_exists(key, data_set, h5_path)
-
-    dat_bytes = bytearray(data_set.attrs[RAW_HEADER_KEY])
-    pixel_data = np.array(data_set)
+    dat_bytes = bytearray(raw_data_group.get(RAW_HEADER_DATASET_NAME))
+    pixel_data = np.array(raw_data_group.get(RAW_PIXELS_DATASET_NAME))
     dat_bytes += bytearray(np.moveaxis(pixel_data, 0, -1).tobytes())
-    for footer_block_name in data_set.attrs[RAW_FOOTER_BLOCK_NAMES_KEY]:
-        dat_bytes += bytearray(data_set.attrs[footer_block_name])
+    dat_bytes += bytearray(raw_data_group.get(RAW_FOOTER_DATASET_NAME))
 
     return dat_bytes
 
 
-def restore_dat_file_for_data_set(h5_path: Path,
-                                  data_set: Dataset,
-                                  to_path: Path) -> None:
+def restore_dat_file(h5_path: Path,
+                     raw_data_group: Group,
+                     to_path: Path) -> None:
 
-    validate_required_key_exists(DAT_FILE_NAME_KEY, data_set, h5_path)
+    if DAT_FILE_NAME_KEY not in raw_data_group.attrs:
+        raise ValueError(f"group {raw_data_group.name} in {str(h5_path)} "
+                         f"is missing required attribute '{DAT_FILE_NAME_KEY}'")
 
-    dat_file_path = Path(to_path, data_set.attrs[DAT_FILE_NAME_KEY])
+    dat_file_path = Path(to_path, raw_data_group.attrs[DAT_FILE_NAME_KEY])
 
     if dat_file_path.exists():
-        raise ValueError(f"{dat_file_path} for data set {data_set.name} in {str(h5_path)} already exists")
+        raise ValueError(f"{dat_file_path} for group {raw_data_group.name} in {str(h5_path)} already exists")
 
-    dat_bytes = restore_dat_bytes(data_set, h5_path)
+    dat_bytes = restore_dat_bytes(raw_data_group)
 
     with open(dat_file_path, "wb") as dat_file:
         dat_file.write(dat_bytes)
 
-    logger.info(f"restore_dat_file_for_data_set: saved {str(dat_file_path)}")
+    logger.info(f"restore_dat_file: saved {str(dat_file_path)}")
 
 
 def restore_dat_files(h5_path_list: list[Path],
                       to_path: Path) -> None:
     for h5_path in h5_path_list:
         with h5py.File(name=str(h5_path), mode="r") as h5_file:
-            data_set_names = sorted(h5_file.keys())
-            logger.info(f"restore_dat_files: found {len(data_set_names)} data sets in {h5_path}")
-            for data_set_name in data_set_names:
-                data_set = h5_file.get(data_set_name)
-                restore_dat_file_for_data_set(h5_path, data_set, to_path)
+            group_names = sorted(h5_file.keys())
+            logger.info(f"restore_dat_files: found {len(group_names)} group(s) in {h5_path}")
+            for group_name in group_names:
+                group = h5_file.get(group_name)
+                restore_dat_file(h5_path, group, to_path)
 
 
 def validate_bytes_match(original_context: str,
@@ -100,7 +88,7 @@ def validate_original_dat_bytes_match(h5_path: Path,
 
             with open(original_dat_file_path, "rb") as original_file:
                 original_bytes = original_file.read()
-            restored_bytes = restore_dat_bytes(data_set, h5_path)
+            restored_bytes = restore_dat_bytes(data_set)
             validate_bytes_match(original_context=str(original_dat_file_path),
                                  original_bytes=original_bytes,
                                  restored_context=restored_context,

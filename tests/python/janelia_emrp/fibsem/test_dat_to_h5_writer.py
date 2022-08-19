@@ -2,7 +2,7 @@ from fibsem_tools.io import read
 
 from janelia_emrp.fibsem.dat_converter import DatConverter
 from janelia_emrp.fibsem.dat_path import new_dat_path, new_dat_layer
-from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer, RAW_HEADER_KEY, ELEMENT_SIZE_UM_KEY
+from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer, ELEMENT_SIZE_UM_KEY
 
 
 def test_create_and_add_mipmap_data_sets(volume_transfer_info,
@@ -40,7 +40,6 @@ def test_create_and_add_mipmap_data_sets(volume_transfer_info,
         assert len(data_set_names) == 7, "incorrect number of data sets created"
 
         assert "XResolution" in group.attrs, "XResolution missing from group attributes"
-        assert RAW_HEADER_KEY not in group.attrs, "raw_header should not be in group attributes"
         assert ELEMENT_SIZE_UM_KEY not in group.attrs, "element_size_um should not be in group attributes"
 
         data_set_name = data_set_names[2]
