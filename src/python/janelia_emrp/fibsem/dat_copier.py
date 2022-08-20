@@ -343,15 +343,13 @@ def main(arg_list: list[str]):
                         missing_dat_list_file.write(f"{str(scope_dat)}\n")
                 logger.info(f"main: added {len(missing_scope_dats)} missing dat file paths to {missing_dat_list_path}")
 
-        previous_keep_file: Optional[KeepFile] = None
-        for keep_file in keep_file_list:
-
-            # if previous keep file was last in layer, save previous keep info to missing_check_path
-            if previous_keep_file is not None and keep_file.acquire_time() > previous_keep_file.acquire_time():
+                # save last keep info to missing_check_path so checks are not repeated by subsequent runs
                 with open(missing_check_path, 'w', encoding='utf-8') as missing_check_file:
-                    logger.info(f"main: saving {missing_check_path} for {Path(previous_keep_file.dat_path).name}")
-                    missing_check_file.write(keep_file.json())
+                    last_keep_file = keep_file_list[-1]
+                    logger.info(f"main: saving {missing_check_path} for {Path(last_keep_file.dat_path).name}")
+                    missing_check_file.write(last_keep_file.json())
 
+        for keep_file in keep_file_list:
             copy_dat_file(scope_host=keep_file.host,
                           scope_dat_path=keep_file.dat_path,
                           dat_storage_root=cluster_root_dat_path)
@@ -359,7 +357,6 @@ def main(arg_list: list[str]):
             remove_keep_file(keep_file)
 
             copy_count += 1
-            previous_keep_file = keep_file
 
             if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
                 stop_processing = True
