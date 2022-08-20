@@ -318,7 +318,6 @@ def main(arg_list: list[str]):
         logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host} for the "
                     f"{transfer_info.scope_data_set.data_set_id} data set")
 
-        missing_value = "missing"
         missing_check_path: Path = cluster_root_dat_path / "last_missing_check.json"
         if missing_check_path.exists():
             nothing_missing_before = KeepFile.parse_file(missing_check_path).acquire_time()
@@ -335,15 +334,11 @@ def main(arg_list: list[str]):
                                                          scope_data_set=transfer_info.scope_data_set,
                                                          cluster_root_dat_path=cluster_root_dat_path)
             if len(missing_scope_dats) > 0:
-                logger.info(f"main: adding {len(missing_scope_dats)} missing dat files to processing list")
-                # TODO: remove exception and uncomment insertion of missing dat info when ready
-                raise FileNotFoundError(f"missing dat {missing_scope_dats[0]}")
-                # for scope_dat in missing_scope_dats:
-                #     keep_file_list.append(KeepFile(host=transfer_info.scope_data_set.host,
-                #                                    keep_path=missing_value,
-                #                                    data_set=missing_value,
-                #                                    dat_path=str(scope_dat)))
-                # keep_file_list.sort(key=lambda kf: kf.dat_path)
+                missing_dat_list_path: Path = cluster_root_dat_path / "missing_dat_list.txt"
+                with open(missing_dat_list_path, 'a', encoding='utf-8') as missing_dat_list_file:
+                    for scope_dat in missing_scope_dats:
+                        missing_dat_list_file.write(f"{str(scope_dat)}\n")
+                logger.info(f"main: added {len(missing_scope_dats)} missing dat file paths to {missing_dat_list_path}")
 
         previous_keep_file: Optional[KeepFile] = None
         for keep_file in keep_file_list:
@@ -358,8 +353,7 @@ def main(arg_list: list[str]):
                           scope_dat_path=keep_file.dat_path,
                           dat_storage_root=cluster_root_dat_path)
 
-            if keep_file.keep_path != missing_value:
-                remove_keep_file(keep_file)
+            remove_keep_file(keep_file)
 
             copy_count += 1
             previous_keep_file = keep_file
