@@ -321,8 +321,11 @@ def main(arg_list: list[str]):
         missing_check_path: Path = cluster_root_dat_path / "last_missing_check.json"
         if missing_check_path.exists():
             nothing_missing_before = KeepFile.parse_file(missing_check_path).acquire_time()
+            logger.info(f"main: loaded {missing_check_path}")
         else:
             nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
+
+        logger.info(f"main: first missing check time is {nothing_missing_before.strftime('%Y-%m-%d %H:%M:%S')}")
 
         if len(keep_file_list) > 0:
             logger.info(f"main: start copying dat files to {cluster_root_dat_path}")
