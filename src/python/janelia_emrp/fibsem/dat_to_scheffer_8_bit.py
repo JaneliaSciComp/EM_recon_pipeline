@@ -8,7 +8,7 @@ from fibsem_tools.io import read
 logger = logging.getLogger(__name__)
 
 
-def compress_compute(dat_record: np.ndarray,
+def compress_compute(cyx_dat_record: np.ndarray,
                      channel_num: int = 0) -> np.ndarray:
     """
     Lou Scheffer's 16-bit to 8-bit "compression" algorithm adapted from
@@ -20,8 +20,8 @@ def compress_compute(dat_record: np.ndarray,
 
     Parameters
     ----------
-    dat_record: np.ndarray
-        two-channel numpy array from 16-bit .dat file.
+    cyx_dat_record: np.ndarray
+        two-channel numpy array from 16-bit .dat file that is in cyx order.
 
     channel_num: int, default=0
         index of channel to compress.
@@ -31,9 +31,9 @@ def compress_compute(dat_record: np.ndarray,
     np.ndarray
         8-bit numpy array produced by "compression".
     """
-    logger.info(f"compress_compute: processing channel {channel_num} from dat with shape {np.shape(dat_record)}")
+    logger.info(f"compress_compute: processing channel {channel_num} from dat with shape {cyx_dat_record.shape}")
 
-    pixel_array = dat_record[channel_num, :, :]
+    pixel_array = cyx_dat_record[channel_num, :, :]
 
     # First, find the mean and standard deviation of the 'real' non-saturated pixels.
     # Ignore any that are too close to saturated light or dark.
@@ -122,9 +122,11 @@ def compress_and_save(dat_path: Path,
         compressed output path.
     """
     dat_record = read(dat_path)
-    logger.info(f"compress_and_save: loaded {dat_record.header.XResolution}x{dat_record.header.YResolution} {str(dat_path)}")
+    # data comes in as x, y, c - we need to change it to c, x, y because dat reader no longer does that
+    cyx_dat_record = np.rollaxis(dat_record, 2)
+    logger.info(f"compress_and_save: loaded {cyx_dat_record.shape} {str(dat_path)}")
 
-    compressed_record = compress_compute(dat_record)
+    compressed_record = compress_compute(cyx_dat_record)
     im = Image.fromarray(compressed_record[0, :, :])
     im.save(compressed_path)
     logger.info(f"compress_and_save: saved {str(compressed_path)}")

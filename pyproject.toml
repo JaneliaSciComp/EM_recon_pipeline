@@ -7,7 +7,7 @@ license = 'BSD-3-Clause'
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fibsem-tools = "^0.2.11"
+fibsem-tools = "0.3.1"
 render-python = {git = "https://github.com/AllenInstitute/render-python.git"}
 dask-janelia = "^0.1.4"
 bokeh = "^2.3.3"

@@ -265,7 +265,7 @@ six = "*"
 
 [[package]]
 name = "fibsem-tools"
-version = "0.2.14"
+version = "0.3.1"
 description = "Tools for processing FIBSEM datasets"
 category = "main"
 optional = false
@@ -629,7 +629,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
 [[package]]
 name = "render-python"
-version = "2.2.3.dev7+gb9b8d0e"
+version = "2.2.3.dev25+gc4a1ba4"
 description = "a python API to interact via python with render databases see https://github.com/saalfeldlab/render"
 category = "main"
 optional = false
@@ -649,7 +649,7 @@ sphinxcontrib-napoleon = "*"
 type = "git"
 url = "https://github.com/AllenInstitute/render-python.git"
 reference = "master"
-resolved_reference = "b9b8d0e5d72403fe7248f583f472f0964a7af577"
+resolved_reference = "c4a1ba489055c872730f45a5b2e100881cc211a7"
 
 [[package]]
 name = "requests"
@@ -879,7 +879,7 @@ heapdict = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "760352c7cc0197f56548c23cf5c5b4089127be73500c564b89fd0a6b7065d7e6"
+content-hash = "517a33f1f41fae0b1db49fc244e68a7182674c4b7811975a9ac936f50d5832ee"
 
 [metadata.files]
 aiobotocore = [
@@ -998,10 +998,7 @@ fasteners = [
     {file = "fasteners-0.16.3-py2.py3-none-any.whl", hash = "sha256:8408e52656455977053871990bd25824d85803b9417aa348f10ba29ef0c751f7"},
     {file = "fasteners-0.16.3.tar.gz", hash = "sha256:b1ab4e5adfbc28681ce44b3024421c4f567e705cc3963c732bf1cba3348307de"},
 ]
-fibsem-tools = [
-    {file = "fibsem-tools-0.2.14.tar.gz", hash = "sha256:ae59cecb2cea62af3da3c1229c1476a12948e2740389be46296b6513ec84f540"},
-    {file = "fibsem_tools-0.2.14-py3-none-any.whl", hash = "sha256:b2202aceebcc5908e9623e22ef894bd1bd330e3a41c8277ac06cb3bba88d3633"},
-]
+fibsem-tools = []
 fsspec = [
     {file = "fsspec-2022.2.0-py3-none-any.whl", hash = "sha256:eb9c9d9aee49d23028deefffe53e87c55d3515512c63f57e893710301001449a"},
     {file = "fsspec-2022.2.0.tar.gz", hash = "sha256:20322c659538501f52f6caa73b08b2ff570b7e8ea30a86559721d090e473ad5c"},

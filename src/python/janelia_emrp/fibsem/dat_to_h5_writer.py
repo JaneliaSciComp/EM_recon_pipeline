@@ -8,13 +8,13 @@ from typing import Any, Optional, Tuple, Union, Final
 import h5py
 import numpy as np
 import sys
-from fibsem_tools.io import read
 from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
 from h5py import Dataset, Group
 from xarray_multiscale import multiscale
 from xarray_multiscale.reducers import windowed_mean
 
-from janelia_emrp.fibsem.dat_path import split_into_layers, DatPath
+from janelia_emrp.fibsem.cyx_dat import CYXDat, new_cyx_dat
+from janelia_emrp.fibsem.dat_path import split_into_layers
 from janelia_emrp.fibsem.dat_to_scheffer_8_bit import compress_compute
 from janelia_emrp.root_logger import init_logger
 
@@ -115,34 +115,31 @@ class DatToH5Writer:
                                     compression_opts=self.compression_opts)
 
     def create_and_add_raw_data_group(self,
-                                      dat_path: DatPath,
-                                      dat_header_dict: dict[str, Any],
-                                      dat_record: np.ndarray,
+                                      cyx_dat: CYXDat,
                                       to_h5_file: h5py.File):
-        raw_data_group_name = dat_path.tile_key()
+        raw_data_group_name = cyx_dat.dat_path.tile_key()
         group_context = f"group {raw_data_group_name} in {to_h5_file.filename}"
 
         logger.info(f"create_and_add_raw_data_group: entry, creating {group_context}")
         raw_data_group = to_h5_file.require_group(raw_data_group_name)
 
-        add_dat_header_attributes(dat_file_path=dat_path.file_path,
-                                  dat_header_dict=dat_header_dict,
+        add_dat_header_attributes(cyx_dat=cyx_dat,
                                   to_group_or_dataset=raw_data_group)
 
         raw_pixels_data_set = self.create_and_add_data_set(group_name=raw_data_group_name,
                                                            data_set_name=RAW_PIXELS_DATASET_NAME,
-                                                           pixel_array=dat_record,
+                                                           pixel_array=cyx_dat.pixels,
                                                            to_h5_file=to_h5_file)
 
-        add_element_size_um_attributes(dat_header_dict=dat_header_dict,
+        add_element_size_um_attributes(dat_header_dict=cyx_dat.header,
                                        z_nm_per_pixel=None,
                                        to_dataset=raw_pixels_data_set)
 
         data_set_names = f"{RAW_HEADER_DATASET_NAME} and {RAW_FOOTER_DATASET_NAME}"
         logger.info(f"create_and_add_raw_data_group: adding {data_set_names} to {group_context}")
 
-        source_size = os.path.getsize(dat_path.file_path)
-        with open(dat_path.file_path, "rb") as raw_file:
+        source_size = os.path.getsize(cyx_dat.dat_path.file_path)
+        with open(cyx_dat.dat_path.file_path, "rb") as raw_file:
             raw_bytes = raw_file.read(OFFSET)
 
             assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
@@ -153,7 +150,7 @@ class DatToH5Writer:
                                           compression=self.compression,
                                           compression_opts=self.compression_opts)
 
-            footer_start = OFFSET + dat_record.nbytes
+            footer_start = OFFSET + cyx_dat.pixels.nbytes
             raw_file.seek(footer_start)
             footer_size = source_size - footer_start
             raw_data_group.create_dataset(name=RAW_FOOTER_DATASET_NAME,
@@ -163,35 +160,31 @@ class DatToH5Writer:
                                           compression_opts=self.compression_opts)
 
     def create_and_add_mipmap_data_sets(self,
-                                        dat_path: DatPath,
-                                        dat_header_dict: dict[str, Any],
-                                        dat_record: np.ndarray,
+                                        cyx_dat: CYXDat,
                                         max_mipmap_level: Optional[int],
                                         to_h5_file: h5py.File):
         """
-        Compresses the specified `dat_record` into an 8 bit level 0 mipmap and down-samples that for subsequent levels.
+        Compresses the specified dat into an 8 bit level 0 mipmap and down-samples that for subsequent levels.
         The `align_writer` is used to save each mipmap as a data set within the specified `layer_align_file`.
         Data sets are named as <section>-<row>-<column>.mipmap.<level> (e.g. 0-0-1.mipmap.3).
         """
         func_name = "create_and_add_mipmap_data_sets:"
-        layer_and_tile = dat_path.layer_and_tile()
-        logger.info(f"{func_name} create level 0 by compressing {dat_path.file_path} for {layer_and_tile}")
+        layer_and_tile = cyx_dat.dat_path.layer_and_tile()
+        logger.info(f"{func_name} create level 0 by compressing {cyx_dat} for {layer_and_tile}")
 
-        compressed_record = compress_compute(dat_record)
+        compressed_record = compress_compute(cyx_dat.pixels)
 
-        tile_key = dat_path.tile_key()
+        tile_key = cyx_dat.dat_path.tile_key()
         level_zero_data_set = self.create_and_add_data_set(group_name=tile_key,
                                                            data_set_name="mipmap.0",
                                                            pixel_array=compressed_record,
                                                            to_h5_file=to_h5_file)
         group = level_zero_data_set.parent
 
-        add_dat_header_attributes(dat_file_path=dat_path.file_path,
-                                  dat_header_dict=dat_header_dict,
+        add_dat_header_attributes(cyx_dat=cyx_dat,
                                   to_group_or_dataset=group)
 
-        # TODO: review maintenance of element_size_um attribute for ImageJ, do we need it?
-        scaled_element_size = add_element_size_um_attributes(dat_header_dict=dat_header_dict,
+        scaled_element_size = add_element_size_um_attributes(dat_header_dict=cyx_dat.header,
                                                              z_nm_per_pixel=None,
                                                              to_dataset=level_zero_data_set)
 
@@ -218,31 +211,27 @@ class DatToH5Writer:
         logger.info(f"{func_name} exit for {layer_and_tile}")
 
 
-def add_dat_header_attributes(dat_file_path: Path,
-                              dat_header_dict: dict[str, Any],
+def add_dat_header_attributes(cyx_dat: CYXDat,
                               to_group_or_dataset: [Group, Dataset]) -> None:
     """
     Adds header data to the specified group or dataset.
 
     Parameters
     ----------
-    dat_file_path : Path
-        path of source .dat file.
-
-    dat_header_dict : dict[str, Any]
-        parsed header dictionary from .dat file to include as attributes.
+    cyx_dat : CYXDat
+        parsed dat file information.
 
     to_group_or_dataset : [Group, Dataset]
         container for the header attributes.
     """
-    for key, value in dat_header_dict.items():
+    for key, value in cyx_dat.header.items():
         try:
             to_group_or_dataset.attrs[key] = value
         except ValueError as valueError:
-            logger.warning(f"add_dat_header_attributes: skipping value for key='{key}' in {dat_file_path}",
+            logger.warning(f"add_dat_header_attributes: skipping value for key='{key}' in {cyx_dat}",
                            exc_info=valueError)
 
-    to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = str(dat_file_path.name)
+    to_group_or_dataset.attrs[DAT_FILE_NAME_KEY] = cyx_dat.dat_path.file_path.name
 
 
 def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None],
@@ -352,11 +341,8 @@ def main(arg_list: list[str]):
         with archive_writer.open_h5_file(str(archive_path)) as layer_archive_file:
             for dat_path in layer.dat_paths:
                 logger.info(f"reading {dat_path.file_path}")
-                dat_record = read(dat_path.file_path)
-
-                archive_writer.create_and_add_raw_data_group(dat_path=dat_path,
-                                                             dat_header_dict=dat_record.header.__dict__,
-                                                             dat_record=dat_record,
+                cyx_dat: CYXDat = new_cyx_dat(dat_path)
+                archive_writer.create_and_add_raw_data_group(cyx_dat=cyx_dat,
                                                              to_h5_file=layer_archive_file)
 
 

@@ -22,7 +22,7 @@ def print_headers(dat_file_paths, print_keys, format_tsv=None):
     header_index = 0
     batch_size = 100
     for i in range(0, len(dat_file_paths), batch_size):
-        header_dict_list = [record.header.__dict__ for record in read(dat_file_paths[i:i+batch_size])]
+        header_dict_list = [record.attrs.__dict__ for record in read(dat_file_paths[i:i+batch_size])]
 
         if header_index == 0 and format_tsv:
             print("path", end='\t')

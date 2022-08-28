@@ -2,9 +2,6 @@ import argparse
 import datetime
 import logging
 import os
-
-import math
-import time
 import traceback
 from contextlib import ExitStack
 from pathlib import Path
@@ -12,11 +9,13 @@ from typing import Optional, List
 
 import dask.bag as dask_bag
 import errno
+import math
 import sys
+import time
 from dask_janelia import get_cluster
 from distributed import Client
-from fibsem_tools.io import read
 
+from janelia_emrp.fibsem.cyx_dat import CYXDat, new_cyx_dat
 from janelia_emrp.fibsem.dat_path import DatPathsForLayer, split_into_layers, new_dat_path, DatPath
 from janelia_emrp.fibsem.dat_to_h5_writer import DatToH5Writer
 from janelia_emrp.fibsem.h5_to_dat import validate_original_dat_bytes_match
@@ -102,21 +101,15 @@ class DatConverter:
                     if not dat_path.file_path.exists():
                         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), dat_path.file_path)
 
-                    logger.info(f"{self} convert_layer: reading {dat_path.file_path}")
-                    dat_record = read(dat_path.file_path)
-                    dat_header_dict = dat_record.header.__dict__
+                    cyx_dat: CYXDat = new_cyx_dat(dat_path)
 
                     if raw_path:
-                        self.raw_writer.create_and_add_raw_data_group(dat_path=dat_path,
-                                                                      dat_header_dict=dat_header_dict,
-                                                                      dat_record=dat_record,
+                        self.raw_writer.create_and_add_raw_data_group(cyx_dat=cyx_dat,
                                                                       to_h5_file=layer_raw_file)
 
                     if align_path:
                         self.align_writer.create_and_add_mipmap_data_sets(
-                            dat_path=dat_path,
-                            dat_header_dict=dat_header_dict,
-                            dat_record=dat_record,
+                            cyx_dat=cyx_dat,
                             max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
                             to_h5_file=layer_align_file)
 
