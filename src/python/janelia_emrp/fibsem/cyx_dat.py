@@ -32,7 +32,7 @@ def new_cyx_dat(dat_path: DatPath) -> CYXDat:
     dat_record = read(dat_path.file_path)
     dat_header_dict = dat_record.attrs.__dict__
 
-    # data comes in as x, y, c - we need to change it to c, y, x because dat reader no longer does that
+    # data comes in as y, x, c - we need to change it to c, y, x because dat reader no longer does that
     cyx_dat_record = np.rollaxis(dat_record, 2)
 
     return CYXDat(dat_path=dat_path,
