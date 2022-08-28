@@ -21,10 +21,10 @@ from janelia_emrp.root_logger import init_logger
 logger = logging.getLogger(__name__)
 
 
+CHANNEL_DATA_SET_NAMES_KEY: Final = "channel_data_set_names"
 DAT_FILE_NAME_KEY: Final = "dat_file_name"
 ELEMENT_SIZE_UM_KEY: Final = "element_size_um"
 RAW_HEADER_DATASET_NAME: Final = "header"
-RAW_PIXELS_DATASET_NAME: Final = "pixels"
 RAW_FOOTER_DATASET_NAME: Final = "footer"
 
 
@@ -93,7 +93,7 @@ class DatToH5Writer:
         Dataset
             The created data set.
         """
-        logger.info(f"create_and_add_data_set: entry, adding {data_set_name} "
+        logger.info(f"create_and_add_data_set: entry, adding {data_set_name} data set with shape {pixel_array.shape} "
                     f"to group {group_name} in {to_h5_file.filename}")
 
         valid_chunks = build_safe_chunk_shape(self.chunk_shape, pixel_array.shape)
@@ -126,26 +126,34 @@ class DatToH5Writer:
         add_dat_header_attributes(cyx_dat=cyx_dat,
                                   to_group_or_dataset=raw_data_group)
 
-        raw_pixels_data_set = self.create_and_add_data_set(group_name=raw_data_group_name,
-                                                           data_set_name=RAW_PIXELS_DATASET_NAME,
-                                                           pixel_array=cyx_dat.pixels,
-                                                           to_h5_file=to_h5_file)
+        channel_data_set_names = []
+        number_of_channels = cyx_dat.pixels.shape[0]
+        for channel_index in range(number_of_channels):
+            channel_data_set_name = f"c{channel_index}"
+            channel_data_set_names.append(channel_data_set_name)
+            channel_pixels_data_set = self.create_and_add_data_set(
+                group_name=raw_data_group_name,
+                data_set_name=channel_data_set_name,
+                pixel_array=cyx_dat.pixels[channel_index, :, :],
+                to_h5_file=to_h5_file)
 
-        add_element_size_um_attributes(dat_header_dict=cyx_dat.header,
-                                       z_nm_per_pixel=None,
-                                       to_dataset=raw_pixels_data_set)
+            add_element_size_um_attributes(dat_header_dict=cyx_dat.header,
+                                           z_nm_per_pixel=None,
+                                           to_dataset=channel_pixels_data_set)
+
+        raw_data_group.attrs[CHANNEL_DATA_SET_NAMES_KEY] = channel_data_set_names
 
         data_set_names = f"{RAW_HEADER_DATASET_NAME} and {RAW_FOOTER_DATASET_NAME}"
         logger.info(f"create_and_add_raw_data_group: adding {data_set_names} to {group_context}")
 
         source_size = os.path.getsize(cyx_dat.dat_path.file_path)
         with open(cyx_dat.dat_path.file_path, "rb") as raw_file:
-            raw_bytes = raw_file.read(OFFSET)
+            raw_header_bytes = raw_file.read(OFFSET)
 
-            assert np.frombuffer(raw_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
+            assert np.frombuffer(raw_header_bytes, '>u4', count=1)[0] == MAGIC_NUMBER
 
             raw_data_group.create_dataset(name=RAW_HEADER_DATASET_NAME,
-                                          data=np.frombuffer(raw_bytes, dtype='u1'),
+                                          data=np.frombuffer(raw_header_bytes, dtype='u1'),
                                           chunks=None,
                                           compression=self.compression,
                                           compression_opts=self.compression_opts)

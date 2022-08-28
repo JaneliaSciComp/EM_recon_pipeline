@@ -56,16 +56,24 @@ def volume_transfer_info(tmpdir_factory: TempPathFactory) -> VolumeTransferInfo:
     )
 
 
+def fibsem_path(file_name: str) -> Path:
+    fibsem_dir = Path("../resources/janelia_emrp/fibsem/").resolve()
+    path = fibsem_dir / file_name
+    assert path.exists(), f"{str(path)} does not exist, base test path is {str(Path('.').resolve())}"
+    return path
+
+
 @pytest.fixture
 def small_dat_path() -> Path:
     # small dat created by clipping /nearline/flyem2/data/Z0720-07m_VNC_Sec06/dat/Merlin-6284_21-07-31_152727_0-0-1.dat
-    path = Path("../resources/janelia_emrp/fibsem/small_21-07-31_152727_0-0-1.dat").resolve()
-    assert path.exists(), f"{str(path)} does not exist, base test path is {str(Path('.').resolve())}"
-    return path
+    return fibsem_path("small_21-07-31_152727_0-0-1.dat")
+
+
+@pytest.fixture
+def small_raw_path() -> Path:
+    return fibsem_path("small_21-07-31_152727.raw.h5")
 
 
 @pytest.fixture
 def small_uint8_path() -> Path:
-    path = Path("../resources/janelia_emrp/fibsem/small_21-07-31_152727.uint8.h5").resolve()
-    assert path.exists(), f"{str(path)} does not exist, base test path is {str(Path('.').resolve())}"
-    return path
+    return fibsem_path("small_21-07-31_152727.uint8.h5")

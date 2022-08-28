@@ -8,18 +8,44 @@ import numpy as np
 import sys
 from h5py import Group
 
-from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY, RAW_HEADER_DATASET_NAME, RAW_PIXELS_DATASET_NAME, \
-    RAW_FOOTER_DATASET_NAME
+from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY, RAW_HEADER_DATASET_NAME, RAW_FOOTER_DATASET_NAME, \
+    CHANNEL_DATA_SET_NAMES_KEY
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
 
-def restore_dat_bytes(raw_data_group: Group) -> bytes:
+def validate_key_exists(h5_path: Path,
+                        raw_data_group: Group,
+                        key: str):
+    if key not in raw_data_group.attrs:
+        raise ValueError(f"group {raw_data_group.name} in {str(h5_path)} is missing required attribute '{key}'")
+
+
+def restore_dat_bytes(h5_path: Path,
+                      raw_data_group: Group) -> bytes:
+
+    validate_key_exists(h5_path, raw_data_group, CHANNEL_DATA_SET_NAMES_KEY)
 
     dat_bytes = bytearray(raw_data_group.get(RAW_HEADER_DATASET_NAME))
-    pixel_data = np.array(raw_data_group.get(RAW_PIXELS_DATASET_NAME))
-    dat_bytes += bytearray(np.moveaxis(pixel_data, 0, -1).tobytes())
+
+    channel_data_set_names = raw_data_group.attrs[CHANNEL_DATA_SET_NAMES_KEY]
+    channels = []
+    for channel_data_set_name in channel_data_set_names:
+        channels.append(np.array(raw_data_group.get(channel_data_set_name)))
+
+    cyx_pixel_data_in_machine_order = np.stack(channels)
+    yxc_pixel_data_in_machine_order = np.moveaxis(cyx_pixel_data_in_machine_order, 0, -1)
+
+    # numpy stack and concatenate functions ignore dtype byte order and always use machine order,
+    # so need to fix byte order after concatenating channels
+    # see https://github.com/numpy/numpy/issues/20767
+    eight_bit_key = "EightBit"
+    is_eight_bit = eight_bit_key in raw_data_group.attrs and raw_data_group.attrs[eight_bit_key] == 1
+    data_type = ">u1" if is_eight_bit else ">i2"  # from https://github.com/janelia-cosem/fibsem-tools/blob/f4bedbfc4ff81ec1b83282908ba6702baf98c734/src/fibsem_tools/io/fibsem.py#L619-L622
+    yxc_pixel_data = yxc_pixel_data_in_machine_order.astype(data_type)
+
+    dat_bytes += bytearray(yxc_pixel_data)
     dat_bytes += bytearray(raw_data_group.get(RAW_FOOTER_DATASET_NAME))
 
     return dat_bytes
@@ -28,17 +54,13 @@ def restore_dat_bytes(raw_data_group: Group) -> bytes:
 def restore_dat_file(h5_path: Path,
                      raw_data_group: Group,
                      to_path: Path) -> None:
-
-    if DAT_FILE_NAME_KEY not in raw_data_group.attrs:
-        raise ValueError(f"group {raw_data_group.name} in {str(h5_path)} "
-                         f"is missing required attribute '{DAT_FILE_NAME_KEY}'")
-
+    validate_key_exists(h5_path, raw_data_group, DAT_FILE_NAME_KEY)
     dat_file_path = Path(to_path, raw_data_group.attrs[DAT_FILE_NAME_KEY])
 
     if dat_file_path.exists():
         raise ValueError(f"{dat_file_path} for group {raw_data_group.name} in {str(h5_path)} already exists")
 
-    dat_bytes = restore_dat_bytes(raw_data_group)
+    dat_bytes = restore_dat_bytes(h5_path, raw_data_group)
 
     with open(dat_file_path, "wb") as dat_file:
         dat_file.write(dat_bytes)
@@ -67,7 +89,11 @@ def validate_bytes_match(original_context: str,
 
     for i in range(0, len(original_bytes)):
         if original_bytes[i] != restored_bytes[i]:
-            raise ValueError(f"byte {i} differs between {original_context} and {restored_context}")
+            debug_info = ""
+            if len(original_bytes) > (i + 4):
+                debug_info = f", expected {original_bytes[i:i+4]} but found {bytes(restored_bytes[i:i+4])}"
+
+            raise ValueError(f"byte {i} differs between {original_context} and {restored_context}{debug_info}")
 
 
 def validate_original_dat_bytes_match(h5_path: Path,
@@ -88,7 +114,7 @@ def validate_original_dat_bytes_match(h5_path: Path,
 
             with open(original_dat_file_path, "rb") as original_file:
                 original_bytes = original_file.read()
-            restored_bytes = restore_dat_bytes(data_set)
+            restored_bytes = restore_dat_bytes(h5_path, data_set)
             validate_bytes_match(original_context=str(original_dat_file_path),
                                  original_bytes=original_bytes,
                                  restored_context=restored_context,
