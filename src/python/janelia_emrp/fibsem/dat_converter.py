@@ -279,8 +279,8 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
     if len(layers) > 0:
         logger.info(f"convert_volume: {len(layers)} layers remain with index range {slice_min}:{slice_max}")
 
-        raw_writer = DatToH5Writer(chunk_shape=(2, 256, 256))
-        align_writer = DatToH5Writer(chunk_shape=(1, 256, 256))
+        raw_writer = DatToH5Writer(chunk_shape=(512, 512))
+        align_writer = DatToH5Writer(chunk_shape=(1, 512, 512))
 
         converter = DatConverter(volume_transfer_info=volume_transfer_info,
                                  raw_writer=raw_writer,
