@@ -58,7 +58,7 @@ def save_matches(host, owner, collection, matches):
 
 
 def tile_spec_to_data(tile_spec):
-    return tile_spec, tile_spec["layout"]["sectionId"], tile_spec["layout"]["imageCol"]
+    return tile_spec, tile_spec["layout"]["sectionId"], tile_spec["layout"]["imageRow"], tile_spec["layout"]["imageCol"]
 
 
 def get_tile_data(host, owner, project, stack, tile_id):
@@ -67,8 +67,8 @@ def get_tile_data(host, owner, project, stack, tile_id):
 
 
 def main(host, owner, project, stack, p_tile_id, q_tile_id, from_collection, to_collection, min_z, max_z, z_step):
-    p_tile_spec, p_section_id, p_image_col = get_tile_data(host, owner, project, stack, p_tile_id)
-    q_tile_spec, q_section_id, q_image_col = get_tile_data(host, owner, project, stack, q_tile_id)
+    p_tile_spec, p_section_id, p_image_row, p_image_col = get_tile_data(host, owner, project, stack, p_tile_id)
+    q_tile_spec, q_section_id, q_image_row, q_image_col = get_tile_data(host, owner, project, stack, q_tile_id)
 
     if p_section_id != q_section_id:
         raise Exception(f'p sectionId {p_section_id} differs from q sectionId {q_section_id}')
@@ -86,11 +86,11 @@ def main(host, owner, project, stack, p_tile_id, q_tile_id, from_collection, to_
         resolved_tiles = get_resolved_tiles_for_layer(host, owner, project, stack, z)
         tile_id_to_spec = resolved_tiles["tileIdToSpecMap"]
         for tile_id in tile_id_to_spec:
-            tile_spec, section_id, image_col = tile_spec_to_data(tile_id_to_spec[tile_id])
-            if image_col == p_image_col:
+            tile_spec, section_id, image_row, image_col = tile_spec_to_data(tile_id_to_spec[tile_id])
+            if image_row == p_image_row and image_col == p_image_col:
                 patch_p_section_id = section_id
                 patch_p_tile_id = tile_id
-            elif image_col == q_image_col:
+            elif image_row == q_image_row and image_col == q_image_col:
                 patch_q_section_id = section_id
                 patch_q_tile_id = tile_id
             if patch_p_section_id and patch_q_section_id:
