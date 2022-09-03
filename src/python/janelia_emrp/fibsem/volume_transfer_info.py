@@ -1,4 +1,5 @@
 import datetime
+import logging
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Any
@@ -6,6 +7,9 @@ from typing import Optional, Any
 from pydantic import BaseModel
 
 from janelia_emrp.fibsem.dat_path import new_dat_path
+
+
+logger = logging.getLogger(__name__)
 
 
 class VolumeTransferTask(Enum):
@@ -231,3 +235,33 @@ class VolumeTransferInfo(BaseModel):
             if self.cluster_root_paths is not None:
                 align_h5_root = self.cluster_root_paths.align_h5
         return align_h5_root
+
+
+def build_volume_transfer_list(volume_transfer_dir_path: Path,
+                               for_scope: Optional[str],
+                               for_task: Optional[VolumeTransferTask]) -> list[VolumeTransferInfo]:
+    volume_transfer_list: list[VolumeTransferInfo] = []
+
+    f_name = "build_volume_transfer_list"
+
+    if volume_transfer_dir_path.is_dir():
+        for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
+
+            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
+
+            if for_task is None or transfer_info.includes_task(for_task):
+                if transfer_info.cluster_root_paths is None:
+                    logger.info(f"{f_name}: ignoring {transfer_info} because cluster_root_paths not defined")
+                elif transfer_info.acquisition_started():
+                    if for_scope is None or for_scope == transfer_info.scope_data_set.host:
+                        volume_transfer_list.append(transfer_info)
+                    else:
+                        logger.info(f"{f_name}: ignoring {transfer_info} because scope is not {for_scope}")
+                else:
+                    logger.info(f"{f_name}: ignoring {transfer_info} because acquisition has not started")
+            else:
+                logger.info(f"{f_name}: ignoring {transfer_info} because it does not include {for_task} task")
+    else:
+        raise ValueError(f"volume_transfer_dir {volume_transfer_dir_path} is not a directory")
+
+    return volume_transfer_list

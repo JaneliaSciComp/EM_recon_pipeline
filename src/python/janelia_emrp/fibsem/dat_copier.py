@@ -4,14 +4,15 @@ import logging
 import subprocess
 import traceback
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Dict
 
 import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
 from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, ScopeDataSet
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, ScopeDataSet, \
+    build_volume_transfer_list
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -130,35 +131,6 @@ def day_range(start_date: datetime.datetime,
               end_date: datetime.datetime):
     for n in range(int((end_date - start_date).days)):
         yield start_date + datetime.timedelta(n)
-
-
-def build_volume_transfer_list(volume_transfer_dir_path: Path,
-                               scope: Optional[str]):
-    volume_transfer_list: list[VolumeTransferInfo] = []
-
-    f_name = "build_volume_transfer_list"
-
-    if volume_transfer_dir_path.is_dir():
-        for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
-
-            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
-
-            if transfer_info.includes_task(VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER):
-                if transfer_info.cluster_root_paths is None:
-                    logger.info(f"{f_name}: ignoring {transfer_info} because cluster_root_paths not defined")
-                elif transfer_info.acquisition_started():
-                    if scope is None or scope == transfer_info.scope_data_set.host:
-                        volume_transfer_list.append(transfer_info)
-                    else:
-                        logger.info(f"{f_name}: ignoring {transfer_info} because scope differs")
-                else:
-                    logger.info(f"{f_name}: ignoring {transfer_info} because acquisition has not started")
-            else:
-                logger.info(f"{f_name}: ignoring {transfer_info} because it does not include copy task")
-    else:
-        raise ValueError(f"volume_transfer_dir {volume_transfer_dir_path} is not a directory")
-
-    return volume_transfer_list
 
 
 def max_transfer_seconds_exceeded(max_transfer_seconds: int,
@@ -294,8 +266,10 @@ def main(arg_list: list[str]):
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
     volume_transfer_dir_path = Path(args.volume_transfer_dir)
-    volume_transfer_list: list[VolumeTransferInfo] = build_volume_transfer_list(volume_transfer_dir_path,
-                                                                                args.scope)
+    volume_transfer_list: list[VolumeTransferInfo] = \
+        build_volume_transfer_list(volume_transfer_dir_path=volume_transfer_dir_path,
+                                   for_scope=args.scope,
+                                   for_task=VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER)
     copy_count = 0
 
     stop_processing = False

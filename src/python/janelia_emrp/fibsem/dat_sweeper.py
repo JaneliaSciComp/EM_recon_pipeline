@@ -7,11 +7,10 @@ from pathlib import Path
 import sys
 import time
 
-from janelia_emrp.fibsem.dat_copier import build_volume_transfer_list, \
-    max_transfer_seconds_exceeded, copy_dat_file, day_range, get_dats_acquired_on_day, add_dat_copy_arguments, \
-    get_scope_day_numbers_with_dats
+from janelia_emrp.fibsem.dat_copier import add_dat_copy_arguments, copy_dat_file, day_range, \
+    get_dats_acquired_on_day, get_scope_day_numbers_with_dats, max_transfer_seconds_exceeded
 from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo
+from janelia_emrp.fibsem.volume_transfer_info import build_volume_transfer_list, VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -35,8 +34,10 @@ def main(arg_list: list[str]):
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
 
     volume_transfer_dir_path = Path(args.volume_transfer_dir)
-    volume_transfer_list: list[VolumeTransferInfo] = build_volume_transfer_list(volume_transfer_dir_path,
-                                                                                args.scope)
+    volume_transfer_list: list[VolumeTransferInfo] = \
+        build_volume_transfer_list(volume_transfer_dir_path=volume_transfer_dir_path,
+                                   for_scope=args.scope,
+                                   for_task=VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER)
 
     missing_count = 0
     copy_count = 0
