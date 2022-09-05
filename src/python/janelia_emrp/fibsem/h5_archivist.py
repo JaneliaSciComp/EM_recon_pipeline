@@ -111,7 +111,7 @@ def main(arg_list: list[str]):
         volume_transfer_list: list[VolumeTransferInfo] = \
             build_volume_transfer_list(volume_transfer_dir_path=volume_transfer_dir_path,
                                        for_scope=None,
-                                       for_task=VolumeTransferTask.ARCHIVE_H5_RAW)
+                                       for_tasks=[VolumeTransferTask.ARCHIVE_H5_RAW])
 
         for transfer_info in volume_transfer_list:
             # noinspection PyBroadException

@@ -199,6 +199,15 @@ class VolumeTransferInfo(BaseModel):
                       task: VolumeTransferTask):
         return task in self.transfer_tasks
 
+    def includes_at_least_one_of_these_tasks(self,
+                                             tasks: list[VolumeTransferTask]):
+        result = False
+        for task in tasks:
+            if task in self.transfer_tasks:
+                result = True
+                break
+        return result
+
     def acquisition_started(self):
         started_for_scope = False
         if self.scope_data_set is not None:
@@ -239,7 +248,7 @@ class VolumeTransferInfo(BaseModel):
 
 def build_volume_transfer_list(volume_transfer_dir_path: Path,
                                for_scope: Optional[str],
-                               for_task: Optional[VolumeTransferTask]) -> list[VolumeTransferInfo]:
+                               for_tasks: Optional[list[VolumeTransferTask]]) -> list[VolumeTransferInfo]:
     volume_transfer_list: list[VolumeTransferInfo] = []
 
     f_name = "build_volume_transfer_list"
@@ -249,7 +258,7 @@ def build_volume_transfer_list(volume_transfer_dir_path: Path,
 
             transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
 
-            if for_task is None or transfer_info.includes_task(for_task):
+            if for_tasks is None or transfer_info.includes_at_least_one_of_these_tasks(for_tasks):
                 if transfer_info.cluster_root_paths is None:
                     logger.info(f"{f_name}: ignoring {transfer_info} because cluster_root_paths not defined")
                 elif transfer_info.acquisition_started():
@@ -260,7 +269,7 @@ def build_volume_transfer_list(volume_transfer_dir_path: Path,
                 else:
                     logger.info(f"{f_name}: ignoring {transfer_info} because acquisition has not started")
             else:
-                logger.info(f"{f_name}: ignoring {transfer_info} because it does not include {for_task} task")
+                logger.info(f"{f_name}: ignoring {transfer_info} because it does not include task {for_tasks}")
     else:
         raise ValueError(f"volume_transfer_dir {volume_transfer_dir_path} is not a directory")
 

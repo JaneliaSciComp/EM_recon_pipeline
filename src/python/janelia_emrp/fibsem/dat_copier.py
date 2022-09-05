@@ -269,7 +269,7 @@ def main(arg_list: list[str]):
     volume_transfer_list: list[VolumeTransferInfo] = \
         build_volume_transfer_list(volume_transfer_dir_path=volume_transfer_dir_path,
                                    for_scope=args.scope,
-                                   for_task=VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER)
+                                   for_tasks=[VolumeTransferTask.COPY_SCOPE_DAT_TO_CLUSTER])
     copy_count = 0
 
     stop_processing = False
