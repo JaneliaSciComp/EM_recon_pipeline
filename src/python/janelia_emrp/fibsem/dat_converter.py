@@ -115,12 +115,6 @@ class DatConverter:
                             to_h5_file=layer_align_file)
 
         if raw_path is not None:
-            # now that raw h5 write is complete, rename it so that archival process knows it is safe to handle
-            ready_for_archival_name = re.sub(r"\.raw\.h5$", ".raw-archive.h5", str(raw_path.name))
-            ready_for_archival_path = raw_path.parent / ready_for_archival_name
-            os.rename(raw_path, ready_for_archival_path)
-            logger.info(f"{self} convert_layer: renamed {raw_path.name} to {ready_for_archival_name}")
-
             if self.volume_transfer_info.includes_task(VolumeTransferTask.REMOVE_DAT_AFTER_H5_CONVERSION):
                 dat_parent_path = dat_paths_for_layer.dat_paths[0].file_path.parent
 
@@ -134,6 +128,12 @@ class DatConverter:
                 except ValueError:
                     traceback.print_exc()
                     logger.error(f"{self} convert_layer: skipped dat removal because h5 validation failed for {raw_path}")
+
+            # now that raw h5 write is complete, rename it so that archival process knows it is safe to handle
+            ready_for_archival_name = re.sub(r"\.raw\.h5$", ".raw-archive.h5", str(raw_path.name))
+            ready_for_archival_path = raw_path.parent / ready_for_archival_name
+            os.rename(raw_path, ready_for_archival_path)
+            logger.info(f"{self} convert_layer: renamed {raw_path.name} to {ready_for_archival_name}")
 
         elapsed_seconds = int(time.time() - start_time)
 
