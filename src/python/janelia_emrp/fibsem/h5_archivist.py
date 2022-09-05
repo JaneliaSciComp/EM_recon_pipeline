@@ -69,14 +69,15 @@ def archive_volume(transfer_info: VolumeTransferInfo,
     rsync_options = "--include='*.raw-archive.h5' --include='*/' --exclude='*' --remove-source-files"
     args = [
         "/misc/local/msrsync/msrsync3",
-        "--processes", number_of_processes,
+        "--processes", str(number_of_processes),
         "--progress", "--stats",
         "--rsync", rsync_options,
         src_dir, dest_dir
     ]
 
     subprocess.run(args,
-                   capture_output=True,
+                   stdout=sys.stdout,
+                   stderr=sys.stdout,
                    check=True)
 
 
@@ -113,9 +114,12 @@ def main(arg_list: list[str]):
                                        for_task=VolumeTransferTask.ARCHIVE_H5_RAW)
 
         for transfer_info in volume_transfer_list:
-
-            archive_volume(transfer_info=transfer_info,
-                           number_of_processes=args.processes)
+            # noinspection PyBroadException
+            try:
+                archive_volume(transfer_info=transfer_info,
+                               number_of_processes=args.processes)
+            except Exception:
+                logger.exception(f"caught exception attempting to archive {transfer_info}")
 
     os.remove(pid_path)
 
