@@ -76,7 +76,9 @@ def archive_volume(transfer_info: VolumeTransferInfo,
         src_dir, dest_dir
     ]
 
-    subprocess.run(args, check=True)
+    subprocess.run(args,
+                   capture_output=True,
+                   check=True)
 
 
 def main(arg_list: list[str]):
