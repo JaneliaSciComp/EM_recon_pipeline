@@ -58,7 +58,7 @@ def archive_volume(transfer_info: VolumeTransferInfo,
     # "archive_root_paths": {
     #     "raw_h5": "/nearline/cellmap/data/jrc_zf-cardiac-1/raw"
     # },
-    transfer_info.archive_root_paths.raw_h5.mkdir(exist_ok=True)
+    transfer_info.archive_root_paths.raw_h5.mkdir(parents=True, exist_ok=True)
 
     # note: Path object removes trailing slash for directories, so it is ok to always add it here for rsync
     src_dir = f"{transfer_info.cluster_root_paths.raw_h5}/"
