@@ -2,6 +2,7 @@ import argparse
 import datetime
 import logging
 import os
+import re
 import traceback
 from contextlib import ExitStack
 from pathlib import Path
@@ -113,21 +114,26 @@ class DatConverter:
                             max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
                             to_h5_file=layer_align_file)
 
-        if raw_path is not None and \
-                self.volume_transfer_info.includes_task(VolumeTransferTask.REMOVE_DAT_AFTER_H5_CONVERSION):
+        if raw_path is not None:
+            # now that raw h5 write is complete, rename it so that archival process knows it is safe to handle
+            ready_for_archival_name = re.sub(r"\.raw\.h5$", ".raw-archive.h5", str(raw_path.name))
+            ready_for_archival_path = raw_path.parent / ready_for_archival_name
+            os.rename(raw_path, ready_for_archival_path)
+            logger.info(f"{self} convert_layer: renamed {raw_path.name} to {ready_for_archival_name}")
 
-            dat_parent_path = dat_paths_for_layer.dat_paths[0].file_path.parent
+            if self.volume_transfer_info.includes_task(VolumeTransferTask.REMOVE_DAT_AFTER_H5_CONVERSION):
+                dat_parent_path = dat_paths_for_layer.dat_paths[0].file_path.parent
 
-            try:
-                matched_dat_file_paths = validate_original_dat_bytes_match(h5_path=raw_path,
-                                                                           dat_parent_path=dat_parent_path)
-                for dat_path in matched_dat_file_paths:
-                    logger.info(f"{self} convert_layer: removing {dat_path}")
-                    dat_path.unlink()
+                try:
+                    matched_dat_file_paths = validate_original_dat_bytes_match(h5_path=raw_path,
+                                                                               dat_parent_path=dat_parent_path)
+                    for dat_path in matched_dat_file_paths:
+                        logger.info(f"{self} convert_layer: removing {dat_path}")
+                        dat_path.unlink()
 
-            except ValueError:
-                traceback.print_exc()
-                logger.error(f"{self} convert_layer: skipped dat removal because h5 validation failed for {raw_path}")
+                except ValueError:
+                    traceback.print_exc()
+                    logger.error(f"{self} convert_layer: skipped dat removal because h5 validation failed for {raw_path}")
 
         elapsed_seconds = int(time.time() - start_time)
 
