@@ -317,11 +317,11 @@ def main(arg_list: list[str]):
                         missing_dat_list_file.write(f"{str(scope_dat)}\n")
                 logger.info(f"main: added {len(missing_scope_dats)} missing dat file paths to {missing_dat_list_path}")
 
-                # save last keep info to missing_check_path so checks are not repeated by subsequent runs
-                with open(missing_check_path, 'w', encoding='utf-8') as missing_check_file:
-                    last_keep_file = keep_file_list[-1]
-                    logger.info(f"main: saving {missing_check_path} for {Path(last_keep_file.dat_path).name}")
-                    missing_check_file.write(last_keep_file.json())
+            # save last keep info to missing_check_path so checks are not repeated by subsequent runs
+            with open(missing_check_path, 'w', encoding='utf-8') as missing_check_file:
+                last_keep_file = keep_file_list[-1]
+                logger.info(f"main: saving {missing_check_path} for {Path(last_keep_file.dat_path).name}")
+                missing_check_file.write(last_keep_file.json())
 
         for keep_file in keep_file_list:
             copy_dat_file(scope_host=keep_file.host,
