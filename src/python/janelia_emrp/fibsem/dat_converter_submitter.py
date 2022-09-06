@@ -98,6 +98,11 @@ def main(arg_list: list[str]):
         type=int,
         default=1
     )
+    parser.add_argument(
+        "--max_batch_count",
+        help="The maximum number of conversion batches to schedule",
+        type=int
+    )
     args = parser.parse_args(args=arg_list)
 
     convert_script_path = Path(args.convert_script)
@@ -111,6 +116,7 @@ def main(arg_list: list[str]):
                                    for_tasks=[VolumeTransferTask.GENERATE_CLUSTER_H5_RAW,
                                               VolumeTransferTask.GENERATE_CLUSTER_H5_ALIGN])
 
+    processed_batch_count = 0
     for transfer_info in volume_transfer_list:
 
         cluster_root_dat_path = transfer_info.cluster_root_paths.raw_dat
@@ -139,6 +145,9 @@ def main(arg_list: list[str]):
         if len(layers) > 0:
             for dat_batch in build_dat_batch_list(layers=layers,
                                                   data_set_id=transfer_info.scope_data_set.data_set_id):
+                if args.max_batch_count is not None and processed_batch_count >= args.max_batch_count:
+                    break
+
                 bsub_convert_dat_batch(dat_batch=dat_batch,
                                        cluster_job_project_for_billing=transfer_info.cluster_job_project_for_billing,
                                        num_workers=args.num_workers,
@@ -148,10 +157,16 @@ def main(arg_list: list[str]):
                 with open(last_conversion_path, "w") as last_conversion_file:
                     last_conversion_file.write(f"{dat_batch.last_dat.file_path}\n")
 
+                processed_batch_count += 1
+
         else:
             logger.info(f"main: no layers remain to process")
 
-        logger.info(f"main: done")
+        if args.max_batch_count is not None and processed_batch_count >= args.max_batch_count:
+            logger.info(f"main: stopping after processing max number of batches ({args.max_batch_count})")
+            break
+
+    logger.info(f"main: done")
 
     return 0
 
