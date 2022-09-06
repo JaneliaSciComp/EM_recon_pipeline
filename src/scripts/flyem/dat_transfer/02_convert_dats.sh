@@ -4,14 +4,13 @@ set -e
 
 umask 0002
 
-if (( $# < 3 )); then
-  echo "USAGE $0 <transfer info file> <num workers> <base logs dir> [first_dat] [last_dat]"
+if (( $# < 2 )); then
+  echo "USAGE $0 <transfer info file> <num workers> [first_dat] [last_dat]"
   exit 1
 fi
 
 TRANSFER_INFO="$1"
 NUM_WORKERS="$2"
-BASE_LOGS_DIR="$3"
 
 if [[ "${HOSTNAME}" =~ ^(e05u15|e05u16) ]]; then
   echo "ERROR: running on login1 or login2, need to bsub this job first ..."
@@ -19,13 +18,6 @@ if [[ "${HOSTNAME}" =~ ^(e05u15|e05u16) ]]; then
 fi
 
 RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
-RUN_YEAR_MONTH=$(echo "${RUN_DATE_AND_TIME}" | cut -c1-6)
-RUN_DAY=$(echo "${RUN_DATE_AND_TIME}" | cut -c7-8)
-RUN_TIME=$(echo "${RUN_DATE_AND_TIME}" | cut -c10-)
-LOG_DIR="${BASE_LOGS_DIR}/convert/${RUN_YEAR_MONTH}/${RUN_DAY}/${RUN_TIME}"
-mkdir -p "${LOG_DIR}"
-
-LOG_FILE="${LOG_DIR}/convert_dat.log"
 
 source /groups/flyem/data/render/bin/miniconda3/source_me.sh
 
@@ -58,7 +50,7 @@ On ${HOSTNAME} at ${RUN_DATE_AND_TIME}
 
 Running:
   python ${ARGS}
-""" | tee -a "${LOG_FILE}"
+"""
 
 # The exit status of a pipeline is the exit status of the last command in the pipeline,
 # unless the pipefail option is enabled (see The Set Builtin).
@@ -66,7 +58,7 @@ Running:
 # to exit with a non-zero status, or zero if all commands exit successfully.
 set -o pipefail
 
-python ${ARGS} 2>&1 | tee -a "${LOG_FILE}"
+python ${ARGS} 2>&1
 RETURN_CODE="$?"
 
 echo "python return code is ${RETURN_CODE}"

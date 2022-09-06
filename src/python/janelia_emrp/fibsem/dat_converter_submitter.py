@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import subprocess
 import traceback
@@ -57,15 +58,15 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
                            cluster_job_project_for_billing: str,
                            num_workers: int,
                            convert_script_path: Path,
-                           base_log_dir_path: Path):
+                           log_file: Path):
     args = [
         "bsub",
         "-P", cluster_job_project_for_billing,
         "-W", dat_batch.runtime_limit,
         "-J", dat_batch.get_job_name(),
+        "-o", str(log_file),
         str(convert_script_path),
         str(num_workers),
-        str(base_log_dir_path),
         str(dat_batch.first_dat.file_path),
         str(dat_batch.last_dat.file_path)
     ]
@@ -74,6 +75,72 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
                    stdout=sys.stdout,
                    stderr=sys.stdout,
                    check=True)
+
+
+def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
+                           convert_script_path: Path,
+                           num_workers: int,
+                           max_batch_count: Optional[int],
+                           dats_per_hour: int,
+                           processed_batch_count: int) -> int:
+
+    cluster_root_dat_path = transfer_info.cluster_root_paths.raw_dat
+
+    if not cluster_root_dat_path.is_dir():
+        raise ValueError(f"cluster_root_paths.raw_dat {cluster_root_dat_path} is not a directory")
+
+    first_dat: Optional[str] = None
+    last_converted_dat_path: Optional[DatPath] = None
+    last_conversion_path = cluster_root_dat_path / "last_conversion.txt"
+    if last_conversion_path.exists():
+        with open(last_conversion_path, "r") as last_conversion_file:
+            first_dat = last_conversion_file.readline().strip()
+            last_converted_dat_path = new_dat_path(Path(first_dat))
+
+    layers = get_layers_for_run(dat_root=cluster_root_dat_path,
+                                first_dat=first_dat,
+                                last_dat=None,
+                                skip_existing=True,
+                                volume_transfer_info=transfer_info)
+    if len(layers) > 0 and \
+            last_converted_dat_path is not None and \
+            layers[0].get_layer_id() == last_converted_dat_path.layer_id:
+        layer_id = last_converted_dat_path.layer_id
+        logger.info(f"submit_jobs_for_volume: removing first layer {layer_id} because it has already been converted")
+        layers = layers[1:]
+
+    if len(layers) > 0:
+        now = datetime.datetime.now()
+        year_month_str = now.strftime('%y%m')
+        day_str = now.strftime('%d')
+        time_str = now.strftime('%H%M%S')
+        base_log_dir = cluster_root_dat_path / "logs" / year_month_str / day_str / time_str
+
+        for dat_batch in build_dat_batch_list(layers=layers,
+                                              data_set_id=transfer_info.scope_data_set.data_set_id,
+                                              number_dats_converted_in_one_hour=dats_per_hour):
+
+            if max_batch_count is not None and processed_batch_count >= max_batch_count:
+                break
+
+            log_dir = base_log_dir / f"batch_{processed_batch_count:06}"
+            log_dir.mkdir(parents=True, exist_ok=False)
+
+            bsub_convert_dat_batch(dat_batch=dat_batch,
+                                   cluster_job_project_for_billing=transfer_info.cluster_job_project_for_billing,
+                                   num_workers=num_workers,
+                                   convert_script_path=convert_script_path,
+                                   log_file=(log_dir / "convert_dat.log"))
+
+            with open(last_conversion_path, "w") as last_conversion_file:
+                last_conversion_file.write(f"{dat_batch.last_dat.file_path}\n")
+
+            processed_batch_count += 1
+
+    else:
+        logger.info(f"submit_jobs_for_volume: no layers remain to process")
+
+    return processed_batch_count
 
 
 def main(arg_list: list[str]):
@@ -121,54 +188,20 @@ def main(arg_list: list[str]):
                                    for_tasks=[VolumeTransferTask.GENERATE_CLUSTER_H5_RAW,
                                               VolumeTransferTask.GENERATE_CLUSTER_H5_ALIGN])
 
+    return_code = 0
     processed_batch_count = 0
     for transfer_info in volume_transfer_list:
-
-        cluster_root_dat_path = transfer_info.cluster_root_paths.raw_dat
-        if not cluster_root_dat_path.is_dir():
-            raise ValueError(f"cluster_root_paths.raw_dat {cluster_root_dat_path} is not a directory")
-
-        first_dat: Optional[str] = None
-        last_converted_dat_path: Optional[DatPath] = None
-        last_conversion_path = cluster_root_dat_path / "last_conversion.txt"
-        if last_conversion_path.exists():
-            with open(last_conversion_path, "r") as last_conversion_file:
-                first_dat = last_conversion_file.readline().strip()
-                last_converted_dat_path = new_dat_path(Path(first_dat))
-
-        layers = get_layers_for_run(dat_root=cluster_root_dat_path,
-                                    first_dat=first_dat,
-                                    last_dat=None,
-                                    skip_existing=True,
-                                    volume_transfer_info=transfer_info)
-
-        if len(layers) > 0 and \
-                last_converted_dat_path is not None and \
-                layers[0].get_layer_id() == last_converted_dat_path.layer_id:
-            layer_id = last_converted_dat_path.layer_id
-            logger.info(f"main: removing first layer {layer_id} because it has already been converted")
-            layers = layers[1:]
-
-        if len(layers) > 0:
-            for dat_batch in build_dat_batch_list(layers=layers,
-                                                  data_set_id=transfer_info.scope_data_set.data_set_id,
-                                                  number_dats_converted_in_one_hour=args.dats_per_hour):
-                if args.max_batch_count is not None and processed_batch_count >= args.max_batch_count:
-                    break
-
-                bsub_convert_dat_batch(dat_batch=dat_batch,
-                                       cluster_job_project_for_billing=transfer_info.cluster_job_project_for_billing,
-                                       num_workers=args.num_workers,
-                                       convert_script_path=convert_script_path,
-                                       base_log_dir_path=(cluster_root_dat_path / "logs"))
-
-                with open(last_conversion_path, "w") as last_conversion_file:
-                    last_conversion_file.write(f"{dat_batch.last_dat.file_path}\n")
-
-                processed_batch_count += 1
-
-        else:
-            logger.info(f"main: no layers remain to process")
+        # noinspection PyBroadException
+        try:
+            processed_batch_count = submit_jobs_for_volume(transfer_info=transfer_info,
+                                                           convert_script_path=convert_script_path,
+                                                           num_workers=args.num_workers,
+                                                           max_batch_count=args.max_batch_count,
+                                                           dats_per_hour=args.dats_per_hour,
+                                                           processed_batch_count=processed_batch_count)
+        except Exception:
+            logger.exception(f"caught exception attempting to submit jobs for {transfer_info}")
+            return_code = 1
 
         if args.max_batch_count is not None and processed_batch_count >= args.max_batch_count:
             logger.info(f"main: stopping after processing max number of batches ({args.max_batch_count})")
@@ -176,7 +209,7 @@ def main(arg_list: list[str]):
 
     logger.info(f"main: done")
 
-    return 0
+    return return_code
 
 
 if __name__ == "__main__":
@@ -187,8 +220,10 @@ if __name__ == "__main__":
 
     # noinspection PyBroadException
     try:
-        main(sys.argv[1:])
+        rc = main(sys.argv[1:])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
-        sys.exit(1)
+        rc = 1
+
+    sys.exit(rc)
