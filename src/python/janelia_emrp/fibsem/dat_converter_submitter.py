@@ -30,11 +30,9 @@ class DatBatch:
 
 
 def build_dat_batch_list(layers: list[DatPathsForLayer],
-                         data_set_id: str) -> list[DatBatch]:
+                         data_set_id: str,
+                         number_dats_converted_in_one_hour: int) -> list[DatBatch]:
     batch_list: list[DatBatch] = []
-
-    # pessimistic estimate: one 8250x8875 dat conversion takes 180 seconds => 20 dats per hour
-    dats_converted_in_one_hour = 20
 
     # build one-hour-ish batches with 3:59 runtime,
     # so we get access to most cluster nodes but don't have to worry about running out of time
@@ -44,7 +42,7 @@ def build_dat_batch_list(layers: list[DatPathsForLayer],
     for i in range(len(layers)):
         dat_paths_for_layer = layers[i].dat_paths
         dat_count = dat_count + len(dat_paths_for_layer)
-        if dat_count >= dats_converted_in_one_hour or i == last_index:
+        if dat_count >= number_dats_converted_in_one_hour or i == last_index:
             batch_list.append(DatBatch(data_set_id=data_set_id,
                                        first_dat=layers[first_index].dat_paths[0],
                                        last_dat=dat_paths_for_layer[-1],
@@ -103,6 +101,13 @@ def main(arg_list: list[str]):
         help="The maximum number of conversion batches to schedule",
         type=int
     )
+    parser.add_argument(
+        "--dats_per_hour",
+        help="The expected number of dats to be converted in one hour by a process "
+             "(a slow 8250x8875 dat conversion takes 180 seconds => 20 dats per hour)",
+        type=int,
+        default=20
+    )
     args = parser.parse_args(args=arg_list)
 
     convert_script_path = Path(args.convert_script)
@@ -146,7 +151,8 @@ def main(arg_list: list[str]):
 
         if len(layers) > 0:
             for dat_batch in build_dat_batch_list(layers=layers,
-                                                  data_set_id=transfer_info.scope_data_set.data_set_id):
+                                                  data_set_id=transfer_info.scope_data_set.data_set_id,
+                                                  number_dats_converted_in_one_hour=args.dats_per_hour):
                 if args.max_batch_count is not None and processed_batch_count >= args.max_batch_count:
                     break
 
