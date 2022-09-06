@@ -207,7 +207,8 @@ def get_layers_for_run(dat_root: Path,
                        skip_existing: bool,
                        volume_transfer_info: VolumeTransferInfo) -> list[DatPathsForLayer]:
 
-    logger.info(f"get_layers_for_run: loading dat file paths ...")
+    logger.info(f"get_layers_for_run: entry, dat_root={dat_root}, first_dat={first_dat}, "
+                f"last_dat={last_dat}, skip_existing={skip_existing}")
 
     layers: list[DatPathsForLayer] = split_into_layers(path_list=[dat_root])
 
@@ -273,7 +274,7 @@ def get_layers_for_run(dat_root: Path,
     elif slice_max is not None:
         layers = layers[0:slice_max]
 
-    logger.info(f"get_layers_for_run: {len(layers)} layers remain with index range {slice_min}:{slice_max}")
+    logger.info(f"get_layers_for_run: {len(layers)} layers remain with index range {slice_min}, {slice_max}")
 
     return layers
 
