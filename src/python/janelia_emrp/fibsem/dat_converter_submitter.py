@@ -137,7 +137,9 @@ def main(arg_list: list[str]):
                                     skip_existing=True,
                                     volume_transfer_info=transfer_info)
 
-        if len(layers) > 0 and layers[0].get_layer_id() == last_converted_dat_path.layer_id:
+        if len(layers) > 0 and \
+                last_converted_dat_path is not None and \
+                layers[0].get_layer_id() == last_converted_dat_path.layer_id:
             layer_id = last_converted_dat_path.layer_id
             logger.info(f"main: removing first layer {layer_id} because it has already been converted")
             layers = layers[1:]
