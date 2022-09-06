@@ -140,6 +140,7 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
 
             with open(last_conversion_path, "w") as last_conversion_file:
                 last_conversion_file.write(f"{dat_batch.last_dat.file_path}\n")
+                logger.info(f"submit_jobs_for_volume: wrote last converted file to {last_conversion_path}")
 
             processed_batch_count += 1
 
