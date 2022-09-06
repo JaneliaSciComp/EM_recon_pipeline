@@ -13,6 +13,7 @@
     },
     "cluster_root_paths": {
         "raw_dat": "/nrs/fibsem/render/dat/Z0422-17_VNC_1",
+        "raw_h5": "/nrs/fibsem/render/h5/Z0422-17_VNC_1/raw",
         "align_h5": "/nrs/fibsem/render/h5/Z0422-17_VNC_1/align"
     },
     "archive_root_paths": {
@@ -37,9 +38,13 @@
     },
     "transfer_tasks": [
         "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
         "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
         "IMPORT_H5_ALIGN_INTO_RENDER",
         "APPLY_FIBSEM_CORRECTION_TRANSFORM"
     ],
-    "cluster_job_project_for_billing": "fibsem"
+    "cluster_job_project_for_billing": "fibsem",
+    "number_of_dats_converted_per_hour": 40
 }
