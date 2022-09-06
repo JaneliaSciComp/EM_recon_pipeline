@@ -223,7 +223,7 @@ def get_layers_for_run(dat_root: Path,
         align_h5_root = volume_transfer_info.get_align_h5_root_for_conversion()
 
         for layer in layers:
-            if not layer.h5_exists(h5_root_path=raw_h5_root_path, source_type="raw") and \
+            if not layer.h5_exists(h5_root_path=raw_h5_root_path, source_type="raw") or \
                     not layer.h5_exists(h5_root_path=align_h5_root, source_type="uint8"):
                 new_layers.append(layer)
 
