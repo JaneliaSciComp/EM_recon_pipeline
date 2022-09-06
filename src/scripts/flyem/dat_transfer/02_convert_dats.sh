@@ -36,10 +36,10 @@ ARGS="${ARGS} --volume_transfer_info ${TRANSFER_INFO}"
 ARGS="${ARGS} --num_workers ${NUM_WORKERS}"
 ARGS="${ARGS} --parent_work_dir ${PARENT_WORK_DIR}"
 
-if (( $# > 2 )); then
-  ARGS="${ARGS} --first_dat ${3}"
-  if (( $# > 3 )); then
-    ARGS="${ARGS} --last_dat ${4}"
+if (( $# > 3 )); then
+  ARGS="${ARGS} --first_dat ${4}"
+  if (( $# > 4 )); then
+    ARGS="${ARGS} --last_dat ${5}"
   fi
 fi
 
