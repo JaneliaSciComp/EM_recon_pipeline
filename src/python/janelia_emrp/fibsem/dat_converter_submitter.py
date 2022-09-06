@@ -69,6 +69,7 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
         str(convert_script_path),
         str(transfer_info_path),
         str(num_workers),
+        str(log_file.parent),
         str(dat_batch.first_dat.file_path),
         str(dat_batch.last_dat.file_path)
     ]

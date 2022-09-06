@@ -4,13 +4,14 @@ set -e
 
 umask 0002
 
-if (( $# < 2 )); then
-  echo "USAGE $0 <transfer info file> <num workers> [first_dat] [last_dat]"
+if (( $# < 3 )); then
+  echo "USAGE $0 <transfer info file> <num workers> <parent work_dir> [first_dat] [last_dat]"
   exit 1
 fi
 
 TRANSFER_INFO="$1"
 NUM_WORKERS="$2"
+PARENT_WORK_DIR="$3"
 
 if [[ "${HOSTNAME}" =~ ^(e05u15|e05u16) ]]; then
   echo "ERROR: running on login1 or login2, need to bsub this job first ..."
@@ -33,7 +34,7 @@ export PYTHONPATH="${EMRP_ROOT}/src/python"
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/dat_converter.py"
 ARGS="${ARGS} --volume_transfer_info ${TRANSFER_INFO}"
 ARGS="${ARGS} --num_workers ${NUM_WORKERS}"
-ARGS="${ARGS} --parent_work_dir ${LOG_DIR}"
+ARGS="${ARGS} --parent_work_dir ${PARENT_WORK_DIR}"
 
 if (( $# > 2 )); then
   ARGS="${ARGS} --first_dat ${3}"
