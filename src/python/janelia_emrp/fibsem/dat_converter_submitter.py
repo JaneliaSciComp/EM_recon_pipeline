@@ -180,7 +180,6 @@ def main(arg_list: list[str]):
         help="The expected number of dats to be converted in one hour by a process "
              "(a slow 8250x8875 dat conversion takes 180 seconds => 20 dats per hour)",
         type=int,
-        default=20
     )
     args = parser.parse_args(args=arg_list)
 
@@ -198,13 +197,20 @@ def main(arg_list: list[str]):
     return_code = 0
     processed_batch_count = 0
     for transfer_info in volume_transfer_list:
+
+        # set dats_per_hour from script arg, transfer info, or default to 20
+        dats_per_hour = \
+            transfer_info.number_of_dats_converted_per_hour if args.dats_per_hour is None else args.dats_per_hour
+        if dats_per_hour is None or dats_per_hour == 0:
+            dats_per_hour = 20
+
         # noinspection PyBroadException
         try:
             processed_batch_count = submit_jobs_for_volume(transfer_info=transfer_info,
                                                            convert_script_path=convert_script_path,
                                                            num_workers=args.num_workers,
                                                            max_batch_count=args.max_batch_count,
-                                                           dats_per_hour=args.dats_per_hour,
+                                                           dats_per_hour=dats_per_hour,
                                                            processed_batch_count=processed_batch_count)
         except Exception:
             logger.exception(f"caught exception attempting to submit jobs for {transfer_info}")

@@ -182,6 +182,10 @@ class VolumeTransferInfo(BaseModel):
     #         set of tasks to perform for this volume
     #     cluster_job_project_for_billing:
     #         project to bill cluster time to
+    #     number_of_dats_converted_per_hour:
+    #         expected number of dats to be converted in one hour (omit to use default for conversion)
+    #     parsed_from_path:
+    #         path of file from which the transfer information was loaded or None if not loaded from a file
     """
     transfer_id: str
     scope_data_set: Optional[ScopeDataSet]
@@ -191,6 +195,7 @@ class VolumeTransferInfo(BaseModel):
     render_data_set: Optional[RenderDataSet]
     transfer_tasks: list[VolumeTransferTask]
     cluster_job_project_for_billing: str
+    number_of_dats_converted_per_hour: Optional[int]
     parsed_from_path: Optional[Path]
 
     def __str__(self):
