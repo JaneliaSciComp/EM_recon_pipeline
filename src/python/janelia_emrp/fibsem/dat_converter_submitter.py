@@ -116,7 +116,7 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
 
     if len(layers) > 0:
         now = datetime.datetime.now()
-        year_month_str = now.strftime('%y%m')
+        year_month_str = now.strftime('%Y%m')
         day_str = now.strftime('%d')
         time_str = now.strftime('%H%M%S')
         base_log_dir = cluster_root_dat_path / "logs" / year_month_str / day_str / time_str
