@@ -56,9 +56,10 @@ def build_dat_batch_list(layers: list[DatPathsForLayer],
 
 def bsub_convert_dat_batch(dat_batch: DatBatch,
                            cluster_job_project_for_billing: str,
-                           num_workers: int,
+                           log_file: Path,
                            convert_script_path: Path,
-                           log_file: Path):
+                           transfer_info_path: Path,
+                           num_workers: int):
     args = [
         "bsub",
         "-P", cluster_job_project_for_billing,
@@ -66,10 +67,13 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
         "-J", dat_batch.get_job_name(),
         "-o", str(log_file),
         str(convert_script_path),
+        str(transfer_info_path),
         str(num_workers),
         str(dat_batch.first_dat.file_path),
         str(dat_batch.last_dat.file_path)
     ]
+
+    logger.info(f"bsub_convert_dat_batch: submitting job with args {args}")
 
     subprocess.run(args,
                    stdout=sys.stdout,
@@ -128,9 +132,10 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
 
             bsub_convert_dat_batch(dat_batch=dat_batch,
                                    cluster_job_project_for_billing=transfer_info.cluster_job_project_for_billing,
-                                   num_workers=num_workers,
+                                   log_file=(log_dir / "convert_dat.log"),
                                    convert_script_path=convert_script_path,
-                                   log_file=(log_dir / "convert_dat.log"))
+                                   num_workers=num_workers,
+                                   transfer_info_path=transfer_info.parsed_from_path)
 
             with open(last_conversion_path, "w") as last_conversion_file:
                 last_conversion_file.write(f"{dat_batch.last_dat.file_path}\n")

@@ -191,6 +191,7 @@ class VolumeTransferInfo(BaseModel):
     render_data_set: Optional[RenderDataSet]
     transfer_tasks: list[VolumeTransferTask]
     cluster_job_project_for_billing: str
+    parsed_from_path: Optional[Path]
 
     def __str__(self):
         return self.transfer_id
@@ -257,6 +258,7 @@ def build_volume_transfer_list(volume_transfer_dir_path: Path,
         for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
 
             transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
+            transfer_info.parsed_from_path = Path(path).absolute()
 
             if for_tasks is None or transfer_info.includes_at_least_one_of_these_tasks(for_tasks):
                 if transfer_info.cluster_root_paths is None:
