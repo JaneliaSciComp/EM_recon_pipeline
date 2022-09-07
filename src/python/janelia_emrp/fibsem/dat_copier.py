@@ -294,8 +294,13 @@ def main(arg_list: list[str]):
 
         missing_check_path: Path = cluster_root_dat_path / "last_missing_check.json"
         if missing_check_path.exists():
-            nothing_missing_before = KeepFile.parse_file(missing_check_path).acquire_time()
-            logger.info(f"main: loaded {missing_check_path}")
+            # noinspection PyBroadException
+            try:
+                nothing_missing_before = KeepFile.parse_file(missing_check_path).acquire_time()
+                logger.info(f"main: loaded {missing_check_path}")
+            except Exception:
+                logger.exception(f"caught exception attempting to read {missing_check_path}")
+                nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
         else:
             nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
 
