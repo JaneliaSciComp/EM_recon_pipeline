@@ -64,9 +64,11 @@ def archive_volume(transfer_info: VolumeTransferInfo,
     src_dir = f"{transfer_info.cluster_root_paths.raw_h5}/"
     dest_dir = f"{transfer_info.archive_root_paths.raw_h5}/"
 
-    # RSYNC_OPTIONS="--include='*.raw.h5' --include='*/' --exclude='*' --remove-source-files"
-    # /misc/local/msrsync/msrsync3 --processes 2 --progress --stats --rsync "${RSYNC_OPTIONS}" ${SRC} ${DEST}/
-    rsync_options = "--include='*.raw-archive.h5' --include='*/' --exclude='*' --remove-source-files"
+    rsync_options = "--include='*.raw-archive.h5' --include='*/' " \
+                    "--exclude='*' " \
+                    "--chmod=D775 " \
+                    "--chmod=F444 " \
+                    "--remove-source-files"
     args = [
         "/misc/local/msrsync/msrsync3",
         "--processes", str(number_of_processes),
