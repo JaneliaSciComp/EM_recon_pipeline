@@ -1,11 +1,15 @@
 #!/bin/bash
 
-set -e
-
 umask 0002
 
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+
+# Set up LSF
+source /misc/lsf/conf/profile.lsf
+
+# loading LSF profile returns error code, so need to wait until here to set -e
+set -e
 
 RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
 RUN_YEAR_MONTH=$(echo "${RUN_DATE_AND_TIME}" | cut -c1-6)
