@@ -212,69 +212,68 @@ def get_layers_for_run(dat_root: Path,
 
     layers: list[DatPathsForLayer] = split_into_layers(path_list=[dat_root])
 
-    if len(layers) == 0:
-        raise ValueError(f"no layers to convert")
-
     logger.info(f"get_layers_for_run: found {len(layers)} layers to convert")
 
-    if skip_existing:
-        logger.info(f"get_layers_for_run: filtering out existing layers")
-        new_layers = []
-        raw_h5_root_path = volume_transfer_info.get_raw_h5_root_for_conversion()
-        align_h5_root = volume_transfer_info.get_align_h5_root_for_conversion()
+    if len(layers) > 0:
 
-        for layer in layers:
-            if not layer.h5_exists(h5_root_path=raw_h5_root_path, source_type="raw") or \
-                    not layer.h5_exists(h5_root_path=align_h5_root, source_type="uint8"):
-                new_layers.append(layer)
+        if skip_existing:
+            logger.info(f"get_layers_for_run: filtering out existing layers")
+            new_layers = []
+            raw_h5_root_path = volume_transfer_info.get_raw_h5_root_for_conversion()
+            align_h5_root = volume_transfer_info.get_align_h5_root_for_conversion()
 
-        if len(new_layers) < len(layers):
-            layers = new_layers
-            logger.info(f"get_layers_for_run: after filtering, {len(layers)} remain to be converted")
+            for layer in layers:
+                if not layer.h5_exists(h5_root_path=raw_h5_root_path, source_type="raw") or \
+                        not layer.h5_exists(h5_root_path=align_h5_root, source_type="uint8"):
+                    new_layers.append(layer)
 
-    first_dat_path = None if first_dat is None else new_dat_path(Path(first_dat))
-    last_dat_path = None if last_dat is None else new_dat_path(Path(last_dat))
+            if len(new_layers) < len(layers):
+                layers = new_layers
+                logger.info(f"get_layers_for_run: after filtering, {len(layers)} remain to be converted")
 
-    if first_dat_path is not None and last_dat_path is not None:
-        if first_dat_path.layer_id > last_dat_path.layer_id:
-            raise ValueError(f"first dat layer {first_dat_path.layer_id} "
-                             f"is after last dat layer {last_dat_path.layer_id}")
-        if first_dat_path.layer_id > layers[-1].get_layer_id():
-            raise ValueError(f"first dat layer {first_dat_path.layer_id} "
-                             f"is after last found layer {layers[-1].get_layer_id()}")
-        if last_dat_path.layer_id < layers[0].get_layer_id():
-            raise ValueError(f"last dat layer {last_dat_path.layer_id} "
-                             f"is before first found layer {layers[0].get_layer_id()}")
+        first_dat_path = None if first_dat is None else new_dat_path(Path(first_dat))
+        last_dat_path = None if last_dat is None else new_dat_path(Path(last_dat))
 
-    min_index = get_layer_index_for_dat(layers=layers,
-                                        start_index=0,
-                                        dat_path=first_dat_path)
+        if first_dat_path is not None and last_dat_path is not None:
+            if first_dat_path.layer_id > last_dat_path.layer_id:
+                raise ValueError(f"first dat layer {first_dat_path.layer_id} "
+                                 f"is after last dat layer {last_dat_path.layer_id}")
+            if first_dat_path.layer_id > layers[-1].get_layer_id():
+                raise ValueError(f"first dat layer {first_dat_path.layer_id} "
+                                 f"is after last found layer {layers[-1].get_layer_id()}")
+            if last_dat_path.layer_id < layers[0].get_layer_id():
+                raise ValueError(f"last dat layer {last_dat_path.layer_id} "
+                                 f"is before first found layer {layers[0].get_layer_id()}")
 
-    max_index = get_layer_index_for_dat(layers=layers,
-                                        start_index=min_index,
-                                        dat_path=last_dat_path)
+        min_index = get_layer_index_for_dat(layers=layers,
+                                            start_index=0,
+                                            dat_path=first_dat_path)
 
-    # ensure last layer is excluded from conversion
-    # unless last dat file of last layer is not recently modified and
-    # acquisition has stopped or last dat path was explicitly specified
-    layer_count_minus_one = len(layers) - 1
-    slice_max = layer_count_minus_one if max_index is None else min(layer_count_minus_one, (max_index + 1))
-    if len(layers) > 0 and (volume_transfer_info.acquisition_stopped() or last_dat_path is not None):
-        one_hour_ago = datetime.datetime.now() - datetime.timedelta(hours=1)
-        exclude_timestamp = datetime.datetime.timestamp(one_hour_ago)
-        last_layer: DatPathsForLayer = layers[-1]
-        last_dat: Path = last_layer.dat_paths[-1].file_path
-        if (last_dat.stat().st_mtime <= exclude_timestamp) and (slice_max >= layer_count_minus_one):
-            logger.info("get_layers_for_run: including last layer because "
-                        "acquisition stopped and last dat is not recently modified")
-            slice_max = None
-    slice_min = None if min_index is None else max(min_index, 0)
-    if slice_min is not None:
-        layers = layers[slice_min:] if slice_max is None else layers[slice_min:slice_max]
-    elif slice_max is not None:
-        layers = layers[0:slice_max]
+        max_index = get_layer_index_for_dat(layers=layers,
+                                            start_index=min_index,
+                                            dat_path=last_dat_path)
 
-    logger.info(f"get_layers_for_run: {len(layers)} layers remain with index range {slice_min}, {slice_max}")
+        # ensure last layer is excluded from conversion
+        # unless last dat file of last layer is not recently modified and
+        # acquisition has stopped or last dat path was explicitly specified
+        layer_count_minus_one = len(layers) - 1
+        slice_max = layer_count_minus_one if max_index is None else min(layer_count_minus_one, (max_index + 1))
+        if len(layers) > 0 and (volume_transfer_info.acquisition_stopped() or last_dat_path is not None):
+            one_hour_ago = datetime.datetime.now() - datetime.timedelta(hours=1)
+            exclude_timestamp = datetime.datetime.timestamp(one_hour_ago)
+            last_layer: DatPathsForLayer = layers[-1]
+            last_dat: Path = last_layer.dat_paths[-1].file_path
+            if (last_dat.stat().st_mtime <= exclude_timestamp) and (slice_max >= layer_count_minus_one):
+                logger.info("get_layers_for_run: including last layer because "
+                            "acquisition stopped and last dat is not recently modified")
+                slice_max = None
+        slice_min = None if min_index is None else max(min_index, 0)
+        if slice_min is not None:
+            layers = layers[slice_min:] if slice_max is None else layers[slice_min:slice_max]
+        elif slice_max is not None:
+            layers = layers[0:slice_max]
+
+        logger.info(f"get_layers_for_run: {len(layers)} layers remain with index range {slice_min}, {slice_max}")
 
     return layers
 
