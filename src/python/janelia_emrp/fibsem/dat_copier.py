@@ -12,9 +12,8 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
-from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT
-from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, ScopeDataSet, \
-    build_volume_transfer_list
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT, new_dat_layer
+from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, build_volume_transfer_list
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -218,6 +217,8 @@ def derive_missing_check_start(last_dat_time_path: Path,
 
 def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
                                     cluster_root_dat_path: Path,
+                                    cluster_root_h5_raw_path: Optional[Path],
+                                    archive_root_h5_raw_path: Optional[Path],
                                     start_time: datetime.datetime,
                                     stop_time: datetime.datetime,
                                     first_keep_file: KeepFile,
@@ -256,6 +257,23 @@ def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
             is_missing = False
 
         if is_missing:
+            dat_layer = new_dat_layer(dat_path)
+            if cluster_root_h5_raw_path is not None:
+                cluster_raw_path = dat_layer.get_h5_path(h5_root_path=cluster_root_h5_raw_path,
+                                                         append_acquisition_based_subdirectories=True,
+                                                         source_type="raw")
+                cluster_raw_archive_path = dat_layer.get_h5_path(h5_root_path=cluster_root_h5_raw_path,
+                                                                 append_acquisition_based_subdirectories=True,
+                                                                 source_type="raw-archive")
+                is_missing = not (cluster_raw_path.exists() or cluster_raw_archive_path.exists())
+
+            if is_missing and archive_root_h5_raw_path is not None:
+                archive_raw_path = dat_layer.get_h5_path(h5_root_path=archive_root_h5_raw_path,
+                                                         append_acquisition_based_subdirectories=True,
+                                                         source_type="raw-archive")
+                is_missing = not archive_raw_path.exists()
+
+        if is_missing:
             logger.info(f"find_missing_scope_dats_for_day: {scope_dat} is missing")
             missing_scope_dats.append(scope_dat)
 
@@ -264,10 +282,14 @@ def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
 
 def find_missing_scope_dats(keep_file_list: list[KeepFile],
                             nothing_missing_before: datetime.datetime,
-                            scope_data_set: ScopeDataSet,
-                            cluster_root_dat_path: Path) -> list[Path]:
+                            transfer_info: VolumeTransferInfo) -> list[Path]:
 
     missing_scope_dats: list[Path] = []
+
+    scope_data_set = transfer_info.scope_data_set
+    cluster_root_dat_path = transfer_info.cluster_root_paths.raw_dat
+    cluster_root_h5_raw_path = transfer_info.cluster_root_paths.raw_h5
+    archive_root_h5_raw_path = transfer_info.archive_root_paths.raw_h5
 
     last_keep_time = keep_file_list[-1].acquire_time()
     day_after_last_keep_time = last_keep_time + datetime.timedelta(days=1)
@@ -303,6 +325,8 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
         missing_scope_dats.extend(
             find_missing_scope_dats_for_day(scope_dat_paths=scope_dat_paths,
                                             cluster_root_dat_path=cluster_root_dat_path,
+                                            cluster_root_h5_raw_path=cluster_root_h5_raw_path,
+                                            archive_root_h5_raw_path=archive_root_h5_raw_path,
                                             start_time=nothing_missing_before,
                                             stop_time=last_keep_time,
                                             first_keep_file=keep_file_list[0],
@@ -377,8 +401,7 @@ def main(arg_list: list[str]):
 
             missing_scope_dats = find_missing_scope_dats(keep_file_list=keep_file_list,
                                                          nothing_missing_before=nothing_missing_before,
-                                                         scope_data_set=transfer_info.scope_data_set,
-                                                         cluster_root_dat_path=cluster_root_dat_path)
+                                                         transfer_info=transfer_info)
             if len(missing_scope_dats) > 0:
                 missing_dat_list_path: Path = cluster_root_dat_path / "missing_dat_list.txt"
                 with open(missing_dat_list_path, 'a', encoding='utf-8') as missing_dat_list_file:

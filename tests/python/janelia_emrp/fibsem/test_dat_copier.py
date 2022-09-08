@@ -43,12 +43,14 @@ def test_find_missing_scope_dats_for_day(tmp_path):
         keep_files_for_time = time_to_keep_files.setdefault(keep_file.acquire_time(), [])
         keep_files_for_time.append(keep_file)
 
-    result: list[KeepFile] = find_missing_scope_dats_for_day(scope_dat_paths,
-                                                             cluster_root_dat_path,
-                                                             start_time,
-                                                             stop_time,
-                                                             keep_file_list[0],
-                                                             keep_file_list[-1],
-                                                             time_to_keep_files)
+    result: list[KeepFile] = find_missing_scope_dats_for_day(scope_dat_paths=scope_dat_paths,
+                                                             cluster_root_dat_path=cluster_root_dat_path,
+                                                             cluster_root_h5_raw_path=None,
+                                                             archive_root_h5_raw_path=None,
+                                                             start_time=start_time,
+                                                             stop_time=stop_time,
+                                                             first_keep_file=keep_file_list[0],
+                                                             last_keep_file=keep_file_list[-1],
+                                                             time_to_keep_files=time_to_keep_files)
 
     assert len(result) == 5, "incorrect number of missing dat files found"
