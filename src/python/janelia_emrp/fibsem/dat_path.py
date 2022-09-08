@@ -8,8 +8,8 @@ from typing import List, Optional, Final
 logger = logging.getLogger(__name__)
 
 # pattern for parsing dat files named with standard convention (e.g. Merlin-6049_15-06-16_000059_0-0-0.dat)
-BASE_NAME_PATTERN: Final[re] = re.compile(r"(.*)_(\d\d-\d\d-\d\d_\d{6})_(\d+)-(\d+)-(\d+).*")
-DAT_TIME_FORMAT: Final[str] = "%y-%m-%d_%H%M%S"
+BASE_NAME_PATTERN: Final = re.compile(r"(.*)_(\d\d-\d\d-\d\d_\d{6})_(\d+)-(\d+)-(\d+).*")
+DAT_TIME_FORMAT: Final = "%y-%m-%d_%H%M%S"
 
 @dataclass
 class DatPath:

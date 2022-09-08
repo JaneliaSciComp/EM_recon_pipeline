@@ -146,8 +146,8 @@ def max_transfer_seconds_exceeded(max_transfer_seconds: int,
 
 def derive_missing_check_start_from_path(root_path: Path,
                                          dir_pattern: str,
-                                         file_pattern: str) -> Optional[datetime]:
-    nothing_missing_before: Optional[datetime] = None
+                                         file_pattern: str) -> Optional[datetime.datetime]:
+    nothing_missing_before: Optional[datetime.datetime] = None
 
     if root_path is not None and root_path.exists():
         logger.info(f"derive_missing_check_start_from_path: checking {root_path}")
