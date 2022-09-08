@@ -20,8 +20,7 @@ def check_and_save_pid(pid_path: Path,
     is_archive_already_running = False
 
     if pid_path.exists():
-        with open(pid_path, "r") as pid_file:
-            saved_pid = int(pid_file.readline().strip())
+        saved_pid = int(pid_path.read_text())
 
         if psutil.pid_exists(saved_pid):
             is_archive_already_running = True
@@ -38,8 +37,7 @@ def check_and_save_pid(pid_path: Path,
                 skip_file.write(f"{run_time_str} {skip_message}\n")
 
     if not is_archive_already_running:
-        with open(pid_path, "w") as pid_file:
-            pid_file.write(f"{os.getpid()}\n")
+        pid_path.write_text(f"{os.getpid()}")
 
     return is_archive_already_running
 
