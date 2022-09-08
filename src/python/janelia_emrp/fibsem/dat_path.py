@@ -3,13 +3,13 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePath
-from typing import List, Optional
+from typing import List, Optional, Final
 
 logger = logging.getLogger(__name__)
 
 # pattern for parsing dat files named with standard convention (e.g. Merlin-6049_15-06-16_000059_0-0-0.dat)
-base_name_pattern = re.compile(r"(.*)_(\d\d-\d\d-\d\d_\d{6})_(\d+)-(\d+)-(\d+).*")
-
+BASE_NAME_PATTERN: Final[re] = re.compile(r"(.*)_(\d\d-\d\d-\d\d_\d{6})_(\d+)-(\d+)-(\d+).*")
+DAT_TIME_FORMAT: Final[str] = "%y-%m-%d_%H%M%S"
 
 @dataclass
 class DatPath:
@@ -42,14 +42,14 @@ def new_dat_path(file_path: Path) -> DatPath:
     DatPath
         A new instance parsed from the specified `file_path`.
     """
-    m = base_name_pattern.match(file_path.name)
+    m = BASE_NAME_PATTERN.match(file_path.name)
     if not m:
         raise ValueError(f"base name for {file_path} does not follow expected pattern")
 
     scope = m.group(1)
     acquire_time_string = m.group(2)
     layer_id = f"{scope}_{acquire_time_string}"
-    acquire_time = datetime.datetime.strptime(acquire_time_string, "%y-%m-%d_%H%M%S")
+    acquire_time = datetime.datetime.strptime(acquire_time_string, DAT_TIME_FORMAT)
     section = int(m.group(3))
     row = int(m.group(4))
     column = int(m.group(5))

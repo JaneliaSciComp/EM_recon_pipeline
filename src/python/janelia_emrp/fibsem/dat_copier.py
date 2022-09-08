@@ -1,16 +1,18 @@
 import argparse
 import datetime
+import glob
 import logging
+import re
 import subprocess
 import traceback
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
-from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, ScopeDataSet, \
     build_volume_transfer_list
 from janelia_emrp.root_logger import init_logger
@@ -140,6 +142,78 @@ def max_transfer_seconds_exceeded(max_transfer_seconds: int,
         elapsed_seconds = time.time() - start_time
         result = elapsed_seconds > max_transfer_seconds
     return result
+
+
+def derive_missing_check_start_from_path(root_path: Path,
+                                         dir_pattern: str,
+                                         file_pattern: str) -> Optional[datetime]:
+    nothing_missing_before: Optional[datetime] = None
+
+    if root_path is not None and root_path.exists():
+        logger.info(f"derive_missing_check_start_from_path: checking {root_path}")
+        dir_list = sorted(glob.glob(dir_pattern))
+        dir_and_file_pattern = f"{dir_list[-1]}{file_pattern}"
+        latest_hour_files = [] if len(dir_list) == 0 else sorted(glob.glob(dir_and_file_pattern))
+
+        if len(latest_hour_files) > 0:
+            latest_file = latest_hour_files[-1]
+            if latest_file.endswith(".h5"):
+                latest_file = re.sub(r"\.raw.*h5", "_0-0-0.dat", latest_file)
+            latest_dat_path = new_dat_path(Path(latest_file))
+            nothing_missing_before = latest_dat_path.acquire_time
+            logger.info(f"derive_missing_check_start_from_path: used {latest_hour_files[-1]} as source")
+
+    return nothing_missing_before
+
+
+def derive_missing_check_start(last_dat_time_path: Path,
+                               transfer_info: VolumeTransferInfo) -> datetime:
+    nothing_missing_before: Optional[datetime] = None
+
+    if last_dat_time_path.exists():
+        logger.info(f"derive_missing_check_start: reading {last_dat_time_path}")
+        # noinspection PyBroadException
+        try:
+            last_dat_time_str = last_dat_time_path.read_text()
+            nothing_missing_before = datetime.datetime.strptime(last_dat_time_str, DAT_TIME_FORMAT)
+            logger.info(f"derive_missing_check_start: used {last_dat_time_path} as source")
+        except Exception:
+            logger.exception(f"caught exception attempting to read {last_dat_time_path}")
+            nothing_missing_before = None
+
+    if nothing_missing_before is None:
+        # /groups/cellmap/cellmap/render/dat/jrc_zf-cardiac-1
+        #   /2022/07/08/23/Merlin-6257_22-07-08_230122_0-0-0.dat
+        dir_pattern = f"{transfer_info.cluster_root_paths.raw_dat}/2*/*/*/*/"
+        nothing_missing_before = \
+            derive_missing_check_start_from_path(root_path=transfer_info.cluster_root_paths.raw_dat,
+                                                 dir_pattern=dir_pattern,
+                                                 file_pattern="*.dat")
+
+    if nothing_missing_before is None:
+        # /groups/cellmap/cellmap/render/h5/jrc_zf-cardiac-1/raw
+        #  /Merlin-6257/2022/07/08/23/Merlin-6257_22-07-08_230122.raw.h5
+        dir_pattern = f"{transfer_info.cluster_root_paths.raw_h5}/*/2*/*/*/*/"
+        nothing_missing_before = \
+            derive_missing_check_start_from_path(root_path=transfer_info.cluster_root_paths.raw_h5,
+                                                 dir_pattern=dir_pattern,
+                                                 file_pattern="*.h5")
+
+    if nothing_missing_before is None:
+        # /groups/cellmap/cellmap/render/h5/jrc_zf-cardiac-1/raw
+        #  /Merlin-6257/2022/07/08/23/Merlin-6257_22-07-08_230122.raw.h5
+        dir_pattern = f"{transfer_info.archive_root_paths.raw_h5}/*/2*/*/*/*/"
+        nothing_missing_before = \
+            derive_missing_check_start_from_path(root_path=transfer_info.archive_root_paths.raw_h5,
+                                                 dir_pattern=dir_pattern,
+                                                 file_pattern="*.h5")
+
+    if nothing_missing_before is None:
+        nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
+
+    logger.info(f"derive_missing_check_start: returning {nothing_missing_before.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    return nothing_missing_before
 
 
 def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
@@ -292,19 +366,9 @@ def main(arg_list: list[str]):
         logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host} for the "
                     f"{transfer_info.scope_data_set.data_set_id} data set")
 
-        missing_check_path: Path = cluster_root_dat_path / "last_missing_check.json"
-        if missing_check_path.exists():
-            # noinspection PyBroadException
-            try:
-                nothing_missing_before = KeepFile.parse_file(missing_check_path).acquire_time()
-                logger.info(f"main: loaded {missing_check_path}")
-            except Exception:
-                logger.exception(f"caught exception attempting to read {missing_check_path}")
-                nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
-        else:
-            nothing_missing_before = transfer_info.scope_data_set.first_dat_acquire_time()
-
-        logger.info(f"main: first missing check time is {nothing_missing_before.strftime('%Y-%m-%d %H:%M:%S')}")
+        last_dat_time_path: Path = cluster_root_dat_path / "last_dat_time.txt"
+        nothing_missing_before = derive_missing_check_start(last_dat_time_path=last_dat_time_path,
+                                                            transfer_info=transfer_info)
 
         if len(keep_file_list) > 0:
             logger.info(f"main: start copying dat files to {cluster_root_dat_path}")
@@ -322,11 +386,14 @@ def main(arg_list: list[str]):
                         missing_dat_list_file.write(f"{str(scope_dat)}\n")
                 logger.info(f"main: added {len(missing_scope_dats)} missing dat file paths to {missing_dat_list_path}")
 
-            # save last keep info to missing_check_path so checks are not repeated by subsequent runs
-            with open(missing_check_path, 'w', encoding='utf-8') as missing_check_file:
-                last_keep_file = keep_file_list[-1]
-                logger.info(f"main: saving {missing_check_path} for {Path(last_keep_file.dat_path).name}")
-                missing_check_file.write(last_keep_file.json())
+            # noinspection PyBroadException
+            try:
+                # save last dat time so checks are not repeated by subsequent runs
+                last_dat_time_str = keep_file_list[-1].acquire_time().strftime(DAT_TIME_FORMAT)
+                logger.info(f"main: saving {last_dat_time_str} to {last_dat_time_path}")
+                last_dat_time_path.write_text(last_dat_time_str)
+            except Exception:
+                logger.exception(f"caught exception attempting to write {last_dat_time_path}")
 
         for keep_file in keep_file_list:
             copy_dat_file(scope_host=keep_file.host,
