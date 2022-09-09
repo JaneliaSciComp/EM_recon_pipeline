@@ -1,9 +1,15 @@
+import argparse
 import datetime
 import logging
 import re
+import traceback
+
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path, PurePath
 from typing import List, Optional, Final
+
+from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
@@ -179,3 +185,78 @@ def split_into_layers(path_list: List[Path]) -> List[DatPathsForLayer]:
         layers.append(paths_for_layer)
 
     return layers
+
+
+def rename_dat_files(source_dir: Path,
+                     target_dir: Path):
+
+    if not source_dir.is_dir():
+        raise ValueError(f"source {source_dir} is not a directory")
+
+    sorted_dat_file_paths = get_sorted_dat_file_paths([source_dir])
+
+    number_to_rename = len(sorted_dat_file_paths)
+    if number_to_rename > 0:
+        logger.info(f"rename_dat_files: found {number_to_rename} dat files to rename/move")
+
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        created_target_dirs = set()
+
+        rename_count = 0
+        for dat_file_path in sorted_dat_file_paths:
+            dat_target_path = dat_to_target_path(from_dat_path=dat_file_path,
+                                                 to_root_path=target_dir)
+            dat_target_parent_path = dat_target_path.parent
+            if dat_target_parent_path not in created_target_dirs:
+                dat_target_parent_path.mkdir(parents=True, exist_ok=True)
+                created_target_dirs.add(dat_target_parent_path)
+
+            dat_file_path.rename(dat_target_path)
+            rename_count += 1
+
+            if rename_count % 1000 == 0:
+                logger.info(f"rename_dat_files: renamed {rename_count} out of {number_to_rename} dat files")
+
+    logger.info(f"rename_dat_files: renamed {number_to_rename} dat files")
+
+    return 0
+
+
+def main(arg_list: list[str]):
+    parser = argparse.ArgumentParser(
+        description="Renames (moves) dat files from a flat directory structure to one with hourly relative paths "
+                    "(e.g. /source-dat/Merlin-6257_22-07-29_151723_0-0-0.dat to "
+                    "/target-dat/2022/07/29/15/Merlin-6257_22-07-29_151723_0-0-0.dat)"
+    )
+    parser.add_argument(
+        "--source",
+        help="Path of root source directory containing dat files to move.",
+        required=True,
+    )
+    parser.add_argument(
+        "--target",
+        help="Path of root target directory to contain dat files with hourly relative paths.",
+        required=True,
+    )
+    args = parser.parse_args(args=arg_list)
+
+    rename_dat_files(source_dir=Path(args.source),
+                     target_dir=Path(args.target))
+
+    return 0
+
+
+if __name__ == "__main__":
+    # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    # setup logger since this module is the main program
+    init_logger(__file__)
+
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)
