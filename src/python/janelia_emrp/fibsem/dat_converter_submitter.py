@@ -32,7 +32,8 @@ class DatBatch:
 
 def build_dat_batch_list(layers: list[DatPathsForLayer],
                          data_set_id: str,
-                         number_dats_converted_in_one_hour: int) -> list[DatBatch]:
+                         number_dats_converted_in_one_hour: int,
+                         runtime_limit: str) -> list[DatBatch]:
     batch_list: list[DatBatch] = []
 
     # build one-hour-ish batches with 3:59 runtime,
@@ -47,7 +48,7 @@ def build_dat_batch_list(layers: list[DatPathsForLayer],
             batch_list.append(DatBatch(data_set_id=data_set_id,
                                        first_dat=layers[first_index].dat_paths[0],
                                        last_dat=dat_paths_for_layer[-1],
-                                       runtime_limit="3:59"))
+                                       runtime_limit=runtime_limit))
             dat_count = 0
             first_index = i + 1
 
@@ -87,7 +88,8 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
                            num_workers: int,
                            max_batch_count: Optional[int],
                            dats_per_hour: int,
-                           processed_batch_count: int) -> int:
+                           processed_batch_count: int,
+                           runtime_limit: str) -> int:
 
     cluster_root_dat_path = transfer_info.cluster_root_paths.raw_dat
 
@@ -123,7 +125,8 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
 
         for dat_batch in build_dat_batch_list(layers=layers,
                                               data_set_id=transfer_info.scope_data_set.data_set_id,
-                                              number_dats_converted_in_one_hour=dats_per_hour):
+                                              number_dats_converted_in_one_hour=dats_per_hour,
+                                              runtime_limit=runtime_limit):
 
             if max_batch_count is not None and processed_batch_count >= max_batch_count:
                 break
@@ -171,6 +174,11 @@ def main(arg_list: list[str]):
         default=1
     )
     parser.add_argument(
+        "--runtime_limit",
+        help="LSF runtime limit",
+        default="3:59"
+    )
+    parser.add_argument(
         "--max_batch_count",
         help="The maximum number of conversion batches to schedule",
         type=int
@@ -211,7 +219,8 @@ def main(arg_list: list[str]):
                                                            num_workers=args.num_workers,
                                                            max_batch_count=args.max_batch_count,
                                                            dats_per_hour=dats_per_hour,
-                                                           processed_batch_count=processed_batch_count)
+                                                           processed_batch_count=processed_batch_count,
+                                                           runtime_limit=args.runtime_limit)
         except Exception:
             logger.exception(f"caught exception attempting to submit jobs for {transfer_info}")
             return_code = 1
