@@ -375,6 +375,7 @@ def main(arg_list: list[str]):
     parser.add_argument(
         "--lsf_runtime_limit",
         help="Runtime limit in minutes when using LSF (e.g. [hour:]minute)",
+        default="3:59"
     )
     parser.add_argument(
         "--first_dat",

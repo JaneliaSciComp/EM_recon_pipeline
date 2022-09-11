@@ -71,6 +71,7 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
         str(transfer_info_path),
         str(num_workers),
         str(log_file.parent),
+        dat_batch.runtime_limit,
         str(dat_batch.first_dat.file_path),
         str(dat_batch.last_dat.file_path)
     ]
@@ -174,8 +175,8 @@ def main(arg_list: list[str]):
         default=1
     )
     parser.add_argument(
-        "--runtime_limit",
-        help="LSF runtime limit",
+        "--lsf_runtime_limit",
+        help="LSF runtime limit (e.g. [hour:]minute)",
         default="3:59"
     )
     parser.add_argument(
@@ -220,7 +221,7 @@ def main(arg_list: list[str]):
                                                            max_batch_count=args.max_batch_count,
                                                            dats_per_hour=dats_per_hour,
                                                            processed_batch_count=processed_batch_count,
-                                                           runtime_limit=args.runtime_limit)
+                                                           runtime_limit=args.lsf_runtime_limit)
         except Exception:
             logger.exception(f"caught exception attempting to submit jobs for {transfer_info}")
             return_code = 1

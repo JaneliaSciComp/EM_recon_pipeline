@@ -5,7 +5,7 @@ set -e
 umask 0002
 
 if (( $# < 3 )); then
-  echo "USAGE $0 <transfer info file> <num workers> <parent work_dir> [first_dat] [last_dat]"
+  echo "USAGE $0 <transfer info file> <num workers> <parent work_dir> [lsf_runtime_limit] [first_dat] [last_dat]"
   exit 1
 fi
 
@@ -37,14 +37,14 @@ ARGS="${ARGS} --num_workers ${NUM_WORKERS}"
 ARGS="${ARGS} --parent_work_dir ${PARENT_WORK_DIR}"
 
 if (( $# > 3 )); then
-  ARGS="${ARGS} --first_dat ${4}"
+  ARGS="${ARGS} --lsf_runtime_limit ${4}"
   if (( $# > 4 )); then
-    ARGS="${ARGS} --last_dat ${5}"
+    ARGS="${ARGS} --first_dat ${5}"
+    if (( $# > 5 )); then
+      ARGS="${ARGS} --last_dat ${6}"
+    fi
   fi
 fi
-
-#ARGS="${ARGS} --lsf_runtime_limit 23:59"
-ARGS="${ARGS} --lsf_runtime_limit 3:59"
 
 echo """
 On ${HOSTNAME} at ${RUN_DATE_AND_TIME}
