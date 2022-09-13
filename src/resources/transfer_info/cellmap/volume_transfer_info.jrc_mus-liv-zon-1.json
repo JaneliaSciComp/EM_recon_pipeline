@@ -12,8 +12,8 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/cellmap/render/dat/jrc_mus-liv-zon-1",
-        "raw_h5": "/nrs/cellmap/render/h5/jrc_mus-liv-zon-1/raw",
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-liv-zon-1/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-liv-zon-1/raw",
         "align_h5": "/nrs/cellmap/render/h5/jrc_mus-liv-zon-1/align"
     },
     "archive_root_paths": {
@@ -38,7 +38,10 @@
     },
     "transfer_tasks": [
         "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
         "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
         "IMPORT_H5_ALIGN_INTO_RENDER",
         "APPLY_FIBSEM_CORRECTION_TRANSFORM"
     ],
