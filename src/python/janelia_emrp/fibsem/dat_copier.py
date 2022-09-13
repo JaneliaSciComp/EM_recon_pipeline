@@ -151,16 +151,17 @@ def derive_missing_check_start_from_path(root_path: Path,
     if root_path is not None and root_path.exists():
         logger.info(f"derive_missing_check_start_from_path: checking {root_path}")
         dir_list = sorted(glob.glob(dir_pattern))
-        dir_and_file_pattern = f"{dir_list[-1]}{file_pattern}"
-        latest_hour_files = [] if len(dir_list) == 0 else sorted(glob.glob(dir_and_file_pattern))
+        if len(dir_list) > 0:
+            dir_and_file_pattern = f"{dir_list[-1]}{file_pattern}"
+            latest_hour_files = [] if len(dir_list) == 0 else sorted(glob.glob(dir_and_file_pattern))
 
-        if len(latest_hour_files) > 0:
-            latest_file = latest_hour_files[-1]
-            if latest_file.endswith(".h5"):
-                latest_file = re.sub(r"\.raw.*h5", "_0-0-0.dat", latest_file)
-            latest_dat_path = new_dat_path(Path(latest_file))
-            nothing_missing_before = latest_dat_path.acquire_time
-            logger.info(f"derive_missing_check_start_from_path: used {latest_hour_files[-1]} as source")
+            if len(latest_hour_files) > 0:
+                latest_file = latest_hour_files[-1]
+                if latest_file.endswith(".h5"):
+                    latest_file = re.sub(r"\.raw.*h5", "_0-0-0.dat", latest_file)
+                latest_dat_path = new_dat_path(Path(latest_file))
+                nothing_missing_before = latest_dat_path.acquire_time
+                logger.info(f"derive_missing_check_start_from_path: used {latest_hour_files[-1]} as source")
 
     return nothing_missing_before
 
