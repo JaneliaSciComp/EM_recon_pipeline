@@ -12,9 +12,9 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/cellmap/render/dat/jrc_mus-epididymus-2",
-        "raw_h5": "/nrs/cellmap/render/h5/jrc_mus-epididymus-2/raw",
-        "align_h5": "/nrs/cellmap/render/h5/jrc_mus-epididymus-2/align"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-epididymus-2/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-epididymus-2/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_mus-epididymus-2/align"
     },
     "archive_root_paths": {
         "raw_h5": "/nearline/cellmap/data/jrc_mus-epididymus-2/raw"
