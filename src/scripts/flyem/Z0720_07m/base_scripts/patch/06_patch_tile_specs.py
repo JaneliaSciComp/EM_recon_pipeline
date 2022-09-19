@@ -87,6 +87,7 @@ def main():
     ]
 
     patched_resolved_tiles = {
+        "transformIdToSpecMap": {},
         "tileIdToSpecMap": {}
     }
 
@@ -94,10 +95,16 @@ def main():
 
     for tile_id, delta_z in tile_ids_to_patch:
         tile_spec_to_patch = get_tile_spec(owner, project, stack, tile_id)
-        prior_layer_resolved_tiles = get_resolved_tiles_for_layer(owner, project, stack, tile_spec_to_patch["z"] + delta_z)
+        adjacent_layer_resolved_tiles = \
+            get_resolved_tiles_for_layer(owner, project, stack, tile_spec_to_patch["z"] + delta_z)
+        if "transformIdToSpecMap" in adjacent_layer_resolved_tiles:
+            transform_id_to_spec_map = adjacent_layer_resolved_tiles["transformIdToSpecMap"]
+            for transform_id in transform_id_to_spec_map.keys():
+                patched_resolved_tiles["transformIdToSpecMap"][transform_id] = transform_id_to_spec_map[transform_id]
+            
         from_tile_spec = None
-        for prior_tile_id in prior_layer_resolved_tiles["tileIdToSpecMap"].keys():
-            prior_tile_spec = prior_layer_resolved_tiles["tileIdToSpecMap"][prior_tile_id]
+        for prior_tile_id in adjacent_layer_resolved_tiles["tileIdToSpecMap"].keys():
+            prior_tile_spec = adjacent_layer_resolved_tiles["tileIdToSpecMap"][prior_tile_id]
             if same_row_and_column(tile_spec_to_patch, prior_tile_spec):
                 from_tile_spec = prior_tile_spec
                 break
@@ -108,9 +115,9 @@ def main():
 
     if len(tile_ids_to_remove) > 0:
         set_stack_state(owner, project, stack, "LOADING")
+        save_resolved_tiles(owner, project, stack, patched_resolved_tiles)
         for tile_id in tile_ids_to_remove:
             remove_tile_spec(owner, project, stack, tile_id)
-        save_resolved_tiles(owner, project, stack, patched_resolved_tiles)
         set_stack_state(owner, project, stack, "COMPLETE")
 
 
