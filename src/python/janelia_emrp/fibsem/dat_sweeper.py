@@ -8,7 +8,8 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_copier import add_dat_copy_arguments, copy_dat_file, day_range, \
-    get_dats_acquired_on_day, get_scope_day_numbers_with_dats, max_transfer_seconds_exceeded
+    get_dats_acquired_on_day, get_scope_day_numbers_with_dats, max_transfer_seconds_exceeded, \
+    is_dat_missing_from_h5_paths
 from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
 from janelia_emrp.fibsem.volume_transfer_info import build_volume_transfer_list, VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
@@ -84,7 +85,12 @@ def main(arg_list: list[str]):
                 dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
 
                 if first_dat_acquire_time <= dat_path.acquire_time <= last_dat_acquire_time:
-                    if not dat_path.file_path.exists():
+                    if not dat_path.file_path.exists() and \
+                            is_dat_missing_from_h5_paths(
+                                dat_path=dat_path,
+                                cluster_root_h5_raw_path=transfer_info.cluster_root_paths.raw_h5,
+                                archive_root_h5_raw_path=transfer_info.archive_root_paths.raw_h5):
+
                         logger.info(f"main: {dat_path.file_path} is missing")
                         missing_count += 1
 

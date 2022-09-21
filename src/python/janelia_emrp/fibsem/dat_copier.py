@@ -12,7 +12,7 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
-from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT, new_dat_layer
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT, new_dat_layer, DatPath
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, build_volume_transfer_list
 from janelia_emrp.root_logger import init_logger
 
@@ -216,6 +216,27 @@ def derive_missing_check_start(last_dat_time_path: Path,
     return nothing_missing_before
 
 
+def is_dat_missing_from_h5_paths(dat_path: DatPath,
+                                 cluster_root_h5_raw_path: Optional[Path],
+                                 archive_root_h5_raw_path: Optional[Path]) -> bool:
+    is_missing = True
+    dat_layer = new_dat_layer(dat_path)
+    if cluster_root_h5_raw_path is not None:
+        cluster_raw_path = dat_layer.get_h5_path(h5_root_path=cluster_root_h5_raw_path,
+                                                 append_acquisition_based_subdirectories=True,
+                                                 source_type="raw")
+        cluster_raw_archive_path = dat_layer.get_h5_path(h5_root_path=cluster_root_h5_raw_path,
+                                                         append_acquisition_based_subdirectories=True,
+                                                         source_type="raw-archive")
+        is_missing = not (cluster_raw_path.exists() or cluster_raw_archive_path.exists())
+    if is_missing and archive_root_h5_raw_path is not None:
+        archive_raw_path = dat_layer.get_h5_path(h5_root_path=archive_root_h5_raw_path,
+                                                 append_acquisition_based_subdirectories=True,
+                                                 source_type="raw-archive")
+        is_missing = not archive_raw_path.exists()
+    return is_missing
+
+
 def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
                                     cluster_root_dat_path: Path,
                                     cluster_root_h5_raw_path: Optional[Path],
@@ -258,21 +279,9 @@ def find_missing_scope_dats_for_day(scope_dat_paths: list[Path],
             is_missing = False
 
         if is_missing:
-            dat_layer = new_dat_layer(dat_path)
-            if cluster_root_h5_raw_path is not None:
-                cluster_raw_path = dat_layer.get_h5_path(h5_root_path=cluster_root_h5_raw_path,
-                                                         append_acquisition_based_subdirectories=True,
-                                                         source_type="raw")
-                cluster_raw_archive_path = dat_layer.get_h5_path(h5_root_path=cluster_root_h5_raw_path,
-                                                                 append_acquisition_based_subdirectories=True,
-                                                                 source_type="raw-archive")
-                is_missing = not (cluster_raw_path.exists() or cluster_raw_archive_path.exists())
-
-            if is_missing and archive_root_h5_raw_path is not None:
-                archive_raw_path = dat_layer.get_h5_path(h5_root_path=archive_root_h5_raw_path,
-                                                         append_acquisition_based_subdirectories=True,
-                                                         source_type="raw-archive")
-                is_missing = not archive_raw_path.exists()
+            is_missing = is_dat_missing_from_h5_paths(dat_path=dat_path,
+                                                      cluster_root_h5_raw_path=cluster_root_h5_raw_path,
+                                                      archive_root_h5_raw_path=archive_root_h5_raw_path)
 
         if is_missing:
             logger.info(f"find_missing_scope_dats_for_day: {scope_dat} is missing")
