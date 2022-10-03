@@ -151,17 +151,29 @@ class DatConverter:
             list of layers to convert
         """
 
-        logger.info(f"{self} convert_layer_list: entry, processing {len(dat_layer_list)} layers")
+        number_of_layers = len(dat_layer_list)
+        logger.info(f"{self} convert_layer_list: entry, processing {number_of_layers} layers")
 
         raw_h5_root = self.volume_transfer_info.get_raw_h5_root_for_conversion() if self.raw_writer else None
         align_h5_root = self.volume_transfer_info.get_align_h5_root_for_conversion() if self.align_writer else None
 
+        number_of_failed_layers = 0
         for dat_paths_for_layer in dat_layer_list:
-            self.convert_layer(dat_paths_for_layer=dat_paths_for_layer,
-                               raw_h5_root_path=raw_h5_root,
-                               align_h5_root_path=align_h5_root)
+            # noinspection PyBroadException
+            try:
+                self.convert_layer(dat_paths_for_layer=dat_paths_for_layer,
+                                   raw_h5_root_path=raw_h5_root,
+                                   align_h5_root_path=align_h5_root)
+            except Exception:
+                traceback.print_exc()
+                logger.error(f"{self} convert_layer_list: failed to convert layer {dat_paths_for_layer.get_layer_id()}")
+                number_of_failed_layers += 1
 
-        logger.info(f"{self} convert_layer_list: exit")
+        if number_of_failed_layers == 0:
+            logger.info(f"{self} convert_layer_list: exit, converted all {number_of_layers} layers")
+        else:
+            logger.info(f"{self} convert_layer_list: exit, failed to convert {number_of_failed_layers} layers")
+
 
     def setup_h5_path(self,
                       context: str,
