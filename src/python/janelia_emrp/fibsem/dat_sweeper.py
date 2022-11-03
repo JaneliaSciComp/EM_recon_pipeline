@@ -29,6 +29,10 @@ def main(arg_list: list[str]):
         help="Copy (restore) any missing dat files to cluster dat storage",
         action=argparse.BooleanOptionalAction
     )
+    parser.add_argument(
+        "--dat_path_output_file",
+        help="If specified, write all dat paths to this file"
+    )
 
     args = parser.parse_args(args=arg_list)
 
@@ -80,6 +84,12 @@ def main(arg_list: list[str]):
             dat_list = get_dats_acquired_on_day(transfer_info.scope_data_set.host,
                                                 transfer_info.scope_data_set.root_dat_path,
                                                 day)
+
+            if args.dat_path_output_file is not None:
+                with open(args.dat_path_output_file, mode='a', encoding='utf-8') as dat_path_output_file:
+                    dat_path_output_file.write('\n'.join(str(dat_list)))
+                logger.info(f'main: wrote scope paths for {len(dat_list)} dat files '
+                            f'imaged on {day.strftime("%y-%m-%d")} to {args.dat_path_output_file}')
 
             for scope_dat_path in dat_list:
                 dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
