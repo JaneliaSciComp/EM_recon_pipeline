@@ -6,13 +6,13 @@
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "Z0422-17_VNC_1",
         "first_dat_name": "Merlin-6049_22-06-22_092228_0-0-0.dat",
-        "last_dat_name": null,
+        "last_dat_name": "Merlin-6049_22-10-14_221531_0-2-2.dat",
         "dat_x_and_y_nm_per_pixel": 8,
         "dat_z_nm_per_pixel": 8,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/fibsem/render/dat/Z0422-17_VNC_1",
+        "raw_dat": "/groups/fibsem/fibsem/data/Z0422-17_VNC_1/dat",
         "raw_h5": "/nrs/fibsem/render/h5/Z0422-17_VNC_1/raw",
         "align_h5": "/nrs/fibsem/render/h5/Z0422-17_VNC_1/align"
     },
@@ -23,7 +23,7 @@
     "render_data_set": {
         "owner": "fibsem",
         "project": "Z0422_17_VNC_1",
-        "stack": "v1_acquire",
+        "stack": "v2_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
         "mask_height": 30,
