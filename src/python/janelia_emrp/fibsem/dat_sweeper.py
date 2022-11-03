@@ -31,7 +31,7 @@ def main(arg_list: list[str]):
     )
     parser.add_argument(
         "--dat_path_output_file",
-        help="If specified, write all dat paths to this file"
+        help="If specified, write all dat paths to this file and skip missing dat check"
     )
 
     args = parser.parse_args(args=arg_list)
@@ -87,9 +87,10 @@ def main(arg_list: list[str]):
 
             if args.dat_path_output_file is not None:
                 with open(args.dat_path_output_file, mode='a', encoding='utf-8') as dat_path_output_file:
-                    dat_path_output_file.write('\n'.join(str(dat_list)))
+                    dat_path_output_file.write('\n'.join([str(p) for p in dat_list]))
                 logger.info(f'main: wrote scope paths for {len(dat_list)} dat files '
                             f'imaged on {day.strftime("%y-%m-%d")} to {args.dat_path_output_file}')
+                continue  # skip check for missing dat files when dat_path_output_file is specified
 
             for scope_dat_path in dat_list:
                 dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
