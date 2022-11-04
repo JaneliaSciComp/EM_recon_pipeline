@@ -27,7 +27,7 @@ bsub -n 1 -P flyem -Is /bin/bash --login
 | Be patient, this could take a few minutes ...
 |
 | Parsing /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/logs/cluster_count.v1_acquire.log to create:
-|   /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/excluded_columns.json
+|   /groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m/VNC/Sec26/excluded_cells.json
 
 # Exit interactive session and return to the submit host to review results.
 exit
@@ -42,66 +42,66 @@ with adjacent tiles creating smaller connected clusters or "islands".  The align
 requires a single connected set of tiles as input, so we need to remove clusters of purely resin tiles 
 and fix/patch missing connections for tiles that have tissue.
 
-The `excluded_columns.json` file produced by `./21_count_acquire_clusters.sh` contains column and z range 
+The `excluded_cells.json` file produced by `./21_count_acquire_clusters.sh` contains cell and z range 
 information for all connected clusters.  There are usually many many tiny clusters in resin areas that 
 can be combined into one or just a few larger clusters for removal (trimming).  Unfortunately, 
 combining/reducing the small resin clusters is currently a manual process.
 
-The `excluded_columns.json` file looks like this: 
+The `excluded_cells.json` file looks like this: 
 ```javascript
 [
-    { "columnNumbers": [
-            "0",
-            "0"
+    { "cellIds": [
+            "0,0",
+            "0,0"
         ],
         "minZ": 1,
         "maxZ": 4244
     },
     {
-        "columnNumbers": [
-            "0",
-            "0"
+        "cellIds": [
+            "0,0",
+            "0,0"
         ],
         "minZ": 4245,
         "maxZ": 4455
     },
     {
-        "columnNumbers": [
-            "0",
-            "0"
+        "cellIds": [
+            "0,0",
+            "0,0"
         ],
         "minZ": 4456,
         "maxZ": 4459
     }, ...
 ```
-To combine/reduce resin clusters, use CATMAID (or any tile viewer) to confirm that the column only contains 
-resin tiles and then edit `excluded_columns.json` accordingly.
+To combine/reduce resin clusters, use CATMAID (or any tile viewer) to confirm that the cell only contains 
+resin tiles and then edit `excluded_cells.json` accordingly.
 
 ![](resin-tiles-in-catmaid.png)
                                   
-For this mini-example, the combined json for column 0 would look like:
+For this mini-example, the combined json for cell 0,0 would look like:
 ```javascript
 [
-    { "columnNumbers": ["0"], "minZ": 1, "maxZ": 4459 }, 
+    { "cellIds": ["0,0"], "minZ": 1, "maxZ": 4459 }, 
     ...
 ]
 ```
 
-After combining/reducing all resin tile columns in VNC Sec26, the final `excluded_columns.json` file 
+After combining/reducing all resin tile cells in VNC Sec26, the final `excluded_cells.json` file 
 looks like this:
 ```javascript
 [
-    { "columnNumbers": [ "0" ], "minZ":     1, "maxZ":  4471 },
-    { "columnNumbers": [ "0" ], "minZ": 23965, "maxZ": 24154 },
-    { "columnNumbers": [ "0" ], "minZ": 25777, "maxZ": 25867 },
-    { "columnNumbers": [ "1" ], "minZ":     1, "maxZ":  2900 },
-    { "columnNumbers": [ "1" ], "minZ": 25245, "maxZ": 25365 },
-    { "columnNumbers": [ "3" ], "minZ": 21797, "maxZ": 21911 },
-    { "columnNumbers": [ "4" ], "minZ": 18750, "maxZ": 21911 }
+    { "cellIds": [ "0,0" ], "minZ":     1, "maxZ":  4471 },
+    { "cellIds": [ "0,0" ], "minZ": 23965, "maxZ": 24154 },
+    { "cellIds": [ "0,0" ], "minZ": 25777, "maxZ": 25867 },
+    { "cellIds": [ "0,1" ], "minZ":     1, "maxZ":  2900 },
+    { "cellIds": [ "0,1" ], "minZ": 25245, "maxZ": 25365 },
+    { "cellIds": [ "0,3" ], "minZ": 21797, "maxZ": 21911 },
+    { "cellIds": [ "0,4" ], "minZ": 18750, "maxZ": 21911 }
 ]
 ```
 
-Once `excluded_columns.json` is ready ...
+Once `excluded_cells.json` is ready ...
 ```bash
 # Generate a trimmed (clip) stack by submitting a bsub array job. 
 ./22_gen_clip_stack.sh
@@ -131,10 +131,10 @@ Once the trimmed stack has been created and completed (you should receive an ema
 ```
 
 The first unconnected tile `21-09-06_113017_0-0-4.18749.0` was orphaned by our earlier trim and can be 
-fixed by simply editing `excluded_columns.json`
+fixed by simply editing `excluded_cells.json`
 ```javascript
-{ "columnNumbers": [ "4" ], "minZ": 18750, "maxZ": 21911 } -> 
-{ "columnNumbers": [ "4" ], "minZ": 18749, "maxZ": 21911 }
+{ "cellIds": [ "0,4" ], "minZ": 18750, "maxZ": 21911 } -> 
+{ "cellIds": [ "0,4" ], "minZ": 18749, "maxZ": 21911 }
 ```
 
 The other two unconnected tiles `21-09-13_091915_0-0-1.23966.0` and `21-09-13_091915_0-0-2.23966.0` happened to 
@@ -186,7 +186,7 @@ def main():
     ]
 ```
 
-Copy the `v1_acquire_trimmed` stack to `v2_acquire_trimmed` (with the updated excluded_columns.json):
+Copy the `v1_acquire_trimmed` stack to `v2_acquire_trimmed` (with the updated excluded_cells.json):
 ```bash
 # Create and immediately submit copy job:
 ./01_gen_new_trimmed_stack.sh

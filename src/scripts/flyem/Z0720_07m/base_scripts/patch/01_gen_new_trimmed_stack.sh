@@ -6,7 +6,7 @@ ABSOLUTE_SCRIPT=`readlink -m $0`
 SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 source ${SCRIPT_DIR}/../00_config.sh
 
-if [[ -z OLD_ACQUIRE_TRIMMED_STACK ]] || [[ "${OLD_ACQUIRE_TRIMMED_STACK}" == "TBD" ]]; then
+if [[ -z "${OLD_ACQUIRE_TRIMMED_STACK}" ]] || [[ "${OLD_ACQUIRE_TRIMMED_STACK}" == "TBD" ]]; then
   echo "ERROR: need to setup OLD_ACQUIRE_TRIMMED_STACK in config"
   exit 1
 fi
@@ -23,7 +23,7 @@ JAVA_CLASS="org.janelia.render.client.CopyStackClient"
 # ----------------------------------------------------------
 ARGS="--baseDataUrl ${BASE_DATA_URL} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --fromStack ${FROM_STACK} --toStack ${TO_STACK}"
-ARGS="${ARGS} --excludedColumnsJson ${SCRIPT_DIR}/excluded_columns.json"
+ARGS="${ARGS} --excludedCellsJson ${SCRIPT_DIR}/excluded_cells.json"
 ARGS="${ARGS} --keepExisting"
 ARGS="${ARGS} --z"
 

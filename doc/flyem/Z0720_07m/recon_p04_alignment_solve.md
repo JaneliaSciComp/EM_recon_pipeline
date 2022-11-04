@@ -52,9 +52,9 @@ You can then navigate through the stack to determine what went wrong during alig
 
 ![](Sec26-v2-poorly-aligned-tiles.png)
 
-In this case, `z 552` has a big wave going through it and the third tile (in column 2) is not 
-connected to its neighbor.  That column remains disconnected until the `z 1200` area.  To correct
-the problem, we can either remove/trim the column tiles or add point matches to better connect the tiles 
+In this case, `z 552` has a big wave going through it and the third tile (in cell 0,2) is not 
+connected to its neighbor.  That cell remains disconnected until the `z 1200` area.  To correct
+the problem, we can either remove/trim the cell tiles or add point matches to better connect the tiles 
 and prevent them from drifting apart during the solve process.  Removal is the best option 
 when the tiles do not contain any useful information.  In all other cases, the tile connections 
 should be improved.

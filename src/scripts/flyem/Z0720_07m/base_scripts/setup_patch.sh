@@ -8,7 +8,7 @@ source ${SCRIPT_DIR}/00_config.sh
 
 #  echo "USAGE: $0 [patch z] ..."
 
-if [[ -z OLD_ACQUIRE_TRIMMED_STACK ]]; then
+if [[ -z "${OLD_ACQUIRE_TRIMMED_STACK}" ]]; then
   echo "ERROR: need to setup OLD_ACQUIRE_TRIMMED_STACK in config"
   exit 1
 fi
@@ -46,7 +46,7 @@ sed -i "
   s/??_acquire_trimmed/${PATCH_VERSION}_acquire_trimmed/g
 " ${PATCH_DIR}/06_patch_tile_specs.py
 
-cp excluded_columns.json ${PATCH_DIR}
+cp excluded_cells.json ${PATCH_DIR}
  
 if (( $# > 0 )); then
 

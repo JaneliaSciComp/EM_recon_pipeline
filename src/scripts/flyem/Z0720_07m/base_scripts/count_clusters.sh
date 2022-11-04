@@ -33,15 +33,15 @@ Be patient, this could take a few minutes ...
 
 ${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > ${COUNT_LOG}
 
-if [ "${STACK}" = "v1_acquire" ]; then
+if [ "${STACK}" = "${ACQUIRE_STACK}" ]; then
 
-  JSON_FILE="${SCRIPT_DIR}/excluded_columns.json"
+  JSON_FILE="${SCRIPT_DIR}/excluded_cells.json"
 
   echo """Parsing ${COUNT_LOG} to create:
   ${JSON_FILE}
 """
 
-  ${SCRIPT_DIR}/gen_excluded_columns.py ${COUNT_LOG} > ${JSON_FILE}
+  ${SCRIPT_DIR}/gen_excluded_cells.py ${COUNT_LOG} > ${JSON_FILE}
 
 else
 

@@ -18,7 +18,7 @@ JAVA_CLASS="org.janelia.render.client.CopyStackClient"
 # ----------------------------------------------------------
 ARGS="--baseDataUrl ${BASE_DATA_URL} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --fromStack ${FROM_STACK} --toStack ${TO_STACK}"
-ARGS="${ARGS} --excludedColumnsJson ${SCRIPT_DIR}/excluded_columns.json"
+ARGS="${ARGS} --excludedCellsJson ${SCRIPT_DIR}/excluded_cells.json"
 ARGS="${ARGS} --keepExisting"
 ARGS="${ARGS} --z"
 
