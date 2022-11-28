@@ -1,10 +1,10 @@
 {
-    "transfer_id": "cellmap::CellMapKidney_1220KD-2::jeiss3",
+    "transfer_id": "cellmap::CellMaplKidney_1220KD-2::jeiss3",
     "scope_data_set": {
         "host": "jeiss3.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "CellMapKidney_1220KD-2",
+        "data_set_id": "CellMaplKidney_1220KD-2",
         "first_dat_name": "Merlin-6257_22-11-03_000011_0-0-0.dat",
         "last_dat_name": "Merlin-6257_22-11-14_061606_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 8,
