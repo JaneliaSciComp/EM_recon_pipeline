@@ -12,12 +12,12 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/stern/sternlab/data/jrc_22ak351-leaf-3r/dat",
-        "raw_h5": "/groups/stern/sternlab/data/jrc_22ak351-leaf-3r/raw",
-        "align_h5": "/nrs/stern/data/jrc_22ak351-leaf-3r/align"
+        "raw_dat": "/groups/stern/sternlab/em_data/jrc_22ak351-leaf-3r/dat",
+        "raw_h5": "/groups/stern/sternlab/em_data/jrc_22ak351-leaf-3r/raw",
+        "align_h5": "/nrs/stern/em_data/jrc_22ak351-leaf-3r/align"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/stern/data/jrc_22ak351-leaf-3r/raw"
+        "raw_h5": "/nearline/stern/em_data/jrc_22ak351-leaf-3r/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
