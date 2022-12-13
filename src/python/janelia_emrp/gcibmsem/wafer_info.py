@@ -1,9 +1,10 @@
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 
-from janelia_emrp.gcibmsem.slab_info import SlabInfo, load_slab_info
+import sys
+
+from janelia_emrp.gcibmsem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 
 
 @dataclass
@@ -11,18 +12,12 @@ class WaferInfo:
     name: str
     base_path: Path
     resolution: List[float]
-    slab_name_to_info: dict[str, SlabInfo] = field(compare=False)
+    slab_group_list: list[ContiguousOrderedSlabGroup] = field(compare=False)
     scan_paths: List[Path]
 
-    def sorted_slab_names(self):
-        return sorted(self.slab_name_to_info.keys())
 
-
-def slab_stack_name(slab_name: str):
-    return f"v1_acquire_slab_{slab_name[0:3]}"
-
-
-def load_wafer_info(wafer_base_path: Path) -> WaferInfo:
+def load_wafer_info(wafer_base_path: Path,
+                    number_of_slabs_per_group: int) -> WaferInfo:
 
     # <storage_root>/<wafer_id>/<scan_id>/<slab_stage_id>/<mFOV>/<sFOV>.png
     # /nrs/hess/render/raw/wafer_52
@@ -38,8 +33,9 @@ def load_wafer_info(wafer_base_path: Path) -> WaferInfo:
         if scan_path.is_dir():
             scan_paths.append(scan_path)
 
-    slab_name_to_info = load_slab_info(annotations_csv_path=annotations_csv_path,
-                                       max_number_of_scans=len(scan_paths))
+    slab_group_list = load_slab_info(annotations_csv_path=annotations_csv_path,
+                                     max_number_of_scans=len(scan_paths),
+                                     number_of_slabs_per_group=number_of_slabs_per_group)
 
     # TODO: parse resolution from experiment.yml or resolution.json (wafer_52 resolution hard-coded here)
     resolution = [8.0, 8.0, 10.0]
@@ -47,24 +43,30 @@ def load_wafer_info(wafer_base_path: Path) -> WaferInfo:
     return WaferInfo(name=wafer_base_path.name,
                      base_path=wafer_base_path,
                      resolution=resolution,
-                     slab_name_to_info=slab_name_to_info,
+                     slab_group_list=slab_group_list,
                      scan_paths=scan_paths)
 
 
 def main(argv: List[str]):
-    wafer_info = load_wafer_info(wafer_base_path=Path(argv[1]))
+    wafer_info = load_wafer_info(wafer_base_path=Path(argv[1]),
+                                 number_of_slabs_per_group=int(argv[2]))
     print(f"name: {wafer_info.name}")
     print(f"base_path: {wafer_info.base_path}")
-    print(f"slab_name_to_info (for {len(wafer_info.slab_name_to_info)} slabs)")
-    for slab_name in sorted(wafer_info.slab_name_to_info.keys()):
-        print(f"  {wafer_info.slab_name_to_info[slab_name]}")
-    print(f"scan_paths (for {len(wafer_info.scan_paths)} scans):")
+
+    print(f"\nslab info ({len(wafer_info.slab_group_list)} groups):")
+    for slab_group in wafer_info.slab_group_list:
+        project = slab_group.to_render_project_name(wafer_info.name)
+        print(f"  render project: {project} ({len(slab_group.ordered_slabs)} slabs):")
+        for slab_info in slab_group.ordered_slabs:
+            print(f"    {slab_info}")
+
+    print(f"\nscan_paths ({len(wafer_info.scan_paths)} scans):")
     for scan_path in wafer_info.scan_paths:
         print(f"  {scan_path}")
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
         main(sys.argv)
     else:
-        print("USAGE: wafer_info.py <wafer_base_path>")
+        print("USAGE: wafer_info.py <wafer_base_path> <number_of_slabs_per_group>")

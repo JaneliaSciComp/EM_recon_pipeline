@@ -2,7 +2,7 @@ import csv
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -12,9 +12,26 @@ class SlabInfo:
     cut_index: int = field(compare=False)
     first_scan_z: int = field(compare=False)
 
+    def dir_name(self) -> str:
+        return f"{self.name}_"
+
+    def stack_name(self) -> str:
+        return f"slab_{self.name}_all"
+
+
+@dataclass
+class ContiguousOrderedSlabGroup:
+    first_cut_index: int
+    last_cut_index: int
+    ordered_slabs: List[SlabInfo]
+
+    def to_render_project_name(self, wafer_name: str):
+        return f"{wafer_name}_cut_{self.first_cut_index:05d}_to_{self.last_cut_index:05d}"
+
 
 def load_slab_info(annotations_csv_path: Path,
-                   max_number_of_scans: int) -> dict[str, SlabInfo]:
+                   max_number_of_scans: int,
+                   number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
     section_id_to_stage_order = {}
     serial_order_to_section_id = {}
     with open(annotations_csv_path, 'r') as data_file:
@@ -30,29 +47,56 @@ def load_slab_info(annotations_csv_path: Path,
             serial_order_to_section_id[serial_order] = section_id
 
     slab_name_to_info = {}
+    first_z_to_slab_name = {}
     for section_id in section_id_to_stage_order:
         stage_order = section_id_to_stage_order[section_id]
         cut_index = serial_order_to_section_id[stage_order]
 
         scope_slab_index = section_id + 1
-        slab_name = f"{scope_slab_index:03d}_"
+        slab_name = f"{scope_slab_index:03d}"
+        first_scan_z = cut_index * max_number_of_scans
         slab_name_to_info[slab_name] = SlabInfo(name=slab_name,
                                                 acquisition_index=section_id,
                                                 cut_index=cut_index,
-                                                first_scan_z=(cut_index * max_number_of_scans))
+                                                first_scan_z=first_scan_z)
+        first_z_to_slab_name[first_scan_z] = slab_name
 
-    return slab_name_to_info
+    slab_group_list = []
+    slab_group : Optional[ContiguousOrderedSlabGroup] = None
+
+    for first_z in sorted(first_z_to_slab_name.keys()):
+        slab_name = first_z_to_slab_name[first_z]
+        slab_info = slab_name_to_info[slab_name]
+        last_z = first_z + max_number_of_scans - 1
+
+        if slab_group is None or len(slab_group.ordered_slabs) >= number_of_slabs_per_group:
+            if slab_group is not None:
+                slab_group_list.append(slab_group)
+            slab_group = ContiguousOrderedSlabGroup(first_cut_index=slab_info.cut_index,
+                                                    last_cut_index=slab_info.cut_index,
+                                                    ordered_slabs=[slab_info])
+        else:
+            slab_group.last_cut_index = slab_info.cut_index
+            slab_group.ordered_slabs.append(slab_info)
+
+    if slab_group is not None:
+        slab_group_list.append(slab_group)
+
+    return slab_group_list
 
 
 def main(argv: List[str]):
-    slab_name_to_info = load_slab_info(annotations_csv_path=Path(argv[1]),
-                                       max_number_of_scans=int(argv[2]))
-    for slab_name in sorted(slab_name_to_info.keys()):
-        print(slab_name_to_info[slab_name])
+    slab_group_list = load_slab_info(annotations_csv_path=Path(argv[1]),
+                                     max_number_of_scans=int(argv[2]),
+                                     number_of_slabs_per_group=int(argv[3]))
+    for slab_group in slab_group_list:
+        print(f"render project: {slab_group.to_render_project_name('wafer')} ({len(slab_group.ordered_slabs)} slabs):")
+        for slab_info in slab_group.ordered_slabs:
+            print(f"  {slab_info}")
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 4:
         main(sys.argv)
     else:
-        print("USAGE: slab_info.py <annotations_csv_path> <max_number_of_scans>")
+        print("USAGE: slab_info.py <annotations_csv_path> <max_number_of_scans> <number_of_slabs_per_group>")

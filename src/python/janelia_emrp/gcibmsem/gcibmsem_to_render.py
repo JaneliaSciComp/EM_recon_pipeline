@@ -16,7 +16,7 @@ from janelia_emrp.gcibmsem.field_of_view_layout \
     import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, SEVEN_MFOV_COLUMN_GROUPS
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
-from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo, slab_stack_name
+from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo
 
 program_name = "gcibmsem_to_render.py"
 
@@ -161,52 +161,50 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
 
 
 def import_slab_stacks_for_wafer(render_owner: str,
-                                 render_project: str,
                                  wafer_info: WaferInfo):
-    render_connect_params = {
-        "host": "renderer-dev.int.janelia.org",
-        "port": 8080,
-        "owner": render_owner,
-        "project": render_project,
-        "web_only": True,
-        "validate_client": False,
-        "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
-        "memGB": "1G"
-    }
 
-    render = renderapi.connect(**render_connect_params)
+    for slab_group in wafer_info.slab_group_list:
 
-    render_api = RenderApi(render_owner=render_connect_params["owner"],
-                           render_project=render_connect_params["project"],
-                           render_connect=params_to_render_connect(render_connect_params))
+        render_connect_params = {
+            "host": "renderer-dev.int.janelia.org",
+            "port": 8080,
+            "owner": render_owner,
+            "project": slab_group.to_render_project_name(wafer_name=wafer_info.name),
+            "web_only": True,
+            "validate_client": False,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
 
-    for slab_name in wafer_info.sorted_slab_names():
-        stack = slab_stack_name(slab_name)
+        render = renderapi.connect(**render_connect_params)
 
-        # explicitly set createTimestamp until render-python bug is fixed
-        # see https://github.com/AllenInstitute/render-python/pull/158
-        create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
-        renderapi.stack.create_stack(stack,
-                                     render=render,
-                                     createTimestamp=create_timestamp,
-                                     stackResolutionX=wafer_info.resolution[0],
-                                     stackResolutionY=wafer_info.resolution[1],
-                                     stackResolutionZ=wafer_info.resolution[2])
+        render_api = RenderApi(render_owner=render_connect_params["owner"],
+                               render_project=render_connect_params["project"],
+                               render_connect=params_to_render_connect(render_connect_params))
 
-        for scan_path in wafer_info.scan_paths:
-            slab_info = wafer_info.slab_name_to_info[slab_name]
-            slab_scan_path = Path(scan_path, slab_name)
-            tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
-            if len(tile_specs) > 0:
-                logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
-                render_api.save_tile_specs(stack=stack,
-                                           tile_specs=tile_specs,
-                                           derive_data=True)
+        for slab_info in slab_group.ordered_slabs:
+            stack = slab_info.stack_name()
 
-        renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
+            # explicitly set createTimestamp until render-python bug is fixed
+            # see https://github.com/AllenInstitute/render-python/pull/158
+            create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
+            renderapi.stack.create_stack(stack,
+                                         render=render,
+                                         createTimestamp=create_timestamp,
+                                         stackResolutionX=wafer_info.resolution[0],
+                                         stackResolutionY=wafer_info.resolution[1],
+                                         stackResolutionZ=wafer_info.resolution[2])
 
-        # TODO: remove break once we're happy with first slab results
-        break
+            for scan_path in wafer_info.scan_paths:
+                slab_scan_path = Path(scan_path, slab_info.dir_name())
+                tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
+                if len(tile_specs) > 0:
+                    logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
+                    render_api.save_tile_specs(stack=stack,
+                                               tile_specs=tile_specs,
+                                               derive_data=True)
+
+            renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
 
 
 def main(arg_list: List[str]):
@@ -221,22 +219,24 @@ def main(arg_list: List[str]):
     )
 
     parser.add_argument(
-        "--render_project",
-        help="Project for all created render stacks",
-        required=True,
-    )
-
-    parser.add_argument(
         "--wafer_base_path",
         help="Base path for wafer data (e.g. /nrs/hess/render/raw/wafer_52)",
         required=True,
     )
 
+    parser.add_argument(
+        "--number_of_slabs_per_render_project",
+        help="Number of slabs to group together into one render project",
+        type=int,
+        default=10
+    )
+
     args = parser.parse_args(args=arg_list)
 
-    wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path))
+    wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
+                                 number_of_slabs_per_group=args.number_of_slabs_per_render_project)
 
-    import_slab_stacks_for_wafer(args.render_owner, args.render_project, wafer_info)
+    import_slab_stacks_for_wafer(args.render_owner, wafer_info)
 
 
 if __name__ == '__main__':
