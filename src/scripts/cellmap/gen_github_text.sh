@@ -71,23 +71,19 @@ fi
 # 53_spark_render_intensity_corrected_n5.sh: --n5Dataset /render/${RENDER_PROJECT}/${INTENSITY_CORRECTED_STACK}___${RUN_TIME}"
 # 54_spark_render_z_corr_n5.sh:              --n5Dataset /z_corr/${RENDER_PROJECT}/${INTENSITY_CORRECTED_STACK}___${RUN_TIME}"
 
+# /nrs/cellmap/data/jrc_mus-liv-zon-2/jrc_mus-liv-zon-2.n5/render/jrc_mus_liv_zon_2/v3_acquire_align_ic___20221222_202401
+# /nrs/cellmap/data/jrc_mus-liv-zon-2/jrc_mus-liv-zon-2.n5/em/fibsem-uint8
+
 unset RENDERED_N5_PATH
 shopt -s nullglob
-DIRS=("${N5_PATH}"*/"${RENDER_PROJECT}"/*/)
+DIRS=("${N5_PATH}"/*/"${RENDER_PROJECT}"/*/ "${N5_PATH}"/em/*/)
 shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
 DIR_COUNT=${#DIRS[@]}
 if (( DIR_COUNT == 0 )); then
   echo "WARNING: no ${RENDER_PROJECT} project n5 directories found in ${N5_PATH}"
-elif (( DIR_COUNT == 1 )); then
-  RENDERED_N5_PATH=${DIRS[0]}
-else
-  PS3="Choose a source directory: "
-  select RENDERED_N5_PATH in "${DIRS[@]}"; do
-    break
-  done
 fi
 
-RENDERED_N5_DATASETS=""
+unset RENDERED_N5_DATASETS
 
 for RENDERED_N5_PATH in "${DIRS[@]}"; do
 
@@ -108,7 +104,11 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
   OFFSET_Z=$(${JQ} '.translate[2]' ${N5_JSON})
 
   N5_PATH_DATASET_AND_OFFSET="-i ${N5_PATH} -d ${RENDERED_DATA_SET} -o ${OFFSET_X},${OFFSET_Y},${OFFSET_Z}"
-  RENDERED_N5_DATASETS="${RENDERED_N5_DATASETS}  ${N5_PATH_DATASET_AND_OFFSET}$'\n'"
+  if [ -z "${RENDERED_N5_DATASETS}" ]; then
+    RENDERED_N5_DATASETS="  ${N5_PATH_DATASET_AND_OFFSET}"
+  else
+    RENDERED_N5_DATASETS=$(printf "%s\n  %s" "${RENDERED_N5_DATASETS}" "${N5_PATH_DATASET_AND_OFFSET}")
+  fi
 
 done
 
