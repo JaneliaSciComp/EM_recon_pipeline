@@ -100,3 +100,4 @@ if __name__ == '__main__':
         main(sys.argv)
     else:
         print("USAGE: slab_info.py <annotations_csv_path> <max_number_of_scans> <number_of_slabs_per_group>")
+        # main(["go", "/nrs/hess/render/raw/wafer_52/annotations.csv", "35", "10"])
