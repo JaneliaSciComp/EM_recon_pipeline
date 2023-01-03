@@ -51,8 +51,7 @@ if __name__ == "__main__":
 
     # noinspection PyBroadException
     try:
-        # main(sys.argv[1:])
-        main(["--h5_path", "/Users/trautmane/Desktop/Merlin-6284_22-10-12_112309.raw-archive.h5"])
+        main(sys.argv[1:])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
