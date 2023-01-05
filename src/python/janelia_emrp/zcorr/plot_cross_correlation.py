@@ -79,7 +79,6 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
     data_source = ColumnDataSource(data=dict(x=z_values, y=cc_with_next, zp=zp_values))
     p.circle(source=data_source)
 
-
     tap_tool = p.select(type=TapTool)
     tap_tool.callback = OpenURL(url=tap_url)
 
