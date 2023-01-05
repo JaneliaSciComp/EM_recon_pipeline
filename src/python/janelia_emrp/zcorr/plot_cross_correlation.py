@@ -55,7 +55,22 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
         output_file(output_file_path)
         print(f'writing plot to {output_file_path}')
 
-    tooltips = [("z", "@x"), ("correlation with next", "@y"), ("to view in CATMAID", "click point")]
+    # open Neuroglancer or CATMAID when circle glyphs are clicked
+    center_x = int(bounds["minX"] + (bounds["maxX"] - bounds["minX"]) / 2)
+    center_y = int(bounds["minY"] + (bounds["maxY"] - bounds["minY"]) / 2)
+
+    if tap_to_ng:
+        tap_help = "to view in Neuroglancer"
+        tap_url = build_neuroglancer_tap_url(owner, project, stack, res_x, res_y, res_z, center_x, center_y,
+                                             z_token="@x")  # confusing, but z values are x in the plot
+    else:
+        tap_help = "to view in CATMAID"
+        catmaid_base_url = 'http://renderer-catmaid.int.janelia.org:8000'
+        xp = center_x * res_x
+        yp = center_y * res_y
+        tap_url = f'{catmaid_base_url}/?pid={owner}__{project}&sid0={stack}&tool=navigator&s0=5&xp={xp}&yp={yp}&zp=@zp'
+
+    tooltips = [("z", "@x"), ("correlation with next", "@y"), (tap_help, "click point")]
     p = figure(title=title, x_axis_label='z', y_axis_label='correlation with next layer',
                tooltips=tooltips, tools='tap,pan,box_zoom,wheel_zoom,save,reset',
                plot_width=plot_width, plot_height=plot_height,
@@ -64,18 +79,6 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
     data_source = ColumnDataSource(data=dict(x=z_values, y=cc_with_next, zp=zp_values))
     p.circle(source=data_source)
 
-    # open Neuroglancer or CATMAID when circle glyphs are clicked
-    center_x = int(bounds["minX"] + (bounds["maxX"] - bounds["minX"]) / 2)
-    center_y = int(bounds["minY"] + (bounds["maxY"] - bounds["minY"]) / 2)
-
-    if tap_to_ng:
-        tap_url = build_neuroglancer_tap_url(owner, project, stack, res_x, res_y, res_z, center_x, center_y,
-                                             z_token="@z")
-    else:
-        catmaid_base_url = 'http://renderer-catmaid.int.janelia.org:8000'
-        xp = center_x * res_x
-        yp = center_y * res_y
-        tap_url = f'{catmaid_base_url}/?pid={owner}__{project}&sid0={stack}&tool=navigator&s0=5&xp={xp}&yp={yp}&zp=@zp'
 
     tap_tool = p.select(type=TapTool)
     tap_tool.callback = OpenURL(url=tap_url)
@@ -158,3 +161,7 @@ def main(arg_list):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
+    # test ng url
+    # s = build_neuroglancer_tap_url('cellmap', 'jrc_mus_kidney_2', 'v1_acquire_align', 8, 8, 8, 0, 0, "2013")
+    # print(s)
