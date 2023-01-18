@@ -9,8 +9,8 @@ import time
 
 from janelia_emrp.fibsem.dat_copier import add_dat_copy_arguments, copy_dat_file, day_range, \
     get_dats_acquired_on_day, get_scope_day_numbers_with_dats, max_transfer_seconds_exceeded, \
-    is_dat_missing_from_h5_paths
-from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path
+    get_h5_dat_names_for_day, get_h5_raw_dat_names_for_day
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, new_dat_layer
 from janelia_emrp.fibsem.volume_transfer_info import build_volume_transfer_list, VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
@@ -64,6 +64,10 @@ def main(arg_list: list[str]):
         end_date = last_dat_acquire_time + datetime.timedelta(days=1)
         end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
+        raw_h5_cluster_root = transfer_info.get_raw_h5_cluster_root()
+        raw_h5_archive_root = transfer_info.get_raw_h5_archive_root()
+        align_h5_cluster_root = transfer_info.get_align_h5_cluster_root()
+
         month = None
         day_numbers = []
 
@@ -85,22 +89,47 @@ def main(arg_list: list[str]):
                                                 transfer_info.scope_data_set.root_dat_path,
                                                 day)
 
-            if args.dat_path_output_file is not None:
-                with open(args.dat_path_output_file, mode='a', encoding='utf-8') as dat_path_output_file:
-                    dat_path_output_file.write('\n'.join([str(p) for p in dat_list]))
-                logger.info(f'main: wrote scope paths for {len(dat_list)} dat files '
-                            f'imaged on {day.strftime("%y-%m-%d")} to {args.dat_path_output_file}')
-                continue  # skip check for missing dat files when dat_path_output_file is specified
+            raw_h5_dat_names_set = set()
+
+            if len(dat_list) > 0:
+                if args.dat_path_output_file is not None:
+                    with open(args.dat_path_output_file, mode='a', encoding='utf-8') as dat_path_output_file:
+                        dat_path_output_file.write('\n'.join([str(p) for p in dat_list]))
+                    logger.info(f'main: wrote scope paths for {len(dat_list)} dat files '
+                                f'imaged on {day.strftime("%y-%m-%d")} to {args.dat_path_output_file}')
+                    continue  # skip check for missing dat files when dat_path_output_file is specified
+
+                raw_h5_dat_names = get_h5_raw_dat_names_for_day(scope_dat_paths=dat_list,
+                                                                raw_h5_archive_root=raw_h5_archive_root,
+                                                                raw_h5_cluster_root=raw_h5_cluster_root)
+                raw_h5_dat_names_set = set(raw_h5_dat_names)
+
+                if transfer_info.get_align_h5_root_for_conversion() is not None:
+                    first_dat_path = new_dat_path(dat_list[0])
+                    first_dat_layer = new_dat_layer(first_dat_path)
+
+                    align_h5_dat_names = get_h5_dat_names_for_day(layer_for_day=first_dat_layer,
+                                                                  h5_root_path=align_h5_cluster_root,
+                                                                  source_type="uint8")
+                    align_h5_dat_names_set = set(align_h5_dat_names)
+
+                    raw_v_align_diff = raw_h5_dat_names_set.difference(align_h5_dat_names_set)
+                    if len(raw_v_align_diff) > 0:
+                        logger.warning(f'main: found {len(raw_v_align_diff)} dat names in {raw_h5_archive_root} '
+                                       f'and {raw_h5_cluster_root} that are missing from {align_h5_cluster_root}')
+                        logger.info(f'main: missing align dats are {sorted(raw_v_align_diff)}')
+
+                    align_v_raw_diff = align_h5_dat_names_set.difference(raw_h5_dat_names_set)
+                    if len(align_v_raw_diff) > 0:
+                        logger.warning(f'main: found {len(align_v_raw_diff)} dat names in {align_h5_cluster_root} '
+                                       f'that are missing from {align_h5_cluster_root} and {raw_h5_cluster_root}')
+                        logger.info(f'main: missing align dats are {sorted(raw_v_align_diff)}')
 
             for scope_dat_path in dat_list:
                 dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
 
                 if first_dat_acquire_time <= dat_path.acquire_time <= last_dat_acquire_time:
-                    if not dat_path.file_path.exists() and \
-                            is_dat_missing_from_h5_paths(
-                                dat_path=dat_path,
-                                cluster_root_h5_raw_path=transfer_info.cluster_root_paths.raw_h5,
-                                archive_root_h5_raw_path=transfer_info.archive_root_paths.raw_h5):
+                    if not dat_path.file_path.exists() and dat_path.file_path.name not in raw_h5_dat_names_set:
 
                         logger.info(f"main: {dat_path.file_path} is missing")
                         missing_count += 1

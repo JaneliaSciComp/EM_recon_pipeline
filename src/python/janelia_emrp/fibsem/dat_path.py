@@ -89,7 +89,7 @@ class DatPathsForLayer:
     def get_h5_path(self,
                     h5_root_path: Path,
                     append_acquisition_based_subdirectories: bool = True,
-                    source_type="raw") -> Path:
+                    source_type: str = "raw") -> Path:
         if len(self.dat_paths) == 0:
             raise ValueError(f"cannot derive h5 path for empty layer, use new_layer function to create a new layer")
 

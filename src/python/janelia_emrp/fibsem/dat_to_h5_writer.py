@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import time
 import traceback
 from pathlib import Path
 from typing import Any, Optional, Tuple, Union, Final
@@ -313,6 +314,23 @@ def add_element_size_um_attributes(dat_header_dict: dict[str, Any],
     to_dataset.attrs[ELEMENT_SIZE_UM_KEY] = element_size_um
 
     return element_size_um
+
+
+def get_dat_file_names_for_h5(h5_path: Path) -> list[str]:
+    dat_file_name_list: list[str] = []
+    if h5_path.exists():
+        # try to ensure h5 is not currently being written by another process
+        one_minute_before_now = time.time() - 60
+        if os.path.getmtime(h5_path) > one_minute_before_now:
+            with h5py.File(name=str(h5_path), mode="r") as h5_file:
+                data_set_names = sorted(h5_file.keys())
+                for data_set_name in data_set_names:
+                    data_set = h5_file.get(data_set_name)
+                    dat_name = data_set.attrs[DAT_FILE_NAME_KEY]
+                    dat_file_name_list.append(dat_name)
+        else:
+            logger.info(f"get_dat_file_names_for_h5: skipping read of recently modified file {h5_path}")
+    return dat_file_name_list
 
 
 def main(arg_list: list[str]):

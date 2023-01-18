@@ -45,8 +45,7 @@ def test_find_missing_scope_dats_for_day(tmp_path):
 
     result: list[KeepFile] = find_missing_scope_dats_for_day(scope_dat_paths=scope_dat_paths,
                                                              cluster_root_dat_path=cluster_root_dat_path,
-                                                             cluster_root_h5_raw_path=None,
-                                                             archive_root_h5_raw_path=None,
+                                                             h5_dat_names_for_day=[],
                                                              start_time=start_time,
                                                              stop_time=stop_time,
                                                              first_keep_file=keep_file_list[0],

@@ -226,6 +226,24 @@ class VolumeTransferInfo(BaseModel):
             stopped_for_scope = self.scope_data_set.acquisition_stopped()
         return stopped_for_scope
 
+    def get_raw_h5_archive_root(self):
+        h5_root = None
+        if self.archive_root_paths is not None:
+            h5_root = self.archive_root_paths.raw_h5
+        return h5_root
+
+    def get_raw_h5_cluster_root(self):
+        h5_root = None
+        if self.cluster_root_paths is not None:
+            h5_root = self.cluster_root_paths.raw_h5
+        return h5_root
+
+    def get_align_h5_cluster_root(self):
+        h5_root = None
+        if self.cluster_root_paths is not None:
+            h5_root = self.cluster_root_paths.align_h5
+        return h5_root
+
     def get_dat_root_for_conversion(self):
         dat_root = None
         if self.cluster_root_paths is not None:
