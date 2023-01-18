@@ -123,7 +123,7 @@ def main(arg_list: list[str]):
                     if len(align_v_raw_diff) > 0:
                         logger.warning(f'main: found {len(align_v_raw_diff)} dat names in {align_h5_cluster_root} '
                                        f'that are missing from {align_h5_cluster_root} and {raw_h5_cluster_root}')
-                        logger.info(f'main: missing align dats are {sorted(raw_v_align_diff)}')
+                        logger.info(f'main: missing raw dats are {sorted(align_v_raw_diff)}')
 
             for scope_dat_path in dat_list:
                 dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
