@@ -45,23 +45,26 @@ class LayerInfo:
         self.group_id: Optional[str] = None
         self.restart_condition_label: Optional[str] = None
 
-        with h5py.File(name=str(h5_path), mode="r") as h5_file:
+        try:
+            with h5py.File(name=str(h5_path), mode="r") as h5_file:
 
-            sorted_group_names = sorted(h5_file.keys())
-            if len(sorted_group_names) < 1:
-                raise RuntimeError(f"possible corrupt file {h5_path}, no group names found")
+                sorted_group_names = sorted(h5_file.keys())
+                if len(sorted_group_names) < 1:
+                    raise RuntimeError(f"possible corrupt file {h5_path}, no group names found")
 
-            for group_name in sorted(sorted_group_names):
-                group = h5_file.get(group_name)
-                if DAT_FILE_NAME_KEY in group.attrs:
-                    self.append_tile(group.attrs)
-                else:
-                    logger.warning(f"skipping group {group_name} in {h5_path} "
-                                   f"because it does not have '{DAT_FILE_NAME_KEY}' attribute")
+                for group_name in sorted(sorted_group_names):
+                    group = h5_file.get(group_name)
+                    if DAT_FILE_NAME_KEY in group.attrs:
+                        self.append_tile(group.attrs)
+                    else:
+                        logger.warning(f"skipping group {group_name} in {h5_path} "
+                                       f"because it does not have '{DAT_FILE_NAME_KEY}' attribute")
+        except Exception as e:
+            raise Exception(f"failed to pull tile metadata from {h5_path}") from e
 
-            if len(self.dat_paths) == 0:
-                raise RuntimeError(f"possible corrupt file {h5_path}, "
-                                   f"no dat file names found in groups {sorted_group_names}")
+        if len(self.dat_paths) == 0:
+            raise RuntimeError(f"possible corrupt file {h5_path}, "
+                               f"no dat file names found in groups {sorted_group_names}")
 
     def append_tile(self,
                     full_header: Dict[str, Any]) -> None:
