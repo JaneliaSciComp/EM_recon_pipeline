@@ -68,4 +68,12 @@ FINAL_N5_PARENT_DIR=$(dirname "${FINAL_N5_PATH}")
 mkdir -p "${FINAL_N5_PARENT_DIR}"
 mv "${RENDERED_N5_PATH}" "${FINAL_N5_PATH}"
 
-ls -ald "${FINAL_N5_PATH}"
+if [ ! -f "${FINAL_N5_PARENT_DIR}"/attributes.json ]; then
+  if [ -f "${RENDERED_N5_PATH}"/../attributes.json ]; then
+    cp "${RENDERED_N5_PATH}"/../attributes.json "${FINAL_N5_PARENT_DIR}"
+  else
+    echo "WARNING: ${RENDERED_N5_PATH}/../attributes.json not found (neuroglancer may not work)"
+  fi
+fi
+
+ls -al "${FINAL_N5_PARENT_DIR}"
