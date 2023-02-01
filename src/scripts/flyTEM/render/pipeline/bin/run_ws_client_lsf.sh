@@ -74,8 +74,12 @@ JAVA_HOME="${JAVA_HOME:-/misc/sc/jdks/8.0.275.fx-zulu}"
 PATH="${JAVA_HOME}/bin:${PATH}"
 unset DISPLAY
 
+# Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
+# (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
+H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/flyem/data/render/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
+
 # request memory up-front and use serial garbage collector to keep GC threads from taking over cluster node
-JAVA_OPTS="-Xms${MEMORY} -Xmx${MEMORY} -Djava.awt.headless=true -XX:+UseSerialGC"
+JAVA_OPTS="-Xms${MEMORY} -Xmx${MEMORY} -Djava.awt.headless=true -XX:+UseSerialGC ${H5_LIBPATH}"
 
 JAVA_PATH=`type java | cut -c9-`
 COMMAND="${JAVA_PATH} ${JAVA_OPTS} -cp ${RENDER_WS_CLIENT_JAR} ${MAIN_CLASS} ${COMMAND_OPTIONS}"
