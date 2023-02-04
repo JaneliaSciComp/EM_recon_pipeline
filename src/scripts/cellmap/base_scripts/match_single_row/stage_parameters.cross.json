@@ -1,0 +1,62 @@
+[
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "SINGLE_SET",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 0.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.05,
+      "renderWithFilter": false,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": false
+    },
+    "maxNeighborDistance": 6,
+    "stageName": "crossPass1"
+  },
+  {
+    "featureExtraction": {
+      "fdSize": 4,
+      "maxScale": 1.0,
+      "minScale": 0.125,
+      "steps": 5
+    },
+    "featureMatchDerivation": {
+      "matchFilter": "SINGLE_SET",
+      "matchFullScaleCoverageRadius": 300.0,
+      "matchIterations": 1000,
+      "matchMaxEpsilonFullScale": 10.0,
+      "matchMaxTrust": 4.0,
+      "matchMinCoveragePercentage": 0.0,
+      "matchMinInlierRatio": 0.0,
+      "matchMinNumInliers": 20,
+      "matchModelType": "RIGID",
+      "matchRod": 0.92
+    },
+    "featureRender": {
+      "renderScale": 0.1,
+      "renderWithFilter": false,
+      "renderWithoutMask": false
+    },
+    "geometricDescriptorAndMatch": {
+      "gdEnabled": false
+    },
+    "maxNeighborDistance": 6,
+    "stageName": "crossPass2"
+  }
+]

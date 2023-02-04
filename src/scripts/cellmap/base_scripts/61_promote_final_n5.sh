@@ -6,7 +6,7 @@ ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh" "${TAB}"
 
-# /nrs/cellmap/data/jrc_mus-liv-zon-2/jrc_mus-liv-zon-2.n5/em/fibsem-uint8
+# /nrs/${LAB_OR_GROUP_PROJECT}/data/${VOLUME}/${VOLUME}.n5/em/fibsem-uint8
 FINAL_DATA_SET="/em/fibsem-uint8"
 FINAL_N5_PATH="${N5_PATH}${FINAL_DATA_SET}"
 

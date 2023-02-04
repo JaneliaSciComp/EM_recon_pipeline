@@ -1,0 +1,14 @@
+{
+  "scalingFactorRegularizerWeight" : 0.1,
+  "coordinateUpdateRegularizerWeight" : 0.0,
+  "shiftProportion" : 0.6,
+  "nIterations" : 100,
+  "comparisonRange" : 10,
+  "minimumSectionThickness" : 1.0E-4,
+  "regularizationType" : "BORDER",
+  "scalingFactorEstimationIterations" : 10,
+  "withReorder" : false,
+  "forceMonotonicity" : false,
+  "estimateWindowRadius" : -1,
+  "minimumCorrelationValue" : 0.0
+}
