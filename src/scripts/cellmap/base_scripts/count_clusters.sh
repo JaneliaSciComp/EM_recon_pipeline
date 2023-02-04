@@ -24,12 +24,12 @@ ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STAC
 ARGS="${ARGS} --matchCollection ${MATCH_COLLECTION}"
 ARGS="${ARGS} --maxSmallClusterSize 0 --includeMatchesOutsideGroup --maxLayersPerBatch 1000 --maxOverlapLayers 6"
   
-echo """
+echo "
 Connected tile cluster counts will be written to:
   ${COUNT_LOG}
 
 Be patient, this could take a few minutes ...
-"""
+"
 
 ${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > ${COUNT_LOG}
 
@@ -37,9 +37,9 @@ ${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > ${COUNT_LOG}
 #
 #  JSON_FILE="${SCRIPT_DIR}/excluded_cells.json"
 #
-#  echo """Parsing ${COUNT_LOG} to create:
+#  echo "Parsing ${COUNT_LOG} to create:
 #  ${JSON_FILE}
-#"""
+#"
 #
 #  ${SCRIPT_DIR}/gen_excluded_cells.py ${COUNT_LOG} > ${JSON_FILE}
 #

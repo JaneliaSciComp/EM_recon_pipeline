@@ -121,7 +121,7 @@ STACK_DATA_URL="http://tem-services.int.janelia.org:8080/render-ws/v1/owner/${RE
 VIEW_STACK_PARAMS="renderStackOwner=${RENDER_OWNER}&renderStackProject=${RENDER_PROJECT}&dynamicRenderHost=renderer.int.janelia.org%3A8080&catmaidHost=renderer-catmaid.int.janelia.org%3A8000"
 VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}&renderDataHost=tem-services.int.janelia.org%3A8080"
 
-echo """
+echo "
 ## Filesystem Paths
 
 \`\`\`bash
@@ -156,4 +156,4 @@ ${RENDERED_N5_DATASETS}
 ## Notes
 
 * [volume_transfer_info](https://github.com/JaneliaSciComp/EM_recon_pipeline/blob/main/src/resources/transfer_info/${RENDER_OWNER}/volume_transfer_info.${VOLUME_NAME}.json)
-"""
+"

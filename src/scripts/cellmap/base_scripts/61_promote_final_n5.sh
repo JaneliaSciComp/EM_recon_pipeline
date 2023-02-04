@@ -56,13 +56,13 @@ OFFSET_X=$(${JQ} '.translate[0]' "${N5_JSON}")
 OFFSET_Y=$(${JQ} '.translate[1]' "${N5_JSON}")
 OFFSET_Z=$(${JQ} '.translate[2]' "${N5_JSON}")
 
-echo """
+echo "
 moving ${RENDERED_N5_PATH}
 to     ${FINAL_N5_PATH}
 
 update GitHub with:
   -i ${N5_PATH} -d ${FINAL_DATA_SET} -o ${OFFSET_X},${OFFSET_Y},${OFFSET_Z}
-"""
+"
 
 FINAL_N5_PARENT_DIR=$(dirname "${FINAL_N5_PATH}")
 mkdir -p "${FINAL_N5_PARENT_DIR}"

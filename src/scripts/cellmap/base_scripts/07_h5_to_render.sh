@@ -11,9 +11,9 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 mkdir -p ${LOG_DIR}
 LOG_FILE="${LOG_DIR}/run_${RUN_TIME}.log"
 
-echo """
+echo "
 Running $0 on ${HOSTNAME} at ${RUN_TIME} ...
-""" | tee -a ${LOG_FILE}
+" | tee -a ${LOG_FILE}
 
 DASK_WORKER_SPACE="${LOG_DIR}/dask_work_${RUN_TIME}"
 mkdir -p ${DASK_WORKER_SPACE}
@@ -37,11 +37,11 @@ ARGS="${ARGS} --num_threads 4"
 ARGS="${ARGS} --dask_worker_space ${DASK_WORKER_SPACE}"
 #ARGS="${ARGS} --min_layer_index 0 --max_layer_index 2027"
 
-echo """
+echo "
 On ${HOSTNAME} at ${RUN_TIME}
 
 Running:
   python ${ARGS}
-""" | tee -a ${LOG_FILE}
+" | tee -a ${LOG_FILE}
 
 python ${ARGS} 2>&1 | tee -a ${LOG_FILE}

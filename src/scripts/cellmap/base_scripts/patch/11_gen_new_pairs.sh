@@ -19,10 +19,10 @@ MAX_Z=$(( PATCH_Z + CROSS_NEIGHBOR_DISTANCE ))
 
 for RUN_TYPE in ${MATCH_RUN_TYPES}; do
 
-echo """
+echo "
 ------------------------------------------------------------------------
 Setting up ${RUN_TYPE} pairs (log is captured so wait for results) ...
-"""
+"
 
 if [[ "${RUN_TYPE}" == "montage_top_bottom" ]]; then
   PASS_ARGS="${MONTAGE_PAIR_ARGS} --excludeSameLayerPairsWithPosition LEFT"
@@ -62,7 +62,7 @@ ${RENDER_CLIENT_SCRIPT} ${RENDER_CLIENT_HEAP} ${PATCH_ARGS} 1>>${PAIR_GEN_LOG} 2
 OUTPUT_HEAD=`head -40 ${PAIR_GEN_LOG} | cut -c1-400`
 OUTPUT_TAIL=`tail -10 ${PAIR_GEN_LOG} | cut -c1-400`
 
-echo """
+echo "
   MAX_PAIRS_PER_FILE was set to ${MAX_PAIRS_PER_FILE}
 
   Full pair generation output written to:
@@ -74,7 +74,7 @@ ${OUTPUT_HEAD}
 ...
 ${OUTPUT_TAIL}
    
-"""
+"
 
 done
 

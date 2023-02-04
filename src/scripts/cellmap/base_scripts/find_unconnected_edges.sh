@@ -24,12 +24,12 @@ ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STAC
 ARGS="${ARGS} --matchCollection ${MATCH_COLLECTION}"
 ARGS="${ARGS} --maxUnconnectedLayers 50"
   
-echo """
+echo "
 Unconnected edge data will be written to:
   ${LOG}
 
 Be patient, this could take a few minutes ...
-"""
+"
 
 ${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > ${LOG}
 

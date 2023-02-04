@@ -33,9 +33,9 @@ mkdir ${PATCH_DIR}
 sed -i "s/^ACQUIRE_TRIMMED_STACK=.*/ACQUIRE_TRIMMED_STACK=\"${ACQUIRE_TRIMMED_STACK}\"/" ${SCRIPT_DIR}/00_config.sh
 sed -i "s/^OLD_ACQUIRE_TRIMMED_STACK=.*/OLD_ACQUIRE_TRIMMED_STACK=\"${OLD_ACQUIRE_TRIMMED_STACK}\"/" ${SCRIPT_DIR}/00_config.sh
 
-echo """
+echo "
 Updated ${SCRIPT_DIR}/00_config.sh:
-"""
+"
 grep "ACQUIRE_TRIMMED_STACK" ${SCRIPT_DIR}/00_config.sh
 
 PATCH_SOURCE_DIR="/groups/flyem/data/render/git/EM_recon_pipeline/src/scripts/cellmap/base_scripts/patch"
@@ -56,10 +56,10 @@ sed -i "
  
 if (( $# > 0 )); then
 
-  echo """
+  echo "
 Copy these patch tile id lines into 
 ${PATCH_DIR}/06_patch_tile_specs.py:
-"""
+"
 
   STACK_URL="http://${SERVICE_HOST}/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${OLD_ACQUIRE_TRIMMED_STACK}"
   for PATCH_Z in "$@"; do
@@ -68,16 +68,16 @@ ${PATCH_DIR}/06_patch_tile_specs.py:
     done
   done
 
-  echo """
+  echo "
 After patching, generate match pairs by running:
 ./11_gen_new_pairs.sh $*
-"""
+"
 
 else
 
-  echo """
+  echo "
 Setup patch directory:
 ${PATCH_DIR}
-"""
+"
 
 fi

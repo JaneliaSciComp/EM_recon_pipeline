@@ -36,10 +36,10 @@ LOG_DIR=`createLogDirectory "${RUN_DIR}"`
 # need to create tmp directory so that run_array_ws_client_lsf.sh sets JAVA_IO_TMPDIR (for HDF5)
 mkdir -p ${RUN_DIR}/tmp
 
-echo """
+echo "
 ------------------------------------------------------------------------
 Setting up job for ${JOB_NAME} ...
-"""
+"
 
 STAGE_JSON_NAME="stage_parameters.${RUN_TYPE}.json"
 STAGE_JSON="${RUN_DIR}/${STAGE_JSON_NAME}"
@@ -47,8 +47,8 @@ cp ${MATCH_PARAMETERS_DIR}/${STAGE_JSON_NAME} ${STAGE_JSON}
 
 COMMON_PARAMETERS_FILE="${RUN_DIR}/common_parameters.txt"
 
-echo """
-Generating ${COMMON_PARAMETERS_FILE}"""
+echo "
+Generating ${COMMON_PARAMETERS_FILE}"
 
 ARGS="--baseDataUrl ${BASE_DATA_URL} --owner ${RENDER_OWNER} --collection ${MATCH_COLLECTION}"
 ARGS="${ARGS} --stageJson ${STAGE_JSON}"
@@ -75,7 +75,7 @@ done
 
 if (( FILE_COUNT == 0 )); then
 
-  echo """
+  echo "
 No tile pair files found !!!
 Removing ${RUN_DIR} ..."
   rm -rf ${RUN_DIR}

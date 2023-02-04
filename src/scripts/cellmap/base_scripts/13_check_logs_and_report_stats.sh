@@ -12,9 +12,9 @@ RUN_DIR="$1"
 
 ${RENDER_PIPELINE_BIN}/check_logs.sh ${RUN_DIR}
 
-echo """
+echo "
 Stage parameters loaded from `ls ${RUN_DIR}/stage_parameters.*.json`	
-"""
+"
 
 cd ${RUN_DIR}/logs
 ${SCRIPT_DIR}/14_report_all_stats.sh log*.txt
