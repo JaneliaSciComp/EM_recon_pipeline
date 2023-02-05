@@ -2,21 +2,22 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-source ${SCRIPT_DIR}/00_config.sh
+ABSOLUTE_SCRIPT=$(readlink -m "${0}")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+source "${SCRIPT_DIR}"/00_config.sh
 
-if (( $# != 1 )); then
-  echo "USAGE: $0 <stack>"
+if (( $# < 1 )); then
+  echo "USAGE: $0 <stack> [generate excluded cells y|n]"
   exit 1
 fi
 
 STACK="$1"
+GENERATE_EXCLUDED_CELLS="${2:-n}"
 
 LOG_DIR="${SCRIPT_DIR}/logs"
 COUNT_LOG="${LOG_DIR}/cluster_count.${STACK}.log"
 
-mkdir -p ${LOG_DIR}
+mkdir -p "${LOG_DIR}"
 
 ARGS="org.janelia.render.client.ClusterCountClient"
 ARGS="${ARGS} --baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
@@ -31,20 +32,20 @@ Connected tile cluster counts will be written to:
 Be patient, this could take a few minutes ...
 "
 
-${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > ${COUNT_LOG}
+${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > "${COUNT_LOG}"
 
-#if [ "${STACK}" = "${ACQUIRE_STACK}" ]; then
-#
-#  JSON_FILE="${SCRIPT_DIR}/excluded_cells.json"
-#
-#  echo "Parsing ${COUNT_LOG} to create:
-#  ${JSON_FILE}
-#"
-#
-#  ${SCRIPT_DIR}/gen_excluded_cells.py ${COUNT_LOG} > ${JSON_FILE}
-#
-#else
+if [ "${GENERATE_EXCLUDED_CELLS}" = "y" ]; then
 
-  tail -5 ${COUNT_LOG}
+  JSON_FILE="${SCRIPT_DIR}/excluded_cells.json"
 
-#fi
+  echo "Parsing ${COUNT_LOG} to create:
+  ${JSON_FILE}
+"
+
+  "${SCRIPT_DIR}"/gen_excluded_cells.py "${COUNT_LOG}" > "${JSON_FILE}"
+
+else
+
+  tail -5 "${COUNT_LOG}"
+
+fi
