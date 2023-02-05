@@ -2,12 +2,10 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-source ${SCRIPT_DIR}/00_config.sh
-
-#  echo "USAGE: $0 [patch z] ..."
-
+ABSOLUTE_SCRIPT=$(readlink -m "${0}")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+CONFIG_FILE="${SCRIPT_DIR}/00_config.sh"
+source "${CONFIG_FILE}"
 
 if [[ -z ${OLD_ACQUIRE_TRIMMED_STACK} ]]; then
   echo "ERROR: need to setup OLD_ACQUIRE_TRIMMED_STACK in config"
@@ -28,15 +26,15 @@ if [[ -d ${PATCH_DIR} ]]; then
   exit 1
 fi
 
-mkdir ${PATCH_DIR}
+mkdir "${PATCH_DIR}"
 
-sed -i "s/^ACQUIRE_TRIMMED_STACK=.*/ACQUIRE_TRIMMED_STACK=\"${ACQUIRE_TRIMMED_STACK}\"/" ${SCRIPT_DIR}/00_config.sh
-sed -i "s/^OLD_ACQUIRE_TRIMMED_STACK=.*/OLD_ACQUIRE_TRIMMED_STACK=\"${OLD_ACQUIRE_TRIMMED_STACK}\"/" ${SCRIPT_DIR}/00_config.sh
+sed -i "s/^ACQUIRE_TRIMMED_STACK=.*/ACQUIRE_TRIMMED_STACK=\"${ACQUIRE_TRIMMED_STACK}\"/" "${CONFIG_FILE}"
+sed -i "s/^OLD_ACQUIRE_TRIMMED_STACK=.*/OLD_ACQUIRE_TRIMMED_STACK=\"${OLD_ACQUIRE_TRIMMED_STACK}\"/" "${CONFIG_FILE}"
 
 echo "
-Updated ${SCRIPT_DIR}/00_config.sh:
+Updated ${CONFIG_FILE}:
 "
-grep "ACQUIRE_TRIMMED_STACK" ${SCRIPT_DIR}/00_config.sh
+grep "ACQUIRE_TRIMMED_STACK" "${CONFIG_FILE}"
 
 PATCH_SOURCE_DIR="/groups/flyem/data/render/git/EM_recon_pipeline/src/scripts/cellmap/base_scripts/patch"
 cp ${PATCH_SOURCE_DIR}/* ${PATCH_DIR}
@@ -52,10 +50,12 @@ sed -i "
   s/'MATCH_COLLECTION'/\"${MATCH_COLLECTION}\"/g
 " ${PATCH_DIR}/copy_match_pair_for_edge_gap.py
 
-#cp excluded_columns.json ${PATCH_DIR}
+EXCLUDED_COLUMNS_JSON="${SCRIPT_DIR}/excluded_columns.json"
+if [ -f "${EXCLUDED_COLUMNS_JSON}" ]; then
+  cp "${EXCLUDED_COLUMNS_JSON}" "${PATCH_DIR}"
+fi
  
 if (( $# > 0 )); then
-
   echo "
 Copy these patch tile id lines into 
 ${PATCH_DIR}/06_patch_tile_specs.py:
