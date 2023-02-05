@@ -73,7 +73,7 @@ in directory:
 mkdir -p "${ALIGN_DIR}"
 chmod 2775 "${ALIGN_DIR}"
 
-cp "${BASE_SCRIPTS_DIR}"/* "${ALIGN_DIR}"
+cp "${BASE_SCRIPTS_DIR}"/*.* "${ALIGN_DIR}"
 cp -r "${BASE_SCRIPTS_DIR}"/match_*_row "${ALIGN_DIR}"
 
 sed -i "
