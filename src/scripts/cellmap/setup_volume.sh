@@ -75,6 +75,7 @@ chmod 2775 "${ALIGN_DIR}"
 
 cp "${BASE_SCRIPTS_DIR}"/*.* "${ALIGN_DIR}"
 cp -r "${BASE_SCRIPTS_DIR}"/match_*_row "${ALIGN_DIR}"
+cp "${TRANSFER_INFO_JSON_FILE}" "${ALIGN_DIR}"
 
 sed -i "
   s/export LAB_OR_PROJECT_GROUP.*/export LAB_OR_PROJECT_GROUP=\"${LAB_OR_PROJECT_GROUP}\"/
