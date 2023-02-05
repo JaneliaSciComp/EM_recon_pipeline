@@ -55,6 +55,7 @@ fi
 ALIGN_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/align/${VOLUME_NAME}"
 if [[ -d "${ALIGN_DIR}" ]]; then
   echo "ERROR: ${ALIGN_DIR} already exists!"
+  exit 1
 fi
 
 echo "
