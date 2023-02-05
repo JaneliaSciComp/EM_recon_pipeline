@@ -24,6 +24,7 @@ def main(arg_list: list[str]):
         description="Finds scope dat files that are missing from network storage."
     )
     add_dat_copy_arguments(parser)
+    # noinspection PyTypeChecker
     parser.add_argument(
         "--copy_missing",
         help="Copy (restore) any missing dat files to cluster dat storage",
@@ -125,8 +126,27 @@ def main(arg_list: list[str]):
                                        f'that are missing from {align_h5_cluster_root} and {raw_h5_cluster_root}')
                         logger.info(f'main: missing raw dats are {sorted(align_v_raw_diff)}')
 
+            previous_layer_id = None
+            previous_tiles_per_layer = None
+            current_layer_id = None
+            current_tiles_per_layer = None
+
             for scope_dat_path in dat_list:
                 dat_path = new_dat_path(dat_to_target_path(scope_dat_path, cluster_root_dat_path))
+
+                if current_layer_id is None:
+                    current_layer_id = dat_path.layer_id
+                    current_tiles_per_layer = 1
+                elif dat_path.layer_id == current_layer_id:
+                    current_tiles_per_layer += 1
+                else:  # new layer
+                    if previous_tiles_per_layer is not None and current_tiles_per_layer != previous_tiles_per_layer:
+                        logger.warning(f'main: layer {current_layer_id} has {current_tiles_per_layer} tiles but '
+                                       f'layer {previous_layer_id} has {previous_tiles_per_layer} tiles')
+                    previous_layer_id = current_layer_id
+                    previous_tiles_per_layer = current_tiles_per_layer
+                    current_layer_id = dat_path.layer_id
+                    current_tiles_per_layer = 1
 
                 if first_dat_acquire_time <= dat_path.acquire_time <= last_dat_acquire_time:
                     if not dat_path.file_path.exists() and dat_path.file_path.name not in raw_h5_dat_names_set:
