@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "zonation1",
+        "rows_per_z_layer": 2,
+        "columns_per_z_layer": 3,
         "first_dat_name": "Merlin-6281_22-04-07_000042_0-0-0.dat",
         "last_dat_name": "Merlin-6281_22-07-02_051307_0-1-2.dat",
         "dat_x_and_y_nm_per_pixel": 8,

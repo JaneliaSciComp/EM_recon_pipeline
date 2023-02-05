@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "CellMapliverD1220-2",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6049_22-10-21_000057_0-0-0.dat",
         "last_dat_name": "Merlin-6049_22-10-29_100834_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 8,

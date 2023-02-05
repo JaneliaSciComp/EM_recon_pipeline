@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/Fly Brain",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "Z0422-05_Ocellar",
+        "rows_per_z_layer": 2,
+        "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6262_22-06-15_155134_0-0-0.dat",
         "last_dat_name": "Merlin-6262_22-07-06_201628_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 8,

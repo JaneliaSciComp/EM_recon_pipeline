@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/Zebrafish",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "0522-20_ZF-Cardi",
+        "rows_per_z_layer": 2,
+        "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6257_23-01-24_000020_0-0-0.dat",
         "last_dat_name": null,
         "dat_x_and_y_nm_per_pixel": 8,

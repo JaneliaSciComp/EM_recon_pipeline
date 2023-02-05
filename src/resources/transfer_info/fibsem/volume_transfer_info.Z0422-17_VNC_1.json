@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/Fly Brain",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "Z0422-17_VNC_1",
+        "rows_per_z_layer": 3,
+        "columns_per_z_layer": 3,
         "first_dat_name": "Merlin-6049_22-06-22_092228_0-0-0.dat",
         "last_dat_name": "Merlin-6049_22-10-14_221531_0-2-2.dat",
         "dat_x_and_y_nm_per_pixel": 8,

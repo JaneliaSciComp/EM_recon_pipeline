@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/CellMap",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "epididymis",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6282_22-07-14_000138_0-0-0.dat",
         "last_dat_name": "Merlin-6282_22-07-17_021207_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 4,

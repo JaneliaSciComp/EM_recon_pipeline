@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/Leaf",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "22AK351-2L",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 3,
         "first_dat_name": "Merlin-6284_22-10-05_115437_0-0-0.dat",
         "last_dat_name": "Merlin-6284_22-10-28_145336_0-0-2.dat",
         "dat_x_and_y_nm_per_pixel": 8,

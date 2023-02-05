@@ -49,6 +49,10 @@ class ScopeDataSet(BaseModel):
     #         target nm pixel resolution for dat x and y dimensions
     #     dat_z_nm_per_pixel:
     #         target nm pixel resolution for dat z dimension
+    #     rows_per_z_layer:
+    #         number of tile rows in each z layer
+    #     columns_per_z_layer:
+    #         number of tile columns in each z layer
     #     dat_tile_overlap_microns:
     #         tile overlap width in microns for older dat volumes without stageX header values
     #         (ignored if StageX and StageY positions exist in dat header - e.g. for FIBSEM version >= 9)
@@ -57,6 +61,8 @@ class ScopeDataSet(BaseModel):
     root_dat_path: Path
     root_keep_path: Path
     data_set_id: str
+    rows_per_z_layer: int = 1
+    columns_per_z_layer: int = 1
     first_dat_name: Optional[str]
     last_dat_name: Optional[str]
     dat_x_and_y_nm_per_pixel: int

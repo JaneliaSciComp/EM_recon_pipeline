@@ -5,6 +5,8 @@
         "root_dat_path": "/cygdrive/e/Images/DRAQ5",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "DRAQ5-S1A3_6min",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6262_22-12-09_090757_0-0-0.dat",
         "last_dat_name": "Merlin-6262_22-12-19_085305_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 8,
