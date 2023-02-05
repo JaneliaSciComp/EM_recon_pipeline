@@ -2,9 +2,8 @@
 
 set -e
 
-export LAB_OR_PROJECT_GROUP="cellmap"
-export LAYOUT="single_row"
-#LAYOUT="multi_row"
+export LAB_OR_PROJECT_GROUP="?"; echo "ERROR: unedited config template!"; exit 1
+export LAYOUT="?" # single_row or multi_row
 
 ABSOLUTE_CONFIG=$(readlink -m $0)
 CONFIG_DIR=$(dirname ${ABSOLUTE_CONFIG})
