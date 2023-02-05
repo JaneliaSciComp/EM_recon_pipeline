@@ -52,7 +52,19 @@ else
   LAYOUT="multi_row"
 fi
 
-ALIGN_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/align/${VOLUME_NAME}"
+# /groups/cellmap/cellmap
+RENDER_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render"
+if [[ ! -d "${RENDER_DIR}" ]]; then
+  # /groups/reiser/reiserlab
+  PREV_RENDER_DIR="${RENDER_DIR}"
+  RENDER_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab/render"
+  if [[ ! -d "${RENDER_DIR}" ]]; then
+    echo "ERROR: can't find ${PREV_RENDER_DIR} or ${RENDER_DIR}"
+    exit 1
+  fi
+fi
+
+ALIGN_DIR="${RENDER_DIR}/align/${VOLUME_NAME}"
 if [[ -d "${ALIGN_DIR}" ]]; then
   echo "ERROR: ${ALIGN_DIR} already exists!"
   exit 1
