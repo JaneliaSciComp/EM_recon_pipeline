@@ -1,4 +1,5 @@
 ```mermaid
+graph TD
     SCOPE_DAT_A[<u>jeiss scope</u><br> z1_0-0-0.dat, z1_0-0-1.dat, <br> z1_0-1-0.dat, z1_0-1-1.dat] --> TRANSFER_DAT
     SCOPE_DAT_B[<u>jeiss scope</u><br> zn_0-0-0.dat, zn_0-0-1.dat, <br> zn_0-1-0.dat, zn_0-1-1.dat] --> TRANSFER_DAT
     TRANSFER_DAT{transfer} --> DM11_DAT_A & DM11_DAT_B
