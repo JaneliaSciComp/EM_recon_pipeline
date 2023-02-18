@@ -83,7 +83,7 @@ if (( DIR_COUNT == 0 )); then
   echo "WARNING: no ${RENDER_PROJECT} project n5 directories found in ${N5_PATH}"
 fi
 
-unset RENDERED_N5_DATASETS
+unset RENDERED_N5_DATASETS RENDERED_N5_NG_LINKS
 
 for RENDERED_N5_PATH in "${DIRS[@]}"; do
 
@@ -99,15 +99,47 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
   RENDERED_DATA_SET="${RENDERED_N5_PATH##${N5_PATH}}"
 
   # /groups/flyem/data/render/bin/jq '.translate[0]' /nrs/flyem/render/n5/Z0720_07m_BR/z_corr/Sec14/v4_acquire_trimmed_align_ic___20210827_131509/attributes.json
-  OFFSET_X=$(${JQ} '.translate[0]' ${N5_JSON})
-  OFFSET_Y=$(${JQ} '.translate[1]' ${N5_JSON})
-  OFFSET_Z=$(${JQ} '.translate[2]' ${N5_JSON})
+  OFFSET_X=$(${JQ} '.translate[0]' "${N5_JSON}")
+  OFFSET_Y=$(${JQ} '.translate[1]' "${N5_JSON}")
+  OFFSET_Z=$(${JQ} '.translate[2]' "${N5_JSON}")
+
+  PIXEL_RES_X=$(${JQ} '.pixelResolution.dimensions[0]' "${N5_JSON}")
+  PIXEL_RES_Y=$(${JQ} '.pixelResolution.dimensions[1]' "${N5_JSON}")
+  PIXEL_RES_Z=$(${JQ} '.pixelResolution.dimensions[2]' "${N5_JSON}")
+
+  RES_X="${PIXEL_RES_X}e-09"
+  RES_Y="${PIXEL_RES_Y}e-09"
+  RES_Z="${PIXEL_RES_Z}e-09"
+
+  NG_BASE_URL="http://renderer.int.janelia.org:8080/ng/#!"
+  EXPORT_NAME=$(basename "${RENDERED_DATA_SET}")
+  NG_SOURCE_NAME="${RENDER_PROJECT}%20${EXPORT_NAME}"
+  NG_SOURCE_PATH=$(echo "/n5_sources/${OWNER}/${RENDER_PROJECT}.n5${RENDERED_DATA_SET}" | sed 's@/@%2F@g')
+
+  # note: "crossSectionScale":8 can't be passed in (for zoomed out view) because it breaks parser for some reason
+  NG_QUERY_STRING="%7B%22layers%22%3A%5B%7B%22type%22%3A%22image%22%2C%22source%22%3A%7B"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22url%22%3A%22n5%3A%2F%2Fhttp%3A%2F%2Frenderer.int.janelia.org%3A8080${NG_SOURCE_PATH}%22%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22transform%22%3A%7B%22matrix%22%3A%5B"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%5B1%2C0%2C0%2C${OFFSET_X}%5D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%5B0%2C1%2C0%2C${OFFSET_Y}%5D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%5B0%2C0%2C1%2C${OFFSET_Z}%5D%5D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22outputDimensions%22%3A%7B"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22x%22%3A%5B${RES_X}%2C%22m%22%5D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22y%22%3A%5B${RES_Y}%2C%22m%22%5D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22z%22%3A%5B${RES_Z}%2C%22m%22%5D%7D%7D%7D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22tab%22%3A%22source%22%2C%22name%22%3A%22${NG_SOURCE_NAME}%22%7D%5D%2C"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22selectedLayer%22%3A%7B"
+  NG_QUERY_STRING="${NG_QUERY_STRING}%22layer%22%3A%22${NG_SOURCE_NAME}%22%7D%2C%22layout%22%3A%224panel%22%7D"
+
+  NG_LINK="[${EXPORT_NAME}](${NG_BASE_URL}${NG_QUERY_STRING})"
 
   N5_PATH_DATASET_AND_OFFSET="-i ${N5_PATH} -d ${RENDERED_DATA_SET} -o ${OFFSET_X},${OFFSET_Y},${OFFSET_Z}"
   if [ -z "${RENDERED_N5_DATASETS}" ]; then
     RENDERED_N5_DATASETS="  ${N5_PATH_DATASET_AND_OFFSET}"
+    RENDERED_N5_NG_LINKS="${NG_LINK}"
   else
     RENDERED_N5_DATASETS=$(printf "%s\n  %s" "${RENDERED_N5_DATASETS}" "${N5_PATH_DATASET_AND_OFFSET}")
+    RENDERED_N5_NG_LINKS=$(printf "%s\n  * %s" "${RENDERED_N5_NG_LINKS}" "${NG_LINK}")
   fi
 
 done
@@ -151,6 +183,8 @@ ${RENDERED_N5_DATASETS}
 \`\`\`
 * render links: [project stacks](${VIEW_STACKS_URL}?${VIEW_STACK_PARAMS}), [restart tiles](${STACK_DATA_URL}/resolvedTiles?groupId=restart), [point match explorer](${VIEW_PME_URL}?${VIEW_PME_PARAMS})
 * ${ALIGN_STACK} data: ${ALIGN_STACK_DATA}
+* neuroglancer links:
+  * ${RENDERED_N5_NG_LINKS}
 
 
 ## Notes
