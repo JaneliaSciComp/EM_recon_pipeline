@@ -160,13 +160,14 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     return tile_specs
 
 
-def import_slab_stacks_for_wafer(render_owner: str,
+def import_slab_stacks_for_wafer(render_ws_host: str,
+                                 render_owner: str,
                                  wafer_info: WaferInfo):
 
     for slab_group in wafer_info.slab_group_list:
 
         render_connect_params = {
-            "host": "renderer-dev.int.janelia.org",
+            "host": render_ws_host,
             "port": 8080,
             "owner": render_owner,
             "project": slab_group.to_render_project_name(wafer_name=wafer_info.name),
@@ -213,6 +214,12 @@ def main(arg_list: List[str]):
     )
 
     parser.add_argument(
+        "--render_host",
+        help="Render web services host (e.g. em-services-1.int.janelia.org)",
+        required=True,
+    )
+
+    parser.add_argument(
         "--render_owner",
         help="Owner for all created render stacks",
         required=True,
@@ -236,7 +243,7 @@ def main(arg_list: List[str]):
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
                                  number_of_slabs_per_group=args.number_of_slabs_per_render_project)
 
-    import_slab_stacks_for_wafer(args.render_owner, wafer_info)
+    import_slab_stacks_for_wafer(args.render_host, args.render_owner, wafer_info)
 
 
 if __name__ == '__main__':
