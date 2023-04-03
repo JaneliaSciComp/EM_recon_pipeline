@@ -29,7 +29,7 @@ N5_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.n5"
 # specify non-standard values.
 
 # IP address and port for the render web services
-RENDER_HOST="10.40.3.162"
+RENDER_HOST="10.40.3.113"
 RENDER_PORT="8080"
 SERVICE_HOST="${RENDER_HOST}:${RENDER_PORT}"
 RENDER_CLIENT_SCRIPTS="/groups/flyTEM/flyTEM/render/bin"
