@@ -5,7 +5,7 @@ import requests
 
 
 def get_stack_url(owner, project, stack):
-    return f'http://tem-services.int.janelia.org:8080/render-ws/v1/owner/{owner}/project/{project}/stack/{stack}'
+    return f'http://em-services-1.int.janelia.org:8080/render-ws/v1/owner/{owner}/project/{project}/stack/{stack}'
 
 
 def get_response_json(url):

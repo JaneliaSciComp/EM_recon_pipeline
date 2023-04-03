@@ -144,14 +144,14 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
 
 done
 
-VIEW_URL="http://tem-services.int.janelia.org:8080/render-ws/view"
+VIEW_URL="http://em-services-1.int.janelia.org:8080/render-ws/view"
 VIEW_STACKS_URL="${VIEW_URL}/stacks.html"
 VIEW_PME_URL="${VIEW_URL}/point-match-explorer.html"
 
-STACK_DATA_URL="http://tem-services.int.janelia.org:8080/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
+STACK_DATA_URL="http://em-services-1.int.janelia.org:8080/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
 
 VIEW_STACK_PARAMS="renderStackOwner=${RENDER_OWNER}&renderStackProject=${RENDER_PROJECT}&dynamicRenderHost=renderer.int.janelia.org%3A8080&catmaidHost=renderer-catmaid.int.janelia.org%3A8000"
-VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}&renderDataHost=tem-services.int.janelia.org%3A8080"
+VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}&renderDataHost=em-services-1.int.janelia.org%3A8080"
 
 echo "
 ## Filesystem Paths

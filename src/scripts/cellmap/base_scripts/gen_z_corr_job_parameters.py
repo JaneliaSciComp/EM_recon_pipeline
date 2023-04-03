@@ -7,7 +7,7 @@ import requests
 
 
 def get_stack_url(owner, project, stack):
-    return "http://tem-services.int.janelia.org:8080/render-ws/v1/owner/%s/project/%s/stack/%s" % \
+    return "http://em-services-1.int.janelia.org:8080/render-ws/v1/owner/%s/project/%s/stack/%s" % \
            (owner, project, stack)
 
 

@@ -114,7 +114,7 @@ def main(host, owner, project, stack, p_tile_id, q_tile_id, from_collection, to_
 
 
 if __name__ == '__main__':
-    main('tem-services.int.janelia.org:8080', 
+    main('em-services-1.int.janelia.org:8080',
          'RENDER_OWNER', 'RENDER_PROJECT', 'ACQUIRE_TRIMMED_STACK',
          'p tile id', 'q tile id',
          'MATCH_COLLECTION', 'MATCH_COLLECTION', minZ, maxZInclusive, z_step)

@@ -20,7 +20,7 @@ def load_json_file_data(json_path):
 
 
 def get_stack_metadata(owner, project, stack):
-    host = 'tem-services.int.janelia.org:8080'
+    host = 'em-services-1.int.janelia.org:8080'
     # noinspection HttpUrlsUsage
     url = f'http://{host}/render-ws/v1/owner/{owner}/project/{project}/stack/{stack}'
     response = requests.get(url)

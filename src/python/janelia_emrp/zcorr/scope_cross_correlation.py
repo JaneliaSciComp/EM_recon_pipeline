@@ -22,7 +22,7 @@ def load_cross_correlation_file_data(cc_data_path):
 
 
 def get_stack_metadata(owner, project, stack):
-    host = 'tem-services.int.janelia.org:8080'
+    host = 'em-services-1.int.janelia.org:8080'
     url = f'http://{host}/render-ws/v1/owner/{owner}/project/{project}/stack/{stack}'
     response = requests.get(url)
     if response.status_code == 200:

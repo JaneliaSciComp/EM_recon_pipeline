@@ -8,7 +8,7 @@ def offset_section_id(section_id: str,
 
 
 def main():
-    host = 'tem-services.int.janelia.org:8080'
+    host = 'em-services-1.int.janelia.org:8080'
     owner = 'fibsem'
     from_collections = ['Z0422_17_VNC_1b_v1']
     to_collection = 'Z0422_17_VNC_1_v2'
