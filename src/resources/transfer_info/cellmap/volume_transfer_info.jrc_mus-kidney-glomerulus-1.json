@@ -4,7 +4,7 @@
         "host": "jeiss8.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/CellMap",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "JRC-E110422_12aWRHT_KD_GL",
+        "data_set_id": "JRC_E110422_12aWRHT_KD_GL",
         "rows_per_z_layer": 2,
         "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6284_23-03-31_161626_0-0-0.dat",
