@@ -156,7 +156,7 @@ def main(arg_list: list[str]):
 
                         if args.copy_missing:
                             copy_dat_file(scope_host=transfer_info.scope_data_set.host,
-                                          scope_dat_path=scope_dat_path,
+                                          scope_dat_path=str(scope_dat_path),
                                           dat_storage_root=cluster_root_dat_path)
                             copy_count += 1
 
