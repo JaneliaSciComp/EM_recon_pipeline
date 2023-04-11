@@ -5,7 +5,7 @@ set -e
 export LAB_OR_PROJECT_GROUP="?"; echo "ERROR: unedited config template!"; exit 1
 export LAYOUT="?" # single_row or multi_row
 
-ABSOLUTE_CONFIG=$(readlink -m $0)
+ABSOLUTE_CONFIG=$(readlink -m "${BASH_SOURCE[0]}")
 CONFIG_DIR=$(dirname ${ABSOLUTE_CONFIG})
 
 VOLUME_NAME=$(basename "${CONFIG_DIR}")
