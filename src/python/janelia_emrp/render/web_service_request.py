@@ -65,22 +65,33 @@ class MatchRequest:
         # noinspection HttpUrlsUsage
         return f"http://{self.host}/render-ws/v1/owner/{self.owner}/matchCollection/{self.collection}"
 
-    def p_group_ids_url(self) -> str:
-        return f"{self.collection_url()}/pGroupIds"
-
     def get_p_group_ids(self) -> list[str]:
-        p_group_ids = submit_get(self.p_group_ids_url())
+        url = f"{self.collection_url()}/pGroupIds"
+        p_group_ids = submit_get(url)
         print(f"retrieved {len(p_group_ids)} pGroupId values for the {self.collection} collection")
 
         return p_group_ids
 
-    def match_pairs_for_group_url(self,
-                                  group_id: str) -> str:
-        return f"{self.collection_url()}/pGroup/{group_id}/matches"
+    # [
+    #   {
+    #     "pGroupId": "1.0",
+    #     "pId": "23-01-24_000020_0-0-0.1.0",
+    #     "qGroupId": "1.0",
+    #     "qId": "23-01-24_000020_0-0-1.1.0",
+    #     "matchCount": 36
+    #   }, ...
+    # ]
+    def get_pairs_with_match_counts_for_group(self,
+                                              group_id: str) -> list[dict[str, Any]]:
+        url = f"{self.collection_url()}/pGroup/{group_id}/matchCounts"
+        match_counts = submit_get(url)
+        print(f"retrieved {len(match_counts)} {self.collection} pairs for groupId {group_id}")
+        return match_counts
 
     def get_match_pairs_for_group(self,
                                   group_id: str) -> list[dict[str, Any]]:
-        match_pairs = submit_get(self.match_pairs_for_group_url(group_id))
+        url = f"{self.collection_url()}/pGroup/{group_id}/matches"
+        match_pairs = submit_get(url)
         print(f"retrieved {len(match_pairs)} {self.collection} pairs for groupId {group_id}")
 
         return match_pairs
@@ -89,7 +100,7 @@ class MatchRequest:
                          group_id: str,
                          match_pairs: list[dict[str, Any]]):
         if len(match_pairs) > 0:
-            matches_url = f"{self.collection_url()}/matches"
-            submit_put(url=matches_url,
+            url = f"{self.collection_url()}/matches"
+            submit_put(url=url,
                        json=match_pairs,
                        context=f"for {len(match_pairs)} pairs with groupId {group_id}")
