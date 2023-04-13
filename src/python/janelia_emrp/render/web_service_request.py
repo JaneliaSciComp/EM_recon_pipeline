@@ -8,9 +8,9 @@ def submit_get(url: str,
                context: Optional[str] = None) -> Union[dict[str, Any], list[dict[str, Any]], list[str]]:
     extra_context = "" if context is None else f" {context}"
     print(f"submitting GET {url}{extra_context}")
-    get_response = requests.get(url)
-    get_response.raise_for_status()
-    return get_response.json()
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json()
 
 
 def submit_put(url: str,
@@ -18,8 +18,16 @@ def submit_put(url: str,
                context: Optional[str] = None) -> None:
     extra_context = "" if context is None else f" {context}"
     print(f"submitting PUT {url}{extra_context}")
-    put_response = requests.put(url, json=json)
-    put_response.raise_for_status()
+    response = requests.put(url, json=json)
+    response.raise_for_status()
+
+
+def submit_delete(url: str,
+                  context: Optional[str] = None) -> None:
+    extra_context = "" if context is None else f" {context}"
+    print(f"submitting DELETE {url}{extra_context}")
+    response = requests.delete(url)
+    response.raise_for_status()
 
 
 @dataclass
@@ -89,8 +97,20 @@ class MatchRequest:
         return match_counts
 
     def get_match_pairs_for_group(self,
-                                  group_id: str) -> list[dict[str, Any]]:
-        url = f"{self.collection_url()}/pGroup/{group_id}/matches"
+                                  group_id: str,
+                                  exclude_match_details: bool = False) -> list[dict[str, Any]]:
+        query = "?excludeMatchDetails=true" if exclude_match_details else ""
+        url = f"{self.collection_url()}/pGroup/{group_id}/matches{query}"
+        match_pairs = submit_get(url)
+        print(f"retrieved {len(match_pairs)} {self.collection} pairs for groupId {group_id}")
+
+        return match_pairs
+
+    def get_match_pairs_within_group(self,
+                                     group_id: str,
+                                     exclude_match_details: bool = False) -> list[dict[str, Any]]:
+        query = "?excludeMatchDetails=true" if exclude_match_details else ""
+        url = f"{self.collection_url()}/group/{group_id}/matchesWithinGroup{query}"
         match_pairs = submit_get(url)
         print(f"retrieved {len(match_pairs)} {self.collection} pairs for groupId {group_id}")
 
@@ -104,3 +124,10 @@ class MatchRequest:
             submit_put(url=url,
                        json=match_pairs,
                        context=f"for {len(match_pairs)} pairs with groupId {group_id}")
+
+    def delete_match_pair(self,
+                          p_group_id: str,
+                          p_id: str,
+                          q_group_id: str,
+                          q_id: str):
+        submit_delete(f"{self.collection_url()}/group/{p_group_id}/id/{p_id}/matchesWith/{q_group_id}/id/{q_id}")
