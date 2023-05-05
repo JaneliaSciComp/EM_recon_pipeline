@@ -6,13 +6,6 @@ ABSOLUTE_SCRIPT=`readlink -m $0`
 SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 source ${SCRIPT_DIR}/00_config.sh
 
-if (( $# < 1 )); then
-  echo "USAGE $0 <number of nodes> (e.g. 18)"
-  exit 1
-fi
-
-N_NODES="${1}"        # 18
-
 #-----------------------------------------------------------
 # Spark executor setup with 11 cores per worker ...
 
@@ -23,6 +16,17 @@ export N_CORES_PER_EXECUTOR=5 # 5
 export N_OVERHEAD_CORES_PER_WORKER=1
 #N_CORES_PER_WORKER=$(( (N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR) + N_OVERHEAD_CORES_PER_WORKER ))
 export N_CORES_DRIVER=1
+
+if (( $# < 1 )); then
+  # default: one task per 1000 z => 10,000 z per worker if each worker has 10 cores
+  JQ="/groups/flyem/data/render/bin/jq"
+  STACK_URL="http://${SERVICE_HOST}/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
+  SECTION_COUNT=$(curl -s "${STACK_URL}" | ${JQ} '.stats.sectionCount')
+  TASKS_PER_NODE=$(( N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR ))
+  N_NODES=$(( (((SECTION_COUNT / 1000 ) + 1) / TASKS_PER_NODE) + 1 ))
+else
+  N_NODES="${1}"        # 18
+fi
 
 #-----------------------------------------------------------
 ARGS="--baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
