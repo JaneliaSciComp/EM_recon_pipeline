@@ -3,7 +3,7 @@
 set -e
 
 export LAB_OR_PROJECT_GROUP="?"; echo "ERROR: unedited config template!"; exit 1
-export LAYOUT="?" # single_row or multi_row
+export LAYOUT="?" # single_tile, single_row, or multi_row
 
 ABSOLUTE_CONFIG=$(readlink -m "${BASH_SOURCE[0]}")
 CONFIG_DIR=$(dirname ${ABSOLUTE_CONFIG})
@@ -70,7 +70,9 @@ MATCH_PARAMETERS_DIR="${CONFIG_DIR}/match_${LAYOUT}"
 
 if [[ "${LAYOUT}" == "multi_row" ]]; then
   MATCH_RUN_TYPES="montage_top_bottom montage_left_right cross"
-else
+elif [[ "${LAYOUT}" == "single_tile" ]]; then
+  MATCH_RUN_TYPES="cross"
+else # single_row
   MATCH_RUN_TYPES="montage cross"
 fi
 

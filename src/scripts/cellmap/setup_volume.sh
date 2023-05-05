@@ -44,11 +44,16 @@ JQ="/groups/flyem/data/render/bin/jq"
 LAB_OR_PROJECT_GROUP=$(${JQ} '.render_data_set.owner' "${TRANSFER_INFO_JSON_FILE}" | sed 's/"//g')
 
 ROW_COUNT=$(${JQ} '.scope_data_set.rows_per_z_layer' "${TRANSFER_INFO_JSON_FILE}")
+COLUMN_COUNT=$(${JQ} '.scope_data_set.columns_per_z_layer' "${TRANSFER_INFO_JSON_FILE}")
 NULL_VALUE="null"
 
 if [[ "${ROW_COUNT}" -eq "${NULL_VALUE}" || "${ROW_COUNT}" -eq "0" || "${ROW_COUNT}" -eq "1" ]]; then
-  LAYOUT="single_row"
-else
+  if [[ "${COLUMN_COUNT}" -eq "1" ]]; then
+    LAYOUT="single_tile"
+  else
+    LAYOUT="single_row"
+  fi
+ else
   LAYOUT="multi_row"
 fi
 
