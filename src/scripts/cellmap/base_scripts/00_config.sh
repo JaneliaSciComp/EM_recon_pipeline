@@ -66,10 +66,11 @@ CROSS_PASS_PAIR_SECONDS="1"
 # Each pair takes roughly 10 seconds to process when using default match parameters, so 60 pairs per file is a good default.
 MAX_PAIRS_PER_FILE=30
 
-MATCH_PARAMETERS_DIR="${CONFIG_DIR}/match_${LAYOUT}"
+MATCH_PARAMETERS_DIR="${CONFIG_DIR}/match_single_row"
 
 if [[ "${LAYOUT}" == "multi_row" ]]; then
   MATCH_RUN_TYPES="montage_top_bottom montage_left_right cross"
+  MATCH_PARAMETERS_DIR="${CONFIG_DIR}/match_multi_row"
 elif [[ "${LAYOUT}" == "single_tile" ]]; then
   MATCH_RUN_TYPES="cross"
 else # single_row
