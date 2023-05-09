@@ -27,7 +27,7 @@ def main():
     render_request.set_stack_state_to_loading(stack)
     
     for z in z_layers_to_patch:
-        resolved_tiles = render_request.get_resolved_tiles_for_layer(stack, z)
+        resolved_tiles = render_request.get_resolved_tiles_for_z(stack, z)
         for tile_id in resolved_tiles["tileIdToSpecMap"]:
             tile_spec = resolved_tiles["tileIdToSpecMap"][tile_id]
             update_source_path_and_labels(tile_spec)
