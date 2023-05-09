@@ -36,27 +36,63 @@ class RenderRequest:
     owner: str
     project: str
 
-    def stack_url(self, stack) -> str:
+    def project_url(self) -> str:
         # noinspection HttpUrlsUsage
-        return f"http://{self.host}/render-ws/v1/owner/{self.owner}/project/{self.project}/stack/{stack}"
+        return f"http://{self.host}/render-ws/v1/owner/{self.owner}/project/{self.project}"
 
-    def get_tile_spec(self, stack, tile_id) -> dict[str, Any]:
+    def stack_url(self,
+                  stack: str) -> str:
+        # noinspection HttpUrlsUsage
+        return f"{self.project_url()}/stack/{stack}"
+
+    def get_stack_ids(self) -> list[dict[str, Any]]:
+        return submit_get(f'{self.project_url()}/stackIds')
+
+    def get_stack_metadata(self,
+                           stack: str) -> dict[str, Any]:
+        return submit_get(f'{self.stack_url(stack)}')
+
+    def get_tile_bounds_for_z(self,
+                              stack: str,
+                              z: [float, str]) -> list[dict[str, Any]]:
+        return submit_get(f'{self.stack_url(stack)}/z/{z}/tileBounds')
+
+    def get_tile_ids_with_pattern(self,
+                                  stack: str,
+                                  match_pattern: str) -> list[str]:
+        return submit_get(f'{self.stack_url(stack)}/tileIds?matchPattern={match_pattern}')
+
+    def get_tile_spec(self,
+                      stack: str,
+                      tile_id: str) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/tile/{tile_id}')
 
-    def get_resolved_tiles_for_layer(self, stack, z):
+    def get_resolved_tiles_for_z(self,
+                                 stack: str,
+                                 z: [float, str]) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/z/{z}/resolvedTiles')
 
-    def set_stack_state(self, stack, state):
+    def get_resolved_restart_tiles(self,
+                                   stack: str) -> dict[str, Any]:
+        return submit_get(f'{self.stack_url(stack)}/resolvedTiles?groupId=restart')
+
+    def set_stack_state(self,
+                        stack: str,
+                        state: str):
         url = f'{self.stack_url(stack)}/state/{state}'
         submit_put(url=url, json=None, context=None)
 
-    def set_stack_state_to_loading(self, stack):
+    def set_stack_state_to_loading(self,
+                                   stack: str):
         self.set_stack_state(stack, 'LOADING')
 
-    def set_stack_state_to_complete(self, stack):
+    def set_stack_state_to_complete(self,
+                                    stack: str):
         self.set_stack_state(stack, 'COMPLETE')
 
-    def save_resolved_tiles(self, stack, resolved_tiles):
+    def save_resolved_tiles(self,
+                            stack: str,
+                            resolved_tiles: dict[str, Any]):
         url = f'{self.stack_url(stack)}/resolvedTiles'
         submit_put(url=url,
                    json=resolved_tiles,
