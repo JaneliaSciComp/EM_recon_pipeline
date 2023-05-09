@@ -54,7 +54,7 @@ class RenderRequest:
 
     def get_tile_bounds_for_z(self,
                               stack: str,
-                              z: [float, str]) -> list[dict[str, Any]]:
+                              z: [float, int, str]) -> list[dict[str, Any]]:
         return submit_get(f'{self.stack_url(stack)}/z/{z}/tileBounds')
 
     def get_tile_ids_with_pattern(self,
@@ -69,7 +69,7 @@ class RenderRequest:
 
     def get_resolved_tiles_for_z(self,
                                  stack: str,
-                                 z: [float, str]) -> dict[str, Any]:
+                                 z: [float, int, str]) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/z/{z}/resolvedTiles')
 
     def get_resolved_restart_tiles(self,
