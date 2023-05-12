@@ -4,7 +4,7 @@
         "host": "jeiss5.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mus_liver-3",
+        "data_set_id": "jrc_mus-D013023-4_liver",
         "rows_per_z_layer": 2,
         "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6049_23-05-03_143627_0-0-0.dat",
