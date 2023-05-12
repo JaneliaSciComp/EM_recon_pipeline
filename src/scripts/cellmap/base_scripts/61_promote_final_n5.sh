@@ -66,11 +66,12 @@ update GitHub with:
 
 FINAL_N5_PARENT_DIR=$(dirname "${FINAL_N5_PATH}")
 mkdir -p "${FINAL_N5_PARENT_DIR}"
+RENDERED_N5_PARENT_DIR=$(dirname "${RENDERED_N5_PATH}")
 mv "${RENDERED_N5_PATH}" "${FINAL_N5_PATH}"
 
 if [ ! -f "${FINAL_N5_PARENT_DIR}"/attributes.json ]; then
-  if [ -f "${RENDERED_N5_PATH}"/../attributes.json ]; then
-    cp "${RENDERED_N5_PATH}"/../attributes.json "${FINAL_N5_PARENT_DIR}"
+  if [ -f "${RENDERED_N5_PARENT_DIR}"/attributes.json ]; then
+    cp "${RENDERED_N5_PARENT_DIR}"/attributes.json "${FINAL_N5_PARENT_DIR}"
   else
     echo "WARNING: ${RENDERED_N5_PATH}/../attributes.json not found (neuroglancer may not work)"
   fi
