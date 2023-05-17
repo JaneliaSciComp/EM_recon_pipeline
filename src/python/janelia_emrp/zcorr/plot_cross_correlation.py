@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import json
+import traceback
 import urllib.parse
 
 import sys
@@ -165,7 +166,15 @@ def main(arg_list):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)
 
     # test ng url
     # s = build_neuroglancer_tap_url('cellmap', 'jrc_mus_kidney_2', 'v1_acquire_align', 8, 8, 8, 0, 0, "2013")

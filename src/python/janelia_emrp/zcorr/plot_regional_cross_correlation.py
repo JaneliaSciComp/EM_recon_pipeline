@@ -3,6 +3,7 @@ import argparse
 import glob
 import re
 import sys
+import traceback
 from typing import Final, Any
 
 from bokeh.io import output_file
@@ -202,11 +203,19 @@ def main(arg_list):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
-    # main([
-    #     "--owner", "cellmap",
-    #     "--project", "jrc_mus_cerebellum_1",
-    #     "--stack", "v1_acquire_trimmed_align",
-    #     "--run", "testPoorCorrelationC",
-    #     "--base_dir", "/Users/trautmane/Desktop/zcorr",
-    # ])
+    # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    # noinspection PyBroadException
+    try:
+        main(sys.argv[1:])
+        # main([
+        #     "--owner", "cellmap",
+        #     "--project", "jrc_mus_cerebellum_1",
+        #     "--stack", "v1_acquire_trimmed_align",
+        #     "--run", "testPoorCorrelationC",
+        #     "--base_dir", "/Users/trautmane/Desktop/zcorr",
+        # ])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)
