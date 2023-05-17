@@ -61,8 +61,15 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
 
     if tap_to_ng:
         tap_help = "to view in Neuroglancer"
-        tap_url = build_neuroglancer_tap_url(owner, project, stack, res_x, res_y, res_z, center_x, center_y,
-                                             z_token="@x")  # confusing, but z values are x in the plot
+        x_y_z_position = f"{center_x},{center_y},@x" # confusing, but z values are x in the plot
+        tap_url = build_neuroglancer_tap_url(owner=owner,
+                                             project=project,
+                                             stack=stack,
+                                             res_x=res_x,
+                                             res_y=res_y,
+                                             res_z=res_z,
+                                             cross_section_scale=32,
+                                             x_y_z_position=x_y_z_position)
     else:
         tap_help = "to view in CATMAID"
         catmaid_base_url = 'http://renderer-catmaid.int.janelia.org:8000'
@@ -91,21 +98,20 @@ def build_neuroglancer_tap_url(owner: str,
                                res_x: int,
                                res_y: int,
                                res_z: int,
-                               center_x: int,
-                               center_y: int,
-                               z_token: str) -> str:
+                               cross_section_scale: int,
+                               x_y_z_position: str) -> str:
 
     ng_source_url = f'render://http://renderer.int.janelia.org:8080/{owner}/{project}/{stack}'
     layer_name = f'{project} {stack}'
-    replace_with_z_token_after_encoding = 0.123456789
+    replace_with_position_after_encoding = 0.12345678987654321
     ng_state = {
         "dimensions": {
             "x": [res_x, "nm"],
             "y": [res_y, "nm"],
             "z": [res_z, "nm"]
         },
-        "position": [center_x, center_y, replace_with_z_token_after_encoding],
-        "crossSectionScale": 32, "projectionScale": 32768,
+        "position": [replace_with_position_after_encoding],
+        "crossSectionScale": cross_section_scale, "projectionScale": 32768,
         "layers": [
             {
                 "type": "image",
@@ -122,7 +128,7 @@ def build_neuroglancer_tap_url(owner: str,
     }
     ng_state_json_string = json.dumps(ng_state)
     encoded_ng_state = urllib.parse.quote(ng_state_json_string)
-    encoded_ng_state_with_at_z = encoded_ng_state.replace(str(replace_with_z_token_after_encoding), z_token)
+    encoded_ng_state_with_at_z = encoded_ng_state.replace(str(replace_with_position_after_encoding), x_y_z_position)
     ng_url = f'http://renderer.int.janelia.org:8080/ng/#!{encoded_ng_state_with_at_z}'
     return ng_url
 
