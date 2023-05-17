@@ -10,16 +10,24 @@ def offset_section_id(section_id: str,
 def main():
     host = 'em-services-1.int.janelia.org:8080'
     owner = 'fibsem'
-    from_collections = ['Z0422_17_VNC_1b_v1']
-    to_collection = 'Z0422_17_VNC_1_v2'
-    section_offset = 59414
+    from_collections = ['Z0422_17_VNC_1_v2']
+    to_collection = 'Z0422_17_VNC_1_v2_test'
+    section_offset = 0
     excluded_group_ids = {"1.0"}
+    min_group_id = 59300.0
+    max_group_id = 59600.0
 
     to_match_request = MatchRequest(host, owner, to_collection)
 
     for from_collection in from_collections:
         from_match_request = MatchRequest(host, owner, from_collection)
         group_ids = from_match_request.get_p_group_ids()
+
+        if min_group_id is not None:
+            group_ids = [group_id for group_id in group_ids if float(group_id) >= min_group_id]
+
+        if max_group_id is not None:
+            group_ids = [group_id for group_id in group_ids if float(group_id) <= max_group_id]
 
         i = 0
         for group_id in group_ids:
