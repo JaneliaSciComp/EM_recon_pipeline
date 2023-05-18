@@ -4,7 +4,7 @@
         "host": "jeiss2.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mus_heart-1",
+        "data_set_id": "jrc_mus-D013023-6_Cardi",
         "rows_per_z_layer": 2,
         "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6262_23-05-18_000012_0-0-0.dat",
