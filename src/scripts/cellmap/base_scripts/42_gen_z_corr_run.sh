@@ -30,8 +30,7 @@ fi
 
 JAVA_CLASS="org.janelia.render.client.zspacing.ZPositionCorrectionClient"
 MEMORY="13G" # 15G allocated per slot
-#BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 59"
-BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 120"
+BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 239"
 MAX_RUNNING_TASKS="1000"
 
 JOB_NAME=`getRunDirectory z_corr`
@@ -58,6 +57,7 @@ ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --stack ${ALIGN_STACK}"
 ARGS="${ARGS} --rootDirectory ${RENDER_NRS_ROOT}/z_corr"
 ARGS="${ARGS} --runName ${JOB_NAME}"
+ARGS="${ARGS} --poorCorrelationThreshold 0.97"
 ARGS="${ARGS} --scale 0.22" # important that this forces us away from a mipmap boundary (e.g. 0.25 was bad)
 
 echo "${ARGS}" > ${SOLVE_BASE_PARAMETERS_FILE}
@@ -69,8 +69,8 @@ echo "${ARGS}" > ${COMMON_PARAMETERS_FILE}
 
 cat ${COMMON_PARAMETERS_FILE}
 
-SECONDS_PER_LAYER=10  # 10 seconds for 2 tile layer at scale 0.25
-MINUTES_PER_JOB=20    # keep safely on short queue
+SECONDS_PER_LAYER=20  # 20 seconds for 6 tile layer at scale 0.25
+MINUTES_PER_JOB=30    # keep safely on short queue
 
 JOB_PARAMETERS_FILE="${RUN_DIR}/job_specific_parameters.txt"
 

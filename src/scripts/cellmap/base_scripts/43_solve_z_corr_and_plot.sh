@@ -69,7 +69,19 @@ echo
 # ---------------------------
 # generate plots
 
-Z_CORR_SCRIPTS_DIR="/groups/flyem/data/trautmane/z_corr"
+source /groups/flyem/data/render/bin/miniconda3/source_me.sh
+
+conda activate janelia_emrp
+
+EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
+export PYTHONPATH="${EMRP_ROOT}/src/python"
+
+Z_CORR_SCRIPTS_DIR="${EMRP_ROOT}/src/python/janelia_emrp/zcorr"
 ARGS="--base_dir ${RENDER_NRS_ROOT}/z_corr --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${ALIGN_STACK} --run ${RUN_NAME}"
-${Z_CORR_SCRIPTS_DIR}/plot_cross_correlation.sh ${ARGS}
-${Z_CORR_SCRIPTS_DIR}/plot_z_coords.sh ${ARGS}
+
+for SCRIPT in plot_cross_correlation.py plot_z_coords.py plot_regional_cross_correlation.py; do
+  echo "Running:
+    ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
+  "
+  ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
+done
