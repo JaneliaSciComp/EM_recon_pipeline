@@ -114,7 +114,7 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
   NG_BASE_URL="http://renderer.int.janelia.org:8080/ng/#!"
   EXPORT_NAME=$(basename "${RENDERED_DATA_SET}")
   NG_SOURCE_NAME="${RENDER_PROJECT}%20${EXPORT_NAME}"
-  NG_SOURCE_PATH=$(echo "/n5_sources/${OWNER}/${RENDER_PROJECT}.n5${RENDERED_DATA_SET}" | sed 's@/@%2F@g')
+  NG_SOURCE_PATH=$(echo "/n5_sources/${RENDER_OWNER}/${VOLUME_NAME}.n5${RENDERED_DATA_SET}" | sed 's@/@%2F@g')
 
   # note: "crossSectionScale":8 can't be passed in (for zoomed out view) because it breaks parser for some reason
   NG_QUERY_STRING="%7B%22layers%22%3A%5B%7B%22type%22%3A%22image%22%2C%22source%22%3A%7B"
