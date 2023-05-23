@@ -80,8 +80,9 @@ Z_CORR_SCRIPTS_DIR="${EMRP_ROOT}/src/python/janelia_emrp/zcorr"
 ARGS="--base_dir ${RENDER_NRS_ROOT}/z_corr --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${ALIGN_STACK} --run ${RUN_NAME}"
 
 for SCRIPT in plot_cross_correlation.py plot_z_coords.py plot_regional_cross_correlation.py; do
-  echo "Running:
-    ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
+  echo "
+Running:
+  ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
   "
   ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
 done
