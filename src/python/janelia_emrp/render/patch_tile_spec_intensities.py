@@ -27,10 +27,10 @@ def main():
     render_request = RenderRequest(host='em-services-1.int.janelia.org:8080',
                                    owner='cellmap',
                                    project='jrc_zf_cardiac_2')
-    stack = "v4_acquire_align_ic_try3"
-    additive_offset = -18.0 / 256.0  # need to divide by intensity range for 8-bit!
-    z_layers_to_patch = [12983, 12984, 12985, 12986, 12987, 12988, 12989, 12990, 12991, 12992, 12993, 12994, 12995,
-                         13791, 13792, 13793]
+    stack = "v4_acquire_align_ic_try4"
+    additive_offset = -4.0 / 256.0  # need to divide by intensity range for 8-bit!
+    z_layers_to_patch = [12983, 12984, 12985, 12986, 12987, 12988, 12989,
+                         12990, 12991, 12992, 12993, 12994, 12995, 12996]
 
     render_request.set_stack_state_to_loading(stack)
     
