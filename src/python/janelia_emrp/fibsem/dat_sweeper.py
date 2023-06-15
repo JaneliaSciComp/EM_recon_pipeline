@@ -34,6 +34,14 @@ def main(arg_list: list[str]):
         "--dat_path_output_file",
         help="If specified, write all dat paths to this file and skip missing dat check"
     )
+    parser.add_argument(
+        "--first_dat",
+        help="File name of first dat to verify (omit to use first dat from transfer info)",
+    )
+    parser.add_argument(
+        "--last_dat",
+        help="File name of last dat to verify (omit to use last dat from transfer info)",
+    )
 
     args = parser.parse_args(args=arg_list)
 
@@ -57,8 +65,16 @@ def main(arg_list: list[str]):
         if not cluster_root_dat_path.is_dir():
             raise ValueError(f"cluster_root_paths.raw_dat {cluster_root_dat_path} is not a directory")
 
-        first_dat_acquire_time = transfer_info.scope_data_set.first_dat_acquire_time()
-        last_dat_acquire_time = transfer_info.scope_data_set.last_dat_acquire_time()
+        if args.first_dat is None:
+            first_dat_acquire_time = transfer_info.scope_data_set.first_dat_acquire_time()
+        else:
+            first_dat_acquire_time = new_dat_path(file_path=Path(args.first_dat)).acquire_time
+
+        if args.last_dat is None:
+            last_dat_acquire_time = transfer_info.scope_data_set.last_dat_acquire_time()
+        else:
+            last_dat_acquire_time = new_dat_path(file_path=Path(args.last_dat)).acquire_time
+
         if last_dat_acquire_time is None:
             last_dat_acquire_time = datetime.datetime.now()
 
