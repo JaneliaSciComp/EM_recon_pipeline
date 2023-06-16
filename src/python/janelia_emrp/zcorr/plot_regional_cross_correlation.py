@@ -147,27 +147,28 @@ def plot_poor_regional_correlations(title, run_path, owner, project, stack,
     for cc_data_path in sorted(glob.glob(glob_pathname, recursive=True)):
         cc_regional_result_list.extend(load_json_file_data(cc_data_path))
 
-    if len(cc_regional_result_list) == 0:
-        raise ValueError(f"{run_path} does not contain any {poor_data_file_name} files")
+    if len(cc_regional_result_list) > 0:
+        layer_plots = []
+        for layer_result in cc_regional_result_list:
+            layer_plots.append(build_poor_regional_correlations_for_z(owner=owner,
+                                                                      project=project,
+                                                                      stack=stack,
+                                                                      res_x=res_x,
+                                                                      res_y=res_y,
+                                                                      res_z=res_z,
+                                                                      layer_result=layer_result))
 
-    layer_plots = []
-    for layer_result in cc_regional_result_list:
-        layer_plots.append(build_poor_regional_correlations_for_z(owner=owner,
-                                                                  project=project,
-                                                                  stack=stack,
-                                                                  res_x=res_x,
-                                                                  res_y=res_y,
-                                                                  res_z=res_z,
-                                                                  layer_result=layer_result))
+        grid_title = Div(text=f"<h3>Regional maps for poorly correlated layers in<br/>{title}</h3>")
+        grid = gridplot(layer_plots, ncols=1)
 
-    grid_title = Div(text=f"<h3>Regional maps for poorly correlated layers in<br/>{title}</h3>")
-    grid = gridplot(layer_plots, ncols=1)
+        if output_file_path:
+            output_file(output_file_path)
+            print(f'writing plot to {output_file_path}')
 
-    if output_file_path:
-        output_file(output_file_path)
-        print(f'writing plot to {output_file_path}')
+        show(bokeh_column(grid_title, grid))
 
-    show(bokeh_column(grid_title, grid))
+    else:
+        print(f"{run_path} does not contain any {poor_data_file_name} files so there is nothing to plot")
 
 
 # noinspection HttpUrlsUsage
