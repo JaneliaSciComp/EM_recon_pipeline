@@ -18,12 +18,19 @@ export N_OVERHEAD_CORES_PER_WORKER=1
 export N_CORES_DRIVER=1
 
 if (( $# < 1 )); then
-  # default: one task per 500 z => 5,000 z per worker if each worker has 10 cores
   JQ="/groups/flyem/data/render/bin/jq"
   STACK_URL="http://${SERVICE_HOST}/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
   SECTION_COUNT=$(curl -s "${STACK_URL}" | ${JQ} '.stats.sectionCount')
+  SECTIONS_PER_SOLVE_SET=500
+  NUMBER_OF_LEFT_SOLVE_SETS=$(( (SECTION_COUNT / SECTIONS_PER_SOLVE_SET) + 1 ))
+  NUMBER_OF_RIGHT_SOLVE_SETS=$(( NUMBER_OF_LEFT_SOLVE_SETS - 1 ))
+  NUMBER_OF_SOLVE_SETS=$(( NUMBER_OF_LEFT_SOLVE_SETS + NUMBER_OF_RIGHT_SOLVE_SETS ))
   TASKS_PER_NODE=$(( N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR ))
-  N_NODES=$(( (((SECTION_COUNT / 500 ) + 1) / TASKS_PER_NODE) + 1 ))
+  N_NODES=$(( (NUMBER_OF_SOLVE_SETS / TASKS_PER_NODE) + 1 ))
+  echo "
+  ${ACQUIRE_TRIMMED_STACK} has ${SECTION_COUNT} z layers
+  requesting ${N_NODES} workers for ${NUMBER_OF_SOLVE_SETS} solve sets
+"
 else
   N_NODES="${1}"        # 18
 fi
