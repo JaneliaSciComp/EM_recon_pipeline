@@ -28,8 +28,9 @@ if (( $# < 1 )); then
   TASKS_PER_NODE=$(( N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR ))
   N_NODES=$(( (NUMBER_OF_SOLVE_SETS / TASKS_PER_NODE) + 1 ))
   echo "
+Default number of worker nodes is ${N_NODES}:
   ${ACQUIRE_TRIMMED_STACK} has ${SECTION_COUNT} z layers
-  requesting ${N_NODES} workers for ${NUMBER_OF_SOLVE_SETS} solve sets
+  ${NUMBER_OF_SOLVE_SETS} solve sets will be processed given ${SECTIONS_PER_SOLVE_SET} z layers per set
 "
 else
   N_NODES="${1}"        # 18
