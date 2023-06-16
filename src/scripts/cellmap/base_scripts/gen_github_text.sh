@@ -45,20 +45,28 @@ if [[ -d ${STACK_Z_CORR_DIR} ]]; then
     RUN_DIR=$(dirname "${SOLVE_DIR}")
     RUN_NAME=$(basename "${RUN_DIR}")
 
-    CC_WITH_NEXT_PLOT="${RUN_DIR}/cc_with_next_plot.html"
+    CC_WITH_NEXT_HTML="cc_with_next_plot.html"
+    CC_WITH_NEXT_PLOT="${RUN_DIR}/${CC_WITH_NEXT_HTML}"
     if [[ ! -f ${CC_WITH_NEXT_PLOT} ]]; then
       echo "ERROR: ${CC_WITH_NEXT_PLOT} not found"
       exit 1
     fi
 
-    DELTA_Z_PLOT="${RUN_DIR}/delta_z_plot.html"
+    DELTA_Z_HTML="delta_z_plot.html"
+    DELTA_Z_PLOT="${RUN_DIR}/${DELTA_Z_HTML}"
     if [[ ! -f ${DELTA_Z_PLOT} ]]; then
       echo "ERROR: ${DELTA_Z_PLOT} not found"
       exit 1
     fi
 
     BASE_PLOT_URL="http://renderer-data4.int.janelia.org:8080/z_corr_plots/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}/${RUN_NAME}"
-    ALIGN_STACK_DATA="[cross correlation plot](${BASE_PLOT_URL}/cc_with_next_plot.html), [z correction delta plot](${BASE_PLOT_URL}/delta_z_plot.html)"
+
+    unset POOR_CC_LINK
+    POOR_HTML="poor_cc_regional_data.html"
+    if [[ -f ${RUN_DIR}/${POOR_HTML} ]]; then
+      POOR_CC_LINK=", [poor regional cross correlation plot](${BASE_PLOT_URL}/${POOR_HTML})"
+    fi
+    ALIGN_STACK_DATA="[cross correlation plot](${BASE_PLOT_URL}/${CC_WITH_NEXT_HTML}), [z correction delta plot](${BASE_PLOT_URL}/${DELTA_Z_HTML})${POOR_CC_LINK}"
 
   fi
 
