@@ -1,12 +1,13 @@
 #!/bin/bash
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
+ABSOLUTE_SCRIPT=$(readlink -m "$0")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
 CONFIG_FILE="${SCRIPT_DIR}/00_config.sh"
 
 if [[ -f ${CONFIG_FILE} ]]; then
-  source ${CONFIG_FILE}
+  # shellcheck source=00_config.sh
+  source "${CONFIG_FILE}"
 else
   echo "ERROR: cannot find ${CONFIG_FILE}"
   exit 1
@@ -33,13 +34,13 @@ MEMORY="13G" # 15G allocated per slot
 BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 239"
 MAX_RUNNING_TASKS="1000"
 
-JOB_NAME=`getRunDirectory z_corr`
+JOB_NAME=$(getRunDirectory z_corr)
 RUN_DIR="${SCRIPT_DIR}/${JOB_NAME}"
-LOG_DIR=`createLogDirectory "${RUN_DIR}"`
+LOG_DIR=$(createLogDirectory "${RUN_DIR}")
 
 # create tmp directory for hdf5 reads
 TMP_DIR="${RUN_DIR}/tmp"
-mkdir ${TMP_DIR}
+mkdir "${TMP_DIR}"
 
 echo "
 ------------------------------------------------------------------------
@@ -57,17 +58,17 @@ ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --stack ${ALIGN_STACK}"
 ARGS="${ARGS} --rootDirectory ${RENDER_NRS_ROOT}/z_corr"
 ARGS="${ARGS} --runName ${JOB_NAME}"
-ARGS="${ARGS} --poorCorrelationThreshold 0.97"
+ARGS="${ARGS} --poorCorrelationThreshold ${POOR_CORRELATION_THRESHOLD}"
 ARGS="${ARGS} --scale 0.22" # important that this forces us away from a mipmap boundary (e.g. 0.25 was bad)
 
-echo "${ARGS}" > ${SOLVE_BASE_PARAMETERS_FILE}
+echo "${ARGS}" > "${SOLVE_BASE_PARAMETERS_FILE}"
 
 ARGS="${ARGS} --optionsJson ${INFERENCE_OPTIONS_FILE}"
 #ARGS="${ARGS} --debugFormat png"
 
-echo "${ARGS}" > ${COMMON_PARAMETERS_FILE}
+echo "${ARGS}" > "${COMMON_PARAMETERS_FILE}"
 
-cat ${COMMON_PARAMETERS_FILE}
+cat "${COMMON_PARAMETERS_FILE}"
 
 SECONDS_PER_LAYER=20  # 20 seconds for 6 tile layer at scale 0.25
 MINUTES_PER_JOB=30    # keep safely on short queue
@@ -77,16 +78,17 @@ JOB_PARAMETERS_FILE="${RUN_DIR}/job_specific_parameters.txt"
 echo "
 Generating ${JOB_PARAMETERS_FILE}"
 
-${SCRIPT_DIR}/gen_z_corr_job_parameters.py ${RENDER_OWNER} ${RENDER_PROJECT} ${ALIGN_STACK} ${SECONDS_PER_LAYER} ${MINUTES_PER_JOB} > ${JOB_PARAMETERS_FILE}
+# shellcheck disable=SC2086
+"${SCRIPT_DIR}/gen_z_corr_job_parameters.py" ${RENDER_OWNER} ${RENDER_PROJECT} ${ALIGN_STACK} ${SECONDS_PER_LAYER} ${MINUTES_PER_JOB} > "${JOB_PARAMETERS_FILE}"
 
-FILE_COUNT=$(wc -l ${JOB_PARAMETERS_FILE} | cut -f1 -d' ')
+FILE_COUNT=$(wc -l "${JOB_PARAMETERS_FILE}" | cut -f1 -d' ')
 
 if (( FILE_COUNT == 0 )); then
 
   echo "
 No z correction batches found !!!
 Removing ${RUN_DIR} ..."
-  rm -rf ${RUN_DIR}
+  rm -rf "${RUN_DIR}"
 
 else
 
@@ -99,9 +101,9 @@ bsub -P ${BILL_TO} -J \"${JOB_NAME}[1-${FILE_COUNT}]%${MAX_RUNNING_TASKS}\" ${BA
 bsub -P ${BILL_TO} -J \"${JOB_NAME}_check_logs\" -w \"ended(${JOB_NAME})\" -n 1 -W 59 ${RENDER_PIPELINE_BIN}/check_logs.sh ${RUN_DIR}
 
 bsub -P ${BILL_TO} -J \"${JOB_NAME}_solve\" -w \"done(${JOB_NAME}_check_logs)\" -n 1 ${SCRIPT_DIR}/43_solve_z_corr_and_plot.sh ${SOLVE_BASE_PARAMETERS_FILE} ${INFERENCE_OPTIONS_FILE}
-" > ${BSUB_ARRAY_FILE}
+" > "${BSUB_ARRAY_FILE}"
 
-  chmod 755 ${BSUB_ARRAY_FILE}
+  chmod 755 "${BSUB_ARRAY_FILE}"
 
   echo "
 Created bsub array script for ${FILE_COUNT} jobs in:
