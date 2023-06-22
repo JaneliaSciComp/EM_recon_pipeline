@@ -37,8 +37,8 @@ def load_wafer_info(wafer_base_path: Path,
                                      max_number_of_scans=len(scan_paths),
                                      number_of_slabs_per_group=number_of_slabs_per_group)
 
-    # TODO: parse resolution from experiment.yml or resolution.json (wafer_52 resolution hard-coded here)
-    resolution = [8.0, 8.0, 10.0]
+    # TODO: parse resolution from experiment.yml or resolution.json (wafer_53 resolution hard-coded here)
+    resolution = [8.0, 8.0, 8.0]
 
     return WaferInfo(name=wafer_base_path.name,
                      base_path=wafer_base_path,
