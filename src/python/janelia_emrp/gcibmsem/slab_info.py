@@ -15,8 +15,11 @@ class SlabInfo:
     def dir_name(self) -> str:
         return f"{self.name}_"
 
+    def slab_index(self) -> int:
+        return self.acquisition_index + 1
+
     def stack_name(self) -> str:
-        return f"slab_{self.name}_all"
+        return f"cut_{self.cut_index:04d}_s{self.name}_acquire"
 
 
 @dataclass
@@ -26,7 +29,7 @@ class ContiguousOrderedSlabGroup:
     ordered_slabs: List[SlabInfo]
 
     def to_render_project_name(self, wafer_name: str):
-        return f"{wafer_name}_cut_{self.first_cut_index:05d}_to_{self.last_cut_index:05d}"
+        return f"{wafer_name}_cut_{self.first_cut_index:04d}_to_{self.last_cut_index:04d}"
 
 
 def load_slab_info(annotations_csv_path: Path,
@@ -62,12 +65,11 @@ def load_slab_info(annotations_csv_path: Path,
         first_z_to_slab_name[first_scan_z] = slab_name
 
     slab_group_list = []
-    slab_group : Optional[ContiguousOrderedSlabGroup] = None
+    slab_group: Optional[ContiguousOrderedSlabGroup] = None
 
     for first_z in sorted(first_z_to_slab_name.keys()):
         slab_name = first_z_to_slab_name[first_z]
         slab_info = slab_name_to_info[slab_name]
-        last_z = first_z + max_number_of_scans - 1
 
         if slab_group is None or len(slab_group.ordered_slabs) >= number_of_slabs_per_group:
             if slab_group is not None:
