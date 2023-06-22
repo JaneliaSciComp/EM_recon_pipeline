@@ -13,7 +13,7 @@ from PIL import Image
 from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.gcibmsem.field_of_view_layout \
-    import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, SEVEN_MFOV_COLUMN_GROUPS
+    import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, SEVEN_MFOV_COLUMN_GROUPS, NINETEEN_MFOV_COLUMN_GROUPS
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
 from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo
@@ -33,6 +33,7 @@ render_api_logger.setLevel(logging.DEBUG)
 render_api_logger.addHandler(c_handler)
 
 WAFER_52_LAYOUT = FieldOfViewLayout(SEVEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
+WAFER_53_LAYOUT = FieldOfViewLayout(NINETEEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
 
 def build_tile_spec(image_path: Path,
@@ -52,7 +53,7 @@ def build_tile_spec(image_path: Path,
     # TODO: need to get and save working distance
 
     section_id = f'{stage_z}.0'
-    image_row, image_col = WAFER_52_LAYOUT.row_and_col(mfov_name, sfov_index_name)
+    image_row, image_col = WAFER_53_LAYOUT.row_and_col(mfov_name, sfov_index_name)
 
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
 
