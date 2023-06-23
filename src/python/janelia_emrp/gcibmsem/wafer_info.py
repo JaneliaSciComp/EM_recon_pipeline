@@ -17,25 +17,28 @@ class WaferInfo:
 
 
 def load_wafer_info(wafer_base_path: Path,
-                    number_of_slabs_per_group: int) -> WaferInfo:
+                    number_of_slabs_per_group: int,
+                    slab_name_width: int = 3) -> WaferInfo:
 
     # <storage_root>/<wafer_id>/<scan_id>/<slab_stage_id>/<mFOV>/<sFOV>.png
-    # /nrs/hess/render/raw/wafer_52
-    #   /wafer_52_scan_000_20220401_20-19-52/002_/000003/002_000003_001_2022-04-01T1723012239596.png
+    # /nrs/hess/render/raw/wafer_53
+    #   /imaging/msem/scan_003
+    #   /wafer_53_scan_003_20220501_08-46-34/012_/000003/012_000003_042_2022-05-01T0618013636729.png
 
-    annotations_csv_path = Path(wafer_base_path, "annotations.csv")
-    if not annotations_csv_path.exists():
-        raise RuntimeError(f"cannot find {annotations_csv_path}")
+    ordering_dir_path = wafer_base_path / "ordering"
+    if not ordering_dir_path.exists():
+        raise RuntimeError(f"cannot find {ordering_dir_path}")
 
     scan_paths = []
-    for relative_scan_path in wafer_base_path.glob("wafer_*_scan_*"):
+    for relative_scan_path in wafer_base_path.glob("imaging/msem/scan_???"):
         scan_path = Path(wafer_base_path, relative_scan_path)
         if scan_path.is_dir():
             scan_paths.append(scan_path)
 
-    slab_group_list = load_slab_info(annotations_csv_path=annotations_csv_path,
+    slab_group_list = load_slab_info(ordering_dir_path=ordering_dir_path,
                                      max_number_of_scans=len(scan_paths),
-                                     number_of_slabs_per_group=number_of_slabs_per_group)
+                                     number_of_slabs_per_group=number_of_slabs_per_group,
+                                     slab_name_width=slab_name_width)
 
     # TODO: parse resolution from experiment.yml or resolution.json (wafer_53 resolution hard-coded here)
     resolution = [8.0, 8.0, 8.0]
@@ -55,7 +58,7 @@ def main(argv: List[str]):
 
     print(f"\nslab info ({len(wafer_info.slab_group_list)} groups):")
     for slab_group in wafer_info.slab_group_list:
-        project = slab_group.to_render_project_name(wafer_info.name)
+        project = slab_group.to_render_project_name()
         print(f"  render project: {project} ({len(slab_group.ordered_slabs)} slabs):")
         for slab_info in slab_group.ordered_slabs:
             print(f"    {slab_info}")
@@ -70,3 +73,4 @@ if __name__ == '__main__':
         main(sys.argv)
     else:
         print("USAGE: wafer_info.py <wafer_base_path> <number_of_slabs_per_group>")
+        main(["go", "/nrs/hess/render/raw/wafer_53", "10"])

@@ -13,7 +13,7 @@ from PIL import Image
 from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.gcibmsem.field_of_view_layout \
-    import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, SEVEN_MFOV_COLUMN_GROUPS, NINETEEN_MFOV_COLUMN_GROUPS
+    import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, NINETEEN_MFOV_COLUMN_GROUPS
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
 from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo
@@ -32,7 +32,6 @@ render_api_logger = logging.getLogger("renderapi")
 render_api_logger.setLevel(logging.DEBUG)
 render_api_logger.addHandler(c_handler)
 
-WAFER_52_LAYOUT = FieldOfViewLayout(SEVEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 WAFER_53_LAYOUT = FieldOfViewLayout(NINETEEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
 
@@ -171,7 +170,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
             "host": render_ws_host,
             "port": 8080,
             "owner": render_owner,
-            "project": slab_group.to_render_project_name(wafer_name=wafer_info.name),
+            "project": slab_group.to_render_project_name(),
             "web_only": True,
             "validate_client": False,
             "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
@@ -228,7 +227,7 @@ def main(arg_list: List[str]):
 
     parser.add_argument(
         "--wafer_base_path",
-        help="Base path for wafer data (e.g. /nrs/hess/render/raw/wafer_52)",
+        help="Base path for wafer data (e.g. /nrs/hess/render/raw/wafer_53)",
         required=True,
     )
 

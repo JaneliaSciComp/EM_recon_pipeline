@@ -21,7 +21,7 @@ class ScanFitParameters:
         }
 
 
-# slab_scan_path: /nrs/hess/render/raw/wafer_52/wafer_52_scan_000_20220401_20-19-52/002_
+# slab_scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_001/wafer_53_scan_001_20220427_23-16-30/002_
 slab_scan_path_pattern = re.compile(r"^(.*)/wafer_\d+_scan_(\d+)_\d{8}_\d{2}-\d{2}-\d{2}/\d+_$")
 
 
@@ -35,7 +35,7 @@ def load_scan_fit_parameters(slab_scan_path: Path) -> ScanFitParameters:
     scan_name = slab_scan_path_match.group(2)
     scan_index = int(scan_name)
 
-    fit_parameters_path = Path(wafer_base_path, f"scan_correction/scan_{scan_name}/fit_parameters.txt")
+    fit_parameters_path = Path(wafer_base_path, f"sfov_correction/average_fit_parameters_for_all_scans.txt")
 
     if not fit_parameters_path.exists():
         raise RuntimeError(f"{fit_parameters_path} not found")

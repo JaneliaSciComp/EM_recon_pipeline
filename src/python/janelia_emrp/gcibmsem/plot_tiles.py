@@ -64,7 +64,11 @@ if __name__ == '__main__':
     #     'Section 4',
     #     '/Volumes/hesslab/render/GCIBMSEM/data/Plate_13_20210525_21-38-12/008_s_4/full_image_coordinates.txt',
     #     output_dir_path='/Users/trautmane/Desktop')
+    # plot_section(
+    #     'Wafer 52 Scan 14',
+    #     '/Volumes/hess/render/raw/wafer_52/wafer_52_scan_014_20220405_09-56-36/039_/full_image_coordinates.txt',
+    #     output_dir_path='/Users/trautmane/Desktop')
     plot_section(
-        'Wafer 52 Scan 14',
-        '/Volumes/hess/render/raw/wafer_52/wafer_52_scan_014_20220405_09-56-36/039_/full_image_coordinates.txt',
+        'Wafer 53 Scan 3',
+        '/Volumes/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34/012_/full_image_coordinates.txt',
         output_dir_path='/Users/trautmane/Desktop')
