@@ -251,6 +251,8 @@ def main(arg_list: List[str]):
                                  number_of_slabs_per_group=args.number_of_slabs_per_render_project,
                                  slab_name_width=args.slab_name_width,
                                  exclude_scan_name_list=args.exclude_scan_name)
+    logger.info(f"loaded:")
+    wafer_info.print_me()
 
     import_slab_stacks_for_wafer(render_ws_host=args.render_host,
                                  render_owner=args.render_owner,

@@ -16,6 +16,21 @@ class WaferInfo:
     slab_group_list: list[ContiguousOrderedSlabGroup] = field(compare=False)
     scan_paths: List[Path]
 
+    def print_me(self):
+        print(f"name: {self.name}")
+        print(f"base_path: {self.base_path}")
+
+        print(f"\nslab info ({len(self.slab_group_list)} groups):")
+        for slab_group in self.slab_group_list:
+            project = slab_group.to_render_project_name()
+            print(f"  render project: {project} ({len(slab_group.ordered_slabs)} slabs):")
+            for slab_info in slab_group.ordered_slabs:
+                print(f"    {slab_info}")
+
+        print(f"\nscan_paths ({len(self.scan_paths)} scans):")
+        for scan_path in self.scan_paths:
+            print(f"  {scan_path}")
+
 
 def load_wafer_info(wafer_base_path: Path,
                     number_of_slabs_per_group: int,
@@ -98,20 +113,7 @@ def main(arg_list: list[str]):
                                  number_of_slabs_per_group=args.number_of_slabs_per_render_project,
                                  slab_name_width=args.slab_name_width,
                                  exclude_scan_name_list=args.exclude_scan_name)
-
-    print(f"name: {wafer_info.name}")
-    print(f"base_path: {wafer_info.base_path}")
-
-    print(f"\nslab info ({len(wafer_info.slab_group_list)} groups):")
-    for slab_group in wafer_info.slab_group_list:
-        project = slab_group.to_render_project_name()
-        print(f"  render project: {project} ({len(slab_group.ordered_slabs)} slabs):")
-        for slab_info in slab_group.ordered_slabs:
-            print(f"    {slab_info}")
-
-    print(f"\nscan_paths ({len(wafer_info.scan_paths)} scans):")
-    for scan_path in wafer_info.scan_paths:
-        print(f"  {scan_path}")
+    wafer_info.print_me()
 
 
 if __name__ == '__main__':
