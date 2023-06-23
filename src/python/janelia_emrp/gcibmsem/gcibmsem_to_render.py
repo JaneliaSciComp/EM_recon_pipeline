@@ -267,14 +267,14 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     try:
-        # main(sys.argv[1:])
-        main([
-            "--render_host", "10.40.3.113",
-            "--render_owner", "trautmane",
-            "--wafer_base_path", "/nrs/hess/render/raw/wafer_53",
-            "--exclude_scan_name", "scan_000",
-            "--import_scan_name", "scan_001"
-        ])
+        main(sys.argv[1:])
+        # main([
+        #     "--render_host", "10.40.3.113",
+        #     "--render_owner", "trautmane",
+        #     "--wafer_base_path", "/nrs/hess/render/raw/wafer_53",
+        #     "--exclude_scan_name", "scan_000",
+        #     "--import_scan_name", "scan_001"
+        # ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
