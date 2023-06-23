@@ -37,7 +37,7 @@ def load_wafer_info(wafer_base_path: Path,
                     slab_name_width: int,
                     exclude_scan_name_list: list[str]) -> WaferInfo:
 
-    # <storage_root>/<wafer_id>/imaging/msem/<simple_scan_name>/<scan_id>/<slab_stage_id>/<mFOV>/<sFOV>.png
+    # <storage_root>/<wafer_id>/imaging/msem/<simple_scan_name>/<scan_id>/<slab_name>_/<mFOV>/<sFOV>.png
     # /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
     #   /012_/000003/012_000003_042_2022-05-01T0618013636729.png
 
