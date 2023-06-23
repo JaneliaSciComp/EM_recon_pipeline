@@ -174,7 +174,8 @@ def get_stack_metadata_or_none(render: Render,
 
 def import_slab_stacks_for_wafer(render_ws_host: str,
                                  render_owner: str,
-                                 wafer_info: WaferInfo):
+                                 wafer_info: WaferInfo,
+                                 import_scan_name_list: list[str]):
 
     for slab_group in wafer_info.slab_group_list:
 
@@ -214,13 +215,17 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 renderapi.stack.set_stack_state(stack, 'LOADING', render=render)
 
             for scan_path in wafer_info.scan_paths:
-                slab_scan_path = Path(scan_path, slab_info.dir_name())
-                tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
-                if len(tile_specs) > 0:
-                    logger.info(f'import_tile_specs: {tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}')
-                    render_api.save_tile_specs(stack=stack,
-                                               tile_specs=tile_specs,
-                                               derive_data=True)
+                if len(import_scan_name_list) == 0 or scan_path.name in import_scan_name_list:
+                    slab_scan_path = Path(scan_path, slab_info.dir_name())
+                    tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
+                    if len(tile_specs) > 0:
+                        tile_id_range = f'{tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}'
+                        logger.info(f"import_slab_stacks_for_wafer: saving tiles {tile_id_range} in stack {stack}")
+                        render_api.save_tile_specs(stack=stack,
+                                                   tile_specs=tile_specs,
+                                                   derive_data=True)
+                else:
+                    logger.info(f'import_slab_stacks_for_wafer: ignoring {scan_path.name} for stack {stack}')
 
             renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
 
@@ -240,6 +245,13 @@ def main(arg_list: List[str]):
         help="Owner for all created render stacks",
         required=True,
     )
+    parser.add_argument(
+        "--import_scan_name",
+        help="If specified, build wafer info using all non-excluded scans but only derive and import "
+             "tile specs for these scans (e.g. scan_001)",
+        nargs='+',
+        default=[]
+    )
     args = parser.parse_args(args=arg_list)
 
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
@@ -247,7 +259,10 @@ def main(arg_list: List[str]):
                                  slab_name_width=args.slab_name_width,
                                  exclude_scan_name_list=args.exclude_scan_name)
 
-    import_slab_stacks_for_wafer(args.render_host, args.render_owner, wafer_info)
+    import_slab_stacks_for_wafer(render_ws_host=args.render_host,
+                                 render_owner=args.render_owner,
+                                 wafer_info=wafer_info,
+                                 import_scan_name_list=args.import_scan_name)
 
 
 if __name__ == '__main__':
