@@ -4,6 +4,7 @@ import logging
 import re
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import List, Any, Optional
 
@@ -19,19 +20,11 @@ from janelia_emrp.gcibmsem.field_of_view_layout \
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
 from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo, build_wafer_info_parent_parser
+from janelia_emrp.root_logger import init_logger
 
 program_name = "gcibmsem_to_render.py"
 
-# set up logging
-logger = logging.getLogger(program_name)
-c_handler = logging.StreamHandler(sys.stdout)
-c_formatter = logging.Formatter("%(asctime)s [%(threadName)s] [%(name)s] [%(levelname)s] %(message)s")
-c_handler.setFormatter(c_formatter)
-logger.addHandler(c_handler)
-logger.setLevel(logging.INFO)
-
-render_api_logger = logging.getLogger("renderapi")
-render_api_logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 WAFER_53_LAYOUT = FieldOfViewLayout(NINETEEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
@@ -153,10 +146,10 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                         min_y=min_y,
                         scan_fit_parameters=scan_fit_parameters,
                         margin=400)
-        for (tile_id, mfov_name, sfov_index_name, image_path, stage_x, stage_y) in tile_data
+        for (tile_id, mfov_name, sfov_index_name, image_path, stage_x, stage_y) in sorted(tile_data)
     ]
 
-    logger.info(f'loaded {len(tile_specs)} tile specs from {slab_scan_path}')
+    logger.info(f'build_tile_specs_for_slab_scan: loaded {len(tile_specs)} tile specs from {slab_scan_path}')
 
     return tile_specs
 
@@ -214,7 +207,8 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 renderapi.stack.set_stack_state(stack, 'LOADING', render=render)
 
             for scan_path in wafer_info.scan_paths:
-                if len(import_scan_name_list) == 0 or scan_path.name in import_scan_name_list:
+                # scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
+                if len(import_scan_name_list) == 0 or scan_path.parent.name in import_scan_name_list:
                     slab_scan_path = Path(scan_path, slab_info.dir_name())
                     tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
                     if len(tile_specs) > 0:
@@ -224,7 +218,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                                    tile_specs=tile_specs,
                                                    derive_data=True)
                 else:
-                    logger.info(f'import_slab_stacks_for_wafer: ignoring {scan_path.name} for stack {stack}')
+                    logger.debug(f'import_slab_stacks_for_wafer: ignoring {scan_path.name} for stack {stack}')
 
             renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
 
@@ -265,4 +259,23 @@ def main(arg_list: List[str]):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    # setup logger since this module is the main program (and set render python logging level to DEBUG)
+    init_logger(__file__)
+    logging.getLogger("renderapi").setLevel(logging.DEBUG)
+
+    # noinspection PyBroadException
+    try:
+        # main(sys.argv[1:])
+        main([
+            "--render_host", "10.40.3.113",
+            "--render_owner", "trautmane",
+            "--wafer_base_path", "/nrs/hess/render/raw/wafer_53",
+            "--exclude_scan_name", "scan_000",
+            "--import_scan_name", "scan_001"
+        ])
+    except Exception as e:
+        # ensure exit code is a non-zero value when Exception occurs
+        traceback.print_exc()
+        sys.exit(1)

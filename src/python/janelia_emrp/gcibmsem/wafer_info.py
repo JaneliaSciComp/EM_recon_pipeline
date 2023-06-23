@@ -22,22 +22,23 @@ def load_wafer_info(wafer_base_path: Path,
                     slab_name_width: int,
                     exclude_scan_name_list: list[str]) -> WaferInfo:
 
-    # <storage_root>/<wafer_id>/<scan_id>/<slab_stage_id>/<mFOV>/<sFOV>.png
-    # /nrs/hess/render/raw/wafer_53
-    #   /imaging/msem/scan_003
-    #   /wafer_53_scan_003_20220501_08-46-34/012_/000003/012_000003_042_2022-05-01T0618013636729.png
+    # <storage_root>/<wafer_id>/imaging/msem/<simple_scan_name>/<scan_id>/<slab_stage_id>/<mFOV>/<sFOV>.png
+    # /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
+    #   /012_/000003/012_000003_042_2022-05-01T0618013636729.png
 
     scan_paths = []
-    for relative_scan_path in wafer_base_path.glob("imaging/msem/scan_???"):
+    for relative_scan_path in wafer_base_path.glob("imaging/msem/scan_???/*_scan_*"):
         scan_path = Path(wafer_base_path, relative_scan_path)
         if scan_path.is_dir():
-            if len(exclude_scan_name_list) == 0 or relative_scan_path.name not in exclude_scan_name_list:
+            simple_scan_name = scan_path.parent.name
+            if len(exclude_scan_name_list) == 0 or simple_scan_name not in exclude_scan_name_list:
                 scan_paths.append(scan_path)
 
     if len(scan_paths) == 0:
         raise ValueError(f"no scan paths found in {wafer_base_path} with exclude_scan_names {exclude_scan_name_list}")
 
-    ordering_scan_csv_path = wafer_base_path / "ordering" / f"{scan_paths[0].name}.csv"
+    simple_scan_name = scan_paths[0].parent.name
+    ordering_scan_csv_path = wafer_base_path / "ordering" / f"{simple_scan_name}.csv"
 
     if not ordering_scan_csv_path.exists():
         raise ValueError(f"cannot find {ordering_scan_csv_path}")

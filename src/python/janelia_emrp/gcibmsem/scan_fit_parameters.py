@@ -22,7 +22,7 @@ class ScanFitParameters:
 
 
 # slab_scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_001/wafer_53_scan_001_20220427_23-16-30/002_
-slab_scan_path_pattern = re.compile(r"^(.*)/wafer_\d+_scan_(\d+)_\d{8}_\d{2}-\d{2}-\d{2}/\d+_$")
+slab_scan_path_pattern = re.compile(r"^(.*)/imaging/msem/scan.*/wafer_\d+_scan_(\d+)_\d{8}_\d{2}-\d{2}-\d{2}/\d+_$")
 
 
 def load_scan_fit_parameters(slab_scan_path: Path) -> ScanFitParameters:
