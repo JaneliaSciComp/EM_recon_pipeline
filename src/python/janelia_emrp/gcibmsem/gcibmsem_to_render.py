@@ -32,7 +32,6 @@ logger.setLevel(logging.INFO)
 
 render_api_logger = logging.getLogger("renderapi")
 render_api_logger.setLevel(logging.DEBUG)
-render_api_logger.addHandler(c_handler)
 
 WAFER_53_LAYOUT = FieldOfViewLayout(NINETEEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
