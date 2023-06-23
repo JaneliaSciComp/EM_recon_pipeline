@@ -167,15 +167,21 @@ def get_stack_metadata_or_none(render: Render,
 def import_slab_stacks_for_wafer(render_ws_host: str,
                                  render_owner: str,
                                  wafer_info: WaferInfo,
-                                 import_scan_name_list: list[str]):
+                                 import_scan_name_list: list[str],
+                                 import_project_name_list: list[str]):
 
     for slab_group in wafer_info.slab_group_list:
+        project_name = slab_group.to_render_project_name()
+
+        if len(import_project_name_list) > 0 and project_name not in import_project_name_list:
+            logger.debug(f'import_slab_stacks_for_wafer: ignoring slabs for project {project_name}')
+            continue
 
         render_connect_params = {
             "host": render_ws_host,
             "port": 8080,
             "owner": render_owner,
-            "project": slab_group.to_render_project_name(),
+            "project": project_name,
             "web_only": True,
             "validate_client": False,
             "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
@@ -245,6 +251,13 @@ def main(arg_list: List[str]):
         nargs='+',
         default=[]
     )
+    parser.add_argument(
+        "--import_project_name",
+        help="If specified, build wafer info using all non-excluded scans but only derive and import "
+             "tile specs for these projects (e.g. cut_400_to_402)",
+        nargs='+',
+        default=[]
+    )
     args = parser.parse_args(args=arg_list)
 
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
@@ -257,7 +270,8 @@ def main(arg_list: List[str]):
     import_slab_stacks_for_wafer(render_ws_host=args.render_host,
                                  render_owner=args.render_owner,
                                  wafer_info=wafer_info,
-                                 import_scan_name_list=args.import_scan_name)
+                                 import_scan_name_list=args.import_scan_name,
+                                 import_project_name_list=args.import_project_name)
 
 
 if __name__ == '__main__':
