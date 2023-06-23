@@ -5,10 +5,12 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import List, Any
+from typing import List, Any, Optional
 
 import renderapi
 from PIL import Image
+from renderapi import Render
+from renderapi.errors import RenderError
 
 from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
@@ -160,6 +162,16 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     return tile_specs
 
 
+def get_stack_metadata_or_none(render: Render,
+                               stack_name: str) -> Optional[dict[str, Any]]:
+    stack_metadata = None
+    try:
+        stack_metadata = renderapi.stack.get_stack_metadata(render=render, stack=stack_name)
+    except RenderError:
+        print(f"failed to retrieve metadata for stack {stack_name}")
+    return stack_metadata
+
+
 def import_slab_stacks_for_wafer(render_ws_host: str,
                                  render_owner: str,
                                  wafer_info: WaferInfo):
@@ -186,15 +198,20 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
         for slab_info in slab_group.ordered_slabs:
             stack = slab_info.stack_name()
 
-            # explicitly set createTimestamp until render-python bug is fixed
-            # see https://github.com/AllenInstitute/render-python/pull/158
-            create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
-            renderapi.stack.create_stack(stack,
-                                         render=render,
-                                         createTimestamp=create_timestamp,
-                                         stackResolutionX=wafer_info.resolution[0],
-                                         stackResolutionY=wafer_info.resolution[1],
-                                         stackResolutionZ=wafer_info.resolution[2])
+            stack_metadata = get_stack_metadata_or_none(render=render, stack_name=stack)
+
+            if stack_metadata is None:
+                # explicitly set createTimestamp until render-python bug is fixed
+                # see https://github.com/AllenInstitute/render-python/pull/158
+                create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
+                renderapi.stack.create_stack(stack,
+                                             render=render,
+                                             createTimestamp=create_timestamp,
+                                             stackResolutionX=wafer_info.resolution[0],
+                                             stackResolutionY=wafer_info.resolution[1],
+                                             stackResolutionZ=wafer_info.resolution[2])
+            else:
+                renderapi.stack.set_stack_state(stack, 'LOADING', render=render)
 
             for scan_path in wafer_info.scan_paths:
                 slab_scan_path = Path(scan_path, slab_info.dir_name())
