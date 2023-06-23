@@ -16,7 +16,7 @@ from janelia_emrp.gcibmsem.field_of_view_layout \
     import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, NINETEEN_MFOV_COLUMN_GROUPS
 from janelia_emrp.gcibmsem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
 from janelia_emrp.gcibmsem.slab_info import SlabInfo
-from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo
+from janelia_emrp.gcibmsem.wafer_info import load_wafer_info, WaferInfo, build_wafer_info_parent_parser
 
 program_name = "gcibmsem_to_render.py"
 
@@ -210,38 +210,25 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
 def main(arg_list: List[str]):
     parser = argparse.ArgumentParser(
-        description="Parse wafer metadata and convert to tile specs that can be saved to render."
+        description="Parse wafer metadata and convert to tile specs that can be saved to render.",
+        parents=[build_wafer_info_parent_parser()]
     )
-
     parser.add_argument(
         "--render_host",
         help="Render web services host (e.g. em-services-1.int.janelia.org)",
         required=True,
     )
-
     parser.add_argument(
         "--render_owner",
         help="Owner for all created render stacks",
         required=True,
     )
-
-    parser.add_argument(
-        "--wafer_base_path",
-        help="Base path for wafer data (e.g. /nrs/hess/render/raw/wafer_53)",
-        required=True,
-    )
-
-    parser.add_argument(
-        "--number_of_slabs_per_render_project",
-        help="Number of slabs to group together into one render project",
-        type=int,
-        default=10
-    )
-
     args = parser.parse_args(args=arg_list)
 
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
-                                 number_of_slabs_per_group=args.number_of_slabs_per_render_project)
+                                 number_of_slabs_per_group=args.number_of_slabs_per_render_project,
+                                 slab_name_width=args.slab_name_width,
+                                 exclude_scan_name_list=args.exclude_scan_name)
 
     import_slab_stacks_for_wafer(args.render_host, args.render_owner, wafer_info)
 

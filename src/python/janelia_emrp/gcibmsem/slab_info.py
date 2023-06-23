@@ -40,19 +40,21 @@ class ContiguousOrderedSlabGroup:
         return f"cut_{self.ordered_slabs[0].cut_name()}_to_{self.ordered_slabs[-1].cut_name()}"
 
 
-def load_slab_info(ordering_dir_path: Path,
+def load_slab_info(ordering_scan_csv_path: Path,
                    slab_name_width: int,
                    max_number_of_scans: int,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
     magc_id_to_stage_order = {}
     serial_order_to_magc_id = {}
 
-    first_scan_csv_path = ordering_dir_path / "scan_000.csv"
-    with open(first_scan_csv_path, 'r') as first_scan_csv_file:
+    if not ordering_scan_csv_path.exists():
+        raise ValueError(f"cannot find {ordering_scan_csv_path}")
+
+    with open(ordering_scan_csv_path, 'r') as ordering_scan_csv_file:
         # magc_to_serial,serial_to_magc,magc_to_stage,stage_to_magc,serial_to_stage,stage_to_serial,angles_in_serial_order
         # 261,209,188,385,95,188,-18.261
         line_number = 0
-        for row in csv.reader(first_scan_csv_file, delimiter=","):
+        for row in csv.reader(ordering_scan_csv_file, delimiter=","):
             line_number = line_number + 1
             if "magc_to_serial" == row[0]:
                 continue
@@ -101,7 +103,7 @@ def load_slab_info(ordering_dir_path: Path,
 
 
 def main(argv: List[str]):
-    slab_group_list = load_slab_info(ordering_dir_path=Path(argv[1]),
+    slab_group_list = load_slab_info(ordering_scan_csv_path=Path(argv[1]),
                                      max_number_of_scans=int(argv[2]),
                                      number_of_slabs_per_group=int(argv[3]),
                                      slab_name_width=3)
@@ -116,5 +118,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         main(sys.argv)
     else:
-        print("USAGE: slab_info.py <ordering_dir_path> <max_number_of_scans> <number_of_slabs_per_group>")
-        # main(["go", "/nrs/hess/render/raw/wafer_53/ordering", "48", "10"])
+        print("USAGE: slab_info.py <ordering_scan_csv_path> <max_number_of_scans> <number_of_slabs_per_group>")
+        # main(["go", "/nrs/hess/render/raw/wafer_53/ordering/scan_001.csv", "48", "10"])
