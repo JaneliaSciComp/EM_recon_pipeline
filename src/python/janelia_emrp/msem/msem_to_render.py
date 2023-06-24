@@ -196,28 +196,23 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
         for slab_info in slab_group.ordered_slabs:
             stack = slab_info.stack_name()
-
-            stack_metadata = get_stack_metadata_or_none(render=render, stack_name=stack)
-
-            if stack_metadata is None:
-                # explicitly set createTimestamp until render-python bug is fixed
-                # see https://github.com/AllenInstitute/render-python/pull/158
-                create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
-                renderapi.stack.create_stack(stack,
-                                             render=render,
-                                             createTimestamp=create_timestamp,
-                                             stackResolutionX=wafer_info.resolution[0],
-                                             stackResolutionY=wafer_info.resolution[1],
-                                             stackResolutionZ=wafer_info.resolution[2])
-            else:
-                renderapi.stack.set_stack_state(stack, 'LOADING', render=render)
+            stack_is_in_loading_state = False
 
             for scan_path in wafer_info.scan_paths:
                 # scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
                 if len(import_scan_name_list) == 0 or scan_path.parent.name in import_scan_name_list:
+
                     slab_scan_path = Path(scan_path, slab_info.dir_name())
                     tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
+
                     if len(tile_specs) > 0:
+
+                        if not stack_is_in_loading_state:
+                            ensure_stack_is_in_loading_state(render=render,
+                                                             stack=stack,
+                                                             wafer_info=wafer_info)
+                            stack_is_in_loading_state = True
+
                         tile_id_range = f'{tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}'
                         logger.info(f"import_slab_stacks_for_wafer: saving tiles {tile_id_range} in stack {stack}")
                         render_api.save_tile_specs(stack=stack,
@@ -226,7 +221,27 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 else:
                     logger.debug(f'import_slab_stacks_for_wafer: ignoring {scan_path.name} for stack {stack}')
 
-            renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
+            if stack_is_in_loading_state:
+                renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
+
+
+def ensure_stack_is_in_loading_state(render: Render,
+                                     stack: str,
+                                     wafer_info: WaferInfo) -> None:
+    stack_metadata = get_stack_metadata_or_none(render=render, stack_name=stack)
+    if stack_metadata is None:
+        # TODO: remove render-python hack
+        # explicitly set createTimestamp until render-python bug is fixed
+        # see https://github.com/AllenInstitute/render-python/pull/158
+        create_timestamp = time.strftime('%Y-%m-%dT%H:%M:%S.00Z')
+        renderapi.stack.create_stack(stack,
+                                     render=render,
+                                     createTimestamp=create_timestamp,
+                                     stackResolutionX=wafer_info.resolution[0],
+                                     stackResolutionY=wafer_info.resolution[1],
+                                     stackResolutionZ=wafer_info.resolution[2])
+    else:
+        renderapi.stack.set_stack_state(stack, 'LOADING', render=render)
 
 
 def main(arg_list: List[str]):
