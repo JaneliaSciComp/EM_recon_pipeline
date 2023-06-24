@@ -25,7 +25,7 @@ EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
-ARGS="${EMRP_ROOT}/src/python/janelia_emrp/gcibmsem/gcibmsem_to_render.py"
+ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/msem_to_render.py"
 ARGS="${ARGS} --render_host ${RENDER_HOST} --render_owner ${RENDER_OWNER}"
 ARGS="${ARGS} --wafer_base_path ${WAFER_BASE_PATH}"
 ARGS="${ARGS} --exclude_scan_name scan_000"

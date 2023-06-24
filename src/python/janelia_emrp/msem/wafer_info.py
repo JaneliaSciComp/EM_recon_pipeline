@@ -5,7 +5,7 @@ from typing import List
 
 import sys
 
-from janelia_emrp.gcibmsem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
+from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 
 
 @dataclass
