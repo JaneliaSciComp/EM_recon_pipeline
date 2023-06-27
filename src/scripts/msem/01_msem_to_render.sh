@@ -27,9 +27,9 @@ export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/msem_to_render.py"
 ARGS="${ARGS} --render_host ${RENDER_HOST} --render_owner ${RENDER_OWNER}"
-ARGS="${ARGS} --wafer_base_path ${WAFER_BASE_PATH}"
+ARGS="${ARGS} --wafer_base_path ${DATA_RAW_DIR}"
 ARGS="${ARGS} --exclude_scan_name scan_000"
-ARGS="${ARGS} --import_scan_name scan_001 scan_042"
+ARGS="${ARGS} --import_scan_name scan_001"
 #ARGS="${ARGS} --import_project_name cut_350_to_359"
 
 echo """
