@@ -37,6 +37,8 @@ ARGS="--baseDataUrl http://${SERVICE_HOST}/render-ws/v1 --owner ${RENDER_OWNER} 
 ARGS="${ARGS} --rootDirectory ${DATA_MIPMAP_DIR} --maxLevel ${MAX_MIPMAP_LEVEL}"
 ARGS="${ARGS} --allStacksInAllProjects"
 
+mkdir -p "${DATA_MIPMAP_DIR}"
+
 #export RUNTIME="3:59"
 
 #-----------------------------------------------------------
