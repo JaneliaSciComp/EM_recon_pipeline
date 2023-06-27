@@ -8,6 +8,8 @@ export CONFIG_DIR
 
 export LAB_OR_PROJECT_GROUP="hess"
 export RENDER_OWNER="hess_wafer_53"
+export RENDER_PROJECT="cut_000_to_009" # default project to first cut
+
 export BASE_DATA_DIR="/nrs/${LAB_OR_PROJECT_GROUP}/data"
 export DATA_RAW_DIR="${BASE_DATA_DIR}/${RENDER_OWNER}/raw"
 export DATA_MIPMAP_DIR="${BASE_DATA_DIR}/${RENDER_OWNER}/mipmaps"
@@ -36,7 +38,8 @@ export RENDER_CLIENT_HEAP="1G"
 
 # Write spark logs to backed-up filesystem rather than user home so that they are readable by others for analysis.
 # NOTE: must consolidate logs when changing run parent dir
-export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/spark_output/${USER}"
+export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/hess/hesslab/render/spark_output/${USER}"
+#export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/spark_output/${USER}"
 
 # Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
 # (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
