@@ -4,19 +4,18 @@ import glob
 import re
 import sys
 import traceback
-from typing import Final, Any
+from typing import Final, Any, Optional
 
 from bokeh.io import output_file
-from bokeh.layouts import gridplot
 from bokeh.layouts import column as bokeh_column
+from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, TapTool, OpenURL, BasicTicker, PrintfTickFormatter, LinearColorMapper, \
-    ColorBar, Div
-from bokeh.plotting import figure, show
+    ColorBar, Div, Panel, Tabs
+from bokeh.plotting import figure, show, Figure
 from bokeh.transform import linear_cmap
 
 from janelia_emrp.zcorr.plot_cross_correlation import build_neuroglancer_tap_url
 from janelia_emrp.zcorr.plot_util import get_stack_metadata, load_json_file_data
-
 
 # .../z/%s/box/-12825,-7107,26455,14179,0.22/render-parameters
 LAYER_URL_PATTERN: Final = re.compile(r".*/box/([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)/render-parameters")
@@ -102,7 +101,7 @@ def build_poor_regional_correlations_for_z(owner: str,
                x_range=[layer_x, layer_x + layer_width],
                y_range=[layer_y + layer_height, layer_y],
                tooltips=tooltips, tools='tap,save,reset',
-               plot_width=plot_width, plot_height=plot_height)
+               plot_width=plot_width, plot_height=plot_height, margin=[0, 50, 0, 0])
     p.title.align = 'center'
 
     data_source = ColumnDataSource(data=dict(x=region_center_x, y=region_center_y, cc=cc_with_next))
@@ -126,6 +125,17 @@ def build_poor_regional_correlations_for_z(owner: str,
     return p
 
 
+def append_tab_for_prior_layers(min_z: Optional[float],
+                                max_z: Optional[float],
+                                contiguous_z_plot_list: list[Figure],
+                                tab_panel_list: list[Panel]):
+    if min_z is not None and len(contiguous_z_plot_list) > 0:
+        tab_title = f"z {int(min_z)} to {int(max_z)}" if min_z < max_z else f"z {min_z}"
+        grid = gridplot(contiguous_z_plot_list, ncols=2)
+        panel = Panel(child=grid, title=tab_title)
+        tab_panel_list.append(panel)
+
+
 def plot_poor_regional_correlations(title, run_path, owner, project, stack,
                                     output_file_path=None):
     stack_metadata = get_stack_metadata(owner, project, stack)
@@ -142,30 +152,61 @@ def plot_poor_regional_correlations(title, run_path, owner, project, stack,
     #   { ... },
     # ]
     poor_data_file_name = "poor_cc_regional_data.json"
-    cc_regional_result_list = []
+    poor_layer_pair_map = {}
     glob_pathname = f"{run_path}/**/{poor_data_file_name}*"
     for cc_data_path in sorted(glob.glob(glob_pathname, recursive=True)):
-        cc_regional_result_list.extend(load_json_file_data(cc_data_path))
+        # If a poor layer pair occurs near a batch boundary, then the same data will be written in
+        # two cc_batches.  Map the pairs here to ensure we only plot each poor pair once.
+        for layer_result in load_json_file_data(cc_data_path):
+            pair_id = f'{layer_result["pZ"]}_to_{layer_result["qZ"]}'
+            if pair_id not in poor_layer_pair_map:
+                poor_layer_pair_map[pair_id] = layer_result
 
-    if len(cc_regional_result_list) > 0:
-        layer_plots = []
-        for layer_result in cc_regional_result_list:
-            layer_plots.append(build_poor_regional_correlations_for_z(owner=owner,
-                                                                      project=project,
-                                                                      stack=stack,
-                                                                      res_x=res_x,
-                                                                      res_y=res_y,
-                                                                      res_z=res_z,
-                                                                      layer_result=layer_result))
+    tab_panel_list = []
+    contiguous_z_plot_list = []
+    first_pz = None
+    previous_pz = None
+    previous_qz = None
+    if len(poor_layer_pair_map) > 0:
+        for pair_id in sorted(poor_layer_pair_map.keys()):
+            layer_result = poor_layer_pair_map[pair_id]
+            layer_plot = build_poor_regional_correlations_for_z(owner=owner,
+                                                                project=project,
+                                                                stack=stack,
+                                                                res_x=res_x,
+                                                                res_y=res_y,
+                                                                res_z=res_z,
+                                                                layer_result=layer_result)
+            pz = float(layer_result["pZ"])
+            qz = float(layer_result["qZ"])
 
-        grid_title = Div(text=f"<h3>Regional maps for poorly correlated layers in<br/>{title}</h3>")
-        grid = gridplot(layer_plots, ncols=1)
+            if previous_pz is None or (pz - previous_pz) > 1.0:
+                append_tab_for_prior_layers(min_z=first_pz,
+                                            max_z=previous_qz,
+                                            contiguous_z_plot_list=contiguous_z_plot_list,
+                                            tab_panel_list=tab_panel_list)
+                first_pz = pz
+                contiguous_z_plot_list = [layer_plot]
+            else:
+                contiguous_z_plot_list.append(layer_plot)
+
+            previous_pz = pz
+            previous_qz = qz
+
+        append_tab_for_prior_layers(min_z=first_pz,
+                                    max_z=previous_qz,
+                                    contiguous_z_plot_list=contiguous_z_plot_list,
+                                    tab_panel_list=tab_panel_list)
+
+    if len(tab_panel_list) > 0:
+        page_title = Div(text=f"<h3>Regional maps for poorly correlated layers in {title}</h3>")
+        tabs = Tabs(tabs=tab_panel_list)
 
         if output_file_path:
             output_file(output_file_path)
             print(f'writing plot to {output_file_path}')
 
-        show(bokeh_column(grid_title, grid))
+        show(bokeh_column(page_title, tabs))
 
     else:
         print(f"{run_path} does not contain any {poor_data_file_name} files so there is nothing to plot")
@@ -208,14 +249,14 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     try:
-        main(sys.argv[1:])
-        # main([
-        #     "--owner", "cellmap",
-        #     "--project", "jrc_mus_cerebellum_1",
-        #     "--stack", "v1_acquire_trimmed_align",
-        #     "--run", "testPoorCorrelationC",
-        #     "--base_dir", "/Users/trautmane/Desktop/zcorr",
-        # ])
+        # main(sys.argv[1:])
+        main([
+            "--owner", "cellmap",
+            "--project", "jrc_mus_kidney_3",
+            "--stack", "v2_acquire_align",
+            "--run", "run_20230710_010245_321_z_corr",
+            "--base_dir", "/nrs/cellmap/data/jrc_mus-kidney-3/z_corr",
+        ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
