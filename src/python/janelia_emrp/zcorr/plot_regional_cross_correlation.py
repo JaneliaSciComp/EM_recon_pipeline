@@ -249,14 +249,14 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     try:
-        # main(sys.argv[1:])
-        main([
-            "--owner", "cellmap",
-            "--project", "jrc_mus_kidney_3",
-            "--stack", "v2_acquire_align",
-            "--run", "run_20230710_010245_321_z_corr",
-            "--base_dir", "/nrs/cellmap/data/jrc_mus-kidney-3/z_corr",
-        ])
+        main(sys.argv[1:])
+        # main([
+        #     "--owner", "cellmap",
+        #     "--project", "jrc_mus_kidney_3",
+        #     "--stack", "v2_acquire_align",
+        #     "--run", "run_20230710_010245_321_z_corr",
+        #     "--base_dir", "/nrs/cellmap/data/jrc_mus-kidney-3/z_corr",
+        # ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
