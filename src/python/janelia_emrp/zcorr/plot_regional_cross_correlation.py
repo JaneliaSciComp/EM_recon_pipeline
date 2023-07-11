@@ -131,7 +131,7 @@ def append_tab_for_prior_layers(min_z: Optional[float],
                                 tab_panel_list: list[Panel]):
     if min_z is not None and len(contiguous_z_plot_list) > 0:
         tab_title = f"z {int(min_z)} to {int(max_z)}" if min_z < max_z else f"z {min_z}"
-        grid = gridplot(contiguous_z_plot_list, ncols=2)
+        grid = gridplot(contiguous_z_plot_list, ncols=3)
         panel = Panel(child=grid, title=tab_title)
         tab_panel_list.append(panel)
 
@@ -158,9 +158,9 @@ def plot_poor_regional_correlations(title, run_path, owner, project, stack,
         # If a poor layer pair occurs near a batch boundary, then the same data will be written in
         # two cc_batches.  Map the pairs here to ensure we only plot each poor pair once.
         for layer_result in load_json_file_data(cc_data_path):
-            pair_id = f'{layer_result["pZ"]}_to_{layer_result["qZ"]}'
-            if pair_id not in poor_layer_pair_map:
-                poor_layer_pair_map[pair_id] = layer_result
+            pz = float(layer_result["pZ"])
+            if pz not in poor_layer_pair_map:
+                poor_layer_pair_map[pz] = layer_result
 
     tab_panel_list = []
     contiguous_z_plot_list = []
@@ -168,8 +168,8 @@ def plot_poor_regional_correlations(title, run_path, owner, project, stack,
     previous_pz = None
     previous_qz = None
     if len(poor_layer_pair_map) > 0:
-        for pair_id in sorted(poor_layer_pair_map.keys()):
-            layer_result = poor_layer_pair_map[pair_id]
+        for pz in sorted(poor_layer_pair_map.keys()):
+            layer_result = poor_layer_pair_map[pz]
             layer_plot = build_poor_regional_correlations_for_z(owner=owner,
                                                                 project=project,
                                                                 stack=stack,
@@ -252,10 +252,10 @@ if __name__ == '__main__':
         main(sys.argv[1:])
         # main([
         #     "--owner", "cellmap",
-        #     "--project", "jrc_mus_kidney_3",
+        #     "--project", "jrc_mus_thymus_1",
         #     "--stack", "v2_acquire_align",
-        #     "--run", "run_20230710_010245_321_z_corr",
-        #     "--base_dir", "/nrs/cellmap/data/jrc_mus-kidney-3/z_corr",
+        #     "--run", "run_20230710_231120_183_z_corr",
+        #     "--base_dir", "/nrs/cellmap/data/jrc_mus-thymus-1/z_corr",
         # ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
