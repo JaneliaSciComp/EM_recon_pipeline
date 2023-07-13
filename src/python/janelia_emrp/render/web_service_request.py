@@ -13,6 +13,15 @@ def submit_get(url: str,
     return response.json()
 
 
+def submit_post(url: str,
+                json: Optional[Union[dict[str, Any], list[dict[str, Any]]]],
+                context: Optional[str] = None) -> None:
+    extra_context = "" if context is None else f" {context}"
+    print(f"submitting POST {url}{extra_context}")
+    response = requests.post(url, json=json)
+    response.raise_for_status()
+
+
 def submit_put(url: str,
                json: Optional[Union[dict[str, Any], list[dict[str, Any]]]],
                context: Optional[str] = None) -> None:
@@ -92,11 +101,21 @@ class RenderRequest:
 
     def save_resolved_tiles(self,
                             stack: str,
-                            resolved_tiles: dict[str, Any]):
-        url = f'{self.stack_url(stack)}/resolvedTiles'
+                            resolved_tiles: dict[str, Any],
+                            derive_data: bool = False):
+        query_params = "?deriveData=true" if derive_data else ""
+        url = f'{self.stack_url(stack)}/resolvedTiles{query_params}'
         submit_put(url=url,
                    json=resolved_tiles,
                    context=f'for {len(resolved_tiles["tileIdToSpecMap"])} tile specs')
+
+    def create_stack(self,
+                     stack: str,
+                     stack_version: dict[str, Any]):
+        url = f'{self.stack_url(stack)}'
+
+        submit_post(url=url,
+                    json=stack_version)
 
 
 @dataclass
