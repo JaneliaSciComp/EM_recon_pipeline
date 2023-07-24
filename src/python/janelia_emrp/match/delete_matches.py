@@ -6,8 +6,8 @@ def main():
     owner = "hess_wafer_53"
     match_request = MatchRequest(host=host,
                                  owner=owner,
-                                 collection=f"c001_s145_v01_match")
-    match_weight = 0.1
+                                 collection=f"c002_s019_v01_match")
+    min_match_weight = 0.2
 
     group_ids = sorted(match_request.get_p_group_ids(), key=float)
 
@@ -17,7 +17,7 @@ def main():
 
         deleted_count = 0
         for pair in match_pairs:
-            if pair["matches"]["w"][0] == match_weight:
+            if pair["matches"]["w"][0] < min_match_weight:
                 match_request.delete_match_pair(p_group_id=pair["pGroupId"],
                                                 p_id=pair["pId"],
                                                 q_group_id=pair["qGroupId"],
