@@ -64,6 +64,7 @@ def build_poor_regional_correlations_for_z(owner: str,
     cc_with_next = []
     min_cc = 1.0
     max_cc = 0.0
+    ignore_cc_threshold = 0.01
     for row in range(0, row_count):
         y = layer_y + (row * region_height)
         y_center = y + int(region_height / 2)
@@ -74,9 +75,14 @@ def build_poor_regional_correlations_for_z(owner: str,
             region_center_y.append(y_center)
             cc = regional_correlation[row][column]
             cc_with_next.append(cc)
-            min_cc = min(min_cc, cc)
-            max_cc = max(max_cc, cc)
+            if cc > ignore_cc_threshold:
+                min_cc = min(min_cc, cc)
+                max_cc = max(max_cc, cc)
 
+    for i in range(0, len(cc_with_next)):
+        if cc_with_next[i] < ignore_cc_threshold:
+            cc_with_next[i] = max_cc
+            
     min_cc = min_cc - 0.005
     max_cc = max_cc + 0.005
 
@@ -249,14 +255,14 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     try:
-        main(sys.argv[1:])
-        # main([
-        #     "--owner", "cellmap",
-        #     "--project", "jrc_mus_thymus_1",
-        #     "--stack", "v2_acquire_align",
-        #     "--run", "run_20230710_231120_183_z_corr",
-        #     "--base_dir", "/nrs/cellmap/data/jrc_mus-thymus-1/z_corr",
-        # ])
+        # main(sys.argv[1:])
+        main([
+            "--owner", "hess_wafer_53",
+            "--project", "cut_000_to_009",
+            "--stack", "c000_s095_v01_align",
+            "--run", "run_20230726_124946",
+            "--base_dir", "/Users/trautmane/Desktop/zcorr",
+        ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
