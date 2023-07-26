@@ -78,10 +78,6 @@ def build_poor_regional_correlations_for_z(owner: str,
             if cc > ignore_cc_threshold:
                 min_cc = min(min_cc, cc)
                 max_cc = max(max_cc, cc)
-
-    for i in range(0, len(cc_with_next)):
-        if cc_with_next[i] < ignore_cc_threshold:
-            cc_with_next[i] = max_cc
             
     min_cc = min_cc - 0.005
     max_cc = max_cc + 0.005
@@ -113,7 +109,7 @@ def build_poor_regional_correlations_for_z(owner: str,
     data_source = ColumnDataSource(data=dict(x=region_center_x, y=region_center_y, cc=cc_with_next))
 
     rect = p.rect(x="x", y="y", width=region_width, height=region_height, source=data_source,
-                  fill_color=linear_cmap("cc", COLORS, low=min_cc, high=max_cc),
+                  fill_color=linear_cmap("cc", COLORS, low=min_cc, high=max_cc, low_color="#000000"),
                   line_color="black")
     rect.nonselection_glyph = None  # disable block suppression when region is clicked/selected
 
@@ -255,14 +251,14 @@ if __name__ == '__main__':
 
     # noinspection PyBroadException
     try:
-        # main(sys.argv[1:])
-        main([
-            "--owner", "hess_wafer_53",
-            "--project", "cut_000_to_009",
-            "--stack", "c000_s095_v01_align",
-            "--run", "run_20230726_124946",
-            "--base_dir", "/Users/trautmane/Desktop/zcorr",
-        ])
+        main(sys.argv[1:])
+        # main([
+        #     "--owner", "hess_wafer_53",
+        #     "--project", "cut_000_to_009",
+        #     "--stack", "c000_s095_v01_align",
+        #     "--run", "run_20230726_124946",
+        #     "--base_dir", "/Users/trautmane/Desktop/zcorr",
+        # ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
