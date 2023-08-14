@@ -324,11 +324,16 @@ def get_dat_file_names_for_h5(h5_path: Path) -> list[str]:
         last_modified_time = os.path.getmtime(h5_path)
         if last_modified_time < one_minute_before_now:
             with h5py.File(name=str(h5_path), mode="r") as h5_file:
-                data_set_names = sorted(h5_file.keys())
-                for data_set_name in data_set_names:
-                    data_set = h5_file.get(data_set_name)
-                    dat_name = data_set.attrs[DAT_FILE_NAME_KEY]
-                    dat_file_name_list.append(dat_name)
+                try:
+                    data_set_names = sorted(h5_file.keys())
+                    for data_set_name in data_set_names:
+                        data_set = h5_file.get(data_set_name)
+                        dat_name = data_set.attrs[DAT_FILE_NAME_KEY]
+                        dat_file_name_list.append(dat_name)
+                except Exception as exc:
+                    logger.error(f"get_dat_file_names_for_h5: failed to read {h5_path}")
+                    raise RuntimeError from exc
+
         else:
             logger.info(f"get_dat_file_names_for_h5: skipping read of recently modified file {h5_path}, "
                         f"last_modified_time={last_modified_time}, one_minute_before_now={one_minute_before_now}")
