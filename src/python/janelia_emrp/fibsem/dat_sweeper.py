@@ -66,9 +66,9 @@ def main(arg_list: list[str]):
     max_transfer_seconds = None if args.max_transfer_minutes is None else args.max_transfer_minutes * 60
     total_missing_count = 0
     total_copy_count = 0
-
-    with H5DatNameHelper(num_workers=args.num_workers,
-                         dask_local_dir=args.parent_work_dir) as h5_dat_name_helper:
+    h5_dat_name_helper = H5DatNameHelper(num_workers=args.num_workers,
+                                         dask_local_dir=args.parent_work_dir)
+    with h5_dat_name_helper:
 
         for transfer_info in volume_transfer_list:
             copy_count, missing_count = check_volume(args,
