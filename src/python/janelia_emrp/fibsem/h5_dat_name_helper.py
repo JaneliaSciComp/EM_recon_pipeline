@@ -67,7 +67,7 @@ class H5DatNameHelper:
                 dat_list.extend(get_dat_file_names_for_h5(h5_path))
         else:
             h5_path_bag = dask_bag.from_sequence(h5_list)
-            list_of_dat_name_lists_bag = h5_path_bag.map(get_dat_file_names_for_h5, h5_path_bag)
+            list_of_dat_name_lists_bag = h5_path_bag.map(get_dat_file_names_for_h5)
             dat_name_list_bag = list_of_dat_name_lists_bag.flatten()
             dat_list = self.dask_client.compute(dat_name_list_bag, sync=True)
 
