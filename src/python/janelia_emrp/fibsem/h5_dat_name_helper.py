@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 import dask.bag as dask_bag
-from distributed import LocalCluster
+from distributed import Client, LocalCluster
 
 from janelia_emrp.fibsem.dat_path import new_dat_path, new_dat_layer, DatPathsForLayer
 from janelia_emrp.fibsem.dat_to_h5_writer import get_dat_file_names_for_h5
@@ -29,18 +29,19 @@ class H5DatNameHelper:
                  dask_local_dir: Optional[str]):
         self.num_workers = num_workers
         self.dask_local_dir = dask_local_dir
-        self.dask_cluster = None
+        self.dask_client = None
 
     def __enter__(self):
         if self.num_workers is not None and self.num_workers > 1:
-            self.dask_cluster = LocalCluster(
+            dask_cluster = LocalCluster(
                 n_workers=self.num_workers, threads_per_worker=1, local_directory=self.dask_local_dir
             )
-            logger.info(f'observe dask cluster information at {self.dask_cluster.dashboard_link}')
+            logger.info(f'observe dask cluster information at {dask_cluster.dashboard_link}')
+            self.dask_client = Client(dask_cluster)
 
     def __exit__(self, typ, value, traceback):
-        if self.dask_cluster is not None:
-            self.dask_cluster.__exit__(typ, value, traceback)
+        if self.dask_client is not None:
+            self.dask_client.shutdown()
 
     def names_for_day(self,
                       layer_for_day: DatPathsForLayer,
@@ -61,14 +62,14 @@ class H5DatNameHelper:
         dat_list = []
         h5_list = h5_day_dir.glob("**/*.h5")
         
-        if self.dask_cluster is None:
+        if self.dask_client is None:
             for h5_path in h5_list:
                 dat_list.extend(get_dat_file_names_for_h5(h5_path))
         else:
             h5_path_bag = dask_bag.from_sequence(h5_list)
             list_of_dat_name_lists_bag = h5_path_bag.map(get_dat_file_names_for_h5, h5_path_bag)
             dat_name_list_bag = list_of_dat_name_lists_bag.flatten()
-            dat_list = self.dask_cluster.compute(dat_name_list_bag, sync=True)
+            dat_list = self.dask_client.compute(dat_name_list_bag, sync=True)
 
         return dat_list
 
