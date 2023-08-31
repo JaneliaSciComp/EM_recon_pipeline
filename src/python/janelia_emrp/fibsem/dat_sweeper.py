@@ -7,9 +7,9 @@ import traceback
 from pathlib import Path
 
 from janelia_emrp.fibsem.dat_copier import add_dat_copy_arguments, copy_dat_file, day_range, \
-    get_dats_acquired_on_day, get_scope_day_numbers_with_dats, max_transfer_seconds_exceeded, \
-    get_h5_dat_names_for_day, get_h5_raw_dat_names_for_day
+    get_dats_acquired_on_day, get_scope_day_numbers_with_dats, max_transfer_seconds_exceeded
 from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, new_dat_layer
+from janelia_emrp.fibsem.h5_dat_name_helper import H5DatNameHelper
 from janelia_emrp.fibsem.volume_transfer_info import build_volume_transfer_list, VolumeTransferInfo, VolumeTransferTask
 from janelia_emrp.root_logger import init_logger
 
@@ -39,6 +39,16 @@ def parse_args(arg_list: list[str]) -> argparse.Namespace:
         "--last_dat",
         help="File name of last dat to verify (omit to use last dat from transfer info)",
     )
+    parser.add_argument(
+        "--num_workers",
+        help="The number of workers to use for Dask (default of 1 indicates serial processing is desired)",
+        type=int,
+        default=1
+    )
+    parser.add_argument(
+        "--parent_work_dir",
+        help="Parent directory for Dask logs and worker data",
+    )
     return parser.parse_args(args=arg_list)
 
 
@@ -57,16 +67,20 @@ def main(arg_list: list[str]):
     total_missing_count = 0
     total_copy_count = 0
 
-    for transfer_info in volume_transfer_list:
-        copy_count, missing_count = check_volume(args,
-                                                 max_transfer_seconds,
-                                                 start_time,
-                                                 transfer_info)
-        total_copy_count += copy_count
-        total_missing_count += missing_count
+    with H5DatNameHelper(num_workers=args.num_workers,
+                         dask_local_dir=args.parent_work_dir) as h5_dat_name_helper:
 
-        if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
-            break
+        for transfer_info in volume_transfer_list:
+            copy_count, missing_count = check_volume(args,
+                                                     max_transfer_seconds,
+                                                     start_time,
+                                                     transfer_info,
+                                                     h5_dat_name_helper)
+            total_copy_count += copy_count
+            total_missing_count += missing_count
+
+            if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
+                break
 
     if max_transfer_seconds_exceeded(max_transfer_seconds, start_time):
         logger.info(f"main: stopping because elapsed time exceeds {max_transfer_seconds / 60} minutes")
@@ -81,7 +95,8 @@ def main(arg_list: list[str]):
 def check_volume(args: argparse.Namespace,
                  max_transfer_seconds: int,
                  start_time: float,
-                 transfer_info: VolumeTransferInfo) -> (int, int):
+                 transfer_info: VolumeTransferInfo,
+                 h5_dat_name_helper: H5DatNameHelper) -> (int, int):
 
     logger.info(f"check_volume: start processing for {transfer_info}")
 
@@ -99,6 +114,7 @@ def check_volume(args: argparse.Namespace,
     logger.info(f"check_volume: checking dats imaged between {first_dat_acquire_time} and {end_date}")
     for day in day_range(first_dat_acquire_time, end_date):
 
+        logger.info(f'check_volume: checking day {day.strftime("%y-%m-%d")}')
         if month is None or day.month != month:
             day_numbers = get_scope_day_numbers_with_dats(transfer_info.scope_data_set.host,
                                                           transfer_info.scope_data_set.root_dat_path,
@@ -122,7 +138,8 @@ def check_volume(args: argparse.Namespace,
                 continue  # skip check for missing dat files when dat_path_output_file is specified
 
             raw_h5_dat_names_set = get_h5_dat_names(dat_list,
-                                                    transfer_info)
+                                                    transfer_info,
+                                                    h5_dat_name_helper)
 
             missing_scope_dat_paths = find_missing_dat_paths(cluster_root_dat_path,
                                                              dat_list,
@@ -169,23 +186,24 @@ def build_dates_and_times(args: argparse.Namespace,
 
 
 def get_h5_dat_names(dat_list: list[Path],
-                     transfer_info: VolumeTransferInfo) -> set[str]:
+                     transfer_info: VolumeTransferInfo,
+                     h5_dat_name_helper: H5DatNameHelper) -> set[str]:
 
     raw_h5_cluster_root = transfer_info.get_raw_h5_cluster_root()
     raw_h5_archive_root = transfer_info.get_raw_h5_archive_root()
     align_h5_cluster_root = transfer_info.get_align_h5_cluster_root()
 
-    raw_h5_dat_names = get_h5_raw_dat_names_for_day(scope_dat_paths=dat_list,
-                                                    raw_h5_archive_root=raw_h5_archive_root,
-                                                    raw_h5_cluster_root=raw_h5_cluster_root)
+    raw_h5_dat_names = h5_dat_name_helper.raw_names_for_day(scope_dat_paths=dat_list,
+                                                            raw_h5_archive_root=raw_h5_archive_root,
+                                                            raw_h5_cluster_root=raw_h5_cluster_root)
     raw_h5_dat_names_set = set(raw_h5_dat_names)
     if transfer_info.get_align_h5_root_for_conversion() is not None:
         first_dat_path = new_dat_path(dat_list[0])
         first_dat_layer = new_dat_layer(first_dat_path)
 
-        align_h5_dat_names = get_h5_dat_names_for_day(layer_for_day=first_dat_layer,
-                                                      h5_root_path=align_h5_cluster_root,
-                                                      source_type="uint8")
+        align_h5_dat_names = h5_dat_name_helper.names_for_day(layer_for_day=first_dat_layer,
+                                                              h5_root_path=align_h5_cluster_root,
+                                                              source_type="uint8")
         align_h5_dat_names_set = set(align_h5_dat_names)
 
         raw_v_align_diff = raw_h5_dat_names_set.difference(align_h5_dat_names_set)
