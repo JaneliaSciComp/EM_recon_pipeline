@@ -12,9 +12,8 @@ import sys
 import time
 
 from janelia_emrp.fibsem.dat_keep_file import KeepFile, build_keep_file
-from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT, new_dat_layer, \
-    DatPathsForLayer
-from janelia_emrp.fibsem.dat_to_h5_writer import get_dat_file_names_for_h5
+from janelia_emrp.fibsem.dat_path import dat_to_target_path, new_dat_path, DAT_TIME_FORMAT
+from janelia_emrp.fibsem.h5_dat_name_helper import H5DatNameHelper
 from janelia_emrp.fibsem.volume_transfer_info import VolumeTransferInfo, VolumeTransferTask, build_volume_transfer_list
 from janelia_emrp.root_logger import init_logger
 
@@ -96,46 +95,6 @@ def get_dats_acquired_on_day(host: str,
             dat_list.append(day_path / name)
 
     return dat_list
-
-
-def get_h5_dat_names_for_day(layer_for_day: DatPathsForLayer,
-                             h5_root_path: Path,
-                             source_type: str) -> list[str]:
-
-    # /groups/.../raw/Merlin-6282/2022/10/17/04/Merlin-6282_22-10-17_040352.raw.h5
-    # /nearline/.../raw/Merlin-6282/2022/10/17/04/Merlin-6282_22-10-17_040352.raw-archive.h5
-    first_h5_path = layer_for_day.get_h5_path(h5_root_path=h5_root_path,
-                                              append_acquisition_based_subdirectories=True,
-                                              source_type=source_type)
-    # /groups/.../raw/Merlin-6282/2022/10/17
-    # /nearline/.../raw/Merlin-6282/2022/10/17
-    h5_day_dir = first_h5_path.parent.parent
-
-    logger.info(f"get_h5_dat_names_for_day: checking {h5_day_dir}")
-
-    dat_list = []
-    for h5_path in h5_day_dir.glob("**/*.h5"):
-        dat_list.extend(get_dat_file_names_for_h5(h5_path))
-
-    return dat_list
-
-
-def get_h5_raw_dat_names_for_day(scope_dat_paths: list[Path],
-                                 raw_h5_archive_root: Path,
-                                 raw_h5_cluster_root: Path):
-    h5_dat_names_for_day = []
-    if len(scope_dat_paths) > 0:
-        first_dat_path = new_dat_path(scope_dat_paths[0])
-        first_dat_layer = new_dat_layer(first_dat_path)
-        if raw_h5_archive_root is not None:
-            h5_dat_names_for_day.extend(get_h5_dat_names_for_day(layer_for_day=first_dat_layer,
-                                                                 h5_root_path=raw_h5_archive_root,
-                                                                 source_type="raw"))
-        if raw_h5_cluster_root is not None:
-            h5_dat_names_for_day.extend(get_h5_dat_names_for_day(layer_for_day=first_dat_layer,
-                                                                 h5_root_path=raw_h5_cluster_root,
-                                                                 source_type="raw"))
-    return h5_dat_names_for_day
 
 
 def copy_dat_file(scope_host: str,
@@ -334,6 +293,7 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
         keep_files_for_time = time_to_keep_files.setdefault(keep_file.acquire_time(), [])
         keep_files_for_time.append(keep_file)
 
+    h5_dat_name_helper = H5DatNameHelper(num_workers=1, dask_local_dir=None)
     month = None
     day_numbers = []
 
@@ -353,9 +313,9 @@ def find_missing_scope_dats(keep_file_list: list[KeepFile],
                                                    scope_data_set.root_dat_path,
                                                    day)
 
-        h5_dat_names_for_day = get_h5_raw_dat_names_for_day(scope_dat_paths=scope_dat_paths,
-                                                            raw_h5_archive_root=raw_h5_archive_root,
-                                                            raw_h5_cluster_root=raw_h5_cluster_root)
+        h5_dat_names_for_day = h5_dat_name_helper.raw_names_for_day(scope_dat_paths=scope_dat_paths,
+                                                                    raw_h5_archive_root=raw_h5_archive_root,
+                                                                    raw_h5_cluster_root=raw_h5_cluster_root)
 
         missing_scope_dats.extend(
             find_missing_scope_dats_for_day(scope_dat_paths=scope_dat_paths,
