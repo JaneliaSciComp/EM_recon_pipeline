@@ -18,7 +18,7 @@
         "align_h5": "/nrs/fibsem/data/jrc_tough-resin_RD/align"
     },
     "archive_root_paths": {
-        "raw_dat": "/nearline/fibsem/FIB-SEM_Images/Images Jeiss4/jrc_tough-resin_R+D"
+        "raw_dat": "/nearline/fibsem/Backup_data/Chris_Bleck_jrc_tough-resin_R+D_part1"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
