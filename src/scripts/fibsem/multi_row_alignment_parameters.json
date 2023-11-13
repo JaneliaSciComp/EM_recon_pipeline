@@ -8,14 +8,14 @@
       "allStacksInAllProjects": false,
       "zValuesPerBatch": 1,
       "stackNames": [
-        "v1_acquire_2nA_0p5MHz",
         "v1_acquire_2nA_1p0MHz",
         "v1_acquire_2nA_2p0MHz",
         "v1_acquire_2nA_3p0MHz",
-        "v1_acquire_3nA_0p5MHz",
         "v1_acquire_3nA_1p0MHz",
         "v1_acquire_3nA_2p0MHz",
-        "v1_acquire_3nA_3p0MHz"
+        "v2_acquire_2nA_0p5MHz",
+        "v2_acquire_3nA_0p5MHz",
+        "v2_acquire_3nA_3p0MHz"
       ]
     },
     "deriveMatchCollectionNamesFromProject": true
