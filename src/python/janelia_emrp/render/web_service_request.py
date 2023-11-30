@@ -61,6 +61,10 @@ class RenderRequest:
                            stack: str) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}')
 
+    def get_z_values(self,
+                     stack: str) -> dict[str, Any]:
+        return submit_get(f'{self.stack_url(stack)}/zValues')
+
     def get_tile_bounds_for_z(self,
                               stack: str,
                               z: [float, int, str]) -> list[dict[str, Any]]:
