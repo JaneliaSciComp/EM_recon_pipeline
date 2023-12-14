@@ -7,8 +7,8 @@
         "data_set_id": "jrc_0823-07_Draq5-Algae",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
-        "first_dat_name": "Merlin-6281_23-11-15_000226_0-0-0",
-        "last_dat_name": "Merlin-6281_23-11-19_192311_0-0-0",
+        "first_dat_name": "Merlin-6281_23-11-15_000226_0-0-0.dat",
+        "last_dat_name": "Merlin-6281_23-11-19_192311_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 4,
         "dat_z_nm_per_pixel": 4,
         "dat_tile_overlap_microns": 2
