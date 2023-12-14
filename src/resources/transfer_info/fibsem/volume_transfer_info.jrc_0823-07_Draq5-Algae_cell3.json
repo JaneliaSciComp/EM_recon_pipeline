@@ -1,5 +1,5 @@
 {
-    "transfer_id": "fibsem::jrc_0823-07_Draq5-Algae_cell2_3::jeiss6",
+    "transfer_id": "fibsem::jrc_0823-07_Draq5-Algae::jeiss6",
     "scope_data_set": {
         "host": "jeiss6.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Unknown",
@@ -7,15 +7,15 @@
         "data_set_id": "jrc_0823-07_Draq5-Algae",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
-        "first_dat_name": "Merlin-6281_23-11-26_000218_0-0-0.dat",
-        "last_dat_name": "Merlin-6281_23-12-06_072121_0-0-0.dat",
+        "first_dat_name": "Merlin-6281_23-12-02_121727_0-0-0.dat",
+        "last_dat_name": "Merlin-6281_23-12-06_030024_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 4,
         "dat_z_nm_per_pixel": 4,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/fibsem/data/jrc_0823-07_Draq5-Algae_cell2_3/dat",
-        "align_h5": "/nrs/fibsem/data/jrc_0823-07_Draq5-Algae_cell2_3/align"
+        "raw_dat": "/nrs/fibsem/data/jrc_0823-07_Draq5-Algae_cell3/dat",
+        "align_h5": "/nrs/fibsem/data/jrc_0823-07_Draq5-Algae_cell3/align"
     },
     "archive_root_paths": {
         "raw_dat": "/nearline/fibsem/Backup_data/James_Liu_jrc_0823-07_Draq5-Algae"
@@ -23,7 +23,7 @@
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "fibsem",
-        "project": "jrc_0823_07_Draq5_Algae_cell2_3",
+        "project": "jrc_0823_07_Draq5_Algae_cell3",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
