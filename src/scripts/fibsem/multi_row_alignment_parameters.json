@@ -39,7 +39,7 @@
         "excludeSameLayerNeighbors": false,
         "excludeSameSectionNeighbors": false,
         "excludePairsInMatchCollection": "pairsFromPriorRuns",
-        "excludeSameLayerPairsWithPositions": "LEFT",
+        "excludeSameLayerPairsWithPosition": "LEFT",
         "minExistingMatchCount": 0
       },
       "matchStageParametersList": [
@@ -129,7 +129,7 @@
         "excludeSameLayerNeighbors": false,
         "excludeSameSectionNeighbors": false,
         "excludePairsInMatchCollection": "pairsFromPriorRuns",
-        "excludeSameLayerPairsWithPositions": "TOP",
+        "excludeSameLayerPairsWithPosition": "TOP",
         "minExistingMatchCount": 0
       },
       "matchStageParametersList": [
