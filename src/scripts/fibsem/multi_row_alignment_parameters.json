@@ -366,7 +366,7 @@
       "matchCollection": "jrc_tough_resin_RD_part2_match"
     },
     "blockPartition": {
-      "sizeZ": 100
+      "sizeZ": 250
     },
     "stitching": {
       "minInliers": 1000000
