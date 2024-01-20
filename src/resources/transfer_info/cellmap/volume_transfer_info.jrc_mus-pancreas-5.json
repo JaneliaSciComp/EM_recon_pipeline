@@ -4,7 +4,7 @@
         "host": "jeiss2.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cellmap",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mus-Pancreas-4",
+        "data_set_id": "jrc_D070623-4-pancreas",
         "rows_per_z_layer": 2,
         "columns_per_z_layer": 3,
         "first_dat_name": "Merlin-6262_23-10-05_150241_0-0-0.dat",
