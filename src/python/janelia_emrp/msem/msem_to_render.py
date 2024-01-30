@@ -170,11 +170,13 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                  import_scan_name_list: list[str],
                                  import_project_name_list: list[str]):
 
+    func_name = "import_slab_stacks_for_wafer"
+
     for slab_group in wafer_info.slab_group_list:
         project_name = slab_group.to_render_project_name()
 
         if len(import_project_name_list) > 0 and project_name not in import_project_name_list:
-            logger.debug(f'import_slab_stacks_for_wafer: ignoring slabs for project {project_name}')
+            logger.debug(f'{func_name}: ignoring slabs for project {project_name}')
             continue
 
         render_connect_params = {
@@ -214,12 +216,15 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                             stack_is_in_loading_state = True
 
                         tile_id_range = f'{tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}'
-                        logger.info(f"import_slab_stacks_for_wafer: saving tiles {tile_id_range} in stack {stack}")
+                        logger.info(f"{func_name}: saving tiles {tile_id_range} in stack {stack}")
                         render_api.save_tile_specs(stack=stack,
                                                    tile_specs=tile_specs,
                                                    derive_data=True)
+                    else:
+                        logger.debug(f'{func_name}: no tile specs in {scan_path.name} for stack {stack}')
+
                 else:
-                    logger.debug(f'import_slab_stacks_for_wafer: ignoring {scan_path.name} for stack {stack}')
+                    logger.debug(f'{func_name}: ignoring {scan_path.name} for stack {stack}')
 
             if stack_is_in_loading_state:
                 renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
