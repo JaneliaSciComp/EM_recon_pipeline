@@ -56,17 +56,17 @@ def load_slab_info(ordering_scan_csv_path: Path,
     # serial order:
     #   order in which the slabs were physically cut
 
-    serial_to_stage_list = []
+    stage_to_serial_list = []
     with open(ordering_scan_csv_path, 'r') as ordering_scan_csv_file:
         for row in csv.reader(ordering_scan_csv_file, delimiter=","):
             if "magc_to_serial" == row[0]:
                 continue
-            serial_to_stage_list.append(int(row[4]))
+            stage_to_serial_list.append(int(row[5]))
 
     slab_name_to_info = {}
     first_z_to_slab_name = {}
-    for cut_index in range(0, len(serial_to_stage_list)):
-        stage = serial_to_stage_list[cut_index]
+    for cut_index in range(0, len(stage_to_serial_list)):
+        stage = stage_to_serial_list[cut_index]
         slab_name = "{stage:0{name_len}d}".format(stage=stage, name_len=slab_name_width)
         first_scan_z = cut_index * max_number_of_scans
         slab_name_to_info[slab_name] = SlabInfo(stage_name=slab_name,
@@ -114,4 +114,4 @@ if __name__ == '__main__':
         main(sys.argv)
     else:
         print("USAGE: slab_info.py <ordering_scan_csv_path> <max_number_of_scans> <number_of_slabs_per_group>")
-        # main(["go", "/nrs/hess/render/raw/wafer_53/ordering/scan_001.csv", "48", "10"])
+        # main(["go", "/nrs/hess/data/hess_wafer_53/raw/ordering/scan_001.csv", "48", "10"])
