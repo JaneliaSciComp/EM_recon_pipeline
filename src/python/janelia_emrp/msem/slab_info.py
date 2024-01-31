@@ -2,6 +2,7 @@ import csv
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 
 # determined by microscope operator
 NAME_LEN = 3
@@ -25,7 +26,7 @@ class SlabInfo:
 @dataclass
 class ContiguousOrderedSlabGroup:
     ordered_slabs: list[SlabInfo]
-    last_id_serial: int | None = None
+    last_id_serial: Optional[int] = None
     """assigned later, but currently unused"""
 
     def to_render_project_name(self) -> str:
@@ -82,7 +83,7 @@ def load_slab_info(ordering_scan_csv_path: Path,
                      id_stage=id_stage,
                      first_scan_z=first_scan_z,))
 
-    slab_group: ContiguousOrderedSlabGroup | None = None
+    slab_group: Optional[ContiguousOrderedSlabGroup] = None
     slab_groups: list[ContiguousOrderedSlabGroup] = []
 
     for slab_info in sorted(slabs, key=lambda si: si.id_serial):
