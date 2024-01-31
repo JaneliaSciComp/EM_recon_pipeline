@@ -197,14 +197,14 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                render_connect=params_to_render_connect(render_connect_params))
 
         for slab_info in slab_group.ordered_slabs:
-            stack = slab_info.stack_name()
+            stack = slab_info.stack_name
             stack_is_in_loading_state = False
 
             for scan_path in wafer_info.scan_paths:
                 # scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
                 if len(import_scan_name_list) == 0 or scan_path.parent.name in import_scan_name_list:
 
-                    slab_scan_path = Path(scan_path, slab_info.dir_name())
+                    slab_scan_path = Path(scan_path, slab_info.dir_name)
                     tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
 
                     if len(tile_specs) > 0:
