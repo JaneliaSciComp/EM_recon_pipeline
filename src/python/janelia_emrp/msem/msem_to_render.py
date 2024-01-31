@@ -282,7 +282,6 @@ def main(arg_list: List[str]):
 
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
                                  number_of_slabs_per_group=args.number_of_slabs_per_render_project,
-                                 slab_name_width=args.slab_name_width,
                                  exclude_scan_name_list=args.exclude_scan_name)
     logger.info(f"loaded:")
     wafer_info.print_me()

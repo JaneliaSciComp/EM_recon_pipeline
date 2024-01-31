@@ -34,7 +34,6 @@ class WaferInfo:
 
 def load_wafer_info(wafer_base_path: Path,
                     number_of_slabs_per_group: int,
-                    slab_name_width: int,
                     exclude_scan_name_list: list[str]) -> WaferInfo:
 
     # <storage_root>/<wafer_id>/imaging/msem/<simple_scan_name>/<scan_id>/<slab_name>_/<mFOV>/<sFOV>.png
@@ -60,8 +59,7 @@ def load_wafer_info(wafer_base_path: Path,
 
     slab_group_list = load_slab_info(ordering_scan_csv_path=ordering_scan_csv_path,
                                      max_number_of_scans=len(scan_paths),
-                                     number_of_slabs_per_group=number_of_slabs_per_group,
-                                     slab_name_width=slab_name_width)
+                                     number_of_slabs_per_group=number_of_slabs_per_group)
 
     # TODO: parse resolution from experiment.yml or resolution.json (wafer_53 resolution hard-coded here)
     resolution = [8.0, 8.0, 8.0]
@@ -88,12 +86,6 @@ def build_wafer_info_parent_parser() -> argparse.ArgumentParser:
         default=10
     )
     parent_parser.add_argument(
-        "--slab_name_width",
-        help="Width of zero padded slab names (e.g. 3 for slab_001)",
-        type=int,
-        default=3
-    )
-    parent_parser.add_argument(
         "--exclude_scan_name",
         help="Exclude these scan names from the render stacks (e.g. scan_000)",
         nargs='+',
@@ -111,7 +103,6 @@ def main(arg_list: list[str]):
 
     wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
                                  number_of_slabs_per_group=args.number_of_slabs_per_render_project,
-                                 slab_name_width=args.slab_name_width,
                                  exclude_scan_name_list=args.exclude_scan_name)
     wafer_info.print_me()
 
@@ -119,6 +110,6 @@ def main(arg_list: list[str]):
 if __name__ == '__main__':
     main(sys.argv[1:])
     # main([
-    #     "--wafer_base_path", "/nrs/hess/render/raw/wafer_53",
+    #     "--wafer_base_path", "/nrs/hess/data/hess_wafer_53/raw",
     #     "--exclude_scan_name", "scan_000"
     # ])

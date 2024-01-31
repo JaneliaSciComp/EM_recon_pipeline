@@ -7,37 +7,39 @@ from typing import List, Optional
 
 @dataclass
 class SlabInfo:
-    stage_name: str
-    cut_index: int = field(compare=False)
+    id_serial: int
+    id_magc: int = field(compare=False)
+    id_stage: int = field(compare=False)
     first_scan_z: int = field(compare=False)
+    name_len: int = field(compare=False)
+
+    def serial_name(self) -> str:
+        return f"{self.pad_id(self.id_serial)}"
 
     def dir_name(self) -> str:
-        return f"{self.stage_name}_"
-
-    def cut_name(self):
-        return "{cut_index:0{name_len}d}".format(cut_index=self.cut_index, name_len=len(self.stage_name))
+        return f"{self.pad_id(self.id_stage + 1)}_"
 
     def stack_name(self) -> str:
-        return f"c{self.cut_name()}_s{self.stage_name}_v01"
+        return f"s{self.serial_name()}_m{self.pad_id(self.id_magc)}"
+
+    def pad_id(self, id_value: int) -> str:
+        return "{id_value:0{name_len}d}".format(id_value=id_value, name_len=self.name_len)
 
     def __str__(self):
-        return f"SlabInfo(stage_name='{self.stage_name}', cut_index={self.cut_index}, " \
-               f"first_scan_z={self.first_scan_z}, stack_name='{self.stack_name()}')"
+        return f"SlabInfo(id_serial='{self.id_serial}', id_magc={self.id_magc}, id_stage={self.id_stage}, " \
+               f"first_scan_z={self.first_scan_z}, dir_name='{self.dir_name()}, stack_name='{self.stack_name()}')"
 
 
 @dataclass
 class ContiguousOrderedSlabGroup:
-    first_cut_index: int
-    last_cut_index: int
     ordered_slabs: List[SlabInfo]
 
     def to_render_project_name(self):
         assert len(self.ordered_slabs) > 0, "must have at least one ordered slab to derive a project name"
-        return f"cut_{self.ordered_slabs[0].cut_name()}_to_{self.ordered_slabs[-1].cut_name()}"
+        return f"slab_{self.ordered_slabs[0].serial_name()}_to_{self.ordered_slabs[-1].serial_name()}"
 
 
 def load_slab_info(ordering_scan_csv_path: Path,
-                   slab_name_width: int,
                    max_number_of_scans: int,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
     if not ordering_scan_csv_path.exists():
@@ -56,39 +58,40 @@ def load_slab_info(ordering_scan_csv_path: Path,
     # serial order:
     #   order in which the slabs were physically cut
 
-    stage_to_serial_list = []
+    magc_to_serial_list = []
+    magc_to_stage_list = []
     with open(ordering_scan_csv_path, 'r') as ordering_scan_csv_file:
         for row in csv.reader(ordering_scan_csv_file, delimiter=","):
             if "magc_to_serial" == row[0]:
                 continue
-            stage_to_serial_list.append(int(row[5]))
+            magc_to_serial_list.append(int(row[0]))
+            magc_to_stage_list.append(int(row[2]))
 
-    slab_name_to_info = {}
-    first_z_to_slab_name = {}
-    for cut_index in range(0, len(stage_to_serial_list)):
-        stage = stage_to_serial_list[cut_index]
-        slab_name = "{stage:0{name_len}d}".format(stage=stage, name_len=slab_name_width)
-        first_scan_z = cut_index * max_number_of_scans
-        slab_name_to_info[slab_name] = SlabInfo(stage_name=slab_name,
-                                                cut_index=cut_index,
-                                                first_scan_z=first_scan_z)
-        first_z_to_slab_name[first_scan_z] = slab_name
+    last_id_magc = len(magc_to_serial_list) - 1
+    name_len = len(str(last_id_magc))
+
+    slab_list = []
+    for id_magc in range(0, len(magc_to_serial_list)):
+        id_serial = magc_to_serial_list[id_magc]
+        id_stage = magc_to_stage_list[id_magc]
+        first_scan_z = (id_serial * max_number_of_scans) + 1  # make first z 1 instead of 0 to maintain old convention
+        slab_list.append(
+            SlabInfo(id_magc=id_magc,
+                     id_serial=id_serial,
+                     id_stage=id_stage,
+                     first_scan_z=first_scan_z,
+                     name_len=name_len))
 
     slab_group_list = []
     slab_group: Optional[ContiguousOrderedSlabGroup] = None
 
-    for first_z in sorted(first_z_to_slab_name.keys()):
-        slab_name = first_z_to_slab_name[first_z]
-        slab_info = slab_name_to_info[slab_name]
-
+    for slab_info in sorted(slab_list, key=lambda si: si.id_serial):
         if slab_group is None or len(slab_group.ordered_slabs) >= number_of_slabs_per_group:
             if slab_group is not None:
                 slab_group_list.append(slab_group)
-            slab_group = ContiguousOrderedSlabGroup(first_cut_index=slab_info.cut_index,
-                                                    last_cut_index=slab_info.cut_index,
-                                                    ordered_slabs=[slab_info])
+            slab_group = ContiguousOrderedSlabGroup(ordered_slabs=[slab_info])
         else:
-            slab_group.last_cut_index = slab_info.cut_index
+            slab_group.last_id_serial = slab_info.id_serial
             slab_group.ordered_slabs.append(slab_info)
 
     if slab_group is not None:
@@ -100,8 +103,7 @@ def load_slab_info(ordering_scan_csv_path: Path,
 def main(argv: List[str]):
     slab_group_list = load_slab_info(ordering_scan_csv_path=Path(argv[1]),
                                      max_number_of_scans=int(argv[2]),
-                                     number_of_slabs_per_group=int(argv[3]),
-                                     slab_name_width=3)
+                                     number_of_slabs_per_group=int(argv[3]))
     for slab_group in slab_group_list:
         print(f"render project: {slab_group.to_render_project_name()} "
               f"({len(slab_group.ordered_slabs)} slabs):")
