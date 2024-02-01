@@ -18,7 +18,6 @@ from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.msem.field_of_view_layout \
     import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, NINETEEN_MFOV_COLUMN_GROUPS
 from janelia_emrp.msem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
-from janelia_emrp.msem.slab_info import SlabInfo
 from janelia_emrp.msem.wafer_info import load_wafer_info, WaferInfo, build_wafer_info_parent_parser
 from janelia_emrp.root_logger import init_logger
 
@@ -79,11 +78,10 @@ def build_tile_spec(image_path: Path,
 unix_relative_image_path_pattern = re.compile(r"(^\d+)/(\d{3}_\d{6}_(\d{3})_\d{4}-\d{2}-\d{2}T\d{13}).png$")
 
 
-def build_tile_specs_for_slab_scan(slab_scan_path: Path,
-                                   slab_info: SlabInfo) -> list[dict[str, Any]]:
+def build_tile_specs_for_slab_scan(slab_scan_path: Path) -> list[dict[str, Any]]:
 
     scan_fit_parameters = load_scan_fit_parameters(slab_scan_path)
-    stage_z = slab_info.first_scan_z + scan_fit_parameters.scan_index
+    stage_z = 1 + scan_fit_parameters.scan_index
 
     tile_data = []
     tile_width = None
@@ -205,7 +203,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 if len(import_scan_name_list) == 0 or scan_path.parent.name in import_scan_name_list:
 
                     slab_scan_path = Path(scan_path, slab_info.dir_name)
-                    tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, slab_info)
+                    tile_specs = build_tile_specs_for_slab_scan(slab_scan_path)
 
                     if len(tile_specs) > 0:
 

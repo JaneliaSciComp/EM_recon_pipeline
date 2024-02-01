@@ -7,27 +7,25 @@ from typing import Optional
 # determined by microscope operator
 NAME_LEN = 3
 
+
 @dataclass
 class SlabInfo:
     id_serial: int
     id_magc: int = field(compare=False)
     id_stage: int = field(compare=False)
-    first_scan_z: int = field(compare=False)
     serial_name: str = field(init=False, repr=False)
     dir_name: str = field(init=False)
     stack_name: str = field(init=False)
     
     def __post_init__(self):
-        self.serial_name= f"{self.id_serial:0{NAME_LEN}}"
+        self.serial_name = f"{self.id_serial:0{NAME_LEN}}"
         self.dir_name = f"{self.id_stage + 1:0{NAME_LEN}}_"
-        self.stack_name= f"s{self.serial_name}_m{self.id_magc:0{NAME_LEN}}"
+        self.stack_name = f"s{self.serial_name}_m{self.id_magc:0{NAME_LEN}}"
 
 
 @dataclass
 class ContiguousOrderedSlabGroup:
     ordered_slabs: list[SlabInfo]
-    last_id_serial: Optional[int] = None
-    """assigned later, but currently unused"""
 
     def to_render_project_name(self) -> str:
         assert len(self.ordered_slabs) > 0, "must have at least one ordered slab to derive a project name"
@@ -35,7 +33,6 @@ class ContiguousOrderedSlabGroup:
 
 
 def load_slab_info(ordering_scan_csv_path: Path,
-                   max_number_of_scans: int,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
     """
     Ordering Scan CSV Format:
@@ -76,12 +73,10 @@ def load_slab_info(ordering_scan_csv_path: Path,
     for id_magc in serial_to_magc:
         id_serial = magc_to_serial[id_magc]
         id_stage = magc_to_stage[id_magc]
-        first_scan_z = (id_serial * max_number_of_scans) + 1  # make first z 1 instead of 0 to maintain old convention
         slabs.append(
             SlabInfo(id_magc=id_magc,
                      id_serial=id_serial,
-                     id_stage=id_stage,
-                     first_scan_z=first_scan_z,))
+                     id_stage=id_stage))
 
     slab_group: Optional[ContiguousOrderedSlabGroup] = None
     slab_groups: list[ContiguousOrderedSlabGroup] = []
@@ -92,7 +87,6 @@ def load_slab_info(ordering_scan_csv_path: Path,
                 slab_groups.append(slab_group)
             slab_group = ContiguousOrderedSlabGroup(ordered_slabs=[slab_info])
         else:
-            slab_group.last_id_serial = slab_info.id_serial # why?
             slab_group.ordered_slabs.append(slab_info)
 
     if slab_group is not None:
@@ -103,8 +97,7 @@ def load_slab_info(ordering_scan_csv_path: Path,
 
 def main(argv: list[str]):
     slab_groups = load_slab_info(ordering_scan_csv_path=Path(argv[1]),
-                                     max_number_of_scans=int(argv[2]),
-                                     number_of_slabs_per_group=int(argv[3]))
+                                 number_of_slabs_per_group=int(argv[2]))
     for slab_group in slab_groups:
         print(f"render project: {slab_group.to_render_project_name()} "
               f"({len(slab_group.ordered_slabs)} slabs):")
@@ -116,5 +109,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         main(sys.argv)
     else:
-        print("USAGE: slab_info.py <ordering_scan_csv_path> <max_number_of_scans> <number_of_slabs_per_group>")
-        # main(["go", "/nrs/hess/data/hess_wafer_53/raw/ordering/scan_001.csv", "48", "10"])
+        print("USAGE: slab_info.py <ordering_scan_csv_path> <number_of_slabs_per_group>")
+        # main(["go", "/nrs/hess/data/hess_wafer_53/raw/ordering/scan_001.csv", "10"])

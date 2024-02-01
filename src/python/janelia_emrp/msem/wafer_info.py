@@ -58,7 +58,6 @@ def load_wafer_info(wafer_base_path: Path,
         raise ValueError(f"cannot find {ordering_scan_csv_path}")
 
     slab_group_list = load_slab_info(ordering_scan_csv_path=ordering_scan_csv_path,
-                                     max_number_of_scans=len(scan_paths),
                                      number_of_slabs_per_group=number_of_slabs_per_group)
 
     # TODO: parse resolution from experiment.yml or resolution.json (wafer_53 resolution hard-coded here)
@@ -85,6 +84,7 @@ def build_wafer_info_parent_parser() -> argparse.ArgumentParser:
         type=int,
         default=10
     )
+    # NOTE: to exclude entire slabs, we decided to simply delete the stack after import
     parent_parser.add_argument(
         "--exclude_scan_name",
         help="Exclude these scan names from the render stacks (e.g. scan_000)",
