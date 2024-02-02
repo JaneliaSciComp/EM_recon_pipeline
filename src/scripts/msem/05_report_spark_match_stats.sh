@@ -14,8 +14,10 @@ if [ ! -d "${BASE_LOGS_DIR}" ]; then
 fi
 
 # 2023-07-07 15:51:59,104 [Executor task launch worker for task 29794] [partition 994] INFO  [org.janelia.alignment.match.stage.StageMatchPairCounts] logStats: for stage crossPass1, saved matches for 44 out of 99 pairs (44%), siftPoorCoverage: 1, ...
+# 2024-01-17 09:40:20,836 [Executor task launch worker for task 893.0 in stage 2.0 (TID 12893)] INFO [StageMatchPairCounts]: logStats: for stage montageBorderPass1, saved matches for 29 out of 29 pairs (100%), siftPoorCoverage: 0
 
-awk '
+grep -h "logStats: " "${BASE_LOGS_DIR}"/worker-*-dir/app-*/*/stdout | awk '
+
 BEGIN {
   job_count = 0
   job_total_seconds = 0
@@ -24,19 +26,19 @@ BEGIN {
 
 /Pass., saved matches for/ {
   gsub(/,/, "")
-  stage = $17
-  totalSaved[stage] += $21
-  totalProcessed[stage] += $24
-  siftPoorCoverage[stage] += $28
-  siftPoorQuantity[stage] += $30
-  siftSaved[stage] += $32
-  combinedPoorCoverage[stage] += $34
-  combinedPoorQuantity[stage] += $36
-  combinedSaved[stage] += $38
+  gsub(/.*logStats: /, "")
+  stage = $3
+  totalSaved[stage] += $7
+  totalProcessed[stage] += $10
+  siftPoorCoverage[stage] += $14
+  siftPoorQuantity[stage] += $16
+  siftSaved[stage] += $18
+  combinedPoorCoverage[stage] += $20
+  combinedPoorQuantity[stage] += $22
+  combinedSaved[stage] += $24
 }
 
 END {
-  printf "\n\n"
   printf "%-20s  %9s  %9s  %9s  %9s  %9s  %9s  %9s  %9s  %9s\n", "",                        "",           "",          "",          "",          "",          "",          "",          "",          ""
   printf "%-20s  %9s  %9s  %9s  %9s  %9s  %9s  %9s  %9s  %9s\n", "",                        "",           "",          "",          "",          "",      "SIFT",      "SIFT",  "Combined",  "Combined"
   printf "%-20s  %9s  %9s  %9s  %9s  %9s  %9s  %9s  %9s  %9s\n", "",                   "Total",      "Total",   "Percent",      "SIFT",  "Combined",      "Poor",      "Poor",      "Poor",      "Poor"
@@ -59,4 +61,4 @@ END {
     saved_pair_count += totalSaved[stage]
   }
 }
-' "${BASE_LOGS_DIR}"/04-driver.log "${BASE_LOGS_DIR}"/worker-*-dir/app-*/*/stdout
+'
