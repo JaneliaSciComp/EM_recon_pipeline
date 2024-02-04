@@ -60,7 +60,7 @@ def load_wafer_info(wafer_base_path: Path,
     slab_group_list = load_slab_info(ordering_scan_csv_path=ordering_scan_csv_path,
                                      number_of_slabs_per_group=number_of_slabs_per_group)
 
-    # TODO: parse resolution from experiment.yml or resolution.json (wafer_53 resolution hard-coded here)
+    # TODO: parse resolution from /nrs/hess/data/hess_wafer_53/raw/resolution.json (wafer_53 resolution hard-coded here)
     resolution = [8.0, 8.0, 8.0]
 
     return WaferInfo(name=wafer_base_path.name,
