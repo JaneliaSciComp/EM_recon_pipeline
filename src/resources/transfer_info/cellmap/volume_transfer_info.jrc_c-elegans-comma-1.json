@@ -1,0 +1,47 @@
+{
+    "transfer_id": "cellmap::jrc_c-elegans-comma-1::jeiss7",
+    "scope_data_set": {
+        "host": "jeiss7.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/Cellmap",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "jrc_HPF_TA+OTO_ME_S2",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
+        "first_dat_name": "Merlin-6282_23-04-18_085952_0-0-0.dat",
+        "last_dat_name": "Merlin-6282_23-05-08_235903_0-0-0.dat",
+        "dat_x_and_y_nm_per_pixel": 6,
+        "dat_z_nm_per_pixel": 6,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/nrs/cellmap/data/jrc_c-elegans-comma-1/raw/dat",
+        "align_h5": "/nrs/cellmap/data/jrc_c-elegans-comma-1/align"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/shroff/EM_data_archive/FIB-SEM_archive/20230511_HPF_TA+OTO_block2_comma-archive/jrc_HPF-TAOTO_ME-S2"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "cellmap",
+        "project": "jrc_c_elegans_comma_1",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "mask_height": 0,
+        "connect": {
+            "host": "10.40.3.113",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM"
+    ],
+    "cluster_job_project_for_billing": "cellmap",
+    "number_of_dats_converted_per_hour": 80
+}
