@@ -58,7 +58,7 @@ ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --stack ${ALIGN_STACK}"
 ARGS="${ARGS} --rootDirectory ${RENDER_NRS_ROOT}/z_corr"
 ARGS="${ARGS} --runName ${JOB_NAME}"
-ARGS="${ARGS} --poorCorrelationThreshold ${POOR_CORRELATION_THRESHOLD}"
+#ARGS="${ARGS} --poorCorrelationThreshold ${POOR_CORRELATION_THRESHOLD}"
 ARGS="${ARGS} --scale 0.22" # important that this forces us away from a mipmap boundary (e.g. 0.25 was bad)
 
 echo "${ARGS}" > "${SOLVE_BASE_PARAMETERS_FILE}"
