@@ -65,7 +65,7 @@ ARGS="${ARGS} --minStitchingInliers 1000000" # exclude stitch first processing b
 # --serializeMatches
 
 # must export this for flintstone
-export RUNTIME="3:59"
+export RUNTIME="23:59"
 
 #-----------------------------------------------------------
 JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
