@@ -24,7 +24,8 @@ ARGS="${ARGS} --baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STACK}"
 ARGS="${ARGS} --matchCollection ${MATCH_COLLECTION}"
 ARGS="${ARGS} --maxSmallClusterSize 0 --includeMatchesOutsideGroup --maxLayersPerBatch 1000 --maxOverlapLayers 6"
-  
+ARGS="${ARGS} --maxLayersForUnconnectedEdge 50"
+
 echo "
 Connected tile cluster counts will be written to:
   ${COUNT_LOG}
@@ -46,6 +47,6 @@ if [ "${GENERATE_EXCLUDED_CELLS}" = "y" ]; then
 
 else
 
-  tail -5 "${COUNT_LOG}"
+  tail -15 "${COUNT_LOG}"
 
 fi
