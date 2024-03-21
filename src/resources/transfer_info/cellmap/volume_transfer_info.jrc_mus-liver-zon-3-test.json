@@ -1,5 +1,5 @@
 {
-    "transfer_id": "cellmap::jrc_mus-liver-zon-3::jeiss7",
+    "transfer_id": "cellmap::jrc_mus-liver-zon-3-test::jeiss7",
     "scope_data_set": {
         "host": "jeiss7.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
@@ -14,12 +14,12 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-liver-zon-3/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-liver-zon-3/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus-liver-zon-3/align"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-liver-zon-3-test/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-liver-zon-3-test/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_mus-liver-zon-3-test/align"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_mus-liver-zon-3/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_mus-liver-zon-3-test/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
