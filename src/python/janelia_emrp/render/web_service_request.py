@@ -128,9 +128,16 @@ class MatchRequest:
     owner: str
     collection: str
 
+    def owner_url(self) -> str:
+        # noinspection HttpUrlsUsage
+        return f"http://{self.host}/render-ws/v1/owner/{self.owner}"
+
     def collection_url(self) -> str:
         # noinspection HttpUrlsUsage
-        return f"http://{self.host}/render-ws/v1/owner/{self.owner}/matchCollection/{self.collection}"
+        return f"{self.owner_url()}/matchCollection/{self.collection}"
+
+    def get_all_match_collections_for_owner(self) -> list[dict[str, Any]]:
+        return submit_get(f'{self.owner_url()}/matchCollections')
 
     def get_p_group_ids(self) -> list[str]:
         url = f"{self.collection_url()}/pGroupIds"
@@ -190,3 +197,6 @@ class MatchRequest:
                           q_group_id: str,
                           q_id: str):
         submit_delete(f"{self.collection_url()}/group/{p_group_id}/id/{p_id}/matchesWith/{q_group_id}/id/{q_id}")
+
+    def delete_collection(self):
+        submit_delete(f"{self.collection_url()}")
