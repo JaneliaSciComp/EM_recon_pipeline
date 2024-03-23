@@ -78,10 +78,10 @@ def build_tile_spec(image_path: Path,
 unix_relative_image_path_pattern = re.compile(r"(^\d+)/(\d{3}_\d{6}_(\d{3})_\d{4}-\d{2}-\d{2}T\d{13}).png$")
 
 
-def build_tile_specs_for_slab_scan(slab_scan_path: Path) -> list[dict[str, Any]]:
+def build_tile_specs_for_slab_scan(slab_scan_path: Path,
+                                   stage_z: int) -> list[dict[str, Any]]:
 
     scan_fit_parameters = load_scan_fit_parameters(slab_scan_path)
-    stage_z = 1 + scan_fit_parameters.scan_index
 
     tile_data = []
     tile_width = None
@@ -197,13 +197,13 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
         for slab_info in slab_group.ordered_slabs:
             stack = slab_info.stack_name
             stack_is_in_loading_state = False
+            z = 1
 
             for scan_path in wafer_info.scan_paths:
                 # scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
                 if len(import_scan_name_list) == 0 or scan_path.parent.name in import_scan_name_list:
-
                     slab_scan_path = Path(scan_path, slab_info.dir_name)
-                    tile_specs = build_tile_specs_for_slab_scan(slab_scan_path)
+                    tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, z)
 
                     if len(tile_specs) > 0:
 
@@ -218,6 +218,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                         render_api.save_tile_specs(stack=stack,
                                                    tile_specs=tile_specs,
                                                    derive_data=True)
+                        z += 1
                     else:
                         logger.debug(f'{func_name}: no tile specs in {scan_path.name} for stack {stack}')
 
