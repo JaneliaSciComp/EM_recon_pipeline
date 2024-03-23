@@ -182,6 +182,16 @@ class MatchRequest:
 
         return match_pairs
 
+    def get_match_pairs_outside_group(self,
+                                      group_id: str,
+                                      exclude_match_details: bool = False) -> list[dict[str, Any]]:
+        query = "?excludeMatchDetails=true" if exclude_match_details else ""
+        url = f"{self.collection_url()}/group/{group_id}/matchesOutsideGroup{query}"
+        match_pairs = submit_get(url)
+        print(f"retrieved {len(match_pairs)} {self.collection} pairs for groupId {group_id}")
+
+        return match_pairs
+
     def save_match_pairs(self,
                          group_id: str,
                          match_pairs: list[dict[str, Any]]):
