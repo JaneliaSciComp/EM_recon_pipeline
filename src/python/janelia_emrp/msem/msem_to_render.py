@@ -21,7 +21,7 @@ from janelia_emrp.msem.scan_fit_parameters import load_scan_fit_parameters, Scan
 from janelia_emrp.msem.wafer_info import load_wafer_info, WaferInfo, build_wafer_info_parent_parser
 from janelia_emrp.root_logger import init_logger
 
-program_name = "gcibmsem_to_render.py"
+program_name = "msem_to_render.py"
 
 logger = logging.getLogger(__name__)
 
