@@ -1,9 +1,16 @@
 import argparse
+import logging
 import sys
 import traceback
 from typing import List
 
 from janelia_emrp.render.web_service_request import MatchRequest
+from janelia_emrp.root_logger import init_logger
+
+
+program_name = "delete_match_pairs.py"
+
+logger = logging.getLogger(__name__)
 
 
 def csv_list(string):
@@ -84,13 +91,16 @@ def main(arg_list: List[str]):
                                                         q_id=pair["qId"])
                     count += 1
 
-            print(f"{action} {count} pairs {args.pair_type} group {group_id}")
+            logger.info(f"{action} {count} pairs {args.pair_type} group {group_id}")
 
-    print("Done!")
+    logger.info("Done!")
 
 
 if __name__ == '__main__':
     # NOTE: to fix module not found errors, export PYTHONPATH="/.../EM_recon_pipeline/src/python"
+
+    # setup logger since this module is the main program (and set render python logging level to DEBUG)
+    init_logger(__file__)
 
     # noinspection PyBroadException
     try:
