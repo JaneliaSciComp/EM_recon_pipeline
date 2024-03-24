@@ -12,7 +12,7 @@ def csv_list(string):
 
 def main(arg_list: List[str]):
     parser = argparse.ArgumentParser(
-        description="Delete point match data"
+        description="Delete match pairs of the specified pair_type with weights less than min_keep_weight"
     )
     parser.add_argument(
         "--render_host",
