@@ -78,11 +78,10 @@ def main(arg_list: List[str]):
             for pair in match_pairs:
                 if pair["matches"]["w"][0] < args.min_keep_weight:
                     if not args.explain:
-                        print("oops")
-                        # match_request.delete_match_pair(p_group_id=pair["pGroupId"],
-                        #                                 p_id=pair["pId"],
-                        #                                 q_group_id=pair["qGroupId"],
-                        #                                 q_id=pair["qId"])
+                        match_request.delete_match_pair(p_group_id=pair["pGroupId"],
+                                                        p_id=pair["pId"],
+                                                        q_group_id=pair["qGroupId"],
+                                                        q_id=pair["qId"])
                     count += 1
 
             print(f"{action} {count} pairs {args.pair_type} group {group_id}")
