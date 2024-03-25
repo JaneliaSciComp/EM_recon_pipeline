@@ -61,6 +61,6 @@ should be improved.
 
 ## Correct Alignment Issues
 If alignment issues are found, corrections are performed 
-using the [patch process](recon_p03_review_matches.md#patch-corrupted-tiles) 
+using the [patch process](2-3_review_matches.md#patch-corrupted-tiles) 
 with an incremented patch version number.  You then repeat the solve and review processes 
 until you have a clean alignment. 

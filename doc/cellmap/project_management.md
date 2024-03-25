@@ -25,7 +25,7 @@ sequenceDiagram
 ```
 
 ## Issues
-For every new dataset, an issue is opened. What information should be included and what processes this triggers is detailed in [part 1 of the pipeline documentation](recon_p01_render_import.md). Here, we concentrate on the management of the issues.
+For every new dataset, an issue is opened. What information should be included and what processes this triggers is detailed in [part 1 of the pipeline documentation](steps/2-1_render_import.md). Here, we concentrate on the management of the issues.
 
 Generally, GitHub is mainly used to track the progress of the processing and to communicate with the collaborators. This can be sped up by assigning the issue to the responsible person, by using labels, and by tagging people from which feedback is needed.
 
