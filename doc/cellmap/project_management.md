@@ -37,7 +37,7 @@ There are three different categories of labels:
 - **Collaborator labels**: `Cell Map`, `eFIB-SEM SR` (the FIB-SEM shared resource), `Fly EM`
 - **TODO labels**: `needs alignment`, `needs clean-up`, `needs cross-correlation`, `needs N5 creation`, `needs review`, `needs straightening`, `needs streak correction`, `non-rigid tile deformations`, `alignment review concerns`
 
-TODO: What labels are required and what’s the logic?
+Each dataset should have the right collaborator label. Apart from that, there are no strict rules about labeling. Use the TODO labels as needed to keep track of what needs to be done. The workflow labels are used to document the processing steps that have been done. When a dataset is done processing, usually all workflow labels below 06 are removed, as they are recorded in the issue history anyway.
 
 ### Project board
 
@@ -46,4 +46,4 @@ All issues are collected on the [project board](https://github.com/JaneliaSciCom
 - **Alignment**: All new issues are automatically entered in this column and stay there during the all standard processing steps.
 - **Review**: Once processing is done, the issue is moved to this column, where Preibisch and the collaborators have a final look at it. If further processing is necessary, the issue stays in this column for the time necessary to address all issues.
 - **Done**: Once the dataset passes the review process, it is moved to this column to signal that we don’t do further processing on the dataset. The dataset is now ready to be handed off to the collaborator.
-- **Cleaned Up**: TODO: find out what exactly this means.
+- **Cleaned Up**: Once the collaborator has taken over the dataset and has indicated that no further processing is necessary, the issue is moved to this column. At this stage all intermediate data that was used for processing (including 8bit images for alignment) are deleted. This clean up is only done irregularly if disk space is scarce.
