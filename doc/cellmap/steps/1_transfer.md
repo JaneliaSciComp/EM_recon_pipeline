@@ -24,6 +24,8 @@ Make sure that the following data are correct:
 * `SampleID` and `root_dat_path`, which can be directly seen from the filenames listed in the directory;
 * `columns_per_z_layer` and `rows_per_z_layer`, which can be inferred from the file suffix, e.g., `*_0-1-3.dat` being the highest suffix means that there are 2 rows and 4 columns.
 
+This is also a good point to check if there is enough space on the collaborator's drives for the data and to increase the quota if necessary.
+
 ## Transfer and conversion
 ```mermaid
 flowchart LR
