@@ -5,9 +5,9 @@
 ## Get necessary metadata
 ```mermaid
 flowchart LR
-    github[(Issue on<br>GitHub)]
-    json(<tt>volume_transfer_info.&ltdataset&gt.json</tt>)
-    scope[(Scope)]
+    github(Issue on<br>GitHub)
+    json{{<tt>volume_transfer_info.&ltdataset&gt.json</tt>}}
+    scope(Scope)
     github-- Extract data --->json
     json<-. Check data ..->scope
     
@@ -29,17 +29,17 @@ This is also a good point to check if there is enough space on the collaborator'
 ## Transfer and conversion
 ```mermaid
 flowchart LR
-    jenkins[(Jenkins<br>server)]
-    scope[(Scope)]
-    prfs[(prfs)]
-    nrs[(nrs)]
-    nearline[(nearline)]
+    jenkins(Jenkins<br>server)
+    scope(Scope)
+    prfs(prfs)
+    nrs(nrs)
+    nearline(nearline)
     jenkins-.->|"Initiate transfer (30min)"|scope
     scope-->|Raw .dat|prfs
     jenkins-.->|"Initiate conversion (2h)"|prfs
     prfs--->|16-bit HDF5|prfs
     prfs--->|8-bit HDF5 for processing|nrs
-    prfs--->|move .dat after conversion|nearline
+    prfs--->|move 16-bit HDF5 after conversion<br>remove corresponding .dat|nearline
 ```
 
 To set up transfer, make sure that `volume_transfer_info.<dataset>.json` is in `/groups/flyem/data/render/git/EM_recon_pipeline/config`. Then, execute
