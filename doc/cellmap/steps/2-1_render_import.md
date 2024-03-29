@@ -1,118 +1,25 @@
 # Reconstruction Part 1: Render Import
-## Common Parameters
 ```bash
-export NEARLINE_HOST="e06u14.int.janelia.org" 
-export BASE_WORK_DIR="/groups/flyem/data/alignment/flyem-alignment-ett/Z0720-07m"
+# Commonly used paths
+RENDER_DIR="/groups/flyem/data/render/"
+PROCESSING_DIR=<path to the processing directory set up in previous step>
 ```
-## Setup Work Area
+We assume that the data has been successfully transferred and converted to HDF5 format, and that there is a directory set up for processing which we call `PROCESSING_DIR` (see [transfer documentation](1_transfer.md) for details). The first step for processing is to import the data into the Render database so that it can be accessed by the render clients.
+
+## Generate TileSpecs
+Go to a machine with access to `${RENDER_DIR}`, navigate to `${PROCESSING_DIR}` and run the following command:
 ```bash
-# Run on host with access to /nearline because that is where .dat files are stored.
-ssh ${NEARLINE_HOST}
-
-cd ${BASE_WORK_DIR}
-
-# Create work area ${BASE_WORK_DIR}/${REGION}/${TAB} with copies of pipeline scripts.
-#
-#   USAGE: ./setup.sh <region> <tab>  ( e.g. ./setup.sh VNC Sec32 )
-./setup.sh VNC Sec26
+./07_h5_to_render.sh
 ```
-## Validate and Correct Scope File Transfers
-<font color="orange">VNC Sec26 Processing Time:</font> 15 minutes using 1 core *(can take much longer if there are many transfer issues)*  
+This will launch a local dask job that will generate TileSpecs from the HDF5 files and upload them to the render database. All necessary information is read from the `volume_transfer_info.<dataset>.json` file that was created in the previous step. After this step, a dynamically rendered stack can be accessed in the point match explorer and viewed in neuroglancer.
 
-The Fly EM image transfer process continuously polls the EM scopes for new data 
-and then copies (and converts) that data to centralized network filesystems.
-The process works most of the time, but occasionally files are not transferred.
-It is important to ensure that all data has been properly transferred 
-before deriving and importing metadata into the Render web services.
+## Set up preview volume: export to N5
+NOTE: this is a feature under active development and the process will likely change in the near future. For now, the following steps are necessary.
 
-### Transfer Process (for context)
-![FIBSEM transfer flow diagram](fibsem-transfer-flow.png)
-
-### Validation Steps
+Go to the Janelia compute cluster (e.g., `ssh login1.int.janelia.org`), navigate to `${PROCESSING_DIR}` and run the following command:
 ```bash
-# While still on nearline host ...
-cd VNC/Sec26 # cd ${BASE_WORK_DIR}/${REGION}/${TAB}
-
-# Run as flyem user so that scopes can be reached and corrections can be written.
-su flyem
-
-# Use date range from transferred files to go back to scope and get listing of
-# all files acquired during that time.
-./01_gen_scope_dat_file_lists.sh
-
-# Look for missing and/or misplaced files. 
-# InLens png, Transferred dat, Archived dat, Scope dat, and Logs counts should be the same.
-# Nothing should be missing.
-./02_check_tabs.sh
-
-| ====================================================
-| Tab: Z0720-07m_VNC_Sec26
-|
-| InLens png  Transferred dat  Archived dat  Scope dat       Logs
-| ----------  ---------------  ------------  ---------  ---------
-|     119187           119187        119187     119208     119187
-|
-|         21 missing InLens png: ['Merlin-6285_21-08-23_084156_0-0-0', 'Merlin-6285_21-08-23_084156_0-0-1', 'Merlin-6285_2
-|         21 missing dat:        ['Merlin-6285_21-08-23_084156_0-0-0', 'Merlin-6285_21-08-23_084156_0-0-1', 'Merlin-6285_2
-|          0 unarchived dat:     []
-|          0 non-standard dat:   []
-         
-# In this example, 21 dat files (along with their corresponding png files) are missing
-# so we need to try to transfer the dat files again.
-# This script serially scp's each missing dat file and converts it to png.  
-./03_fetch_missing_dat.sh
-
-# Re-run the check: nothing should be missing now unless the source files are corrupted in some way.
-./02_check_tabs.sh
-
-| ====================================================
-| Tab: Z0720-07m_VNC_Sec26
-|
-| InLens png  Transferred dat  Archived dat  Scope dat       Logs
-| ----------  ---------------  ------------  ---------  ---------
-|     119208           119208        119208     119208     119208
-| 
-|          0 missing InLens png: []
-|          0 missing dat:        []
-|          0 unarchived dat:     []
-|          0 non-standard dat:   []
-         
-# Verify the total dat file count and the first and last dat file names 
-# match what Wei thinks they should be.  Wei typically emails the names and counts 
-# but sometimes you need to ask Wei to send the information.
-#
-# TODO: merge this information into the check tabs tool
-./list_first_and_last_dats.sh 
-
-# Once everything looks good, exit from the flyem shell.
-exit
+./99_append_to_export.sh <number of executors>
 ```
+This will submit a couple of spark cluster jobs and set up logging directories. The number of executors should be chosen based on the size of the dataset. Currently, a single executor will occupy 10 cores on the cluster and 3 more cores for the driver are needed. The logs for scripts usually reside in `${PROCESSING_DIR}/logs`, but the spark jobs will set up additional log directories for each executor and the driver. These directories are printed to the console when executing above command.
 
-### Move Bad dat Files
-
-```bash
-# If dat files are corrupted such that png files cannot be generated for them ...
-NEARLINE_TAB_DIR="/nearline/flyem2/data/Z0720-07m_${REGION}_${TAB}"
-BAD_DAT_FILE="???"
-mkdir ${NEARLINE_TAB_DIR}/dat_bad
-mv ${NEARLINE_TAB_DIR}/dat/${BAD_DAT_FILE} ${NEARLINE_TAB_DIR}/dat_bad
-
-# Note that the render import process will automatically 
-# patch partial layers with tiles from complete adjacent layers.  
-```
-
-## Import Metadata into Render Web Services
-<font color="orange">VNC Sec26 Processing Time:</font> 2 minutes using 32 cores
-
-```bash
-# While still on nearline host in ${BASE_WORK_DIR}/${REGION}/${TAB} and as yourself ...
-
-# Run script that parses dat headers, generates JSON tile specs, and imports them into render.
-# Current process sets up a 32-worker dask cluster to do the import, so you may need to
-# reconfigure the number of dask workers if your nearline host does not have enough cores.  
-./06_dat_to_render.sh
-
-# Once import completes everything else needs to launch from an LSF submit host,
-# so exit from the nearline host.
-exit
-```
+Once fininshed, the location of the final N5 volume can be found either in the driver logs or by running `gen_github_text.sh` again.
