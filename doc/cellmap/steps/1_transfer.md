@@ -1,6 +1,11 @@
 # Transfer data from scope to shared filesystem
 
-
+```bash
+# Commonly used paths
+EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
+TRANSFER_INFO_DIR="src/resources/transfer_info/cellmap"
+TRANSFER_DIR="/groups/flyem/home/flyem/bin/dat_transfer/2022/config"
+```
 
 ## Get necessary metadata
 ```mermaid
@@ -12,7 +17,7 @@ flowchart LR
     json<-. Check data ..->scope
     
 ```
-There is an issue template that has to be filled out by the FIB-SEM shared resource to gather necessary data for subsequent processing. This information should be converted to a file called `volume_transfer_info.<dataset>.json`, where `<dataset>` is the dataset name as specified by the collaborator. This file should be put under `src/resources/transfer_info/cellmap` in this repository and committed.
+There is an issue template that has to be filled out by the FIB-SEM shared resource to gather necessary data for subsequent processing. This information should be converted to a file called `volume_transfer_info.<dataset>.json`, where `<dataset>` is the dataset name as specified by the collaborator. This file should be put under `${TRANSFER_INFO_DIR}` in this repository and committed.
 
 It is best to double-check the validity of the data from the GitHub issue. Sometimes, some post-processing is necessary to make sure all necessary data are present and correct. To this end, log into the scope as user `flyem` and navigate to the `root_keep_path` specified in the issue, e.g.:
 ```bash
@@ -41,12 +46,11 @@ flowchart LR
     prfs--->|8-bit HDF5 for processing|nrs
     prfs--->|move 16-bit HDF5 after conversion<br>remove corresponding .dat|nearline
 ```
-
-To set up transfer, make sure that `volume_transfer_info.<dataset>.json` is in `/groups/flyem/data/render/git/EM_recon_pipeline/config`. Then, execute
+To set up transfer, make sure that `volume_transfer_info.<dataset>.json` is in `${EMPR_ROOT}/${TRANSFER_INFO_DIR}`. Then, go to that directory and execute
 ```bash
 ./00_setup_transfer.sh volume_transfer_info.<dataset>.json
 ```
-This will copy the json file into `/groups/flyem/home/flyem/bin/dat_transfer/2022/config`, where it can be found by the processes run by the Jenkins server.
+This will copy the json file into `${TRANSFER_DIR}/config`, where it can be found by the processes run by the Jenkins server.
 
 ### Configuring and starting the Jenkins server for transfer
 1. Log in to [the server](https://jenkins.int.janelia.org) and navigate to your scope under the FlyEM tab.
@@ -57,7 +61,7 @@ This will copy the json file into `/groups/flyem/home/flyem/bin/dat_transfer/202
 The Jenkins process for conversion should always be running and happens every two hours. Note that everything resides under the FlyEM tab even if the current acquisition is done by the FIB-SEM shared resource for another collaborator, since the shared resources was initially founded for FlyEM, so the name has historic reasons.
 
 ## Set up processing directory
-To set up a directory for subsequent processing, execute `11_setup_volume.sh`. This will copy all relevant scripts for processing from this directory to a directory on `prfs` specified in `/groups/cellmap/cellmap/render/align/jrc_mus-liver-zon-3`.
+To set up a directory for subsequent processing, execute `11_setup_volume.sh` in `${TRANSFER_DIR}`. This will copy all relevant scripts for processing from this directory to a directory on `prfs` specified in `volume_transfer_info.<dataset>.json`.
 
 ## Update GitHub issue
-To automatically create a text with all relevant links for the GitHub issue, execute `gen_github_text.sh`. This text can be used to update the issue description.
+To automatically create a text with all relevant links for the GitHub issue, execute `gen_github_text.sh` in the processing directory. This text can be used to update the issue description.
