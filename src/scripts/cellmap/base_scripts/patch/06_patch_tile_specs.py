@@ -86,6 +86,17 @@ def main():
     tile_ids_to_patch = [
     ]
 
+    missing_tile_ids_to_specs = {
+        # "24-03-01_143550_0-0-3.15438.0": {
+        #     "tileId": "24-03-01_143550_0-0-3.15438.0", "z": 15438,
+        #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 3}
+        # },
+        # "24-03-01_143550_0-0-4.15438.0": {
+        #     "tileId": "24-03-01_143550_0-0-4.15438.0", "z": 15438,
+        #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 3}
+        # },
+    }
+
     patched_resolved_tiles = {
         "transformIdToSpecMap": {},
         "tileIdToSpecMap": {}
@@ -94,7 +105,12 @@ def main():
     tile_ids_to_remove = []
 
     for tile_id, delta_z in tile_ids_to_patch:
-        tile_spec_to_patch = get_tile_spec(owner, project, stack, tile_id)
+
+        if tile_id in missing_tile_ids_to_specs:
+            tile_spec_to_patch = missing_tile_ids_to_specs[tile_id]
+        else:
+            tile_spec_to_patch = get_tile_spec(owner, project, stack, tile_id)
+
         adjacent_layer_resolved_tiles = \
             get_resolved_tiles_for_layer(owner, project, stack, tile_spec_to_patch["z"] + delta_z)
         if "transformIdToSpecMap" in adjacent_layer_resolved_tiles:
