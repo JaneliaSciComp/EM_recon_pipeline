@@ -77,6 +77,19 @@ def save_resolved_tiles(owner, project, stack, resolved_tiles):
     response.raise_for_status()
 
 
+def build_missing_tile_json_string(layer_timestamp, z, row, column):
+    tile_id = f'{layer_timestamp}_0-{row}-{column}.{z}.0'
+    layout = f'{{"sectionId": "{z}.0", "imageRow": {row}, "imageCol": {column}}}'
+    tile_spec = f'{{"tileId": "{tile_id}", "z": {z}, "layout": {layout}}}'
+
+    # "24-03-01_143550_0-0-3.15438.0": {
+    #     "tileId": "24-03-01_143550_0-0-3.15438.0",
+    #     "z": 15438,
+    #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 3}
+    # },
+    return f'"{tile_id}": {tile_spec}'
+
+
 def main():
     owner = "RENDER_OWNER"  # TODO: update with render stack owner
     project = "RENDER_PROJECT"  # TODO: render stack project
@@ -86,15 +99,16 @@ def main():
     tile_ids_to_patch = [
     ]
 
+    # missing_layer_timestamp = "24-03-01_143550"
+    # missing_layer_z = 15438
     missing_tile_ids_to_specs = {
-        # "24-03-01_143550_0-0-3.15438.0": {
-        #     "tileId": "24-03-01_143550_0-0-3.15438.0", "z": 15438,
-        #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 3}
-        # },
-        # "24-03-01_143550_0-0-4.15438.0": {
-        #     "tileId": "24-03-01_143550_0-0-4.15438.0", "z": 15438,
-        #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 4}
-        # },
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 0, 3),
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 0, 4),
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 0),
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 1),
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 2),
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 3),
+        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 4),
     }
 
     patched_resolved_tiles = {
