@@ -77,17 +77,18 @@ def save_resolved_tiles(owner, project, stack, resolved_tiles):
     response.raise_for_status()
 
 
-def build_missing_tile_json_string(layer_timestamp, z, row, column):
+def add_missing_tile(layer_timestamp, z, row, column, to_dict):
     tile_id = f'{layer_timestamp}_0-{row}-{column}.{z}.0'
-    layout = f'{{"sectionId": "{z}.0", "imageRow": {row}, "imageCol": {column}}}'
-    tile_spec = f'{{"tileId": "{tile_id}", "z": {z}, "layout": {layout}}}'
-
-    # "24-03-01_143550_0-0-3.15438.0": {
-    #     "tileId": "24-03-01_143550_0-0-3.15438.0",
-    #     "z": 15438,
-    #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 3}
-    # },
-    return f'"{tile_id}": {tile_spec}'
+    tile_spec = {
+        "tileId": tile_id,
+        "z": z,
+        "layout": {
+            "sectionId": f'{z}.0',
+            "imageRow": row,
+            "imageCol": column
+        }
+    }
+    to_dict[tile_id] = tile_spec
 
 
 def main():
@@ -99,17 +100,17 @@ def main():
     tile_ids_to_patch = [
     ]
 
+    missing_tile_ids_to_specs = {}
+
     # missing_layer_timestamp = "24-03-01_143550"
     # missing_layer_z = 15438
-    missing_tile_ids_to_specs = {
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 0, 3),
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 0, 4),
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 0),
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 1),
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 2),
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 3),
-        # build_missing_tile_json_string(missing_layer_timestamp, missing_layer_z, 1, 4),
-    }
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 0, 3, missing_tile_ids_to_specs),
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 0, 4, missing_tile_ids_to_specs),
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 1, 0, missing_tile_ids_to_specs),
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 1, 1, missing_tile_ids_to_specs),
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 1, 2, missing_tile_ids_to_specs),
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 1, 3, missing_tile_ids_to_specs),
+    # add_missing_tile(missing_layer_timestamp, missing_layer_z, 1, 4, missing_tile_ids_to_specs),
 
     patched_resolved_tiles = {
         "transformIdToSpecMap": {},
