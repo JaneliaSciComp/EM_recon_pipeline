@@ -93,7 +93,7 @@ def main():
         # },
         # "24-03-01_143550_0-0-4.15438.0": {
         #     "tileId": "24-03-01_143550_0-0-4.15438.0", "z": 15438,
-        #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 3}
+        #     "layout": { "sectionId": "15438.0", "imageRow": 0, "imageCol": 4}
         # },
     }
 
