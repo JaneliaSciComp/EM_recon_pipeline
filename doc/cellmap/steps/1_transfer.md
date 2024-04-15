@@ -65,3 +65,4 @@ To set up a directory for subsequent processing, execute `11_setup_volume.sh` in
 
 ## Update GitHub issue
 To automatically create a text with all relevant links for the GitHub issue, execute `gen_github_text.sh` in the processing directory. This text can be used to update the issue description.
+Furthermore, assign the issue to the person responsible for the next steps, add the right labels, and add the issue to the project board.
