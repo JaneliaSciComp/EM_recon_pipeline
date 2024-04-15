@@ -48,7 +48,7 @@ fi
 
 # must export this for flintstone
 export LSF_PROJECT="${BILL_TO}"
-export RUNTIME="3:59"
+export RUNTIME="333:59"
 
 #-----------------------------------------------------------
 JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
