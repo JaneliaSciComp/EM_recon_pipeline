@@ -73,6 +73,9 @@ if [[ "${LAYOUT}" == "multi_row" ]]; then
   MATCH_PARAMETERS_DIR="${CONFIG_DIR}/match_multi_row"
 elif [[ "${LAYOUT}" == "single_tile" ]]; then
   MATCH_RUN_TYPES="cross"
+  if [[ "${RENDER_PROJECT}" == *"leaf"* ]]; then
+    MATCH_PARAMETERS_DIR="${CONFIG_DIR}/match_leaf"
+  fi
 else # single_row
   MATCH_RUN_TYPES="montage cross"
 fi
