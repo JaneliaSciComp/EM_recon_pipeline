@@ -77,9 +77,6 @@ else # single_row
   MATCH_RUN_TYPES="montage cross"
 fi
 
-# threshold for generating regional poor correlation data
-POOR_CORRELATION_THRESHOLD="0.97"
-
 # ============================================================================
 # Common Spark job parameters
 
