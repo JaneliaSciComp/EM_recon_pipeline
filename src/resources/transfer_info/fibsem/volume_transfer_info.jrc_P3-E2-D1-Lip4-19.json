@@ -14,7 +14,7 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/fibsem/data/jrc_P3-E2-D1-Lip4-19/dat",
+        "raw_dat": "/nrs/fibsem/data/jrc_P3-E2-D1-Lip4-19/raw/dat",
         "align_h5": "/nrs/fibsem/data/jrc_P3-E2-D1-Lip4-19/align"
     },
     "archive_root_paths": {
