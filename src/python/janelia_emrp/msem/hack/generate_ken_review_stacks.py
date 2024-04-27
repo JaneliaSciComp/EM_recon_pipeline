@@ -30,7 +30,7 @@ def main():
             "slab_100_to_109", "slab_110_to_119", "slab_120_to_129", "slab_130_to_139", "slab_140_to_149",
             "slab_150_to_159", "slab_160_to_169", "slab_170_to_179", "slab_180_to_189", "slab_190_to_199"
         ],
-        "s200_to_249": [
+        "s200_to_299": [
             "slab_200_to_209", "slab_210_to_219", "slab_220_to_229", "slab_230_to_239", "slab_240_to_249",
             "slab_250_to_259", "slab_260_to_269", "slab_270_to_279", "slab_280_to_289", "slab_290_to_299"
         ],
