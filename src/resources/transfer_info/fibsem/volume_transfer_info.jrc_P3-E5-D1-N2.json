@@ -2,7 +2,7 @@
     "transfer_id": "fibsem::jrc_P3-E5-D1-N2::jeiss8",
     "scope_data_set": {
         "host": "jeiss8.hhmi.org",
-        "root_dat_path": "/cygdrive/e/Images",
+        "root_dat_path": "/cygdrive/e/Images/C-elegans",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "jrc_P3-E5-D1-N2",
         "rows_per_z_layer": 1,
