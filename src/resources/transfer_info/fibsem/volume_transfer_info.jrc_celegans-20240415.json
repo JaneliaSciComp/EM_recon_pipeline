@@ -14,11 +14,12 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/nrs/fibsem/data/jrc_celegans-20240415/dat",
+        "raw_dat": "/groups/fibsem/fibsem/data/jrc_celegans-20240415/dat",
+        "raw_h5": "/groups/fibsem/fibsem/data/jrc_celegans-20240415/raw",
         "align_h5": "/nrs/fibsem/data/jrc_celegans-20240415/align"
     },
     "archive_root_paths": {
-        "raw_dat": "/nearline/fibsem/Backup_data/Hari_Shroff_jrc_celegans-20240415"
+        "raw_h5": "/nearline/fibsem/data/jrc_celegans-20240415/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
