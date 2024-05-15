@@ -7,7 +7,7 @@
         "data_set_id": "jrc_celegans-20240415",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
-        "first_dat_name": "Merlin-6281_24-01-26_000057_0-0-0.dat",
+        "first_dat_name": "Merlin-6049_24-05-09_000312_0-0-0.dat",
         "last_dat_name": null,
         "dat_x_and_y_nm_per_pixel": 6,
         "dat_z_nm_per_pixel": 6,
