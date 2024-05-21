@@ -177,7 +177,7 @@ def main(arg_list: list[str]):
     parser.add_argument(
         "--lsf_runtime_limit",
         help="LSF runtime limit (e.g. [hour:]minute)",
-        default="3:59"
+        default="233:59"
     )
     parser.add_argument(
         "--max_batch_count",
