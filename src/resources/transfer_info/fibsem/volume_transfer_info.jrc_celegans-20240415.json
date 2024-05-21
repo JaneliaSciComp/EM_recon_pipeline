@@ -24,7 +24,7 @@
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "fibsem",
-        "project": "jrc_celegans-20240415",
+        "project": "jrc_celegans_20240415",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
