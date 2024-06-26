@@ -269,7 +269,7 @@ def get_layers_for_run(dat_root: Path,
         # unless last dat file of last layer is not recently modified and
         # acquisition has stopped or last dat path was explicitly specified
         layer_count_minus_one = len(layers) - 1
-        slice_max = layer_count_minus_one if max_index is None else min(layer_count_minus_one, (max_index + 1))
+        slice_max = layer_count_minus_one if max_index is None else min(len(layers), (max_index + 1))
         if len(layers) > 0 and (volume_transfer_info.acquisition_stopped() or last_dat_path is not None):
             one_hour_ago = datetime.datetime.now() - datetime.timedelta(hours=1)
             exclude_timestamp = datetime.datetime.timestamp(one_hour_ago)
