@@ -191,6 +191,8 @@ class VolumeTransferInfo(BaseModel):
     #         project to bill cluster time to
     #     number_of_dats_converted_per_hour:
     #         expected number of dats to be converted in one hour (omit to use default for conversion)
+    #     number_of_preview_workers:
+    #         number of Spark workers to use when generating preview exports (omit to use default)
     #     parsed_from_path:
     #         path of file from which the transfer information was loaded or None if not loaded from a file
     """
@@ -203,6 +205,7 @@ class VolumeTransferInfo(BaseModel):
     transfer_tasks: list[VolumeTransferTask]
     cluster_job_project_for_billing: str
     number_of_dats_converted_per_hour: Optional[int]
+    number_of_preview_workers: Optional[int]
     parsed_from_path: Optional[Path]
 
     def __str__(self):
