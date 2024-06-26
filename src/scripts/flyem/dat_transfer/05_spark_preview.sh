@@ -88,6 +88,9 @@ for TRANSFER_JSON_FILE in ${TRANSFER_JSON_FILES}; do
 
       LAUNCH_LOG_FILE="${LOG_DIR}/preview-$(date +"%Y%m%d_%H%M%S").log"
 
+      # ensure all workers are available before starting driver
+      export MIN_WORKERS="${NUM_WORKERS}"
+
       # Write spark logs to backed-up filesystem rather than user home so that they are readable by others for analysis.
       # NOTE: must consolidate logs when changing run parent dir
       export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir ${SPARK_LOG_DIR}"
