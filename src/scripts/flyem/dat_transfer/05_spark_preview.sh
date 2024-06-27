@@ -64,7 +64,9 @@ JQ="/groups/flyem/data/render/bin/jq"
 
 for TRANSFER_JSON_FILE in ${TRANSFER_JSON_FILES}; do
 
-  EXPORT_PREVIEW_VOLUME_COUNT=$(grep -c "EXPORT_PREVIEW_VOLUME" "${TRANSFER_JSON_FILE}")
+  echo "checking ${TRANSFER_JSON_FILE} for EXPORT_PREVIEW_VOLUME task ..."
+  EXPORT_PREVIEW_VOLUME_COUNT=$(grep -c "EXPORT_PREVIEW_VOLUME" "${TRANSFER_JSON_FILE}" || true)  # grep exits with status code 1 if the string is not found so use || true to avoid script exit
+  echo "EXPORT_PREVIEW_VOLUME_COUNT is ${EXPORT_PREVIEW_VOLUME_COUNT} for ${TRANSFER_JSON_FILE}"
 
   if (( EXPORT_PREVIEW_VOLUME_COUNT == 1 )); then
 
@@ -107,8 +109,6 @@ ${ARGS}
       echo "${TRANSFER_JSON_FILE} cluster_root_paths.align_h5 ${ALIGN_H5_PATH} does not exist, nothing to do"
     fi
 
-  else
-    echo "${TRANSFER_JSON_FILE} does not contain EXPORT_PREVIEW_VOLUME task, nothing to do"
   fi
 
   # wait a few seconds before launching next job
