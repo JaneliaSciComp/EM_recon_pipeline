@@ -111,6 +111,9 @@ ${ARGS}
     echo "${TRANSFER_JSON_FILE} does not contain EXPORT_PREVIEW_VOLUME task, nothing to do"
   fi
 
+  # wait a few seconds before launching next job
+  sleep 5
+
 done
 
 
