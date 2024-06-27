@@ -90,6 +90,9 @@ for TRANSFER_JSON_FILE in ${TRANSFER_JSON_FILES}; do
 
       LAUNCH_LOG_FILE="${LOG_DIR}/preview-$(date +"%Y%m%d_%H%M%S").log"
 
+       # set job runtime to be ten days to avoid job being killed by LSF
+      export RUNTIME="240:00"
+
       # ensure all workers are available before starting driver
       export MIN_WORKERS="${NUM_WORKERS}"
 
