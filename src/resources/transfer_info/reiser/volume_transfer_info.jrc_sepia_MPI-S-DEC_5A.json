@@ -17,7 +17,7 @@
         "raw_dat": "/groups/reiser/reiserlab/data/jrc_sepia_MPI-S-DEC_5A/dat",
         "raw_h5": "/groups/reiser/reiserlab/data/jrc_sepia_MPI-S-DEC_5A/raw",
         "align_h5": "/nrs/reiser/render/data/jrc_sepia_MPI-S-DEC_5A/h5/align",
-        "export_n5": "/nrs/reiser/render/data/jrc_sepia_MPI-S-DEC_5A.n5"
+        "export_n5": "/nrs/reiser/render/data/jrc_sepia_MPI-S-DEC_5A/jrc_sepia_MPI-S-DEC_5A.n5"
     },
     "archive_root_paths": {
         "raw_h5": "/nearline/reiser/data/jrc_sepia_MPI-S-DEC_5A/h5/raw"
