@@ -21,7 +21,9 @@ if [ ! -d "${TRANSFER_JSON_DIR}" ]; then
   echo "ERROR: ${TRANSFER_JSON_DIR} is not a directory"
   exit 1
 else
-  echo "Using transfer JSON directory: ${TRANSFER_JSON_DIR}"
+  echo "
+Using transfer JSON directory: ${TRANSFER_JSON_DIR}
+"
 fi
 
 cd "${TRANSFER_JSON_DIR}"
@@ -64,19 +66,34 @@ JQ="/groups/flyem/data/render/bin/jq"
 
 for TRANSFER_JSON_FILE in ${TRANSFER_JSON_FILES}; do
 
-  echo "checking ${TRANSFER_JSON_FILE} for EXPORT_PREVIEW_VOLUME task ..."
+  echo "
+checking ${TRANSFER_JSON_FILE} for EXPORT_PREVIEW_VOLUME task ..."
   EXPORT_PREVIEW_VOLUME_COUNT=$(grep -c "EXPORT_PREVIEW_VOLUME" "${TRANSFER_JSON_FILE}" || true)  # grep exits with status code 1 if the string is not found so use || true to avoid script exit
-  echo "EXPORT_PREVIEW_VOLUME_COUNT is ${EXPORT_PREVIEW_VOLUME_COUNT} for ${TRANSFER_JSON_FILE}"
+
+  echo "EXPORT_PREVIEW_VOLUME_COUNT is ${EXPORT_PREVIEW_VOLUME_COUNT}"
 
   if (( EXPORT_PREVIEW_VOLUME_COUNT == 1 )); then
 
     RENDER_HOST=$(${JQ} -r '.render_data_set.connect.host' "${TRANSFER_JSON_FILE}")
     RENDER_PORT=$(${JQ} -r '.render_data_set.connect.port' "${TRANSFER_JSON_FILE}")
-    ALIGN_H5_PATH=$(${JQ} -r '.cluster_root_paths.align_h5' "${TRANSFER_JSON_FILE}")
+    ALIGN_H5_PATH=$(${JQ} -r '.cluster_root_paths.align_h5 // "undefined"' "${TRANSFER_JSON_FILE}")
+    EXPORT_N5_PATH=$(${JQ} -r '.cluster_root_paths.export_n5 // "undefined"' "${TRANSFER_JSON_FILE}")
     BILL_TO=$(${JQ} -r '.cluster_job_project_for_billing' "${TRANSFER_JSON_FILE}")
     NUM_WORKERS=$(${JQ} -r '.number_of_preview_workers // "10"' "${TRANSFER_JSON_FILE}") # default to 10 workers
 
-    if [ -d "${ALIGN_H5_PATH}" ]; then
+    if [ "${ALIGN_H5_PATH}" == "undefined" ]; then
+
+      echo "cluster_root_paths.align_h5 not defined in ${TRANSFER_JSON_FILE}, nothing to do"
+
+    elif [ ! -d "${ALIGN_H5_PATH}" ]; then
+
+      echo "cluster_root_paths.align_h5 ${ALIGN_H5_PATH} in ${TRANSFER_JSON_FILE} does not exist, nothing to do"
+
+    elif [ "${EXPORT_N5_PATH}" == "undefined" ]; then
+
+      echo "cluster_root_paths.export_n5 not defined in ${TRANSFER_JSON_FILE}, nothing to do"
+
+    else
 
       ARGS="--baseDataUrl http://${RENDER_HOST}:${RENDER_PORT}/render-ws/v1"
       ARGS="${ARGS} --transferInfo ${TRANSFER_JSON_DIR}/${TRANSFER_JSON_FILE}"
@@ -102,14 +119,13 @@ for TRANSFER_JSON_FILE in ${TRANSFER_JSON_FILES}; do
 
 # use shell group to tee all output to log file
 {
-  echo "Running with arguments:
+  echo "
+Running with arguments:
 ${ARGS}
 "
   /groups/flyTEM/flyTEM/render/spark/spark-janelia/flintstone.sh $NUM_WORKERS $JAR $CLASS $ARGS
 } 2>&1 | tee -a "${LAUNCH_LOG_FILE}"
 
-    else
-      echo "${TRANSFER_JSON_FILE} cluster_root_paths.align_h5 ${ALIGN_H5_PATH} does not exist, nothing to do"
     fi
 
   fi

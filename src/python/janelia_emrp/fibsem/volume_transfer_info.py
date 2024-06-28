@@ -94,14 +94,15 @@ class ScopeDataSet(BaseModel):
 
 
 class ClusterRootDirectoryPaths(BaseModel):
-    """Cluster accessible (e.g. dm11 or nrs) paths for data."""
+    """Cluster accessible (e.g. /groups or /nrs) paths for data."""
     raw_dat: Optional[Path]
     raw_h5: Optional[Path]
     align_h5: Optional[Path]
+    export_n5: Optional[Path]
 
 
 class ArchiveRootDirectoryPaths(BaseModel):
-    """Archive (e.g. nearline) paths for data."""
+    """Archive (e.g. /nearline) paths for data."""
     raw_dat: Optional[Path]
     raw_h5: Optional[Path]
 
