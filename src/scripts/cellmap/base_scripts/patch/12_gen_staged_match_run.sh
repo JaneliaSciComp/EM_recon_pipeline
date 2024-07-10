@@ -6,6 +6,7 @@ SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 CONFIG_FILE="${SCRIPT_DIR}/../00_config.sh"
 
 if [[ -f ${CONFIG_FILE} ]]; then
+  # shellcheck disable=SC1090
   source ${CONFIG_FILE}
 else
   echo "ERROR: cannot find ${CONFIG_FILE}"
@@ -26,7 +27,7 @@ fi
 JAVA_CLASS="org.janelia.render.client.MultiStagePointMatchClient"
 MEMORY="13G" # 15G allocated per slot
 #BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 60" # limit to 60 minutes for short queue
-BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 239"
+BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 1440" # limit to 1 day otherwise
 MAX_RUNNING_TASKS="2000"
 
 JOB_NAME=`getRunDirectory multi_stage_match_${RUN_TYPE}`

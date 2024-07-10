@@ -31,7 +31,7 @@ fi
 
 JAVA_CLASS="org.janelia.render.client.zspacing.ZPositionCorrectionClient"
 MEMORY="13G" # 15G allocated per slot
-BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 239"
+BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 1440" # limit to 1 day
 MAX_RUNNING_TASKS="1000"
 
 JOB_NAME=$(getRunDirectory z_corr)
