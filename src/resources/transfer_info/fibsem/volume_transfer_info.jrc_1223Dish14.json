@@ -4,7 +4,7 @@
         "host": "jeiss2.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cryo",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_celegans-20240415",
+        "data_set_id": "jrc_1223Dish14",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6262_24-07-04_000156_0-0-0.dat",
