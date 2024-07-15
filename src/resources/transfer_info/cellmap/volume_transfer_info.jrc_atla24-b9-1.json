@@ -1,5 +1,5 @@
 {
-    "transfer_id": "cellmap::jrc_alta24-b9_4nm::jeiss7",
+    "transfer_id": "cellmap::jrc_alta24-b9-1::jeiss7",
     "scope_data_set": {
         "host": "jeiss7.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cellmap",
@@ -8,24 +8,24 @@
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6282_24-06-18_000158_0-0-0.dat",
-        "last_dat_name": "Merlin-6282_24-07-07_154708_0-0-0.dat",
+        "last_dat_name": "Merlin-6282_24-07-01_080754_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 4,
         "dat_z_nm_per_pixel": 4,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_alta24-b9_4nm/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_alta24-b9_4nm/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_alta24-b9_4nm/align",
-        "export_n5": "/nrs/cellmap/data/jrc_alta24-b9_4nm/jrc_alta24-b9_4nm.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_atla24-b9-1/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_atla24-b9-1/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_atla24-b9-1/align",
+        "export_n5": "/nrs/cellmap/data/jrc_atla24-b9-1/jrc_atla24-b9_4nm.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_alta24-b9_4nm/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_atla24-b9-1/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "cellmap",
-        "project": "jrc_alta24_b9_4nm",
+        "project": "jrc_atla24_b9_1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
