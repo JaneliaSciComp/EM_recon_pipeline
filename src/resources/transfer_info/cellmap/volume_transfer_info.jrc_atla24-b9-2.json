@@ -16,8 +16,7 @@
     "cluster_root_paths": {
         "raw_dat": "/groups/cellmap/cellmap/data/jrc_atla24-b9-2/dat",
         "raw_h5": "/groups/cellmap/cellmap/data/jrc_atla24-b9-2/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_atla24-b9-2/align",
-        "export_n5": "/nrs/cellmap/data/jrc_atla24-b9-2/jrc_atla24-b9_4nm.n5"
+        "align_h5": "/nrs/cellmap/data/jrc_atla24-b9-2/align"
     },
     "archive_root_paths": {
         "raw_h5": "/nearline/cellmap/data/jrc_atla24-b9-2/raw"
@@ -45,8 +44,7 @@
         "REMOVE_DAT_AFTER_H5_CONVERSION",
         "ARCHIVE_H5_RAW",
         "IMPORT_H5_ALIGN_INTO_RENDER",
-        "APPLY_FIBSEM_CORRECTION_TRANSFORM",
-        "EXPORT_PREVIEW_VOLUME"
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM"
     ],
     "cluster_job_project_for_billing": "cellmap",
     "number_of_dats_converted_per_hour": 80,
