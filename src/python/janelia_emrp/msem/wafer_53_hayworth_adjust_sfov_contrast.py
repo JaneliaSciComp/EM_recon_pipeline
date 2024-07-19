@@ -97,7 +97,8 @@ def correct_mfov_for_scan(main_source_dir_path: str,
         skimage_io.imsave(save_target_file_path, processed_image_uint8)
 
 
-def correct_center7_mfovs_for_slab(slab_directory_number: int):
+def correct_center7_mfovs_for_slab(parameters_dir: str,
+                                   slab_directory_number: int):
     print(f'Correcting slab {slab_directory_number}')
 
     # Source and target paths
@@ -105,11 +106,11 @@ def correct_center7_mfovs_for_slab(slab_directory_number: int):
     main_target_dir_path = r'/nrs/hess/data/hess_wafer_53/scan_corrected_with_hayworth_contrast'
 
     # These two *.npy files contain all the pre-computed parameters needed to adjust contrasts in Wafer53 run
-    load_path = r'../../../resources/wafer_53/SAVED_NORMALIZATION_ARRAY.npy'
+    load_path = f'{parameters_dir}/SAVED_NORMALIZATION_ARRAY.npy'
     print(f'Loading {load_path}')
     loaded_normalization_array = np.load(load_path)
 
-    load_path = r'../../../resources/wafer_53/SAVED_BEAM_BLANK_ARRAY.npy'
+    load_path = f'{parameters_dir}/SAVED_BEAM_BLANK_ARRAY.npy'
     print(f'Loading {load_path}')
     loaded_beam_blank_array = np.load(load_path)
 
@@ -130,14 +131,14 @@ def correct_center7_mfovs_for_slab(slab_directory_number: int):
 
 
 if __name__ == '__main__':
-    slab_indexes = []
-    for arg_index in range(1, len(sys.argv)):
-        slab_indexes.append(int(sys.argv[arg_index]))
-
-    if len(slab_indexes) == 0:
-        slab_indexes.append(110)  # TODO: remove testing hack
-        print(f"USAGE: {sys.argv[0]} <slab_index> [slab index] ...")
+    if len(sys.argv) < 3:
+        print(f"USAGE: {sys.argv[0]} <parameters dir> <slab_index> [slab index] ...\n")
+        print(f"       e.g. /groups/flyem/data/render/git/EM_recon_pipeline/resources/wafer_53 110")
         sys.exit(1)
 
+    slab_indexes = []
+    for arg_index in range(2, len(sys.argv)):
+        slab_indexes.append(int(sys.argv[arg_index]))
+
     for slab_index in slab_indexes:
-        correct_center7_mfovs_for_slab(slab_index)
+        correct_center7_mfovs_for_slab(sys.argv[1], slab_index)
