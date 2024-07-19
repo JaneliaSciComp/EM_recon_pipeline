@@ -102,8 +102,8 @@ def correct_center7_mfovs_for_slab(parameters_dir: str,
     print(f'Correcting slab {slab_directory_number}')
 
     # Source and target paths
-    main_source_dir_path = r'/nrs/hess/from_mdas/ufomsem/acquisition/base/wafer_53/imaging/corrected_msem'
-    main_target_dir_path = r'/nrs/hess/data/hess_wafer_53/scan_corrected_with_hayworth_contrast'
+    main_source_dir_path = r'/nrs/hess/from_mdas/ufomsem/acquisition/base/wafer_53/imaging/msem'
+    main_target_dir_path = r'/nrs/hess/data/hess_wafer_53/msem_with_hayworth_contrast'
 
     # These two *.npy files contain all the pre-computed parameters needed to adjust contrasts in Wafer53 run
     load_path = f'{parameters_dir}/SAVED_NORMALIZATION_ARRAY.npy'
