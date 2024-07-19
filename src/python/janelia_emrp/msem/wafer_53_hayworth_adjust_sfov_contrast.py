@@ -30,18 +30,18 @@ import sys
 
 
 # These two *.npy files contain all the pre-computed parameters needed to adjust contrasts in Wafer53 run
-LOAD_PATH =  r'N:\from_mdas\Hayworth\Wafer53\INTENSITY_EQ_FOR_CENTER_7_MFOVS_July2024\SAVED_NORMALIZATION_ARRAY.npy'
+LOAD_PATH =  r'../../../resources/wafer_53/SAVED_NORMALIZATION_ARRAY.npy'
 print(f'Loading: {LOAD_PATH}')
 LOADED_NORMALIZATION_ARRAY = np.load(LOAD_PATH)
 
-LOAD_PATH =  r'N:\from_mdas\Hayworth\Wafer53\INTENSITY_EQ_FOR_CENTER_7_MFOVS_July2024\SAVED_BEAM_BLANK_ARRAY.npy'
+LOAD_PATH =  r'../../../resources/wafer_53/SAVED_BEAM_BLANK_ARRAY.npy'
 print(f'Loading: {LOAD_PATH}')
 LOADED_BEAM_BLANK_ARRAY = np.load(LOAD_PATH)
 
 
 # Source and target paths
-MAIN_SOURCE_DIR_PATH = r'N:\from_mdas\ufomsem\acquisition\base\wafer_53\imaging\corrected_msem'
-MAIN_TARGET_DIR_PATH = r'N:\from_mdas\Hayworth\Wafer53\INTENSITY_EQ_FOR_CENTER_7_MFOVS_July2024\scan_corrected_equalized_target_dir'
+MAIN_SOURCE_DIR_PATH = r'/nrs/hess/from_mdas/ufomsem/acquisition/base/wafer_53/imaging/corrected_msem'
+MAIN_TARGET_DIR_PATH = r'/nrs/hess/data/hess_wafer_53/hayworth_contrast'
 
 #######################
 # Here is where you specify what files to convert
