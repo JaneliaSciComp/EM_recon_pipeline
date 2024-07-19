@@ -2,7 +2,7 @@
 #
 # This is the minimal script needed to adjust the sFOV contrasts identically to what I originally did for Wafer53
 #
-# N: must be mapped to \\nrs\hess
+# Assuming N: is mapped to \\nrs\hess
 #
 # The original source images (for mFOV 000010) were scan corrected by Thomas Templier and put in:
 #    N:\from_mdas\ufomsem\acquisition\base\wafer_53\imaging\corrected_msem
@@ -21,90 +21,123 @@
 #    N:\from_mdas\Hayworth\Wafer53\INTENSITY_EQ_FOR_CENTER_7_MFOVS_July2024\SAVED_NORMALIZATION_ARRAY.npy
 #    N:\from_mdas\Hayworth\Wafer53\INTENSITY_EQ_FOR_CENTER_7_MFOVS_July2024\SAVED_BEAM_BLANK_ARRAY.npy
 # which are loaded at the beginning of this script.
-
+import sys
+import traceback
 
 import numpy as np
 import os
 import skimage.io as skimage_io
-import sys
 
 
-# These two *.npy files contain all the pre-computed parameters needed to adjust contrasts in Wafer53 run
-LOAD_PATH =  r'../../../resources/wafer_53/SAVED_NORMALIZATION_ARRAY.npy'
-print(f'Loading: {LOAD_PATH}')
-LOADED_NORMALIZATION_ARRAY = np.load(LOAD_PATH)
+def correct_mfov_for_scan(main_source_dir_path: str,
+                          main_target_dir_path: str,
+                          loaded_normalization_array: np.ndarray,
+                          loaded_beam_blank_array: np.ndarray,
+                          real_scan_index: int,
+                          slab_directory_number: int,
+                          mfov_number: int):
 
-LOAD_PATH =  r'../../../resources/wafer_53/SAVED_BEAM_BLANK_ARRAY.npy'
-print(f'Loading: {LOAD_PATH}')
-LOADED_BEAM_BLANK_ARRAY = np.load(LOAD_PATH)
+    # Find the correct source images...
+    temp_sub_dir_str = f'scan_{real_scan_index:03}'
+    source_path = os.path.join(main_source_dir_path, temp_sub_dir_str)
+    temp_list = os.listdir(source_path)
+    if len(temp_list) != 1:
+        raise Warning(f'Skipping correction: found {len(temp_list)} instead of one dir in {source_path}')
+
+    source_path = os.path.join(source_path, temp_list[0])
+    slab_directory_str = f'{slab_directory_number:03}_'
+    source_path = os.path.join(source_path, slab_directory_str)
+    mfov_directory_str = f'{mfov_number:06}'
+    source_path = os.path.join(source_path, mfov_directory_str)
+    temp_list_raw = os.listdir(source_path)
+    list_of_image_names = []
+    for i in range(0, len(temp_list_raw)):
+        if len(temp_list_raw[i]) == 43:  # len('001_000010_001_2022-09-17T0621004666315.png)'
+            list_of_image_names.append(temp_list_raw[i])
+    list_of_image_names.sort()  # puts in correct order of beams
+    if len(list_of_image_names) != 91:
+        raise Warning(f'Skipping correction: found {len(list_of_image_names)} instead of 91 images in {source_path}')
+
+    # Create the target directory structure...
+    temp_sub_dir_str = f'scan_{real_scan_index:03}'
+    target_path = os.path.join(main_target_dir_path, temp_sub_dir_str)
+    if not os.path.exists(target_path):
+        print(f'Making directory: {target_path}')
+        os.mkdir(target_path)
+    else:
+        print(f'Already exists: {target_path}')
+    slab_directory_str = f'{slab_directory_number:03}_'
+    target_path = os.path.join(target_path, slab_directory_str)
+    if not os.path.exists(target_path):
+        print(f'Making directory: {target_path}')
+        os.mkdir(target_path)
+    else:
+        print(f'Already exists: {target_path}')
+        mfov_directory_str = f'{mfov_number:06}'
+    target_path = os.path.join(target_path, mfov_directory_str)
+    if not os.path.exists(target_path):
+        print(f'Making directory: {target_path}')
+        os.mkdir(target_path)
+    else:
+        print(f'Already exists: {target_path}')
+
+    # Do intensity correction and save
+    for sFOV_index in range(0, len(list_of_image_names)):
+        image_name = list_of_image_names[sFOV_index]
+        path_to_source_image_file = os.path.join(source_path, image_name)
+        print("        Reading: " + path_to_source_image_file)
+        my_source_image = skimage_io.imread(path_to_source_image_file)
+
+        processed_image_float = ((my_source_image - loaded_beam_blank_array[real_scan_index, sFOV_index]) *
+                                 (1.0 / loaded_normalization_array[real_scan_index, sFOV_index]))
+        processed_image_uint8 = processed_image_float.astype(np.uint8)
+
+        save_target_file_path = os.path.join(target_path, image_name)
+        print("   Saving: " + save_target_file_path)
+        skimage_io.imsave(save_target_file_path, processed_image_uint8)
 
 
-# Source and target paths
-MAIN_SOURCE_DIR_PATH = r'/nrs/hess/from_mdas/ufomsem/acquisition/base/wafer_53/imaging/corrected_msem'
-MAIN_TARGET_DIR_PATH = r'/nrs/hess/data/hess_wafer_53/hayworth_contrast'
+def correct_center7_mfovs_for_slab(slab_directory_number: int):
+    print(f'Correcting slab {slab_directory_number}')
 
-#######################
-# Here is where you specify what files to convert
-real_scan_index = 42
-slab_directory_number = 110
-mFOV_number = 10
+    # Source and target paths
+    main_source_dir_path = r'/nrs/hess/from_mdas/ufomsem/acquisition/base/wafer_53/imaging/corrected_msem'
+    main_target_dir_path = r'/nrs/hess/data/hess_wafer_53/scan_corrected_with_hayworth_contrast'
+
+    # These two *.npy files contain all the pre-computed parameters needed to adjust contrasts in Wafer53 run
+    load_path = r'../../../resources/wafer_53/SAVED_NORMALIZATION_ARRAY.npy'
+    print(f'Loading {load_path}')
+    loaded_normalization_array = np.load(load_path)
+
+    load_path = r'../../../resources/wafer_53/SAVED_BEAM_BLANK_ARRAY.npy'
+    print(f'Loading {load_path}')
+    loaded_beam_blank_array = np.load(load_path)
+
+    # skip scan_000 based on Thomas's doc, skip scan_047+ because scan_046 is last one referenced
+    for real_scan_index in range(1, 47):
+        for mfov_number in [5, 6, 9, 10, 11, 14, 15]:
+            # noinspection PyBroadException
+            try:
+                correct_mfov_for_scan(main_source_dir_path,
+                                      main_target_dir_path,
+                                      loaded_normalization_array,
+                                      loaded_beam_blank_array,
+                                      real_scan_index,
+                                      slab_directory_number,
+                                      mfov_number)
+            except Exception:
+                traceback.print_exc()
 
 
-# Find the correct source images...
-temp_sub_dir_str = f'scan_{real_scan_index:03}'
-SOURCE_PATH = os.path.join(MAIN_SOURCE_DIR_PATH, temp_sub_dir_str)
-temp_list = os.listdir(SOURCE_PATH)
-if len(temp_list) != 1:
-    print(f'ERROR. Should only be one dir in: {SOURCE_PATH}')
-    sys.exit()
-SOURCE_PATH = os.path.join(SOURCE_PATH, temp_list[0])
-slab_directory_str = f'{slab_directory_number:03}_'
-SOURCE_PATH = os.path.join(SOURCE_PATH, slab_directory_str)
-mFOV_directory_str = f'{mFOV_number:06}'
-SOURCE_PATH = os.path.join(SOURCE_PATH, mFOV_directory_str)
-temp_list_raw = os.listdir(SOURCE_PATH)
-list_of_image_names = []
-for i in range(0, len(temp_list_raw)):
-    if len(temp_list_raw[i]) == len('001_000010_001_2022-09-17T0621004666315.png'):
-        list_of_image_names.append(temp_list_raw[i])
-list_of_image_names.sort() #puts in correct order of beams
-if len(list_of_image_names) != 91:
-    print(f'ERROR. Should be 91 images in: {SOURCE_PATH}')
-    sys.exit()
+if __name__ == '__main__':
+    slab_indexes = []
+    for arg_index in range(1, len(sys.argv)):
+        slab_indexes.append(int(sys.argv[arg_index]))
 
-# Create the target directory structure...
-temp_sub_dir_str = f'scan_{real_scan_index:03}'
-TARGET_PATH = os.path.join(MAIN_TARGET_DIR_PATH, temp_sub_dir_str)
-if not os.path.exists(TARGET_PATH):
-    print(f'Making directory: {TARGET_PATH}')
-    os.mkdir(TARGET_PATH)
-else:
-    print(f'Already exists: {TARGET_PATH}')
-slab_directory_str = f'{slab_directory_number:03}_'
-TARGET_PATH = os.path.join(TARGET_PATH, slab_directory_str)
-if not os.path.exists(TARGET_PATH):
-    print(f'Making directory: {TARGET_PATH}')
-    os.mkdir(TARGET_PATH)
-else:
-    print(f'Already exists: {TARGET_PATH}')
-    mFOV_directory_str = f'{mFOV_number:06}'
-TARGET_PATH = os.path.join(TARGET_PATH, mFOV_directory_str)
-if not os.path.exists(TARGET_PATH):
-    print(f'Making directory: {TARGET_PATH}')
-    os.mkdir(TARGET_PATH)
-else:
-    print(f'Already exists: {TARGET_PATH}')
+    if len(slab_indexes) == 0:
+        slab_indexes.append(110)  # TODO: remove testing hack
+        print(f"USAGE: {sys.argv[0]} <slab_index> [slab index] ...")
+        sys.exit(1)
 
-# Do intensity correection and save
-for sFOV_index in range(0, len(list_of_image_names)):
-    image_name = list_of_image_names[sFOV_index]
-    path_to_source_image_file = os.path.join(SOURCE_PATH, image_name)
-    print("        Reading: " + path_to_source_image_file)
-    my_source_image = skimage_io.imread(path_to_source_image_file)
-
-    processed_image_float = (my_source_image - LOADED_BEAM_BLANK_ARRAY[real_scan_index, sFOV_index]) * (1.0/LOADED_NORMALIZATION_ARRAY[real_scan_index,sFOV_index])
-    processed_image_uint8 = processed_image_float.astype(np.uint8)
-
-    save_target_file_path = os.path.join(TARGET_PATH, image_name)
-    print("   Saving: " + save_target_file_path)
-    skimage_io.imsave(save_target_file_path, processed_image_uint8)
+    for slab_index in slab_indexes:
+        correct_center7_mfovs_for_slab(slab_index)
