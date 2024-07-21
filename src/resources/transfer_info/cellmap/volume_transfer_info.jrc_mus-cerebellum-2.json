@@ -16,7 +16,8 @@
     "cluster_root_paths": {
         "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-cerebellum-2/dat",
         "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-cerebellum-2/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus-cerebellum-2/align"
+        "align_h5": "/nrs/cellmap/data/jrc_mus-cerebellum-2/align",
+        "export_n5": "/nrs/cellmap/data/jrc_mus-cerebellum-2/jrc_mus-cerebellum-2.n5"
     },
     "archive_root_paths": {
         "raw_h5": "/nearline/cellmap/data/jrc_mus-cerebellum-2/raw"
