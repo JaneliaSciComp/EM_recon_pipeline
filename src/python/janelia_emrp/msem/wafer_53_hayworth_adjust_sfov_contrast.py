@@ -24,9 +24,15 @@
 import sys
 import traceback
 
+import datetime
 import numpy as np
 import os
 import skimage.io as skimage_io
+
+
+def log_with_ts(message: str):
+    now = datetime.datetime.now()
+    print(f'{now.strftime("%Y-%m-%d %H%M%S")}: {message}')
 
 
 def correct_mfov_for_scan(main_source_dir_path: str,
@@ -36,6 +42,8 @@ def correct_mfov_for_scan(main_source_dir_path: str,
                           real_scan_index: int,
                           slab_directory_number: int,
                           mfov_number: int):
+    log_with_ts(f'correct_mfov_for_scan: entry, '
+                f'slab {slab_directory_number}, scan {real_scan_index}, mfov {mfov_number}')
 
     # Find the correct source images...
     temp_sub_dir_str = f'scan_{real_scan_index:03}'
@@ -96,10 +104,13 @@ def correct_mfov_for_scan(main_source_dir_path: str,
         print("   Saving: " + save_target_file_path)
         skimage_io.imsave(save_target_file_path, processed_image_uint8)
 
+    log_with_ts(f'correct_mfov_for_scan: exit')
+
 
 def correct_center7_mfovs_for_slab(parameters_dir: str,
-                                   slab_directory_number: int):
-    print(f'Correcting slab {slab_directory_number}')
+                                   slab_directory_number: int,
+                                   real_scan_index: int):
+    log_with_ts(f'correct_center7_mfovs_for_slab: entry, slab {slab_directory_number}, scan {real_scan_index}')
 
     # Source and target paths
     main_source_dir_path = r'/nrs/hess/from_mdas/ufomsem/acquisition/base/wafer_53/imaging/msem'
@@ -114,31 +125,26 @@ def correct_center7_mfovs_for_slab(parameters_dir: str,
     print(f'Loading {load_path}')
     loaded_beam_blank_array = np.load(load_path)
 
-    # skip scan_000 based on Thomas's doc, skip scan_047+ because scan_046 is last one referenced
-    for real_scan_index in range(1, 47):
-        for mfov_number in [5, 6, 9, 10, 11, 14, 15]:
-            # noinspection PyBroadException
-            try:
-                correct_mfov_for_scan(main_source_dir_path,
-                                      main_target_dir_path,
-                                      loaded_normalization_array,
-                                      loaded_beam_blank_array,
-                                      real_scan_index,
-                                      slab_directory_number,
-                                      mfov_number)
-            except Exception:
-                traceback.print_exc()
+    for mfov_number in [5, 6, 9, 10, 11, 14, 15]:
+        # noinspection PyBroadException
+        try:
+            correct_mfov_for_scan(main_source_dir_path,
+                                  main_target_dir_path,
+                                  loaded_normalization_array,
+                                  loaded_beam_blank_array,
+                                  real_scan_index,
+                                  slab_directory_number,
+                                  mfov_number)
+        except Exception:
+            traceback.print_exc()
+
+    log_with_ts(f'correct_center7_mfovs_for_slab: exit')
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print(f"USAGE: {sys.argv[0]} <parameters dir> <slab_index> [slab index] ...\n")
-        print(f"       e.g. /groups/flyem/data/render/git/EM_recon_pipeline/resources/wafer_53 110")
+    if len(sys.argv) != 3:
+        print(f"USAGE: {sys.argv[0]} <parameters dir> <slab index> <real scan index>\n")
+        print(f"       e.g. /groups/flyem/data/render/git/EM_recon_pipeline/resources/wafer_53 110 19")
         sys.exit(1)
 
-    slab_indexes = []
-    for arg_index in range(2, len(sys.argv)):
-        slab_indexes.append(int(sys.argv[arg_index]))
-
-    for slab_index in slab_indexes:
-        correct_center7_mfovs_for_slab(sys.argv[1], slab_index)
+    correct_center7_mfovs_for_slab(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
