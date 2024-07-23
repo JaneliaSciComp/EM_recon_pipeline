@@ -32,7 +32,7 @@ import skimage.io as skimage_io
 
 def log_with_ts(message: str):
     now = datetime.datetime.now()
-    print(f'{now.strftime("%Y-%m-%d %H%M%S")}: {message}')
+    print(f'[{now.strftime("%Y-%m-%d %H:%M:%S")}] {message}')
 
 
 def correct_mfov_for_scan(main_source_dir_path: str,
@@ -102,7 +102,7 @@ def correct_mfov_for_scan(main_source_dir_path: str,
 
         save_target_file_path = os.path.join(target_path, image_name)
         print("   Saving: " + save_target_file_path)
-        skimage_io.imsave(save_target_file_path, processed_image_uint8)
+        skimage_io.imsave(save_target_file_path, processed_image_uint8, check_contrast=False)
 
     log_with_ts(f'correct_mfov_for_scan: exit')
 
