@@ -25,6 +25,8 @@ import sys
 import traceback
 
 import datetime
+from pathlib import Path
+
 import numpy as np
 import os
 import skimage.io as skimage_io
@@ -71,21 +73,21 @@ def correct_mfov_for_scan(main_source_dir_path: str,
     target_path = os.path.join(main_target_dir_path, temp_sub_dir_str)
     if not os.path.exists(target_path):
         print(f'Making directory: {target_path}')
-        os.mkdir(target_path)
+        Path(target_path).mkdir(parents=True, exist_ok=True)
     else:
         print(f'Already exists: {target_path}')
     slab_directory_str = f'{slab_directory_number:03}_'
     target_path = os.path.join(target_path, slab_directory_str)
     if not os.path.exists(target_path):
         print(f'Making directory: {target_path}')
-        os.mkdir(target_path)
+        Path(target_path).mkdir(parents=True, exist_ok=True)
     else:
         print(f'Already exists: {target_path}')
         mfov_directory_str = f'{mfov_number:06}'
     target_path = os.path.join(target_path, mfov_directory_str)
     if not os.path.exists(target_path):
         print(f'Making directory: {target_path}')
-        os.mkdir(target_path)
+        Path(target_path).mkdir(parents=True, exist_ok=True)
     else:
         print(f'Already exists: {target_path}')
 
