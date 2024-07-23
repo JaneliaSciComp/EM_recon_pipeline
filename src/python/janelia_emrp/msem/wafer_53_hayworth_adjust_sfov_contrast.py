@@ -142,7 +142,7 @@ def correct_center7_mfovs_for_slab(parameters_dir: str,
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print(f"USAGE: {sys.argv[0]} <parameters dir> <slab index> <real scan index>\n")
         print(f"       e.g. /groups/flyem/data/render/git/EM_recon_pipeline/resources/wafer_53 110 19")
         sys.exit(1)
