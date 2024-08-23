@@ -1,6 +1,6 @@
 {
     "transfer_id": "fibsem::jrc_liu-nih_ips-draq5-test-2::jeiss6",
-    "scope_data_set": {
+    "scope_data_set": {https://github.com/JaneliaSciComp/EM_recon_pipeline/blob/main/src/resources/transfer_info/fibsem/volume_transfer_info.jrc_liu-nih_ips-draq5-test-2.json
         "host": "jeiss6.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/DRAQ",
         "root_keep_path": "/cygdrive/d/UploadFlags",
