@@ -49,6 +49,7 @@ def get_magc_ids(
     # print(f"{serial_values=}")
     indices = sorter[np.searchsorted(serial_values, serial_ids, sorter=sorter)]
     print(indices)
+    return indices
 
 
 def get_region_ids(
