@@ -9,14 +9,15 @@ from typing import TYPE_CHECKING
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from constant import FACTOR_THUMBNAIL, N_BEAMS
 from dask import bag
 from distributed import Client
 from matplotlib.transforms import Affine2D
-from path import get_image_paths, get_slab_path
-from roi import get_mfovs
 from skimage.io import imread
 from skimage.transform import EuclideanTransform
+
+from constant import FACTOR_THUMBNAIL, N_BEAMS
+from path import get_image_paths, get_slab_path
+from roi import get_mfovs
 from xdim import XDim
 from xvar import XVar
 
@@ -140,7 +141,9 @@ def plot_aligned_slab(
     """
     slab_path = get_slab_path(xlog=xlog, scan=scan, slab=slab)
     rotation = get_slab_rotation(xlog=xlog, slab=slab)
-    xy = get_xy_slab(xlog=xlog, scan=scan, slab=slab) / (4 if thumbnail else 1)
+    xy = get_xy_slab(xlog=xlog, scan=scan, slab=slab) / (
+        FACTOR_THUMBNAIL if thumbnail else 1
+    )
 
     fig, ax = plt.subplots()
     ax.set_xlim(np.min(xy[0]), np.max(xy[0]))

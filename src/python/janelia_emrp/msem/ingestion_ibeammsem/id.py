@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+
 from roi import get_n_slabs
 from xdim import XDim
 from xvar import XVar
@@ -46,9 +47,7 @@ def get_magc_ids(
         )
     serial_values = xlog[XVar.ID_SERIAL].values
     sorter = np.argsort(serial_values)
-    # print(f"{serial_values=}")
     indices = sorter[np.searchsorted(serial_values, serial_ids, sorter=sorter)]
-    print(indices)
     return indices
 
 
