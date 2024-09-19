@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from constant import N_BEAMS
 from xdim import XDim
 from xvar import XVar
@@ -35,7 +36,11 @@ def plot_distance_roi(xlog: xr.Dataset, slab: int, mfov: int | None = None) -> N
 def get_roi_sfovs(
     xlog: xr.Dataset, slab: int, mfov: int, dilation: float = 15
 ) -> list[int]:
-    """Returns SFOV IDs of an MFOV that are inside the dilated ROI boundaries."""
+    """Returns SFOV IDs of an MFOV that are inside the dilated ROI boundaries.
+
+    The boundary grows outwards with a positive dilation.
+    The boundary grows inwards  with a negative dilation.
+    """
     mask = xlog[XVar.DISTANCE_ROI].sel(slab=slab, mfov=mfov) < dilation
     return mask.where(mask).dropna(XDim.SFOV)[XDim.SFOV].astype(int).values
 
@@ -79,7 +84,7 @@ def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
 
 
 def get_n_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
-    """Returns the number effective slabs in a scan. See get_slabs."""
+    """Returns the number of effective slabs in a scan. See get_slabs."""
     return (
         xlog[XVar.ACQUISITION]
         .sel(scan=scan, mfov=slice(0, None))
@@ -90,7 +95,10 @@ def get_n_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
 
 
 def get_n_mfovs(xlog: xr.Dataset, scan: int) -> int:
-    """Returns the total number of MFOVs in a scan."""
+    """Returns the total number of MFOVs in a scan.
+
+    We count how many MFOVs have a non-nan acquisition time.
+    """
     return (
         xlog[XVar.ACQUISITION].sel(scan=scan, mfov=slice(0, None)).count().values.item()
     )
@@ -99,7 +107,7 @@ def get_n_mfovs(xlog: xr.Dataset, scan: int) -> int:
 def get_mfovs(xlog: xr.Dataset, slab: int) -> np.ndarray:
     """Returns the effective MFOV IDs of a slab.
 
-    One slab may have 12 MFOVs, and another may have 27 MFOVs.
+    A slab may have 12 MFOVs, and another may have 27 MFOVs.
 
     The maximum index value of the MFOV dimension of the xarray
         is the number of MFOVs (-1) in the slab with the most MFOVs.

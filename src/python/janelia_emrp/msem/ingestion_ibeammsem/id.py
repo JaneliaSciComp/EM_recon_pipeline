@@ -54,7 +54,7 @@ def get_magc_ids(
 def get_region_ids(
     xlog: xr.Dataset, slab: int, mfovs: list[int] | np.ndarray
 ) -> list[int | None]:
-    """Returns the region ID of an MFOV."""
+    """Returns the region ID of MFOVs."""
     _region_ids = xlog[XVar.ID_REGION_LAYOUT].sel(slab=slab, mfov=mfovs).values
     return [
         None if np.isnan(_region_id) or _region_id == -1 else int(_region_id)

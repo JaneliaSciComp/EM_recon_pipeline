@@ -43,7 +43,7 @@ def get_xy_slab(
     These coordinates hide low-level artifacts of the IBEAM-MSEM workflow:
         1. plate insertion position variability
         2. mismatch between request stage position and actual stage position
-        3. internal knowledge of beam
+        3. internal knowledge of beam position
 
     The coordinates are in the local, aligned space:
         the slabs have been 3d aligned using light microscopy.
