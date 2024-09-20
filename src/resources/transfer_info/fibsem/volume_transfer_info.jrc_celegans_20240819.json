@@ -2,7 +2,7 @@
     "transfer_id": "fibsem::jrc_celegans_20240819::jeiss6",
     "scope_data_set": {
         "host": "jeiss6.hhmi.org",
-        "root_dat_path": "/cygdrive/e/Images/Celegans",
+        "root_dat_path": "/cygdrive/e/Images/C_elegans",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "jrc_celegans_20240819",
         "rows_per_z_layer": 1,
