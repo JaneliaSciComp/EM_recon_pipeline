@@ -16,7 +16,8 @@
     "cluster_root_paths": {
         "raw_dat": "/groups/fibsem/fibsem/data/jrc_celegans_20240819/dat",
         "raw_h5": "/groups/fibsem/fibsem/data/jrc_celegans_20240819/raw",
-        "align_h5": "/nrs/fibsem/data/jrc_celegans_20240819/align"
+        "align_h5": "/nrs/fibsem/data/jrc_celegans_20240819/align",
+        "export_n5": "/nrs/fibsem/data/jrc_celegans_20240819/jrc_celegans_20240819.n5"
     },
     "archive_root_paths": {
         "raw_h5": "/nearline/fibsem/data/jrc_celegans_20240819/raw"
