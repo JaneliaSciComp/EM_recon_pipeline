@@ -2,7 +2,7 @@
     "transfer_id": "cellmap::jrc_mus-cerebellum-3::jeiss2",
     "scope_data_set": {
         "host": "jeiss2.hhmi.org",
-        "root_dat_path": "/cygdrive/e/Images/Mouse/",
+        "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "jrc_D020524-1_aging",
         "rows_per_z_layer": 2,
