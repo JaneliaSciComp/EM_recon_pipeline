@@ -90,7 +90,7 @@ def main(arguments) -> None:
     println(f"{get_percentage_tissue(xlog=xlog, scan=3, dilation=20) = :.2f}%")
 
     # assembly
-    println(f"{get_slab_rotation(xlog=xlog, slab=2) = :.2f} degrees")
+    println(f"{get_slab_rotation(xlog=xlog, scan=3, slab=2) = :.2f} degrees")
     println(f"{get_xy_slab(xlog=xlog, scan=2, slab=2).shape = }")
 
     mfov = assemble_mfovs_straight(

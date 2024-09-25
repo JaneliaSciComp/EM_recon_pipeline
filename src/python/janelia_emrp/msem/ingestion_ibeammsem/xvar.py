@@ -35,7 +35,7 @@ class XVar(StrEnum):
     Unit: full-resolution pixel.
     Space: local. See X above.
     """
-    ROTATION = auto()
+    ROTATION_SLAB = auto()
     """Rotation of a slab, in degrees.
 
     Physical slabs are deposited with MagC onto silicon wafers with random orientations.

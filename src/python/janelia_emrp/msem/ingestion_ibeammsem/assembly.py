@@ -29,9 +29,15 @@ if TYPE_CHECKING:
     import xarray as xr
 
 
-def get_slab_rotation(xlog: xr.Dataset, slab: int) -> float:
-    """Returns the rotation of a slab, in degrees."""
-    return xlog[XVar.ROTATION].sel(slab=slab).values.item()
+def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:
+    """Returns the rotation of a slab, in degrees.
+
+    The slab rotation depends on the scan, because:
+        1. the plate position changes at every scan
+        2. the coordinates exposed for downstream assembly hide low-level hardware artefacts
+    The scan dependency is likely negligible, but it is conceptually correct.
+    """
+    return 180 + xlog[XVar.ROTATION_SLAB].sel(scan=scan, slab=slab).values.item()
 
 
 def get_xy_slab(
@@ -107,7 +113,7 @@ def assemble_mfovs_straight(
         FACTOR_THUMBNAIL if thumbnail else 1
     )
     xy_straight: np.ndarray = EuclideanTransform(
-        rotation=np.radians(-get_slab_rotation(xlog=xlog, slab=slab))
+        rotation=np.radians(get_slab_rotation(xlog=xlog, scan=scan, slab=slab))
     )(xy)
     xy_straight = (xy_straight - xy_straight.min(axis=0)).round().astype(int)
 
@@ -140,7 +146,7 @@ def plot_aligned_slab(
         3. translate the SFOV by (x,y) to place the SFOV center at (x,y)
     """
     slab_path = get_slab_path(xlog=xlog, scan=scan, slab=slab)
-    rotation = get_slab_rotation(xlog=xlog, slab=slab)
+    rotation = -get_slab_rotation(xlog=xlog, scan=scan, slab=slab)
     xy = get_xy_slab(xlog=xlog, scan=scan, slab=slab) / (
         FACTOR_THUMBNAIL if thumbnail else 1
     )
