@@ -16,6 +16,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from skimage.io import imshow
+
 from assembly import (
     assemble_mfovs_straight,
     get_slab_rotation,
@@ -37,7 +39,6 @@ from roi import (
     plot_distance_roi,
     plot_tissue_sfovs,
 )
-from skimage.io import imshow
 
 matplotlib.use("tkagg")
 
@@ -93,6 +94,7 @@ def main(arguments) -> None:
     println(f"{get_slab_rotation(xlog=xlog, scan=3, slab=2) = :.2f} degrees")
     println(f"{get_xy_slab(xlog=xlog, scan=2, slab=2).shape = }")
 
+    println("assemble images | takes 5-20 seconds ...")
     mfov = assemble_mfovs_straight(
         xlog=xlog, scan=10, slab=7, mfovs=[10], thumbnail=True
     )
@@ -109,6 +111,7 @@ def main(arguments) -> None:
     imshow(mfov)
     plt.show()
 
+    println("assemble images | takes 5-20 seconds ...")
     plot_aligned_slab(xlog=xlog, scan=2, slab=7, thumbnail=True)
 
 
