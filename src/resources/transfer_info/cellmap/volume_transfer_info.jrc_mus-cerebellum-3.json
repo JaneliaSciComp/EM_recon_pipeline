@@ -1,0 +1,55 @@
+{
+    "transfer_id": "cellmap::jrc_mus-cerebellum-3::jeiss2",
+    "scope_data_set": {
+        "host": "jeiss2.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/Mouse",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "jrc_D020524-1_aging",
+        "rows_per_z_layer": 2,
+        "columns_per_z_layer": 4,
+        "first_dat_name": "Merlin-6262_24-08-09_154522_0-0-0.dat",
+        "last_dat_name": null,
+        "dat_x_and_y_nm_per_pixel": 8,
+        "dat_z_nm_per_pixel": 8,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-cerebellum-3/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-cerebellum-3/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_mus-cerebellum-3/align",
+        "export_n5": "/nrs/cellmap/data/jrc_mus-cerebellum-3/jrc_mus-cerebellum-3.n5"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/cellmap/data/jrc_mus-cerebellum-3/raw"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "cellmap",
+        "project": "jrc_mus_cerebellum_3",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "mask_height": 30,
+        "connect": {
+            "host": "10.40.3.113",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM",
+        "EXPORT_PREVIEW_VOLUME"
+    ],
+    "cluster_job_project_for_billing": "cellmap",
+    "number_of_dats_converted_per_hour": 80,
+    "number_of_preview_workers": 20
+}
