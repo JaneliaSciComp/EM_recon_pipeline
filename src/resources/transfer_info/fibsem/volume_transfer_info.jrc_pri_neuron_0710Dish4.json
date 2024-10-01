@@ -14,12 +14,12 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/fibsem/fibsem/data/jrc_pri_neuron_0710Dish4/dat",
-        "raw_h5": "/groups/fibsem/fibsem/data/jrc_pri_neuron_0710Dish4/raw",
-        "align_h5": "/nrs/fibsem/data/jrc_pri_neuron_0710Dish4/align"
+        "raw_dat": "/groups/fibsem/fibsem/data/jrc_pri-neuron_0710Dish4/dat",
+        "raw_h5": "/groups/fibsem/fibsem/data/jrc_pri-neuron_0710Dish4/raw",
+        "align_h5": "/nrs/fibsem/data/jrc_pri-neuron_0710Dish4/align"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/fibsem/data/jrc_pri_neuron_0710Dish4/raw"
+        "raw_h5": "/nearline/fibsem/data/jrc_pri-neuron_0710Dish4/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
