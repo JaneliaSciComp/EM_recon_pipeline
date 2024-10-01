@@ -4,7 +4,7 @@
         "host": "jeiss9.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cell",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_pri_neuron_0710Dish4",
+        "data_set_id": "jrc_pri-neuron_0710Dish4",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6285_24-09-20_000053_0-0-0.dat",
