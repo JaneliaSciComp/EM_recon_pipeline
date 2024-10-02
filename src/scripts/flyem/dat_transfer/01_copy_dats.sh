@@ -4,8 +4,7 @@ set -e
 
 umask 0002
 
-ABSOLUTE_SCRIPT=$(readlink -m "$0")
-SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+DAT_TRANSFER_DIR="/groups/flyem/home/flyem/bin/dat_transfer/2022"
 
 if (( $# != 2 )); then
   echo "USAGE $0 <scope> <max_transfer_minutes> (e.g. jeiss5.hhmi.org 9)"
@@ -17,7 +16,7 @@ MAX_TRANSFER_MINUTES="$2"
 
 RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
 RUN_YEAR_MONTH=$(echo "${RUN_DATE_AND_TIME}" | cut -c1-6)
-LOG_DIR="${SCRIPT_DIR}/logs/copy_dat/${SCOPE}"
+LOG_DIR="${DAT_TRANSFER_DIR}/logs/copy_dat/${SCOPE}"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/${SCOPE}__${RUN_YEAR_MONTH}.log"
 
@@ -30,7 +29,7 @@ EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/dat_copier.py"
-ARGS="${ARGS} --volume_transfer_dir ${SCRIPT_DIR}/config"
+ARGS="${ARGS} --volume_transfer_dir ${DAT_TRANSFER_DIR}/config"
 ARGS="${ARGS} --scope ${SCOPE}"
 ARGS="${ARGS} --max_transfer_minutes ${MAX_TRANSFER_MINUTES}"
 
