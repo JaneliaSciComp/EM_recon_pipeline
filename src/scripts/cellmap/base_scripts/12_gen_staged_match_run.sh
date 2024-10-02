@@ -88,7 +88,7 @@ else
 
 bsub -P ${BILL_TO} -g \"${JOB_GROUP}\" -J \"${JOB_NAME}[1-${FILE_COUNT}]%${MAX_RUNNING_TASKS}\" ${BATCH_AND_QUEUE_PARAMETERS} -o /dev/null ${RENDER_PIPELINE_BIN}/run_array_ws_client_lsf.sh ${RUN_DIR} ${MEMORY} ${JAVA_CLASS}
 
-bsub -P ${BILL_TO} -J \"check_${RENDER_OWNER}_${RENDER_PROJECT}_${RUN_TYPE}_match\" -w \"ended(${JOB_NAME})\" -n 1 -W 240 ${SCRIPT_DIR}/13_check_logs_and_report_stats.sh ${RUN_DIR}
+bsub -P ${BILL_TO} -J \"check_${RENDER_OWNER}_${RENDER_PROJECT}_${RUN_TYPE}_match\" -w \"ended(${JOB_NAME})\" -n 1 -W 240 ${SCRIPT_DIR}/support/13_check_logs_and_report_stats.sh ${RUN_DIR}
 " > ${BSUB_ARRAY_FILE}
 
   chmod 755 ${BSUB_ARRAY_FILE}
