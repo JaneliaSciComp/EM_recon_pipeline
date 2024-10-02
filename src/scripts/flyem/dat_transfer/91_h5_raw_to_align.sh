@@ -4,9 +4,8 @@ set -e
 
 umask 0002
 
- # ./02_convert_dats.sh config/volume_transfer_info.jrc_mus-hippocampus-1.json 1 /groups/cellmap/cellmap/data/jrc_mus-hippocampus-1/dat 239 Merlin-6049_23-07-17_090058_0-0-0.dat Merlin-6049_23-07-17_090058_0-1-1.dat
 if (( $# < 3 )); then
-  echo "USAGE $0 <transfer info file> <num workers> <parent work_dir> [lsf_runtime_limit] [first_dat] [last_dat]"
+  echo "USAGE $0 <transfer info file> <num workers> <parent work_dir> [lsf_runtime_limit] [first_raw_h5] [last_raw_h5]"
   exit 1
 fi
 
@@ -32,7 +31,7 @@ EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
-ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/dat_converter.py"
+ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/h5_raw_to_align.py"
 ARGS="${ARGS} --volume_transfer_info ${TRANSFER_INFO}"
 ARGS="${ARGS} --num_workers ${NUM_WORKERS}"
 ARGS="${ARGS} --parent_work_dir ${PARENT_WORK_DIR}"
@@ -40,9 +39,9 @@ ARGS="${ARGS} --parent_work_dir ${PARENT_WORK_DIR}"
 if (( $# > 3 )); then
   ARGS="${ARGS} --lsf_runtime_limit ${4}"
   if (( $# > 4 )); then
-    ARGS="${ARGS} --first_dat ${5}"
+    ARGS="${ARGS} --first_h5 ${5}"
     if (( $# > 5 )); then
-      ARGS="${ARGS} --last_dat ${6}"
+      ARGS="${ARGS} --last_h5 ${6}"
     fi
   fi
 fi
