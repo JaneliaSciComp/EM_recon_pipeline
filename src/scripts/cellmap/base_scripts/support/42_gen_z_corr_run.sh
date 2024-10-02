@@ -3,7 +3,7 @@
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
-CONFIG_FILE="${SCRIPT_DIR}/00_config.sh"
+CONFIG_FILE="${SCRIPT_DIR}/../00_config.sh"
 
 if [[ -f ${CONFIG_FILE} ]]; then
   # shellcheck source=00_config.sh
@@ -35,7 +35,7 @@ BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 1440" # limit to 1 day
 MAX_RUNNING_TASKS="1000"
 
 JOB_NAME=$(getRunDirectory z_corr)
-RUN_DIR="${SCRIPT_DIR}/${JOB_NAME}"
+RUN_DIR=$(readlink -m "${SCRIPT_DIR}/../${JOB_NAME}")
 LOG_DIR=$(createLogDirectory "${RUN_DIR}")
 
 # create tmp directory for hdf5 reads

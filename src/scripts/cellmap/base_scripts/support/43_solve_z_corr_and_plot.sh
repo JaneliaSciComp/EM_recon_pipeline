@@ -2,17 +2,17 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-source ${SCRIPT_DIR}/00_config.sh
+ABSOLUTE_SCRIPT=$(readlink -m "$0")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+CONFIG_FILE="${SCRIPT_DIR}/../00_config.sh"
 
 if (( $# != 2 )); then
   echo "USAGE: $0 <solve base parameters file> <inference options file>"
   exit 1
 fi
 
-SOLVE_BASE_PARAMETERS_FILE=$(readlink -m $1)
-INFERENCE_OPTIONS_FILE=$(readlink -m $2)
+SOLVE_BASE_PARAMETERS_FILE=$(readlink -m "${1}")
+INFERENCE_OPTIONS_FILE=$(readlink -m "${2}")
 
 if [[ ! -f ${SOLVE_BASE_PARAMETERS_FILE} ]]; then
   echo "ERROR: ${SOLVE_BASE_PARAMETERS_FILE} not found"
@@ -24,11 +24,11 @@ if [[ ! -f ${INFERENCE_OPTIONS_FILE} ]]; then
   exit 1
 fi
 
-RUN_DIR=$(dirname ${SOLVE_BASE_PARAMETERS_FILE})
-RUN_NAME=$(basename ${RUN_DIR})
+RUN_DIR=$(dirname "${SOLVE_BASE_PARAMETERS_FILE}")
+RUN_NAME=$(basename "${RUN_DIR}")
 
 LOGS_DIR="${RUN_DIR}/logs"
-mkdir -p ${LOGS_DIR}
+mkdir -p "${LOGS_DIR}"
 
 # use shell group to tee all output to log file
 {
@@ -38,11 +38,12 @@ mkdir -p ${LOGS_DIR}
 
 JAVA_CLASS="org.janelia.render.client.zspacing.ZPositionCorrectionClient"
 
-ARGS=$(cat ${SOLVE_BASE_PARAMETERS_FILE})
+ARGS=$(cat "${SOLVE_BASE_PARAMETERS_FILE}")
 ARGS="${ARGS} --solveExisting"
 ARGS="${ARGS} --optionsJson ${INFERENCE_OPTIONS_FILE}"
 ARGS="${ARGS} --normalizedEdgeLayerCount 30"
 
+# shellcheck disable=SC2086
 ${RENDER_CLIENT_SCRIPT} ${RENDER_CLIENT_HEAP} ${JAVA_CLASS} ${ARGS}
 
 
@@ -58,12 +59,13 @@ fi
 
 JAVA_CLASS="org.janelia.render.client.zspacing.CrossCorrelationDataMerger"
 
+# shellcheck disable=SC2086
 ${RENDER_CLIENT_SCRIPT} ${RENDER_CLIENT_HEAP} ${JAVA_CLASS} ${CC_BATCHES_DIR}
 
-} 1>>${LOGS_DIR}/cc_solve.log 2>&1
+} 1>>"${LOGS_DIR}"/cc_solve.log 2>&1
 
 echo
-grep Zcoords.txt ${LOGS_DIR}/cc_solve.log
+grep Zcoords.txt "${LOGS_DIR}"/cc_solve.log
 echo
 
 # ---------------------------
@@ -84,5 +86,6 @@ for SCRIPT in plot_cross_correlation.py plot_z_coords.py plot_regional_cross_cor
 Running:
   ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
   "
+  # shellcheck disable=SC2086
   ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
 done
