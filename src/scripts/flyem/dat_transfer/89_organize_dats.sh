@@ -4,9 +4,6 @@ set -e
 
 umask 0002
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-
 if (( $# < 2 )); then
   echo "USAGE $0 <source dir> <target dir> ( e.g. /nrs/fibsem/data/jrc_tough-resin_RD/dat_scope /nrs/fibsem/data/jrc_tough-resin_RD/dat )"
   exit 1
