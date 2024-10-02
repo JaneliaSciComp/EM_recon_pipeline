@@ -2,8 +2,7 @@
 
 umask 0002
 
-ABSOLUTE_SCRIPT=$(readlink -m "$0")
-SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+DAT_TRANSFER_DIR="/groups/flyem/home/flyem/bin/dat_transfer/2022"
 
 # Set up LSF
 source /misc/lsf/conf/profile.lsf
@@ -14,7 +13,7 @@ set -e
 RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
 RUN_YEAR_MONTH=$(echo "${RUN_DATE_AND_TIME}" | cut -c1-6)
 RUN_DAY=$(echo "${RUN_DATE_AND_TIME}" | cut -c7-8)
-LOG_DIR="${SCRIPT_DIR}/logs/convert_submit/${RUN_YEAR_MONTH}/${RUN_DAY}"
+LOG_DIR="${DAT_TRANSFER_DIR}/logs/convert_submit/${RUN_YEAR_MONTH}/${RUN_DAY}"
 mkdir -p "${LOG_DIR}"
 
 LOG_FILE="${LOG_DIR}/convert_submit.${RUN_DATE_AND_TIME}.log"
@@ -28,7 +27,7 @@ EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/dat_converter_submitter.py"
-ARGS="${ARGS} --volume_transfer_dir ${SCRIPT_DIR}/config"
+ARGS="${ARGS} --volume_transfer_dir ${DAT_TRANSFER_DIR}/config"
 #ARGS="${ARGS} --max_batch_count 1"
 #ARGS="${ARGS} --dats_per_hour 20"
 

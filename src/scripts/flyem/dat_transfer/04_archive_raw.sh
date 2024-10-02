@@ -4,8 +4,7 @@ set -e
 
 umask 0002
 
-ABSOLUTE_SCRIPT=$(readlink -m "$0")
-SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+DAT_TRANSFER_DIR="/groups/flyem/home/flyem/bin/dat_transfer/2022"
 
 if (( $# < 1 )); then
   echo "USAGE $0 <num rsync processes>"
@@ -17,7 +16,7 @@ NUM_PROCESSES="$1"
 RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
 RUN_YEAR_MONTH=$(echo "${RUN_DATE_AND_TIME}" | cut -c1-6)
 RUN_DAY=$(echo "${RUN_DATE_AND_TIME}" | cut -c7-8)
-LOG_DIR="${SCRIPT_DIR}/logs/archive_raw/${RUN_YEAR_MONTH}/${RUN_DAY}"
+LOG_DIR="${DAT_TRANSFER_DIR}/logs/archive_raw/${RUN_YEAR_MONTH}/${RUN_DAY}"
 mkdir -p "${LOG_DIR}"
 
 LOG_FILE="${LOG_DIR}/archive_raw.${RUN_DATE_AND_TIME}.log"
@@ -31,7 +30,7 @@ EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/h5_archivist.py"
-ARGS="${ARGS} --volume_transfer_dir ${SCRIPT_DIR}/config"
+ARGS="${ARGS} --volume_transfer_dir ${DAT_TRANSFER_DIR}/config"
 ARGS="${ARGS} --processes ${NUM_PROCESSES}"
 
 echo """
