@@ -1,17 +1,9 @@
 #!/bin/bash
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-
-CONFIG_FILE="${SCRIPT_DIR}/00_config.sh"
-
-if [[ -f ${CONFIG_FILE} ]]; then
-  # shellcheck disable=SC1090
-  source ${CONFIG_FILE}
-else
-  echo "ERROR: cannot find ${CONFIG_FILE}"
-  exit 1
-fi
+ABSOLUTE_SCRIPT=$(readlink -m "$0")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+SCRIPT_DIR=$(dirname "${SCRIPT_DIR}") # move up one directory since this is in support subdirectory
+source "${SCRIPT_DIR}"/00_config.sh
 
 for RUN_TYPE in ${MATCH_RUN_TYPES}; do
 
@@ -30,12 +22,14 @@ MEMORY="13G" # 15G allocated per slot
 BATCH_AND_QUEUE_PARAMETERS="-n 1 -W 1440" # limit to 1 day otherwise
 MAX_RUNNING_TASKS="2000"
 
-JOB_NAME=`getRunDirectory multi_stage_match_${RUN_TYPE}`
+JOB_NAME=$(getRunDirectory multi_stage_match_"${RUN_TYPE}")
+CHECK_MATCH_RUN_JOB="check_${JOB_NAME}"
+COUNT_MATCHES_JOB="count_${JOB_NAME}"
 RUN_DIR="${SCRIPT_DIR}/${JOB_NAME}"
-LOG_DIR=`createLogDirectory "${RUN_DIR}"`
+LOG_DIR=$(createLogDirectory "${RUN_DIR}")
 
 # need to create tmp directory so that run_array_ws_client_lsf.sh sets JAVA_IO_TMPDIR (for HDF5)
-mkdir -p ${RUN_DIR}/tmp
+mkdir -p "${RUN_DIR}"/tmp
 
 echo "
 ------------------------------------------------------------------------
@@ -44,7 +38,7 @@ Setting up job for ${JOB_NAME} ...
 
 STAGE_JSON_NAME="stage_parameters.${RUN_TYPE}.json"
 STAGE_JSON="${RUN_DIR}/${STAGE_JSON_NAME}"
-cp ${MATCH_PARAMETERS_DIR}/${STAGE_JSON_NAME} ${STAGE_JSON}
+cp "${MATCH_PARAMETERS_DIR}/${STAGE_JSON_NAME}" "${STAGE_JSON}"
 
 COMMON_PARAMETERS_FILE="${RUN_DIR}/common_parameters.txt"
 
@@ -55,7 +49,7 @@ ARGS="--baseDataUrl ${BASE_DATA_URL} --owner ${RENDER_OWNER} --collection ${MATC
 ARGS="${ARGS} --stageJson ${STAGE_JSON}"
 #ARGS="${ARGS} --cacheFullScaleSourcePixels" # cache full scale source since we don't have mipmaps
 
-echo "${ARGS}" > ${COMMON_PARAMETERS_FILE}
+echo "${ARGS}" > "${COMMON_PARAMETERS_FILE}"
 
 JOB_PARAMETERS_FILE="${RUN_DIR}/job_specific_parameters.txt"
 :> "${JOB_PARAMETERS_FILE}"
@@ -65,7 +59,7 @@ echo "Generating ${JOB_PARAMETERS_FILE}"
 cd "${PAIRS_DIR}" || exit
 FILE_COUNT=0
 for JSON_FILE in tile_pairs_*.json*; do
-  echo "--pairJson ${PAIRS_DIR}/${JSON_FILE}" >> ${JOB_PARAMETERS_FILE}
+  echo "--pairJson ${PAIRS_DIR}/${JSON_FILE}" >> "${JOB_PARAMETERS_FILE}"
   (( FILE_COUNT += 1 ))
   if (( FILE_COUNT % 100 == 0 )); then
     echo -n "."
@@ -77,7 +71,7 @@ if (( FILE_COUNT == 0 )); then
   echo "
 No tile pair files found !!!
 Removing ${RUN_DIR} ..."
-  rm -rf ${RUN_DIR}
+  rm -rf "${RUN_DIR}"
 
 else
 
@@ -88,10 +82,12 @@ else
 
 bsub -P ${BILL_TO} -g \"${JOB_GROUP}\" -J \"${JOB_NAME}[1-${FILE_COUNT}]%${MAX_RUNNING_TASKS}\" ${BATCH_AND_QUEUE_PARAMETERS} -o /dev/null ${RENDER_PIPELINE_BIN}/run_array_ws_client_lsf.sh ${RUN_DIR} ${MEMORY} ${JAVA_CLASS}
 
-bsub -P ${BILL_TO} -J \"check_${RENDER_OWNER}_${RENDER_PROJECT}_${RUN_TYPE}_match\" -w \"ended(${JOB_NAME})\" -n 1 -W 240 ${SCRIPT_DIR}/support/13_check_logs_and_report_stats.sh ${RUN_DIR}
-" > ${BSUB_ARRAY_FILE}
+bsub -P ${BILL_TO} -J \"${CHECK_MATCH_RUN_JOB}\" -w \"ended(${JOB_NAME})\" -n 1 -W 59 ${SCRIPT_DIR}/support/13_check_logs_and_report_stats.sh ${RUN_DIR}
 
-  chmod 755 ${BSUB_ARRAY_FILE}
+bsub -P ${BILL_TO} -J \"${COUNT_MATCHES_JOB}\" -w \"ended(${CHECK_MATCH_RUN_JOB})\" -n1 -W 59 ${SCRIPT_DIR}/support/23_count_trimmed_clusters.sh
+" > "${BSUB_ARRAY_FILE}"
+
+  chmod 755 "${BSUB_ARRAY_FILE}"
 
   echo "
 
@@ -100,9 +96,7 @@ Created bsub array script for ${FILE_COUNT} jobs in ${BSUB_ARRAY_FILE}
 Logs will be written to ${LOG_DIR}
 "
 
-  if [[ "${1}" == "launch" ]]; then
-    ${BSUB_ARRAY_FILE}
-  fi
+  ${BSUB_ARRAY_FILE}
 
 fi
 

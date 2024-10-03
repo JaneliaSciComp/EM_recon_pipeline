@@ -4,6 +4,7 @@ set -e
 
 ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+SCRIPT_DIR=$(dirname "${SCRIPT_DIR}") # move up one directory since this is in support subdirectory
 source "${SCRIPT_DIR}"/00_config.sh
 
 LOG_DIR="${SCRIPT_DIR}/logs"
@@ -25,4 +26,7 @@ Connected tile cluster counts will be written to:
 Be patient, this could take a few minutes ...
 "
 
+# shellcheck disable=SC2086
 ${RENDER_CLIENT_SCRIPT} 1G ${ARGS} > "${COUNT_LOG}"
+
+tail -15 "${COUNT_LOG}"
