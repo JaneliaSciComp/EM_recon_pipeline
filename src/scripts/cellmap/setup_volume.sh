@@ -97,7 +97,7 @@ cp -r "${BASE_SCRIPTS_DIR}"/support "${ALIGN_DIR}"
 cp "${TRANSFER_INFO_JSON_FILE}" "${ALIGN_DIR}"
 
 chmod 775 "${ALIGN_DIR}"/*.sh
-chmod 775 "${ALIGN_DIR}"/support/*.sh "${ALIGN_DIR}"/support/*.py
+chmod 775 "${ALIGN_DIR}"/support "${ALIGN_DIR}"/support/*.sh "${ALIGN_DIR}"/support/*.py
 chmod 664 "${ALIGN_DIR}"/*/*.json
 
 sed -i "
