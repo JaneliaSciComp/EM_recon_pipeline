@@ -33,7 +33,7 @@ ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STAC
 ARGS="${ARGS} --scale 0.22"
 ARGS="${ARGS} --n5Path ${N5_PATH}"
 ARGS="${ARGS} --resinMaskingEnabled false" # resin masking should be disabled for regional cross-correlation (it is needed for layer cross-correlation)
-ARGS="${ARGS} --regionSize 2000"
+ARGS="${ARGS} --regionSize 500"
 
 # must export this for flintstone
 export LSF_PROJECT="${BILL_TO}"
