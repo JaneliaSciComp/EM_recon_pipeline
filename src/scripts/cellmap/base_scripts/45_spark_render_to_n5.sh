@@ -9,7 +9,7 @@ SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
 source ${SCRIPT_DIR}/00_config.sh
 
 if (( $# < 2 )); then
-  echo "USAGE $0 <stack> <number of nodes> [Zcoords.txt]"
+  echo "USAGE $0 <stack> <number of nodes> [review | Zcoords.txt]"
   exit 1
 fi
 
@@ -35,10 +35,13 @@ ARGS="--baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STACK}"
 ARGS="${ARGS} --n5Path ${N5_PATH}"
 ARGS="${ARGS} --n5Dataset /render/${RENDER_PROJECT}/${STACK}___${RUN_TIME}"
-ARGS="${ARGS} --tileWidth 4096 --tileHeight 4096 --blockSize 128,128,64 --factors 2,2,2"
+ARGS="${ARGS} --tileWidth 4096 --tileHeight 4096 --blockSize 128,128,64"
+ARGS="${ARGS} --factors 2,2,2"
 
 if (( $# > 2 )); then
-  if [[ -f ${Z_COORDS_FILE} ]]; then
+  if [[ "${3}" == "review" ]]; then
+    ARGS="${ARGS} --reviewFactors 2,2,1"
+  elif [[ -f ${Z_COORDS_FILE} ]]; then
     ARGS="${ARGS} --z_coords ${Z_COORDS_FILE}"
   else
     echo "ERROR: ${Z_COORDS_FILE} not found"
