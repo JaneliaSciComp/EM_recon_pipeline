@@ -1,5 +1,7 @@
 #!/bin/bash
 
+umask 0002
+
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 

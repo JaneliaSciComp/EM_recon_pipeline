@@ -2,6 +2,8 @@
 
 set -e
 
+umask 0002
+
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 CONFIG_FILE="${SCRIPT_DIR}/../00_config.sh"
