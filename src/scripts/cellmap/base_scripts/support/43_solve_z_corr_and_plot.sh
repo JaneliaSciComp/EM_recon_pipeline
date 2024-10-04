@@ -6,7 +6,7 @@ umask 0002
 
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
-CONFIG_FILE="${SCRIPT_DIR}/../00_config.sh"
+source "${SCRIPT_DIR}/../00_config.sh"
 
 if (( $# != 2 )); then
   echo "USAGE: $0 <solve base parameters file> <inference options file>"
