@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image
 from fibsem_tools.io import read
 
+from janelia_emrp.root_logger import init_logger
+
 logger = logging.getLogger(__name__)
 
 
@@ -130,3 +132,15 @@ def compress_and_save(dat_path: Path,
     im = Image.fromarray(compressed_record[0, :, :])
     im.save(compressed_path)
     logger.info(f"compress_and_save: saved {str(compressed_path)}")
+
+
+if __name__ == '__main__':
+    init_logger(__file__)
+
+    # base_name = 'Merlin-6284_24-07-27_000003_0-0'
+    base_name = 'Merlin-6284_24-07-28_135631_0-0'
+    for column in range(3):
+        dat_path = Path(f'/Users/trautmane/Desktop/16_to_8/dat/{base_name}-{column}.dat')
+        compressed_path = Path(f'/Users/trautmane/Desktop/16_to_8/out_old/{base_name}-{column}.png')
+        compress_and_save(dat_path=dat_path,
+                          compressed_path=compressed_path)
