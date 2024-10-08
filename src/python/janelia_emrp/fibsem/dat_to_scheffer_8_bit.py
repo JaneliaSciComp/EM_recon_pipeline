@@ -75,9 +75,6 @@ def compress_compute(cyx_dat_record: np.ndarray,
     span = high - low
     logger.info(f"compress_compute: low {low:.2f}  -> 0, high {high:.2f} -> 255")
 
-    # TODO: see if dat header QuantLow and QuantHigh values could be used instead since they seem to be
-    #       the same as the swapped low and high values here (would allow us to skip stdDev calculation)
-
     # create a float array of round-able converted values using the derived low-to-high 8-bit range
     compressed_data = 255.0 * ((pixel_array - low) / span) + 0.5
 
