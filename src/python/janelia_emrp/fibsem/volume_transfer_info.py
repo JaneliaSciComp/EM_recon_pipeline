@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Any
 
+import numpy as np
 from pydantic import BaseModel
 
 from janelia_emrp.fibsem.dat_path import new_dat_path
@@ -165,6 +166,48 @@ class RenderDataSet(BaseModel):
         }
 
 
+class FillInfo(BaseModel):
+    """Information about a region to fill with a specific intensity.
+    #
+    # Attributes:
+    #     tile_indexes:
+    #         list of tile indexes to fill (for a 2x2 grid, 0_0 = 0, 0_1 = 1, 1_0 = 2, 1_1 = 3)
+    #     x:
+    #         upper left x coordinate of the fill region
+    #     y:
+    #         upper left y coordinate of the fill region
+    #     width:
+    #         width of the fill region
+    #     height:
+    #         height of the fill region
+    #     fill_intensity:
+    #         intensity to apply to all pixels in the fill region that have intensities above the threshold
+    #     intensity_threshold:
+    #         replace pixels in the region with the fill intensity when their intensity is greater than this threshold
+    """
+    tile_indexes: list[int]
+    x: int
+    y: int
+    width: int
+    height: int
+    fill_intensity: int
+    intensity_threshold: int
+
+    def fill_region(self,
+                    pixel_array: np.ndarray) -> np.ndarray:
+        writable_pixel_array = pixel_array.copy()
+        filled_count = 0
+        for x in range(self.x, self.x + self.width):
+            for y in range(self.y, self.y + self.height):
+                if writable_pixel_array[y][x] > self.intensity_threshold:
+                    writable_pixel_array[y][x] = self.fill_intensity
+                    filled_count += 1
+
+        logger.info(f"fill_region: filled {filled_count} pixels with intensities above {self.intensity_threshold}")
+
+        return writable_pixel_array
+
+
 class VolumeTransferInfo(BaseModel):
     """Information for managing the transfer of volume data from a scope to centralized storage.
     #
@@ -204,6 +247,7 @@ class VolumeTransferInfo(BaseModel):
     max_mipmap_level: Optional[int]
     render_data_set: Optional[RenderDataSet]
     transfer_tasks: list[VolumeTransferTask]
+    fill_info: Optional[FillInfo]
     cluster_job_project_for_billing: str
     number_of_dats_converted_per_hour: Optional[int]
     number_of_preview_workers: Optional[int]

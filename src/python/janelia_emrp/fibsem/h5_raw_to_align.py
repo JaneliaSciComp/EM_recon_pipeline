@@ -88,11 +88,11 @@ class H5RawToAlign:
 
         with self.align_writer.open_h5_file(output_path=str(h5_paths_for_layer.align_path),
                                             mode=h5_write_mode) as layer_align_file:
-            for cyx_dat in cyx_dat_list:
-                self.align_writer.create_and_add_mipmap_data_sets(
-                    cyx_dat=cyx_dat,
-                    max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
-                    to_h5_file=layer_align_file)
+            self.align_writer.create_and_add_mipmap_data_sets(
+                cyx_dat_list=cyx_dat_list,
+                max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
+                to_h5_file=layer_align_file,
+                fill_info=self.volume_transfer_info.fill_info)
 
         elapsed_seconds = int(time.time() - start_time)
 

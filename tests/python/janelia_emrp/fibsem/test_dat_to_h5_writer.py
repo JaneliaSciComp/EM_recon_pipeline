@@ -27,9 +27,10 @@ def test_create_and_add_mipmap_data_sets(volume_transfer_info,
 
     with align_writer.open_h5_file(str(align_path)) as align_file, \
             h5py.File(name=str(small_uint8_path), mode="r") as expected_align_file:
-        align_writer.create_and_add_mipmap_data_sets(cyx_dat=cyx_dat,
+        align_writer.create_and_add_mipmap_data_sets(cyx_dat_list=[cyx_dat],
                                                      max_mipmap_level=volume_transfer_info.max_mipmap_level,
-                                                     to_h5_file=align_file)
+                                                     to_h5_file=align_file,
+                                                     fill_info=None)
         
         assert align_path.exists(), f"{str(align_path)} not created"
 

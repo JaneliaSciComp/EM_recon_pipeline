@@ -1,61 +1,20 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 from PIL import Image
 from fibsem_tools.io import read
-from pydantic import BaseModel
 
+from janelia_emrp.fibsem.volume_transfer_info import FillInfo
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
 
-class FillInfo(BaseModel):
-    """Information about a region to fill within one or more tiles in a layer.
-    #
-    # Attributes:
-    #     tile_indexes:
-    #         list of tile indexes to fill
-    #     x:
-    #         upper left x coordinate of the fill region
-    #     y:
-    #         upper left y coordinate of the fill region
-    #     width:
-    #         width of the fill region
-    #     height:
-    #         height of the fill region
-    #     fill_value:
-    #         intensity to apply to all beyond threshold pixels in the fill region
-    #     threshold:
-    #         replace pixels in the region with the fill value when they are greater than this threshold
-    """
-    tile_indexes: list[int]
-    x: int
-    y: int
-    width: int
-    height: int
-    fill_value: int
-    threshold: int
-
-    def fill_region(self,
-                    pixel_array: np.ndarray) -> np.ndarray:
-        writable_pixel_array = pixel_array.copy()
-        filled_count = 0
-        for x in range(self.x, self.x + self.width):
-            for y in range(self.y, self.y + self.height):
-                if writable_pixel_array[y][x] > self.threshold:
-                    writable_pixel_array[y][x] = self.fill_value
-                    filled_count += 1
-
-        logger.info(f"fill_region: filled {filled_count} pixels with intensities above {self.threshold}")
-
-        return writable_pixel_array
-
-
 def compress_compute_layer(cyx_dat_record_list: list[np.ndarray],
                            channel_num: int = 0,
-                           fill_info: FillInfo = None) -> list[np.ndarray]:
+                           fill_info: Optional[FillInfo] = None) -> list[np.ndarray]:
     """
     Adaptation of Lou Scheffer's 16-bit to 8-bit "compression" algorithm from
     /groups/flyem/home/flyem/bin/compress_dats/build2/Compress.cpp
@@ -221,5 +180,5 @@ if __name__ == '__main__':
                                                y=470,
                                                width=1650,
                                                height=830,
-                                               fill_value=-1000,
-                                               threshold=0))
+                                               fill_intensity=-1000,
+                                               intensity_threshold=0))

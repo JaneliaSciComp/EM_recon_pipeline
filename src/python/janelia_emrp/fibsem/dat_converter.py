@@ -97,6 +97,7 @@ class DatConverter:
             # TODO: clean-up properly if errors occur during conversion
 
             if raw_path or align_path:
+                align_cyx_dat_record_list: list[CYXDat] = []
                 for dat_path in dat_paths_for_layer.dat_paths:
 
                     if not dat_path.file_path.exists():
@@ -107,12 +108,15 @@ class DatConverter:
                     if raw_path:
                         self.raw_writer.create_and_add_raw_data_group(cyx_dat=cyx_dat,
                                                                       to_h5_file=layer_raw_file)
-
                     if align_path:
+                        align_cyx_dat_record_list.append(cyx_dat)
+
+                if len(align_cyx_dat_record_list) > 0:
                         self.align_writer.create_and_add_mipmap_data_sets(
-                            cyx_dat=cyx_dat,
+                            cyx_dat_list=align_cyx_dat_record_list,
                             max_mipmap_level=self.volume_transfer_info.max_mipmap_level,
-                            to_h5_file=layer_align_file)
+                            to_h5_file=layer_align_file,
+                            fill_info=self.volume_transfer_info.fill_info)
 
         if raw_path is not None:
             if self.volume_transfer_info.includes_task(VolumeTransferTask.REMOVE_DAT_AFTER_H5_CONVERSION):

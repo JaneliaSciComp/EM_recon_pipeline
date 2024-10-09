@@ -16,7 +16,7 @@ from xarray_multiscale.reducers import windowed_mean
 
 from janelia_emrp.fibsem.cyx_dat import CYXDat, new_cyx_dat
 from janelia_emrp.fibsem.dat_path import split_into_layers
-from janelia_emrp.fibsem.dat_to_scheffer_8_bit import compress_compute
+from janelia_emrp.fibsem.dat_to_scheffer_8_bit_layer import compress_compute_layer, FillInfo
 from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
@@ -169,55 +169,71 @@ class DatToH5Writer:
                                           compression_opts=self.compression_opts)
 
     def create_and_add_mipmap_data_sets(self,
-                                        cyx_dat: CYXDat,
+                                        cyx_dat_list: list[CYXDat],
                                         max_mipmap_level: Optional[int],
-                                        to_h5_file: h5py.File):
+                                        to_h5_file: h5py.File,
+                                        fill_info: Optional[FillInfo]):
         """
         Compresses the specified dat into an 8 bit level 0 mipmap and down-samples that for subsequent levels.
         The `align_writer` is used to save each mipmap as a data set within the specified `layer_align_file`.
         Data sets are named as <section>-<row>-<column>.mipmap.<level> (e.g. 0-0-1.mipmap.3).
         """
         func_name = "create_and_add_mipmap_data_sets:"
-        layer_and_tile = cyx_dat.dat_path.layer_and_tile()
-        logger.info(f"{func_name} create level 0 by compressing {cyx_dat} for {layer_and_tile}")
 
-        compressed_record = compress_compute(cyx_dat.pixels)
+        if len(cyx_dat_list) == 0:
+            raise ValueError("empty cyx_dat_list provided")
 
-        tile_key = cyx_dat.dat_path.tile_key()
-        level_zero_data_set = self.create_and_add_data_set(group_name=tile_key,
-                                                           data_set_name="mipmap.0",
-                                                           pixel_array=compressed_record,
-                                                           to_h5_file=to_h5_file)
-        group = level_zero_data_set.parent
+        cyx_dat_pixels_list: list[np.ndarray] = []
+        for cyx_dat in cyx_dat_list:
+            layer_and_tile = cyx_dat.dat_path.layer_and_tile()
+            logger.info(f"{func_name} add pixels from {cyx_dat} for {layer_and_tile}")
+            cyx_dat_pixels_list.append(cyx_dat.pixels)
 
-        add_dat_header_attributes(cyx_dat=cyx_dat,
-                                  to_group_or_dataset=group)
+        logger.info(f"{func_name} create level 0")
+        compressed_record_list = compress_compute_layer(cyx_dat_pixels_list,
+                                                        channel_num=0,
+                                                        fill_info=fill_info)
 
-        scaled_element_size = add_element_size_um_attributes(dat_header_dict=cyx_dat.header,
-                                                             z_nm_per_pixel=None,
-                                                             to_dataset=level_zero_data_set)
+        for index in range(len(cyx_dat_list)):
+            cyx_dat = cyx_dat_list[index]
+            compressed_record = compressed_record_list[index]
 
-        if max_mipmap_level is not None:
-            lazy_mipmaps = multiscale(compressed_record, windowed_mean, (1, 2, 2))
-            actual_max_mipmap_level = len(lazy_mipmaps) - 1
-            derived_max_mipmap_level = min(max_mipmap_level, actual_max_mipmap_level)
+            tile_key = cyx_dat.dat_path.tile_key()
+            level_zero_data_set = self.create_and_add_data_set(group_name=tile_key,
+                                                               data_set_name="mipmap.0",
+                                                               pixel_array=compressed_record,
+                                                               to_h5_file=to_h5_file)
+            group = level_zero_data_set.parent
 
-            for mipmap_level in range(1, derived_max_mipmap_level + 1):
+            add_dat_header_attributes(cyx_dat=cyx_dat,
+                                      to_group_or_dataset=group)
 
-                logger.info(f"{func_name} create level {mipmap_level} for {layer_and_tile}")
+            scaled_element_size = add_element_size_um_attributes(dat_header_dict=cyx_dat.header,
+                                                                 z_nm_per_pixel=None,
+                                                                 to_dataset=level_zero_data_set)
 
-                scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
-                level_data_set = self.create_and_add_data_set(group_name=tile_key,
-                                                              data_set_name=f"mipmap.{mipmap_level}",
-                                                              pixel_array=scaled_bytes,
-                                                              to_h5_file=to_h5_file)
+            if max_mipmap_level is not None:
+                layer_and_tile = cyx_dat.dat_path.layer_and_tile()
+                lazy_mipmaps = multiscale(compressed_record, windowed_mean, (1, 2, 2))
+                actual_max_mipmap_level = len(lazy_mipmaps) - 1
+                derived_max_mipmap_level = min(max_mipmap_level, actual_max_mipmap_level)
 
-                scaled_element_size = [
-                    scaled_element_size[0], scaled_element_size[1] * 2.0, scaled_element_size[2] * 2.0
-                ]
-                level_data_set.attrs["element_size_um"] = scaled_element_size
+                for mipmap_level in range(1, derived_max_mipmap_level + 1):
 
-        logger.info(f"{func_name} exit for {layer_and_tile}")
+                    logger.info(f"{func_name} create level {mipmap_level} for {layer_and_tile}")
+
+                    scaled_bytes = lazy_mipmaps[mipmap_level].to_numpy()
+                    level_data_set = self.create_and_add_data_set(group_name=tile_key,
+                                                                  data_set_name=f"mipmap.{mipmap_level}",
+                                                                  pixel_array=scaled_bytes,
+                                                                  to_h5_file=to_h5_file)
+
+                    scaled_element_size = [
+                        scaled_element_size[0], scaled_element_size[1] * 2.0, scaled_element_size[2] * 2.0
+                    ]
+                    level_data_set.attrs["element_size_um"] = scaled_element_size
+
+        logger.info(f"{func_name} exit for layer {cyx_dat_list[0].dat_path.layer_id}")
 
 
 def add_dat_header_attributes(cyx_dat: CYXDat,
