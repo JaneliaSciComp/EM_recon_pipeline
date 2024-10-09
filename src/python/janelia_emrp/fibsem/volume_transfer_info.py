@@ -203,7 +203,7 @@ class FillInfo(BaseModel):
                     writable_pixel_array[y][x] = self.fill_intensity
                     filled_count += 1
 
-        logger.info(f"fill_region: filled {filled_count} pixels with intensities above {self.intensity_threshold}")
+        logger.info(f"fill_region: filled {filled_count} pixels that have intensities above {self.intensity_threshold} with value {self.fill_intensity}")
 
         return writable_pixel_array
 
