@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DATE_PATTERN="20240[789]"
-#DATE_PATTERN="20240[89]"
+DATE_PATTERN="202410"
+#DATE_PATTERN="20240[789]"
 
 DRIVER_LOGS=$(ls /nrs/[cf]*/data/*/align/logs/spark/${DATE_PATTERN}*/logs/04-driver.log /nrs/r*/data/*/h5/align/logs/spark/${DATE_PATTERN}*/logs/04-driver.log 2> /dev/null)
 
