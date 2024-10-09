@@ -15,7 +15,7 @@
     },
     "cluster_root_paths": {
         "raw_dat": "/groups/fibsem/fibsem/data/jrc_liu-nih_ips-draq5-test-1/dat",
-        "raw_h5": "/groups/fibsem/fibsem/data/jrc_liu-nih_ips-draq5-test-1/raw",
+        "raw_h5": "/nearline/fibsem/data/jrc_liu-nih_ips-draq5-test-1/raw",
         "align_h5": "/nrs/fibsem/data/jrc_liu-nih_ips-draq5-test-1/align",
         "export_n5": "/nrs/fibsem/data/jrc_liu-nih_ips-draq5-test-1/jrc_liu-nih_ips-draq5-test-1.n5"
     },
