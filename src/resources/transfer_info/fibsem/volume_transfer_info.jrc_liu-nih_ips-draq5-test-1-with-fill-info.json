@@ -54,7 +54,7 @@
         "y": 470,
         "width": 1650,
         "height": 830,
-        "fill_intensity": 1000,
+        "fill_intensity": -1000,
         "intensity_threshold": 0
     },
     "cluster_job_project_for_billing": "fibsem",
