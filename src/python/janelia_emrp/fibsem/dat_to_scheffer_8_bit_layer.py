@@ -166,19 +166,29 @@ if __name__ == '__main__':
 
     init_logger(__file__)
 
-    base_name = 'Merlin-6284_24-07-27_000003_0-0'
-    # base_name = 'Merlin-6284_24-07-28_135631_0-0'
+    base_name = 'Merlin-6281_24-08-22_064029_0-0' # jrc_liu-nih_ips-draq5-test-2
     dat_path_list = []
     compressed_path_list = []
-    for column in range(3):
+    for column in range(1):
         dat_path_list.append(Path(f'/Users/trautmane/Desktop/16_to_8/dat/{base_name}-{column}.dat'))
         compressed_path_list.append(Path(f'/Users/trautmane/Desktop/16_to_8/out_test/{base_name}-{column}.png'))
+
+    # ----------------------------------------------------------
+    # generate without fill_info:
+
+    # compress_and_save_layer(dat_path_list=dat_path_list,
+    #                         compressed_path_list=compressed_path_list,
+    #                         fill_info=None)
+
+    # ----------------------------------------------------------
+    # generate with fill_info:
+
     compress_and_save_layer(dat_path_list=dat_path_list,
                             compressed_path_list=compressed_path_list,
                             fill_info=FillInfo(tile_indexes=[0],
-                                               x=2900,
-                                               y=470,
-                                               width=1650,
-                                               height=830,
+                                               x=0,
+                                               y=1900,
+                                               width=5200,
+                                               height=350,
                                                fill_intensity=-1000,
                                                intensity_threshold=0))
