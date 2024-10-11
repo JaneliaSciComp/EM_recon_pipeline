@@ -200,7 +200,9 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                                  skip_existing=skip_existing)
 
         if num_workers > 1:
-            local_kwargs = {}
+            local_kwargs = {
+                "memory_limit": "10GB"
+            }
             lsf_kwargs = {
                 "project": volume_transfer_info.cluster_job_project_for_billing,
                 "memory": "14GB"
