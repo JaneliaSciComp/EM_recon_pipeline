@@ -42,14 +42,15 @@ export PATH="${JAVA_HOME}/bin:${PATH}"
 JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
 CLASS="org.janelia.render.client.spark.n5.H5TileToN5PreviewClient"
 
-# Avoid GSON read errors
-GSON_JAR="/groups/flyem/data/render/lib/gson/gson-2.10.1.jar"
-
 # Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
 # (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
 H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/flyem/data/render/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
 
-export SUBMIT_ARGS="--conf \"spark.executor.extraJavaOptions=${GSON_JAR} ${H5_LIBPATH}\" --conf spark.driver.extraJavaOptions=\"${GSON_JAR} ${H5_LIBPATH}\""
+export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
+
+# preview code needs newer GSON library to parse HDF5 attributes
+GSON_JAR="/groups/flyem/data/render/lib/gson/gson-2.10.1.jar"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 # setup for 11 cores per worker (allows 4 workers to fit on one 48 core node with 4 cores to spare for other jobs)
 export N_EXECUTORS_PER_NODE=5
@@ -59,9 +60,6 @@ export N_CORES_PER_EXECUTOR=2
 export N_OVERHEAD_CORES_PER_WORKER=1
 #N_CORES_PER_WORKER=$(( (N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR) + N_OVERHEAD_CORES_PER_WORKER ))
 export N_CORES_DRIVER=1
-
-# preview code needs newer GSON library to parse HDF5 attributes
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=/groups/flyTEM/flyTEM/render/lib/gson-2.10.1.jar"
 
 #-----------------------------------------------------------
 # Loop over all transfer JSON files and launch Spark job for each one ...
