@@ -87,9 +87,13 @@ fi
 # NOTE: must consolidate logs when changing run parent dir
 export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/spark_output/${USER}"
 
+# Avoid GSON read errors
+GSON_JAR="/groups/flyem/data/render/lib/gson/gson-2.10.1.jar"
+
 # Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
 # (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
 H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/flyem/data/render/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
-export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
+
+export SUBMIT_ARGS="--conf \"spark.executor.extraJavaOptions=${GSON_JAR} ${H5_LIBPATH}\" --conf spark.driver.extraJavaOptions=\"${GSON_JAR} ${H5_LIBPATH}\""
 
 export LSF_PROJECT="${BILL_TO}"
