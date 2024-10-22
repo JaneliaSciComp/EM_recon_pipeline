@@ -2,7 +2,7 @@
 Pipeline scripts and tools for reconstructing Electron Microscopy volumes.
 
 ### Setup
-1. If necessary, [install miniconda](https://docs.conda.io/en/latest/miniconda.html).
+1. If necessary, [install miniforge](https://github.com/conda-forge/miniforge).
 
 ### Create Environment and Install 
 ```bash
