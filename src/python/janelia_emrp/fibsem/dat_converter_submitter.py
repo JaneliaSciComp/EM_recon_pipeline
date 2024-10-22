@@ -166,7 +166,7 @@ def main(arg_list: list[str]):
     parser.add_argument(
         "--convert_script",
         help="Path of convert script to be called by bsub job",
-        default="/groups/flyem/home/flyem/bin/dat_transfer/2022/02_convert_dats.sh"
+        default="/groups/fibsem/home/fibsemxfer/bin/02_convert_dats.sh"
     )
     parser.add_argument(
         "--num_workers",
