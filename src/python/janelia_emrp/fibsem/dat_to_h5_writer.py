@@ -336,9 +336,9 @@ def get_dat_file_names_for_h5(h5_path: Path) -> list[str]:
     dat_file_name_list: list[str] = []
     if h5_path.exists():
         # try to ensure h5 is not currently being written by another process
-        one_minute_before_now = time.time() - 60
+        ten_minutes_before_now = time.time() - 600
         last_modified_time = os.path.getmtime(h5_path)
-        if last_modified_time < one_minute_before_now:
+        if last_modified_time < ten_minutes_before_now:
             try:
                 with h5py.File(name=str(h5_path), mode="r") as h5_file:
                         data_set_names = sorted(h5_file.keys())
@@ -351,7 +351,7 @@ def get_dat_file_names_for_h5(h5_path: Path) -> list[str]:
 
         else:
             logger.info(f"get_dat_file_names_for_h5: skipping read of recently modified file {h5_path}, "
-                        f"last_modified_time={last_modified_time}, one_minute_before_now={one_minute_before_now}")
+                        f"last_modified_time={last_modified_time}, ten_minutes_before_now={ten_minutes_before_now}")
     return dat_file_name_list
 
 
