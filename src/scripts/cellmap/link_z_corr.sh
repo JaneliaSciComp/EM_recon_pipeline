@@ -3,7 +3,7 @@
 #  To run every 10 minutes on renderer-data4 without trying to mail stdout/stderr:
 #
 #    crontab -e
-#      */10 * * * * /groups/flyem/data/render/git/EM_recon_pipeline/src/scripts/cellmap/link_z_corr.sh >/dev/null 2>&1
+#      */10 * * * * /groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/scripts/cellmap/link_z_corr.sh >/dev/null 2>&1
 #
 #  Crontab file is saved to /var/spool/cron/trautmane
 

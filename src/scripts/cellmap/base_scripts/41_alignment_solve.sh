@@ -2,9 +2,9 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-source ${SCRIPT_DIR}/00_config.sh
+ABSOLUTE_SCRIPT=$(readlink -m "${0}")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+source "${SCRIPT_DIR}"/00_config.sh
 
 #-----------------------------------------------------------
 # Spark executor setup with 11 cores per worker ...
@@ -18,7 +18,6 @@ export N_OVERHEAD_CORES_PER_WORKER=1
 export N_CORES_DRIVER=1
 
 if (( $# < 1 )); then
-  JQ="/groups/flyem/data/render/bin/jq"
   STACK_URL="http://${SERVICE_HOST}/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
   SECTION_COUNT=$(curl -s "${STACK_URL}" | ${JQ} '.stats.sectionCount')
   SECTIONS_PER_SOLVE_SET=500
@@ -72,9 +71,9 @@ JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
 CLASS="org.janelia.render.client.solver.DistributedSolveSpark"
 
 LOG_DIR="${SCRIPT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/solve-`date +"%Y%m%d_%H%M%S"`.log"
+LOG_FILE="${LOG_DIR}/solve-$(date +"%Y%m%d_%H%M%S").log"
 
-mkdir -p ${LOG_DIR}
+mkdir -p "${LOG_DIR}"
 
 #export SPARK_JANELIA_ARGS="--consolidate_logs"
 
@@ -84,14 +83,15 @@ mkdir -p ${LOG_DIR}
   echo "Running with arguments:
 ${ARGS}
 "
+  # shellcheck disable=SC2086
   /groups/flyTEM/flyTEM/render/spark/spark-janelia/flintstone.sh $N_NODES $JAR $CLASS $ARGS
-} 2>&1 | tee -a ${LOG_FILE}
+} 2>&1 | tee -a "${LOG_FILE}"
 
-SHUTDOWN_JOB_ID=$(awk '/PEND.*_sd/ {print $1}' ${LOG_FILE})
+SHUTDOWN_JOB_ID=$(awk '/PEND.*_sd/ {print $1}' "${LOG_FILE}")
 
 if (( SHUTDOWN_JOB_ID > 1234 )); then
   echo "Scheduling z correction derivation job upon completion of solve job ${SHUTDOWN_JOB_ID}"
   echo
 
-  bsub -P ${BILL_TO} -J ${RENDER_PROJECT}_launch_z_corr -w "ended(${SHUTDOWN_JOB_ID})" -n1 -W 59 ${SCRIPT_DIR}/support/42_gen_z_corr_run.sh launch
+  bsub -P "${BILL_TO}" -J "${RENDER_PROJECT}_launch_z_corr" -w "ended(${SHUTDOWN_JOB_ID})" -n1 -W 59 "${SCRIPT_DIR}"/support/42_gen_z_corr_run.sh launch
 fi

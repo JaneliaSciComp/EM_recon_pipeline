@@ -6,6 +6,7 @@ umask 0002
 
 ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+source "${SCRIPT_DIR}"/00_config.sh
 
 TRANSFER_INFO_JSON=$(ls "${SCRIPT_DIR}"/volume_transfer_info.*.json)
 if [[ ! -f "${TRANSFER_INFO_JSON}" ]]; then
@@ -13,18 +14,16 @@ if [[ ! -f "${TRANSFER_INFO_JSON}" ]]; then
   exit 1
 fi
 
-JQ="/groups/flyem/data/render/bin/jq"
 SCOPE=$(${JQ} '.scope_data_set.host' "${TRANSFER_INFO_JSON}")
 
 SWEEP_LOG_DIR="${SCRIPT_DIR}/logs/sweep"
 mkdir -p "${SWEEP_LOG_DIR}"
 LOG_FILE="${SWEEP_LOG_DIR}/sweep_dat.log"
 
-source /groups/flyem/data/render/bin/miniconda3/source_me.sh
+# shellcheck source=???
+source "${SOURCE_MINIFORGE3_SCRIPT}"
 
 conda activate janelia_emrp
-
-EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 

@@ -6,8 +6,6 @@ ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh" "${TAB}"
 
-JQ="/groups/flyem/data/render/bin/jq"
-
 # ----------------------------------------------
 # Source Images
 
@@ -18,7 +16,7 @@ ALIGN_H5=$(${JQ} '.cluster_root_paths.align_h5' "${VOLUME_TRANSFER_INFO}" | sed 
 # ----------------------------------------------
 # Thickness Correction paths
 
-# /nrs/flyem/render/z_corr/Z0720_07m_BR/Sec14/v4_acquire_trimmed_align/run_20210827_101623_480_z_corr/solve_20210827_104130/Zcoords.txt
+# .../z_corr/Z0720_07m_BR/Sec14/v4_acquire_trimmed_align/run_20210827_101623_480_z_corr/solve_20210827_104130/Zcoords.txt
 STACK_Z_CORR_DIR="${RENDER_NRS_ROOT}/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
 
 unset Z_COORDS_FILE ALIGN_STACK_DATA
@@ -106,7 +104,7 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
 
   RENDERED_DATA_SET="${RENDERED_N5_PATH##${N5_PATH}}"
 
-  # /groups/flyem/data/render/bin/jq '.translate[0]' /nrs/flyem/render/n5/Z0720_07m_BR/z_corr/Sec14/v4_acquire_trimmed_align_ic___20210827_131509/attributes.json
+  # jq '.translate[0]' attributes.json
   OFFSET_X=$(${JQ} '.translate[0]' "${N5_JSON}")
   OFFSET_Y=$(${JQ} '.translate[1]' "${N5_JSON}")
   OFFSET_Z=$(${JQ} '.translate[2]' "${N5_JSON}")

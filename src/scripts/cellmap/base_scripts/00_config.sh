@@ -28,6 +28,11 @@ N5_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.n5"
 # standard values.  There is no need to modify these unless you want to
 # specify non-standard values.
 
+FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
+EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
+JQ="${FIBSEMXFER_DIR}/bin/jq"
+SOURCE_MINIFORGE3_SCRIPT="${FIBSEMXFER_DIR}/bin/source_miniforge3.sh"
+
 # IP address and port for the render web services
 RENDER_HOST="10.40.3.113"
 RENDER_PORT="8080"
@@ -89,12 +94,12 @@ export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/${LAB_OR_
 
 # Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
 # (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
-H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/flyem/data/render/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
+H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/fibsem/home/fibsemxfer/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
 
 export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
 
 # preview code needs newer GSON library to parse HDF5 attributes
-GSON_JAR="/groups/flyem/data/render/lib/gson/gson-2.10.1.jar"
+GSON_JAR="/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar"
 export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 export LSF_PROJECT="${BILL_TO}"

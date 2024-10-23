@@ -36,7 +36,7 @@ Updated ${CONFIG_FILE}:
 "
 grep "ACQUIRE_TRIMMED_STACK" "${CONFIG_FILE}"
 
-PATCH_SOURCE_DIR="/groups/flyem/data/render/git/EM_recon_pipeline/src/scripts/cellmap/base_scripts/patch"
+PATCH_SOURCE_DIR="${EMRP_ROOT}/src/scripts/cellmap/base_scripts/patch"
 cp ${PATCH_SOURCE_DIR}/* ${PATCH_DIR}
 
 sed -i "
