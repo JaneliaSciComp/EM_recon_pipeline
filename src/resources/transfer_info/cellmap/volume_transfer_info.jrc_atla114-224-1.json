@@ -1,10 +1,10 @@
 {
-    "transfer_id": "cellmap::jrc_atla114_224_1::jeiss5",
+    "transfer_id": "cellmap::jrc_atla114-224-1::jeiss5",
     "scope_data_set": {
         "host": "jeiss5.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/EMBL",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_atla114_224_1",
+        "data_set_id": "jrc_atla114-224-1",
         "rows_per_z_layer": 2,
         "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6049_24-10-21_000103_0-0-0.dat",
@@ -14,13 +14,13 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_atla114_224_1/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_atla114_224_1/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_atla114_224_1/align",
-        "export_n5": "/nrs/cellmap/data/jrc_atla114_224_1/jrc_atla114_224_1.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_atla114-224-1/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_atla114-224-1/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_atla114-224-1/align",
+        "export_n5": "/nrs/cellmap/data/jrc_atla114-224-1/jrc_atla114_224_1.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_atla114_224_1/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_atla114-224-1/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
