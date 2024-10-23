@@ -37,8 +37,8 @@ ARGS="${ARGS} --num_workers 8 --parent_work_dir ${SWEEP_LOG_DIR} $*"
 echo """
 On ${HOSTNAME} at ${RUN_TIME}
 
-Running (as flyem user for connection to scope):
+Running (as fibsemxfer user for connection to scope):
   python ${ARGS}
 """ | tee -a "${LOG_FILE}"
 
-su -c "umask 0002; python ${ARGS} 2>&1 | tee -a ${LOG_FILE}" flyem
+su -c "umask 0002; python ${ARGS} 2>&1 | tee -a ${LOG_FILE}" fibsemxfer
