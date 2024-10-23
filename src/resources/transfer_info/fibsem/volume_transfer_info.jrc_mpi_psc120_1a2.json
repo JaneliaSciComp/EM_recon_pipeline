@@ -1,0 +1,51 @@
+{
+    "transfer_id": "fibsem::jrc_mpi_psc120_1a2::jeiss6",
+    "scope_data_set": {
+        "host": "jeiss6.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/human",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "jrc_mpi_psc120_1a2",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
+        "first_dat_name": "Merlin-6281_24-10-04_090007_0-0-0.dat",
+        "last_dat_name": "Merlin-6281_24-10-07_075437_0-0-0.dat",
+        "dat_x_and_y_nm_per_pixel": 8,
+        "dat_z_nm_per_pixel": 8,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/groups/fibsem/fibsem/data/jrc_mpi_psc120_1a2/dat",
+        "raw_h5": "/groups/fibsem/fibsem/data/jrc_mpi_psc120_1a2/raw",
+        "align_h5": "/nrs/fibsem/data/jrc_mpi_psc120_1a2/align"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/fibsem/data/jrc_mpi_psc120_1a2/raw"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "fibsem",
+        "project": "jrc_mpi_psc120_1a2",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "connect": {
+            "host": "10.40.3.113",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM"
+    ],
+    "cluster_job_project_for_billing": "feliciano",
+    "number_of_dats_converted_per_hour": 15
+}
