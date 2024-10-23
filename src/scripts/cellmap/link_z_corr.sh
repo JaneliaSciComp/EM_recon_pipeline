@@ -11,7 +11,7 @@ set -e
 
 cd /opt/local/jetty_base/webapps/z_corr_plots/cellmap
 
-for Z_CORR_BASE_DIR in /nrs/cellmap/data/jrc_*/z_corr/cellmap/jrc_*; do
+for Z_CORR_BASE_DIR in /nrs/cellmap/data/jrc_*/z_corr/cellmap/jrc_* /nrs/fibsem/data/*/z_corr/fibsem/*; do
   NAME=$(basename "${Z_CORR_BASE_DIR}")
   if [ -e "${NAME}" ]; then
     echo "${NAME} already exists"
