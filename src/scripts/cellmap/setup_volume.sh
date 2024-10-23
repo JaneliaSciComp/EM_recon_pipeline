@@ -6,7 +6,8 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 BASE_SCRIPTS_DIR="${SCRIPT_DIR}/base_scripts"
 
-EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
+FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
+EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
 TRANSFER_INFO_DIR="${EMRP_ROOT}/src/resources/transfer_info"
 
 RUN_DIR=$(readlink -m ".")
@@ -39,7 +40,7 @@ fi
 VOLUME_NAME="${TI_BASENAME#volume_transfer_info.}"
 VOLUME_NAME="${VOLUME_NAME%.json}"
 
-JQ="/groups/flyem/data/render/bin/jq"
+JQ="${FIBSEMXFER_DIR}/bin/jq"
 
 LAB_OR_PROJECT_GROUP=$(${JQ} '.render_data_set.owner' "${TRANSFER_INFO_JSON_FILE}" | sed 's/"//g')
 
