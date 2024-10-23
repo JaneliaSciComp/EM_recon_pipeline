@@ -9,14 +9,17 @@
 
 set -e
 
-cd /opt/local/jetty_base/webapps/z_corr_plots/cellmap
+BASE_PLOT_DIR="/opt/local/jetty_base/webapps/z_corr_plots"
 
-for Z_CORR_BASE_DIR in /nrs/cellmap/data/jrc_*/z_corr/cellmap/jrc_* /nrs/fibsem/data/*/z_corr/fibsem/*; do
-  NAME=$(basename "${Z_CORR_BASE_DIR}")
-  if [ -e "${NAME}" ]; then
-    echo "${NAME} already exists"
-  else
-    ln -s "${Z_CORR_BASE_DIR}" .
-    ls -ald "${NAME}"
-  fi
+for GROUP in cellmap fibsem; do
+  cd "${BASE_PLOT_DIR}/${GROUP}"
+  for Z_CORR_BASE_DIR in /nrs/"${GROUP}"/data/*/z_corr/"${GROUP}"/*; do
+    NAME=$(basename "${Z_CORR_BASE_DIR}")
+    if [ -e "${NAME}" ]; then
+      echo "${NAME} already exists"
+    else
+      ln -s "${Z_CORR_BASE_DIR}" .
+      ls -ald "${NAME}"
+    fi
+  done
 done
