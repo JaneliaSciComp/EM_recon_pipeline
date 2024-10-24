@@ -33,7 +33,9 @@ def get_base_ssh_args(host: str):
 
 def get_keep_file_list(host: str,
                        keep_file_root: Path,
-                       data_set_id: str) -> list[KeepFile]:
+                       data_set_id: str,
+                       first_dat_name: str,
+                       last_dat_name: str) -> list[KeepFile]:
     keep_file_list = []
     args = get_base_ssh_args(host)
     args.append(f'ls "{keep_file_root}"')
@@ -43,10 +45,23 @@ def get_keep_file_list(host: str,
                                        check=True)
     for name in completed_process.stdout.decode("utf-8").split("\n"):
         name = name.strip()
+
         if name.endswith("^keep"):
-            keep_file = build_keep_file(host, str(keep_file_root), name)
-            if keep_file is not None and keep_file.data_set == data_set_id:
-                keep_file_list.append(keep_file)
+            # jrc_celegans_20241007^E^^Images^C_elegans^Y2024^M10^D24^Merlin-6281_24-10-24_100613_0-0-0.dat^keep
+            name_pieces = name.split("^")
+
+            if len(name_pieces) > 2:
+                dat_data_set_id = name_pieces[0]
+                dat_name = name_pieces[-2]
+
+                if (dat_data_set_id == data_set_id) and (dat_name >= first_dat_name) and \
+                        ((last_dat_name is None) or (dat_name <= last_dat_name)):
+
+                    keep_file = build_keep_file(host, str(keep_file_root), name)
+                    if keep_file is not None:
+                        keep_file_list.append(keep_file)
+
+
 
     return keep_file_list
 
@@ -379,10 +394,13 @@ def main(arg_list: list[str]):
 
         keep_file_list = get_keep_file_list(host=transfer_info.scope_data_set.host,
                                             keep_file_root=transfer_info.scope_data_set.root_keep_path,
-                                            data_set_id=transfer_info.scope_data_set.data_set_id)
+                                            data_set_id=transfer_info.scope_data_set.data_set_id,
+                                            first_dat_name=transfer_info.scope_data_set.first_dat_name,
+                                            last_dat_name=transfer_info.scope_data_set.last_dat_name)
 
         logger.info(f"main: found {len(keep_file_list)} keep files on {transfer_info.scope_data_set.host} for the "
-                    f"{transfer_info.scope_data_set.data_set_id} data set")
+                    f"{transfer_info.scope_data_set.data_set_id} data set for dat files with names between "
+                    f"{transfer_info.scope_data_set.first_dat_name} and {transfer_info.scope_data_set.last_dat_name}")
 
         last_dat_time_path: Path = cluster_root_dat_path / "last_dat_time.txt"
         nothing_missing_before = derive_missing_check_start(last_dat_time_path=last_dat_time_path,
