@@ -170,9 +170,6 @@ Source Images:
 Alignment Prep:
   ${SCRIPT_DIR}
 
-Thickness Correction Data:
-  ${Z_COORDS_FILE}
-  
 N5 Volumes:
 ${RENDERED_N5_DATASETS}
 \`\`\`
