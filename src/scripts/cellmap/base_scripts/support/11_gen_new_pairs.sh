@@ -2,6 +2,8 @@
 
 set -e
 
+umask 0002
+
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 SCRIPT_DIR=$(dirname "${SCRIPT_DIR}") # move up one directory since this is in support subdirectory
