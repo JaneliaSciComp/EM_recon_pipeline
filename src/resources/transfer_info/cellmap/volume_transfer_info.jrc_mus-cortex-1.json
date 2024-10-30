@@ -16,8 +16,8 @@
     "cluster_root_paths": {
         "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-cortex-1/dat",
         "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-cortex-1/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus-cortex-1/align",
-        "export_n5": "/nrs/cellmap/data/jrc_mus-cortex-1/jrc_mus-cortex-1.n5"
+        "align_h5": "/nrs/cellmap/data/jrc_mus-cortex-1/align"
+    
     },
     "archive_root_paths": {
         "raw_h5": "/nearline/cellmap/data/jrc_mus-cortex-1/raw"
