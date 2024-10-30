@@ -4,7 +4,7 @@
         "host": "jeiss8.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_D020524-1_aging",
+        "data_set_id": "jrc_mus-cortex-1",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6284_24-10-24_221931_0-0-0.dat",
