@@ -50,7 +50,7 @@ def get_thumbnail_path(slab_path: Path, mfov: int, sfov: int) -> Path:
 
 def get_image_paths(
     slab_path: Path, mfovs: list[int], *, thumbnail: bool = True
-) -> list[int]:
+) -> list[Path]:
     """Returns SFOV or thumbnail paths of MFOVs in a slab."""
     get_path = get_thumbnail_path if thumbnail else get_sfov_path
     return [

@@ -42,8 +42,8 @@ def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:
 
 def get_xys_sfov_and_paths(
     xlog: xr.Dataset, scan: int, slab: int, mfov: int
-) -> tuple[tuple[Path], np.ndarray]:
-    """Paths and top-left corner coordinates of an MFOV in straight orientation.
+) -> tuple[list[Path], np.ndarray]:
+    """Paths and top-left corner coordinates of SFOVs of an MFOV in straight orientation.
 
     Paths:
         type UNC
