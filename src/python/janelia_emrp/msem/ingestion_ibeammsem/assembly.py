@@ -40,6 +40,40 @@ def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:
     return 180 + xlog[XVar.ROTATION_SLAB].sel(scan=scan, slab=slab).values.item()
 
 
+def get_xys_sfov_and_paths(
+    xlog: xr.Dataset, scan: int, slab: int, mfov: int
+) -> tuple[tuple[Path], np.ndarray]:
+    """Paths and top-left corner coordinates of an MFOV in straight orientation.
+
+    Paths:
+        type UNC
+        length N_BEAMS
+    Coordinates:
+        shape (N_BEAMS, 2)
+        unit: full-resolution pixel
+        orientation: original, that is, the SFOVs are "straight"
+        top-left corner of the SFOVs
+
+    To align multiple slabs with the correct offset and orientation,
+        apply the slab rotation around the center (0,0).
+    """
+    xys_center_rotated = (
+        get_xy_slab(xlog=xlog, scan=scan, slab=slab, mfovs=[mfov]).squeeze().T
+    )
+
+    xys_center_original: np.ndarray = EuclideanTransform(
+        rotation=np.radians(get_slab_rotation(xlog=xlog, scan=scan, slab=slab))
+    )(xys_center_rotated)
+    xys_top_left_original = xys_center_original - np.array(
+        [xlog[XDim.X_SFOV].size / 2, xlog[XDim.Y_SFOV].size / 2]
+    )
+    return get_image_paths(
+        slab_path=get_slab_path(xlog=xlog, scan=scan, slab=slab),
+        mfovs=[mfov],
+        thumbnail=False,
+    ), xys_top_left_original
+
+
 def get_xy_slab(
     xlog: xr.Dataset, scan: int, slab: int, mfovs: list[int] | np.ndarray | None = None
 ) -> np.ndarray:
