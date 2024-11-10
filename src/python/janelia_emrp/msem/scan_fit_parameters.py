@@ -1,4 +1,3 @@
-import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,21 +20,18 @@ class ScanFitParameters:
         }
 
 
-# slab_scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_001/wafer_53_scan_001_20220427_23-16-30/002_
-slab_scan_path_pattern = re.compile(r"^(.*)/imaging/msem/scan.*/wafer_\d+_scan_(\d+)_\d{8}_\d{2}-\d{2}-\d{2}/\d+_$")
-
-
 def load_scan_fit_parameters(slab_scan_path: Path) -> ScanFitParameters:
 
-    slab_scan_path_match = slab_scan_path_pattern.match(str(slab_scan_path))
-    if not slab_scan_path_match:
-        raise RuntimeError(f"failed to parse slab_scan_path {slab_scan_path}")
+    # slab_scan_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010
+    scan_name = slab_scan_path.name
 
-    wafer_base_path = Path(slab_scan_path_match.group(1))
-    scan_name = slab_scan_path_match.group(2)
-    scan_index = int(scan_name)
+    if not scan_name.startswith("scan_"):
+        raise RuntimeError(f"expected scan name for {slab_scan_path} to start with 'scan_' but found {scan_name}")
 
-    fit_parameters_path = Path(wafer_base_path, f"sfov_correction/average_fit_parameters_for_all_scans.txt")
+    scan_index = int(scan_name.split("_")[1])
+
+    # /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/sfov_correction/results/fit_parameters.txt
+    fit_parameters_path = Path(slab_scan_path, "sfov_correction/results/fit_parameters.txt")
 
     if not fit_parameters_path.exists():
         raise RuntimeError(f"{fit_parameters_path} not found")
