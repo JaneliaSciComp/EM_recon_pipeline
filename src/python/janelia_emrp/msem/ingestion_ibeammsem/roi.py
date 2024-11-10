@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 import numpy as np
 
-from constant import N_BEAMS
-from xdim import XDim
-from xvar import XVar
+from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
 if TYPE_CHECKING:
     import xarray as xr

@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from roi import get_n_slabs
-from xdim import XDim
-from xvar import XVar
+from janelia_emrp.msem.ingestion_ibeammsem.roi import get_n_slabs
+from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -47,7 +47,7 @@ def get_magc_ids(
         )
     serial_values = xlog[XVar.ID_SERIAL].values
     sorter = np.argsort(serial_values)
-    indices = sorter[np.searchsorted(serial_values, serial_ids, sorter=sorter)]
+    indices = sorter[np.searchsorted(serial_values, serial_ids, sorter=sorter)].tolist()
     return indices
 
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from constant import N_BEAMS
-from xvar import XVar
+from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
 if TYPE_CHECKING:
     import xarray as xr

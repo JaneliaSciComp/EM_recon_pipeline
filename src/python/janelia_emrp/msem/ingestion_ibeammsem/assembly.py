@@ -15,11 +15,11 @@ from matplotlib.transforms import Affine2D
 from skimage.io import imread
 from skimage.transform import EuclideanTransform
 
-from constant import FACTOR_THUMBNAIL, N_BEAMS
-from path import get_image_paths, get_slab_path
-from roi import get_mfovs
-from xdim import XDim
-from xvar import XVar
+from janelia_emrp.msem.ingestion_ibeammsem.constant import FACTOR_THUMBNAIL, N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.path import get_image_paths, get_slab_path
+from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
+from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
 matplotlib.use("tkagg")
 
