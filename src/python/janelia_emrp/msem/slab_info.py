@@ -137,4 +137,4 @@ if __name__ == '__main__':
         main(sys.argv)
     else:
         print("USAGE: slab_info.py <xlog path> <wafer id> <number_of_slabs_per_group>")
-        main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "60", "10"])
+        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "60", "10"])
