@@ -49,9 +49,13 @@ class SlabInfo:
 class ContiguousOrderedSlabGroup:
     ordered_slabs: list[SlabInfo]
 
-    def to_render_project_name(self) -> str:
+    def to_render_project_name(self,
+                               slabs_per_group: int) -> str:
         assert len(self.ordered_slabs) > 0, "must have at least one ordered slab to derive a project name"
-        return f"serial_{self.ordered_slabs[0].serial_name}_to_{self.ordered_slabs[-1].serial_name}"
+        first_slab = self.ordered_slabs[0]
+        first_group_serial_id = int((first_slab.serial_id / slabs_per_group)) * slabs_per_group
+        last_group_serial_id = first_group_serial_id + slabs_per_group - 1
+        return f"w{first_slab.wafer_id}_serial_{first_group_serial_id:0{SERIAL_NAME_LEN}}_to_{last_group_serial_id:0{SERIAL_NAME_LEN}}"
 
 
 def load_slab_info(xlog: xarray.Dataset,
@@ -122,11 +126,12 @@ def main(argv: list[str]):
     xlog = xarray.open_zarr(argv[1])
 
     print(f"loading slab info with wafer_id {argv[2]} and {argv[3]} number_of_slabs_per_group ...")
+    number_of_slabs_per_group=int(argv[3])
     slab_groups = load_slab_info(xlog=xlog,
                                  wafer_id=int(argv[2]),
-                                 number_of_slabs_per_group=int(argv[3]))
+                                 number_of_slabs_per_group=number_of_slabs_per_group)
     for slab_group in slab_groups:
-        print(f"render project: {slab_group.to_render_project_name()} "
+        print(f"render project: {slab_group.to_render_project_name(number_of_slabs_per_group)} "
               f"({len(slab_group.ordered_slabs)} slab regions):")
         for slab_info in slab_group.ordered_slabs:
             print(f"  {slab_info}")
