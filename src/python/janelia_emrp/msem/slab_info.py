@@ -62,12 +62,10 @@ def load_slab_info(xlog: xarray.Dataset,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
 
     magc_ids = get_all_magc_ids(xlog=xlog).tolist()
-    serial_ids = get_serial_ids(xlog=xlog, magc_ids=magc_ids)
 
     slabs: list[SlabInfo] = []
-    for i in range(len(magc_ids)):
-        id_serial=serial_ids[i]
-        slab = magc_ids[i]
+    for slab in magc_ids:
+        id_serial=get_serial_ids(xlog=xlog,magc_ids=slab)[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
         region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
         id_region = region_ids[0]
