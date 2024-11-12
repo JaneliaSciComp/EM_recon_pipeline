@@ -17,9 +17,15 @@ MAX_NUMBER_OF_SCANS = 500
 @dataclass
 class SlabInfo:
     wafer_id: int
-    serial_id: int                                     # order in which the slabs were physically cut
+    serial_id: int
+    """order in which the slabs were physically cut"""
+    magc_id: int = field(compare=False)
+    """magc ID.
+    
+    order in which the slabs were originally defined by the user
+    with the MagFinder plugin in the .magc file
+    """
     region: int
-    magc_id: int = field(compare=False)                # order in which the slabs were originally defined by the user with the MagFinder plugin in the .magc file
     first_mfov: int = field(compare=False)
     last_mfov: int = field(compare=False)
     serial_name: str = field(init=False, repr=False)
