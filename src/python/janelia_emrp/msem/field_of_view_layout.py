@@ -201,7 +201,6 @@ def build_mfov_column_group(mfov_position_list: List[MFovPosition],
 
     return column_group
 
-
 class FieldOfViewLayout:
     def __init__(self,
                  mfov_column_group: MfovColumnGroup,
@@ -209,7 +208,7 @@ class FieldOfViewLayout:
 
         self.mfov_column_group = mfov_column_group
         self.sfov_index_name_to_row_col = sfov_index_name_to_row_col
-        self.mfov_name_to_offsets = {}
+        self.mfov_number_to_offsets = {}
 
         max_number_of_mfovs_in_column = mfov_column_group.max_number_of_mfovs_in_column()
         column_group_index = 0
@@ -228,22 +227,21 @@ class FieldOfViewLayout:
 
             for mfov_number in layout_column.to_mfov_number_list():
                 if mfov_number >= 0:
-                    mfov_name = f"{mfov_number:06d}"
-                    self.mfov_name_to_offsets[mfov_name] = (row_offset, col_offset)
+                    self.mfov_number_to_offsets[mfov_number] = (row_offset, col_offset)
                 row_offset = row_offset + 11
             column_group_index += 1
 
     def row_and_col(self,
-                    mfov_name: str,
+                    mfov_number: int,
                     sfov_index_name: str) -> (int, int):
-        row_offset, col_offset = self.mfov_name_to_offsets[mfov_name]
+        row_offset, col_offset = self.mfov_number_to_offsets[mfov_number]
         sfov_row, sfov_col = self.sfov_index_name_to_row_col[sfov_index_name]
         return sfov_row + row_offset, sfov_col + col_offset
 
     def build_sfov_index_name_matrix(self) -> List[List[str]]:
         max_row_offset = 0
         max_col_offset = 0
-        for key, value in self.mfov_name_to_offsets.items():
+        for key, value in self.mfov_number_to_offsets.items():
             row_offset, col_offset = value
             max_row_offset = max(max_row_offset, row_offset)
             max_col_offset = max(max_col_offset, col_offset)
@@ -264,10 +262,10 @@ class FieldOfViewLayout:
                 names_for_row.append("      ")
             sfov_index_name_matrix.append(names_for_row)
 
-        for mfov_name in sorted(self.mfov_name_to_offsets.keys()):
+        for mfov_number in sorted(self.mfov_number_to_offsets.keys()):
             for sfov_index_name in sorted(self.sfov_index_name_to_row_col.keys()):
-                row, col = self.row_and_col(mfov_name, sfov_index_name)
-                sfov_index_name_matrix[row][col] = f"{mfov_name[-2:]}:{sfov_index_name}"
+                row, col = self.row_and_col(mfov_number, sfov_index_name)
+                sfov_index_name_matrix[row][col] = f"{mfov_number:02d}:{sfov_index_name}"
 
         return sfov_index_name_matrix
 
