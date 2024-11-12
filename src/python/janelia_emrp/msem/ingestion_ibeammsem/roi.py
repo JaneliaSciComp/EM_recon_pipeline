@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
@@ -102,6 +101,20 @@ def get_n_mfovs(xlog: xr.Dataset, scan: int) -> int:
     return (
         xlog[XVar.ACQUISITION].sel(scan=scan, mfov=slice(0, None)).count().values.item()
     )
+
+
+def get_max_mfovs_per_slab(xlog: xr.Dataset) -> int:
+    """Gets the maximum number of MFOVs per slab.
+
+    The xlog is dimensioned along XDim.MFOV to fit the slab with the most MFOVs.
+    E.g.: if the largest slab has 24 MFOVs,
+        then the positive labels of the XDim.MFOV are [0,...,23].
+
+    Note that MFOVs with negative IDs exist,
+        but are internals of the IBEAM-MSEM acquisition
+        and are not part of the final dataset.
+    """
+    return 1 + xlog[XDim.MFOV].max().values.item()
 
 
 def get_mfovs(xlog: xr.Dataset, slab: int) -> np.ndarray:

@@ -12,7 +12,6 @@ WAFER_NAME_LEN = 2   # wafers 60 and 61
 SERIAL_NAME_LEN = 3  # 400+ slabs per wafer
 REGION_NAME_LEN = 2  # usually only a few regions per slab, but allow for up to 99
 
-MAX_NUMBER_OF_MFOVS = 100
 MAX_NUMBER_OF_SCANS = 500
 
 @dataclass
