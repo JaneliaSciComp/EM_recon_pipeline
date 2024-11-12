@@ -110,7 +110,7 @@ def get_max_mfovs_per_slab(xlog: xr.Dataset) -> int:
     E.g.: if the largest slab has 24 MFOVs,
         then the positive labels of the XDim.MFOV are [0,...,23].
 
-    Note that MFOVs with negative IDs exist,
+    Note that MFOVs with strictly negative IDs exist,
         but are internals of the IBEAM-MSEM acquisition
         and are not part of the final dataset.
     """

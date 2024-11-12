@@ -17,11 +17,11 @@ from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov_column_group, \
     NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y, NINETY_ONE_SFOV_NAME_TO_ROW_COL
-from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths
+from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths, get_max_scans
 from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_timestamp
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, \
     build_fit_parameters_path, WAFER_60_61_SCAN_FIT_PARAMETERS
-from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup, MAX_NUMBER_OF_SCANS
+from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 from janelia_emrp.root_logger import init_logger
 
 program_name = "msem_to_render.py"
@@ -176,6 +176,9 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
 
     logger.info(f"{func_name}: loading slab info, wafer_id={wafer_id}, number_of_slabs_per_group={number_of_slabs_per_render_project}")
+    
+    n_scans_max = get_max_scans(xlog=xlog)
+    logger.info(f"the maximum number of scans is {n_scans_max}")
 
     slab_group_list = load_slab_info(xlog=xlog,
                                      wafer_id=wafer_id,
@@ -244,7 +247,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                         logger.warning(f'{func_name}: scan {scan} not found for stack {stack}')
             else:
                 # build scan list by looking for first mfov timestamps for all scans and ignoring excluded scans
-                for scan in range(0, MAX_NUMBER_OF_SCANS):
+                for scan in range(0, n_scans_max):
                     first_mfov_scan_timestamp = get_timestamp(xlog=xlog, scan=scan, slab=slab_info.magc_id, mfov=slab_info.first_mfov)
                     if first_mfov_scan_timestamp is not None:
                         if scan not in exclude_scan_list:
