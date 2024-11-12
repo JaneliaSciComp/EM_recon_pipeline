@@ -21,7 +21,7 @@ def get_all_magc_ids(xlog: xr.Dataset) -> np.ndarray:
 
 def get_serial_ids(
     xlog: xr.Dataset, magc_ids: list[int] | np.ndarray
-) -> int | None | list[int | None]:
+) -> list[int | None]:
     """Returns the serial IDs of slabs identified by their MagC IDs.
 
     If a magc_id does not have a serial ID, then returns None.
