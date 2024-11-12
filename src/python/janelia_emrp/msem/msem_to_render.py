@@ -1,5 +1,4 @@
 import argparse
-import csv
 import logging
 import re
 import sys
@@ -9,23 +8,25 @@ from pathlib import Path
 from typing import List, Any, Optional
 
 import renderapi
+import xarray
 from PIL import Image
 from renderapi import Render
 from renderapi.errors import RenderError
 
 from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
-from janelia_emrp.msem.field_of_view_layout \
-    import NINETY_ONE_SFOV_NAME_TO_ROW_COL, FieldOfViewLayout, NINETEEN_MFOV_COLUMN_GROUPS
-from janelia_emrp.msem.scan_fit_parameters import load_scan_fit_parameters, ScanFitParameters
-from janelia_emrp.msem.wafer_info import load_wafer_info, WaferInfo, build_wafer_info_parent_parser
+from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov_column_group, \
+    NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y, NINETY_ONE_SFOV_NAME_TO_ROW_COL
+from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths
+from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_timestamp
+from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, \
+    build_fit_parameters_path, WAFER_60_61_SCAN_FIT_PARAMETERS
+from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup, MAX_NUMBER_OF_SCANS
 from janelia_emrp.root_logger import init_logger
 
 program_name = "msem_to_render.py"
 
 logger = logging.getLogger(__name__)
-
-WAFER_53_LAYOUT = FieldOfViewLayout(NINETEEN_MFOV_COLUMN_GROUPS, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
 
 def build_tile_spec(image_path: Path,
@@ -35,17 +36,16 @@ def build_tile_spec(image_path: Path,
                     tile_id: str,
                     tile_width: int,
                     tile_height: int,
-                    mfov_name: str,
+                    layout: FieldOfViewLayout,
+                    mfov_number: int,
                     sfov_index_name: str,
                     min_x: int,
                     min_y: int,
                     scan_fit_parameters: ScanFitParameters,
                     margin: int) -> dict[str, Any]:
 
-    # TODO: need to get and save working distance
-
     section_id = f'{stage_z}.0'
-    image_row, image_col = WAFER_53_LAYOUT.row_and_col(mfov_name, sfov_index_name)
+    image_row, image_col = layout.row_and_col(mfov_number, sfov_index_name)
 
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
 
@@ -74,61 +74,55 @@ def build_tile_spec(image_path: Path,
     return tile_spec
 
 
-# unix_relative_image_path: 000003/002_000003_001_2022-04-01T1723012239596.png
-unix_relative_image_path_pattern = re.compile(r"(^\d+)/(\d{3}_\d{6}_(\d{3})_\d{4}-\d{2}-\d{2}T\d{13}).png$")
+# /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
+SFOV_PATTERN = re.compile(r".*/wafers/wafer_(\d{2})/.*/scan_(\d{3})/slabs/slab_(\d{4})/mfovs/mfov_(\d{4})/sfov_(\d{3}).png$")
 
 
 def build_tile_specs_for_slab_scan(slab_scan_path: Path,
-                                   stage_z: int) -> list[dict[str, Any]]:
+                                   sfov_path_list: list[Path],
+                                   sfov_xy_list: list[tuple[int, int]],
+                                   stage_z: int,
+                                   layout: FieldOfViewLayout) -> list[dict[str, Any]]:
 
-    scan_fit_parameters = load_scan_fit_parameters(slab_scan_path)
+    scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
 
     tile_data = []
     tile_width = None
     tile_height = None
     min_x = None
     min_y = None
-    full_image_coordinates_path = Path(slab_scan_path, "full_image_coordinates.txt")
 
-    if full_image_coordinates_path.exists():
-        with open(full_image_coordinates_path, 'r') as data_file:
-            # 000007\020_000007_082_2022-04-03T0154134018404.png	2014641.659	915550.903	0
-            for row in csv.reader(data_file, delimiter="\t"):
-                unix_relative_image_path = row[0].replace('\\', '/')
-                stage_x = int(float(row[1]))
-                stage_y = int(float(row[2]))
-                image_path = Path(slab_scan_path, unix_relative_image_path)
+    for i in range(0, len(sfov_path_list)):
+        image_path = sfov_path_list[i]  # /nrs/.../scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
+        stage_x, stage_y = tuple(int(v) for v in sfov_xy_list[i])  # truncate float x and y values to int
 
-                unix_relative_image_path_match = unix_relative_image_path_pattern.match(unix_relative_image_path)
-                if not unix_relative_image_path_match:
-                    raise RuntimeError(f"failed to parse unix_relative_image_path {unix_relative_image_path} "
-                                       f"in {full_image_coordinates_path}")
+        sfov_pattern_match = SFOV_PATTERN.match(image_path.as_posix())
+        if not sfov_pattern_match:
+            raise RuntimeError(f"failed to parse image_path {image_path}")
 
-                mfov_name = unix_relative_image_path_match.group(1)
+        p_wafer_number = "0" + sfov_pattern_match.group(1)
+        p_scan_number = sfov_pattern_match.group(2)
+        p_slab_number = sfov_pattern_match.group(3)
+        p_mfov_number = sfov_pattern_match.group(4)
+        p_sfov_number = sfov_pattern_match.group(5)
 
-                # Slightly shorten/simplify tile id so that it works better with web UIs.
-                # Technically, scan timestamp could be completely removed because stage_z gets appended to tile_id.
-                # Decided to keep scan time with truncated microseconds in the id because it is nice context to have.
-                # Example shortening: 020_000007_082_2022-04-03T0154134018404 => 020_000007_082_20220403_015413
-                short_sfov_name = unix_relative_image_path_match.group(2).replace("-", "").replace("T", "_")[:-7]
-                tile_id = f"{short_sfov_name}.{stage_z}.0"
+        # w060_magc0002_scan001_m0003_s004
+        tile_id = f"w{p_wafer_number}_magc{p_slab_number}_scan{p_scan_number}_m{p_mfov_number}_s{p_sfov_number}"
 
-                sfov_index_name = unix_relative_image_path_match.group(3)
+        mfov_number = int(p_mfov_number)   # 0022 => 22
 
-                if not tile_width:
-                    image = Image.open(image_path)
-                    tile_width = image.width
-                    tile_height = image.height
-                    min_x = stage_x
-                    min_y = stage_y
-                else:
-                    min_x = min(min_x, stage_x)
-                    min_y = min(min_y, stage_y)
+        if not tile_width:
+            image = Image.open(image_path)
+            tile_width = image.width
+            tile_height = image.height
+            min_x = stage_x
+            min_y = stage_y
+        else:
+            min_x = min(min_x, stage_x)
+            min_y = min(min_y, stage_y)
 
-                tile_data.append(
-                    (tile_id, mfov_name, sfov_index_name, image_path, stage_x, stage_y))
-    else:
-        logger.warning(f'{full_image_coordinates_path} not found')
+        tile_data.append(
+            (tile_id, mfov_number, p_sfov_number, image_path, stage_x, stage_y))
 
     tile_specs = [
         build_tile_spec(image_path=image_path,
@@ -138,13 +132,14 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                         tile_id=tile_id,
                         tile_width=tile_width,
                         tile_height=tile_height,
-                        mfov_name=mfov_name,
+                        layout=layout,
+                        mfov_number=mfov_number,
                         sfov_index_name=sfov_index_name,
                         min_x=min_x,
                         min_y=min_y,
                         scan_fit_parameters=scan_fit_parameters,
                         margin=400)
-        for (tile_id, mfov_name, sfov_index_name, image_path, stage_x, stage_y) in sorted(tile_data)
+        for (tile_id, mfov_number, sfov_index_name, image_path, stage_x, stage_y) in sorted(tile_data)
     ]
 
     logger.info(f'build_tile_specs_for_slab_scan: loaded {len(tile_specs)} tile specs from {slab_scan_path}')
@@ -164,18 +159,50 @@ def get_stack_metadata_or_none(render: Render,
 
 def import_slab_stacks_for_wafer(render_ws_host: str,
                                  render_owner: str,
-                                 wafer_info: WaferInfo,
-                                 import_scan_name_list: list[str],
-                                 import_project_name_list: list[str]):
+                                 wafer_xlog_path: Path,
+                                 import_magc_slab_list: list[int],
+                                 include_scan_list: list[int],
+                                 exclude_scan_list: list[int],
+                                 wafer_id: int,
+                                 number_of_slabs_per_render_project: int):
 
     func_name = "import_slab_stacks_for_wafer"
 
-    for slab_group in wafer_info.slab_group_list:
-        project_name = slab_group.to_render_project_name()
+    logger.info(f"{func_name}: opening {wafer_xlog_path}")
 
-        if len(import_project_name_list) > 0 and project_name not in import_project_name_list:
-            logger.debug(f'{func_name}: ignoring slabs for project {project_name}')
-            continue
+    if wafer_xlog_path.exists():
+        xlog = xarray.open_zarr(wafer_xlog_path)
+    else:
+        raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
+
+    logger.info(f"{func_name}: loading slab info, wafer_id={wafer_id}, number_of_slabs_per_group={number_of_slabs_per_render_project}")
+
+    slab_group_list = load_slab_info(xlog=xlog,
+                                     wafer_id=wafer_id,
+                                     number_of_slabs_per_group=number_of_slabs_per_render_project)
+
+    logger.info(f"{func_name}: loaded {len(slab_group_list)} slab groups")
+
+    if len(import_magc_slab_list) > 0:
+        logger.info(f"{func_name}: looking for magc slabs {import_magc_slab_list}")
+
+        filtered_slab_group_list: list[ContiguousOrderedSlabGroup] = []
+        for slab_group in slab_group_list:
+            filtered_slab_group = ContiguousOrderedSlabGroup(ordered_slabs=[])
+            for slab_info in slab_group.ordered_slabs:
+                if slab_info.magc_id in import_magc_slab_list:
+                    filtered_slab_group.ordered_slabs.append(slab_info)
+            if len(filtered_slab_group.ordered_slabs) > 0:
+                filtered_slab_group_list.append(filtered_slab_group)
+
+        if len(filtered_slab_group_list) > 0:
+            slab_group_list = filtered_slab_group_list
+            logger.info(f"{func_name}: filtered down to {len(slab_group_list)} slab groups")
+        else:
+            raise RuntimeError(f"no slabs found with magc ids {import_magc_slab_list}")
+
+    for slab_group in slab_group_list:
+        project_name = slab_group.to_render_project_name(number_of_slabs_per_render_project)
 
         render_connect_params = {
             "host": render_ws_host,
@@ -184,7 +211,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
             "project": project_name,
             "web_only": True,
             "validate_client": False,
-            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "client_scripts": "/groups/hess/hesslab/render/client_scripts",
             "memGB": "1G"
         }
 
@@ -198,32 +225,99 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
             stack = slab_info.stack_name
             stack_is_in_loading_state = False
             z = 1
+            scan_list = []
 
-            for scan_path in wafer_info.scan_paths:
-                # scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_003/wafer_53_scan_003_20220501_08-46-34
-                if len(import_scan_name_list) == 0 or scan_path.parent.name in import_scan_name_list:
-                    slab_scan_path = Path(scan_path, slab_info.dir_name)
-                    tile_specs = build_tile_specs_for_slab_scan(slab_scan_path, z)
+            logger.info(f'{func_name}: building layout for stack {stack}')
 
-                    if len(tile_specs) > 0:
+            mfov_position_list = slab_info.build_mfov_position_list(xlog=xlog)
+            mfov_column_group = build_mfov_column_group(mfov_position_list,
+                                                        NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y)
+            stack_layout = FieldOfViewLayout(mfov_column_group, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
-                        if not stack_is_in_loading_state:
-                            ensure_stack_is_in_loading_state(render=render,
-                                                             stack=stack,
-                                                             wafer_info=wafer_info)
-                            stack_is_in_loading_state = True
-
-                        tile_id_range = f'{tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}'
-                        logger.info(f"{func_name}: saving tiles {tile_id_range} in stack {stack}")
-                        render_api.save_tile_specs(stack=stack,
-                                                   tile_specs=tile_specs,
-                                                   derive_data=True)
-                        z += 1
+            if len(include_scan_list) > 0:
+                # build scan list by looking for first mfov timestamps for explicitly included scans
+                for scan in include_scan_list:
+                    first_mfov_scan_timestamp = get_timestamp(xlog=xlog, scan=scan, slab=slab_info.magc_id, mfov=slab_info.first_mfov)
+                    if first_mfov_scan_timestamp is not None:
+                        scan_list.append(scan)
                     else:
-                        logger.debug(f'{func_name}: no tile specs in {scan_path.name} for stack {stack}')
+                        logger.warning(f'{func_name}: scan {scan} not found for stack {stack}')
+            else:
+                # build scan list by looking for first mfov timestamps for all scans and ignoring excluded scans
+                for scan in range(0, MAX_NUMBER_OF_SCANS):
+                    first_mfov_scan_timestamp = get_timestamp(xlog=xlog, scan=scan, slab=slab_info.magc_id, mfov=slab_info.first_mfov)
+                    if first_mfov_scan_timestamp is not None:
+                        if scan not in exclude_scan_list:
+                            scan_list.append(scan)
+                    else:
+                        break
 
+            if len(scan_list) == 0:
+                logger.warning(f'{func_name}: found no scans to import for stack {stack}')
+                continue
+
+            logger.info(f'{func_name}: found {len(scan_list)} scans to import for stack {stack}')
+
+            for scan in scan_list:
+                slab_scan_sfov_path_list: list[Path] = []
+                slab_scan_sfov_xy_list: list[tuple[int, int]] = []
+                for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
+                    mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
+                                                                      scan=scan,
+                                                                      slab=slab_info.magc_id,
+                                                                      mfov=mfov)
+
+                    # change //nearline-msem.int.janelia.org/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
+                    # to     /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
+                    slab_scan_sfov_path_list.extend(
+                        [Path(str(mp).replace("//nearline-msem.int.janelia.org", "/nrs")) for mp in mfov_path_list]
+                    )
+
+                    slab_scan_sfov_xy_list.extend(mfov_xys)
+
+                logger.info(f"{func_name}: loaded {len(slab_scan_sfov_path_list)} paths and xys for "
+                            f"{stack} scan {scan}, mfovs {slab_info.first_mfov} to {slab_info.last_mfov}, "
+                            f"first path is {slab_scan_sfov_path_list[0]}, first xy is {slab_scan_sfov_xy_list[0]}")
+
+                first_sfov_path = slab_scan_sfov_path_list[0]
+                if not first_sfov_path.exists():
+                    logger.warning(f"{func_name}: skipping import of scan {scan} because {first_sfov_path} is missing")
+                    continue
+
+                # scan_sfov_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
+                # slab_scan_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010
+                slab_scan_path = slab_scan_sfov_path_list[0].parent.parent.parent.parent.parent
+
+                fit_parameters_path = build_fit_parameters_path(slab_scan_path)
+                if not fit_parameters_path.exists():
+                    logger.warning(f"{func_name}: skipping import of scan {scan} because {fit_parameters_path} is missing")
+                    continue
+
+                tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
+                                                            sfov_path_list=slab_scan_sfov_path_list,
+                                                            sfov_xy_list=slab_scan_sfov_xy_list,
+                                                            stage_z=z,
+                                                            layout=stack_layout)
+
+                if len(tile_specs) > 0:
+
+                    if not stack_is_in_loading_state:
+                        # TODO: parse resolution from wafer xlog
+                        ensure_stack_is_in_loading_state(render=render,
+                                                         stack=stack,
+                                                         resolution_x=8.0,
+                                                         resolution_y=8.0,
+                                                         resolution_z=8.0)
+                        stack_is_in_loading_state = True
+
+                    tile_id_range = f'{tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}'
+                    logger.info(f"{func_name}: saving tiles {tile_id_range} in stack {stack}")
+                    render_api.save_tile_specs(stack=stack,
+                                               tile_specs=tile_specs,
+                                               derive_data=True)
+                    z += 1
                 else:
-                    logger.debug(f'{func_name}: ignoring {scan_path.name} for stack {stack}')
+                    logger.debug(f'{func_name}: no tile specs in {slab_scan_path.name} for stack {stack}')
 
             if stack_is_in_loading_state:
                 renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
@@ -231,7 +325,10 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
 def ensure_stack_is_in_loading_state(render: Render,
                                      stack: str,
-                                     wafer_info: WaferInfo) -> None:
+                                     resolution_x: float,
+                                     resolution_y: float,
+                                     resolution_z: float) -> None:
+
     stack_metadata = get_stack_metadata_or_none(render=render, stack_name=stack)
     if stack_metadata is None:
         # TODO: remove render-python hack
@@ -241,17 +338,16 @@ def ensure_stack_is_in_loading_state(render: Render,
         renderapi.stack.create_stack(stack,
                                      render=render,
                                      createTimestamp=create_timestamp,
-                                     stackResolutionX=wafer_info.resolution[0],
-                                     stackResolutionY=wafer_info.resolution[1],
-                                     stackResolutionZ=wafer_info.resolution[2])
+                                     stackResolutionX=resolution_x,
+                                     stackResolutionY=resolution_y,
+                                     stackResolutionZ=resolution_z)
     else:
         renderapi.stack.set_stack_state(stack, 'LOADING', render=render)
 
 
 def main(arg_list: List[str]):
     parser = argparse.ArgumentParser(
-        description="Parse wafer metadata and convert to tile specs that can be saved to render.",
-        parents=[build_wafer_info_parent_parser()]
+        description="Parse wafer metadata and convert to tile specs that can be saved to render."
     )
     parser.add_argument(
         "--render_host",
@@ -264,32 +360,54 @@ def main(arg_list: List[str]):
         required=True,
     )
     parser.add_argument(
-        "--import_scan_name",
-        help="If specified, build wafer info using all non-excluded scans but only derive and import "
-             "tile specs for these scans (e.g. scan_001)",
+        "--path_xlog",
+        help="Path of the wafer xarray (e.g. /groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr)",
+        required=True,
+    )
+    parser.add_argument(
+        "--import_magc_slab",
+        help="If specified, only import tile specs for slabs with these magc ids (e.g. 399)",
+        type=int,
         nargs='+',
         default=[]
     )
     parser.add_argument(
-        "--import_project_name",
-        help="If specified, build wafer info using all non-excluded scans but only derive and import "
-             "tile specs for these projects (e.g. cut_400_to_402)",
+        "--include_scan",
+        help="Only include these scans from the render stacks (e.g. 5 6 for testing).  When specified, exclude_scan is ignored.",
+        type=int,
         nargs='+',
         default=[]
     )
+    # NOTE: to exclude entire slabs, we decided to simply delete the stack after import
+    parser.add_argument(
+        "--exclude_scan",
+        help="Exclude these scans from the render stacks (e.g. 0 1 2 3 7 18)",
+        type=int,
+        nargs='+',
+        default=[]
+    )
+    parser.add_argument(
+        "--wafer_id",
+        help="Wafer identifier (e.g. 60)",
+        type=int,
+        required=True
+    )
+    parser.add_argument(
+        "--number_of_slabs_per_render_project",
+        help="Number of slabs to group together into one render project",
+        type=int,
+        default=10
+    )
     args = parser.parse_args(args=arg_list)
-
-    wafer_info = load_wafer_info(wafer_base_path=Path(args.wafer_base_path),
-                                 number_of_slabs_per_group=args.number_of_slabs_per_render_project,
-                                 exclude_scan_name_list=args.exclude_scan_name)
-    logger.info(f"loaded:")
-    wafer_info.print_me()
 
     import_slab_stacks_for_wafer(render_ws_host=args.render_host,
                                  render_owner=args.render_owner,
-                                 wafer_info=wafer_info,
-                                 import_scan_name_list=args.import_scan_name,
-                                 import_project_name_list=args.import_project_name)
+                                 wafer_xlog_path=Path(args.path_xlog),
+                                 import_magc_slab_list=args.import_magc_slab,
+                                 include_scan_list=args.include_scan,
+                                 exclude_scan_list=args.exclude_scan,
+                                 wafer_id=args.wafer_id,
+                                 number_of_slabs_per_render_project=args.number_of_slabs_per_render_project)
 
 
 if __name__ == '__main__':
@@ -299,15 +417,20 @@ if __name__ == '__main__':
     init_logger(__file__)
     logging.getLogger("renderapi").setLevel(logging.DEBUG)
 
+    # to see more log data, set root level to debug
+    # logging.getLogger().setLevel(logging.DEBUG)
+
     # noinspection PyBroadException
     try:
         main(sys.argv[1:])
         # main([
         #     "--render_host", "10.40.3.113",
         #     "--render_owner", "trautmane",
-        #     "--wafer_base_path", "/nrs/hess/render/raw/wafer_53",
-        #     "--exclude_scan_name", "scan_000",
-        #     "--import_scan_name", "scan_001"
+        #     "--wafer_id", "60",
+        #     "--path_xlog", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr",
+        #     "--import_magc_slab", "399",
+        #     # "--include_scan", "6",
+        #     "--exclude_scan", "0", "1", "2", "3", "7", "18"
         # ])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
