@@ -15,13 +15,22 @@ if TYPE_CHECKING:
 
 
 def get_all_magc_ids(xlog: xr.Dataset) -> np.ndarray:
-    """Gets all MagC IDs of the wafer."""
+    """Gets all MagC IDs of the wafer.
+    
+    Note that MagC IDs
+        are not guaranteed to be contiguous, e.g., [0,1,3,5]
+        and do not necessarily start at 0.
+        Therefore use
+            for magc_id in get_all_magc_ids(xlog)
+        instead of
+            for magc_id in range(len(get_all_magc_ids(xlog)))
+    """
     return xlog[XDim.SLAB].values
 
 
 def get_serial_ids(
     xlog: xr.Dataset, magc_ids: list[int] | np.ndarray
-) -> int | None | list[int | None]:
+) -> list[int | None]:
     """Returns the serial IDs of slabs identified by their MagC IDs.
 
     If a magc_id does not have a serial ID, then returns None.

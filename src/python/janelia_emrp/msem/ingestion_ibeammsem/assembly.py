@@ -11,15 +11,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dask import bag
 from distributed import Client
-from matplotlib.transforms import Affine2D
-from skimage.io import imread
-from skimage.transform import EuclideanTransform
-
 from janelia_emrp.msem.ingestion_ibeammsem.constant import FACTOR_THUMBNAIL, N_BEAMS
 from janelia_emrp.msem.ingestion_ibeammsem.path import get_image_paths, get_slab_path
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
+from matplotlib.transforms import Affine2D
+from skimage.io import imread
+from skimage.transform import EuclideanTransform
 
 matplotlib.use("tkagg")
 
@@ -27,6 +26,23 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import xarray as xr
+
+
+def get_max_scans(xlog: xr.Dataset) -> int:
+    """Gets the maximum number of scans.
+
+    The xlog is conservatively over-dimensioned upfront along XDim.SCAN
+        to accommodate all anticipated scans.
+
+    The prediction of the number of scans is made by IBEAM-MSEM operators
+        considering the nominal slab thickness
+        and the material removal thickness at every scan.
+
+    Note that scans with strictly negative labels exist,
+        but they are internals of the IBEAM-MSEM process
+        and must not be ingested.
+    """
+    return 1 + xlog[XDim.SCAN].max().values.item()
 
 
 def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:

@@ -8,19 +8,23 @@ from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_path
 from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_serial_ids, get_region_ids
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
 
-WAFER_NAME_LEN = 2   # wafers 60 and 61
 SERIAL_NAME_LEN = 3  # 400+ slabs per wafer
 REGION_NAME_LEN = 2  # usually only a few regions per slab, but allow for up to 99
 
-MAX_NUMBER_OF_MFOVS = 100
 MAX_NUMBER_OF_SCANS = 500
 
 @dataclass
 class SlabInfo:
-    wafer_id: int
-    serial_id: int                                     # order in which the slabs were physically cut
+    wafer_id: str
+    serial_id: int
+    """order in which the slabs were physically cut"""
+    magc_id: int = field(compare=False)
+    """magc ID.
+    
+    order in which the slabs were originally defined by the user
+    with the MagFinder plugin in the .magc file
+    """
     region: int
-    magc_id: int = field(compare=False)                # order in which the slabs were originally defined by the user with the MagFinder plugin in the .magc file
     first_mfov: int = field(compare=False)
     last_mfov: int = field(compare=False)
     serial_name: str = field(init=False, repr=False)
@@ -28,7 +32,7 @@ class SlabInfo:
 
     def __post_init__(self):
         self.serial_name = f"{self.serial_id:0{SERIAL_NAME_LEN}}"
-        self.stack_name = f"w{self.wafer_id:0{WAFER_NAME_LEN}}_s{self.serial_name}_r{self.region:0{REGION_NAME_LEN}}"
+        self.stack_name = f"w{self.wafer_id}_s{self.serial_name}_r{self.region:0{REGION_NAME_LEN}}"
 
     def build_mfov_position_list(self,
                                  xlog: xarray.Dataset,
@@ -59,16 +63,14 @@ class ContiguousOrderedSlabGroup:
 
 
 def load_slab_info(xlog: xarray.Dataset,
-                   wafer_id: int,
+                   wafer_id: str,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
 
     magc_ids = get_all_magc_ids(xlog=xlog).tolist()
-    serial_ids = get_serial_ids(xlog=xlog, magc_ids=magc_ids)
 
     slabs: list[SlabInfo] = []
-    for i in range(len(magc_ids)):
-        id_serial=serial_ids[i]
-        slab = magc_ids[i]
+    for slab in magc_ids:
+        id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
         region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
         id_region = region_ids[0]
@@ -128,7 +130,7 @@ def main(argv: list[str]):
     print(f"loading slab info with wafer_id {argv[2]} and {argv[3]} number_of_slabs_per_group ...")
     number_of_slabs_per_group=int(argv[3])
     slab_groups = load_slab_info(xlog=xlog,
-                                 wafer_id=int(argv[2]),
+                                 wafer_id=argv[2],
                                  number_of_slabs_per_group=number_of_slabs_per_group)
     for slab_group in slab_groups:
         print(f"render project: {slab_group.to_render_project_name(number_of_slabs_per_group)} "
