@@ -15,7 +15,12 @@ MAX_NUMBER_OF_SCANS = 500
 
 @dataclass
 class SlabInfo:
-    wafer_id: str
+    wafer_short_prefix: str
+    """short prefix for wafer that gets prepended to all project and stack names
+    
+    For data sets that only have one wafer, this should be an empty string.
+    For data sets with multiple wafers, this should be something like 'w60_'.
+    """
     serial_id: int
     """order in which the slabs were physically cut"""
     magc_id: int = field(compare=False)
@@ -32,7 +37,7 @@ class SlabInfo:
 
     def __post_init__(self):
         self.serial_name = f"{self.serial_id:0{SERIAL_NAME_LEN}}"
-        self.stack_name = f"w{self.wafer_id}_s{self.serial_name}_r{self.region:0{REGION_NAME_LEN}}"
+        self.stack_name = f"{self.wafer_short_prefix}s{self.serial_name}_r{self.region:0{REGION_NAME_LEN}}"
 
     def build_mfov_position_list(self,
                                  xlog: xarray.Dataset,
@@ -59,11 +64,11 @@ class ContiguousOrderedSlabGroup:
         first_slab = self.ordered_slabs[0]
         first_group_serial_id = int((first_slab.serial_id / slabs_per_group)) * slabs_per_group
         last_group_serial_id = first_group_serial_id + slabs_per_group - 1
-        return f"w{first_slab.wafer_id}_serial_{first_group_serial_id:0{SERIAL_NAME_LEN}}_to_{last_group_serial_id:0{SERIAL_NAME_LEN}}"
+        return f"{first_slab.wafer_short_prefix}serial_{first_group_serial_id:0{SERIAL_NAME_LEN}}_to_{last_group_serial_id:0{SERIAL_NAME_LEN}}"
 
 
 def load_slab_info(xlog: xarray.Dataset,
-                   wafer_id: str,
+                   wafer_short_prefix: str,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
 
     magc_ids = get_all_magc_ids(xlog=xlog).tolist()
@@ -76,7 +81,7 @@ def load_slab_info(xlog: xarray.Dataset,
         id_region = region_ids[0]
 
         slabs.append(
-            SlabInfo(wafer_id=wafer_id,
+            SlabInfo(wafer_short_prefix=wafer_short_prefix,
                      serial_id=id_serial,
                      region=id_region,
                      magc_id=slab,
@@ -87,7 +92,7 @@ def load_slab_info(xlog: xarray.Dataset,
             if region_ids[j] != id_region:
                 id_region = region_ids[j]
                 slabs.append(
-                    SlabInfo(wafer_id=wafer_id,
+                    SlabInfo(wafer_short_prefix=wafer_short_prefix,
                              serial_id=id_serial,
                              region=id_region,
                              magc_id=slab,
@@ -127,10 +132,10 @@ def main(argv: list[str]):
     print(f"opening {argv[1]} ...")
     xlog = xarray.open_zarr(argv[1])
 
-    print(f"loading slab info with wafer_id {argv[2]} and {argv[3]} number_of_slabs_per_group ...")
+    print(f"loading slab info with wafer_short_prefix {argv[2]} and {argv[3]} number_of_slabs_per_group ...")
     number_of_slabs_per_group=int(argv[3])
     slab_groups = load_slab_info(xlog=xlog,
-                                 wafer_id=argv[2],
+                                 wafer_short_prefix=argv[2],
                                  number_of_slabs_per_group=number_of_slabs_per_group)
     for slab_group in slab_groups:
         print(f"render project: {slab_group.to_render_project_name(number_of_slabs_per_group)} "
@@ -143,5 +148,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         main(sys.argv)
     else:
-        print("USAGE: slab_info.py <xlog path> <wafer id> <number_of_slabs_per_group>")
-        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "60", "10"])
+        print("USAGE: slab_info.py <xlog_path> <wafer_short_prefix> <number_of_slabs_per_group>")
+        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "w60_", "10"])
