@@ -163,7 +163,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                  import_magc_slab_list: list[int],
                                  include_scan_list: list[int],
                                  exclude_scan_list: list[int],
-                                 wafer_id: int,
+                                 wafer_id: str,
                                  number_of_slabs_per_render_project: int):
 
     func_name = "import_slab_stacks_for_wafer"
@@ -392,7 +392,7 @@ def main(arg_list: List[str]):
     parser.add_argument(
         "--wafer_id",
         help="Wafer identifier (e.g. 60)",
-        type=int,
+        type=str,
         required=True
     )
     parser.add_argument(
