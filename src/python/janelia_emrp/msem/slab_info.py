@@ -70,7 +70,7 @@ def load_slab_info(xlog: xarray.Dataset,
 
     slabs: list[SlabInfo] = []
     for slab in magc_ids:
-        id_serial=get_serial_ids(xlog=xlog,magc_ids=slab)[0]
+        id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
         region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
         id_region = region_ids[0]
