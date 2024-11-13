@@ -233,7 +233,7 @@ class FieldOfViewLayout:
 
     def row_and_col(self,
                     mfov_number: int,
-                    sfov_index_name: str) -> (int, int):
+                    sfov_index_name: str) -> Tuple[int, int]:
         row_offset, col_offset = self.mfov_number_to_offsets[mfov_number]
         sfov_row, sfov_col = self.sfov_index_name_to_row_col[sfov_index_name]
         return sfov_row + row_offset, sfov_col + col_offset
