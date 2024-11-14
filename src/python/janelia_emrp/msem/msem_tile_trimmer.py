@@ -78,6 +78,9 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                                     stack_version=stack_version)
 
         z_values = render_request.get_z_values(stack)
+
+        # process 10 z layers at a time to reduce the total number of requests
+        # while ensuring we don't exceed the maximum number of tiles per request (currently 100,000)
         for i in range(0, len(z_values), 10):
             min_z = z_values[i]
             max_z = z_values[min(i + 9, len(z_values) - 1)]
