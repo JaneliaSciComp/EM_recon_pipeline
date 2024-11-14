@@ -1,3 +1,4 @@
+import re
 import sys
 from dataclasses import dataclass, field
 
@@ -5,7 +6,7 @@ import xarray
 
 from janelia_emrp.msem.field_of_view_layout import MFovPosition
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths
-from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_serial_ids, get_region_ids
+from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_serial_ids, get_region_ids, get_magc_ids
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
 
 SERIAL_NAME_LEN = 3  # 400+ slabs per wafer
@@ -52,7 +53,6 @@ class SlabInfo:
             mfov_position_list.append(MFovPosition(mfov, int(sfov_1_stage_x), int(sfov_1_stage_y)))
 
         return mfov_position_list
-
 
 @dataclass
 class ContiguousOrderedSlabGroup:
@@ -127,6 +127,43 @@ def load_slab_info(xlog: xarray.Dataset,
 
     return slab_groups
 
+# w60_s296_r00...
+STACK_PATTERN = re.compile(r"(.*_)s(\d{3})_r(\d{2}).*")
+
+def build_slab_info_from_stack_name(xlog: xarray.Dataset,
+                                    stack_name: str) -> SlabInfo:
+    # w60_s296_r00
+    stack_pattern_match = STACK_PATTERN.match(stack_name)
+    if not stack_pattern_match:
+        raise RuntimeError(f"failed to parse stack_name {stack_name}")
+
+    wafer_short_prefix = stack_pattern_match.group(1)
+    serial_id = int(stack_pattern_match.group(2))
+    region = int(stack_pattern_match.group(3))
+
+    magc_ids = get_magc_ids(xlog=xlog, serial_ids=[serial_id])
+    if len(magc_ids) != 1:
+        raise RuntimeError(f"failed to find magc_id for serial_id {serial_id}")
+    magc_id = magc_ids[0]
+
+    mfovs = get_mfovs(xlog=xlog, slab=magc_id)
+    region_ids = get_region_ids(xlog=xlog, slab=magc_id, mfovs=mfovs)
+    first_mfov = None
+    last_mfov = None
+    for i in range(len(region_ids)):
+        if region_ids[i] == region:
+            if first_mfov is None:
+                first_mfov = i
+            last_mfov = i
+        elif region_ids[i] > region:
+            break
+
+    return SlabInfo(wafer_short_prefix=wafer_short_prefix,
+                    serial_id=serial_id,
+                    region=region,
+                    magc_id=magc_id,
+                    first_mfov=first_mfov,
+                    last_mfov=last_mfov)
 
 def main(argv: list[str]):
     print(f"opening {argv[1]} ...")
