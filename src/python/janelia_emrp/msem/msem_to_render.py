@@ -104,6 +104,9 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         p_scan_number = sfov_pattern_match.group(1)
         p_slab_number = sfov_pattern_match.group(2)
         p_mfov_number = sfov_pattern_match.group(3)
+
+        # Chose to keep this consistent with the scope file name which means it is a 1-based number.
+        # The xlog data uses 0-based SFOV indices, so need to convert things when using xlog APIs for SFOVs.
         p_sfov_number = sfov_pattern_match.group(4)
 
         # w060_magc0002_scan001_m0003_s004
