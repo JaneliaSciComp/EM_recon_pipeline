@@ -59,6 +59,9 @@ def plot_tissue_sfovs(
     distance.where(np.invert(mask_tissue)).plot.scatter(
         **xy_variables, ax=scatter.axes, c="none", marker="o", edgecolors="k", alpha=0.3
     )
+    scatter.axes.set_aspect(1)
+    scatter.axes.invert_xaxis()
+    scatter.axes.invert_yaxis()
     scatter.figure.suptitle(
         f"Distance transform of tissue SFOVs and excluded non-tissue SFOVs"
         f" | ROI dilation {dilation:.2f} micron"
