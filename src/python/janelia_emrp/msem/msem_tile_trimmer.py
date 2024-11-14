@@ -8,6 +8,7 @@ from typing import List
 import xarray
 
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_roi_sfovs
+from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.slab_info import build_slab_info_from_stack_name
 from janelia_emrp.render.web_service_request import RenderRequest
 from janelia_emrp.root_logger import init_logger
@@ -41,7 +42,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
         logger.info(f"{func_name}: loaded slab_info: {slab_info}")
 
         roi_names = {}
-        total_sfov_count = (slab_info.last_mfov - slab_info.first_mfov + 1) * 91
+        total_sfov_count = (slab_info.last_mfov - slab_info.first_mfov + 1) * N_BEAMS
         for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
             for sfov_id in get_roi_sfovs(xlog=xlog, slab=slab_info.magc_id, mfov=mfov, dilation=dilation):
                 roi_names[f"{mfov:04}_s{sfov_id:03}"] = True

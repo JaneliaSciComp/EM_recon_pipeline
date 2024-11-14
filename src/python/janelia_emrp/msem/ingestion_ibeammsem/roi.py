@@ -69,8 +69,10 @@ def plot_tissue_sfovs(
 def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
     """Returns the IDs of effective slabs in a scan.
 
-    The number of slabs in a scan can be smaller than the total number of slabs:
-        1. some slabs do not have any tissue to be imaged
+    The number of slabs in a scan can be smaller
+        than the total number of slabs physically present on a wafer:
+        1. some slabs do not have any tissue to be imaged.
+            These slabs are not present in the xlog.
         2. some slabs have been entirely milled and they are not imaged any more
     """
     return (
