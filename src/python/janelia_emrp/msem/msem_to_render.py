@@ -103,6 +103,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     min_x = None
     min_y = None
 
+
     for (mfov_id, sfov_id), image_path, (stage_x, stage_y) in zip(
         product(mfovs, range(N_BEAMS)), sfov_path_list, sfov_xy_list
     ):
