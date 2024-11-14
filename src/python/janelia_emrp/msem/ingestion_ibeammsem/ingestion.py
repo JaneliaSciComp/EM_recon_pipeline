@@ -49,7 +49,7 @@ def main(arguments) -> None:
     """See parse_arguments for the arguments."""
     xlog = xr.open_zarr(arguments.path_xlog)
     plot_tissue_sfovs(
-        xlog=xlog, slab=399, dilation=0, marker_size=500, fixed_color="blue"
+        xlog=xlog, slab=399, dilation=0, marker_size=500, fixed_color="blue", off_by=-1
     )
     plot_tissue_sfovs(
         xlog=xlog,

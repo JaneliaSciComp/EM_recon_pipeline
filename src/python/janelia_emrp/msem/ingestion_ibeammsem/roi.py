@@ -51,12 +51,16 @@ def plot_tissue_sfovs(
     dilation: float = 15,
     marker_size: float | None = None,
     fixed_color: str | None = None,
+    off_by: int | None = None,
 ) -> None:
     """Plots the ROI distance transform of SFOVs that are inside the dilated ROI.
 
     If mfovs is None, then use all MFOVs of the slab.
     If fixed_color provided, then tissue SFOVs are colorized with the same color.
         If not, then they are colorized with their distance to nearest ROI boundary.
+
+    off_by: if provided, rolls the SFOV IDs by "off_by".
+        used for debugging to simulate e.g. off-by-one ID errors
     """
     mfovs = np.asarray(mfovs) if mfovs is not None else None
     xy_variables = dict(x=XVar.X_REFERENCE, y=XVar.Y_REFERENCE)
@@ -64,6 +68,8 @@ def plot_tissue_sfovs(
         slab=slab, mfov=mfovs if mfovs is not None else slice(0, None)
     )
     mask_tissue = distance[XVar.DISTANCE_ROI] < dilation
+    if off_by is not None:
+        mask_tissue = mask_tissue.roll(shifts={XDim.SFOV: off_by})
     params_plot = dict(s=marker_size, marker="s")
     scatter = distance.where(mask_tissue).plot.scatter(
         **xy_variables,
