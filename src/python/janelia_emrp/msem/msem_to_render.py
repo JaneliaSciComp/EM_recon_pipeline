@@ -79,6 +79,9 @@ SFOV_PATTERN = re.compile(r".*/scan_(\d{3})/slabs/slab_(\d{4})/mfovs/mfov_(\d{4}
 
 
 def build_tile_specs_for_slab_scan(slab_scan_path: Path,
+                                   scan: int,
+                                   slab: int,
+                                   mfovs: list[int],
                                    sfov_path_list: list[Path],
                                    sfov_xy_list: list[tuple[int, int]],
                                    stage_z: int,
@@ -306,6 +309,9 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                     continue
 
                 tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
+                                                            scan=scan,
+                                                            slab=slab_info.magc_id,
+                                                            mfovs=slab_info.mfovs,
                                                             sfov_path_list=slab_scan_sfov_path_list,
                                                             sfov_xy_list=slab_scan_sfov_xy_list,
                                                             stage_z=z,

@@ -53,6 +53,11 @@ class SlabInfo:
             mfov_position_list.append(MFovPosition(mfov, int(sfov_1_stage_x), int(sfov_1_stage_y)))
 
         return mfov_position_list
+    
+    @property
+    def mfovs(self)->list[int]:
+        """MFOV IDs of the slab."""
+        return list(range(self.first_mfov, self.last_mfov + 1))
 
 @dataclass
 class ContiguousOrderedSlabGroup:
