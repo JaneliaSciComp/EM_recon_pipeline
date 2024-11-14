@@ -45,19 +45,41 @@ def get_roi_sfovs(
 
 
 def plot_tissue_sfovs(
-    xlog: xr.Dataset, slab: int, mfov: int | None = None, dilation: float = 15
+    xlog: xr.Dataset,
+    slab: int,
+    mfovs: list[int] | np.ndarray | None = None,
+    dilation: float = 15,
+    marker_size: float | None = None,
+    fixed_color: str | None = None,
 ) -> None:
-    """Plots the ROI distance transform of SFOVs that are inside the dilated ROI."""
+    """Plots the ROI distance transform of SFOVs that are inside the dilated ROI.
+
+    If mfovs is None, then use all MFOVs of the slab.
+    If fixed_color provided, then tissue SFOVs are colorized with the same color.
+        If not, then they are colorized with their distance to nearest ROI boundary.
+    """
+    mfovs = np.asarray(mfovs) if mfovs is not None else None
     xy_variables = dict(x=XVar.X_REFERENCE, y=XVar.Y_REFERENCE)
     distance = xlog[[*xy_variables.values(), XVar.DISTANCE_ROI]].sel(
-        slab=slab, mfov=mfov or slice(0, None)
+        slab=slab, mfov=mfovs if mfovs is not None else slice(0, None)
     )
     mask_tissue = distance[XVar.DISTANCE_ROI] < dilation
+    params_plot = dict(s=marker_size, marker="s")
     scatter = distance.where(mask_tissue).plot.scatter(
-        **xy_variables, hue=XVar.DISTANCE_ROI, cmap="jet"
+        **xy_variables,
+        hue=XVar.DISTANCE_ROI if fixed_color is None else None,
+        c=fixed_color,
+        cmap="jet",
+        alpha=0.5,
+        **params_plot,
     )
     distance.where(np.invert(mask_tissue)).plot.scatter(
-        **xy_variables, ax=scatter.axes, c="none", marker="o", edgecolors="k", alpha=0.3
+        **xy_variables,
+        ax=scatter.axes,
+        c="none",
+        edgecolors="k",
+        alpha=0.3,
+        **params_plot,
     )
     scatter.axes.set_aspect(1)
     scatter.axes.invert_xaxis()
