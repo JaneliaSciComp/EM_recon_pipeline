@@ -6,6 +6,7 @@ import time
 import traceback
 from pathlib import Path
 from typing import List, Any, Optional
+from itertools import product
 
 import renderapi
 import xarray
@@ -18,6 +19,7 @@ from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov_column_group, \
     NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y, NINETY_ONE_SFOV_NAME_TO_ROW_COL
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths, get_max_scans
+from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_timestamp
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, \
     build_fit_parameters_path, WAFER_60_61_SCAN_FIT_PARAMETERS
@@ -37,7 +39,7 @@ def build_tile_spec(image_path: Path,
                     tile_width: int,
                     tile_height: int,
                     layout: FieldOfViewLayout,
-                    mfov_number: int,
+                    mfov_id: int,
                     sfov_index_name: str,
                     min_x: int,
                     min_y: int,
@@ -45,7 +47,7 @@ def build_tile_spec(image_path: Path,
                     margin: int) -> dict[str, Any]:
 
     section_id = f'{stage_z}.0'
-    image_row, image_col = layout.row_and_col(mfov_number, sfov_index_name)
+    image_row, image_col = layout.row_and_col(mfov_id, sfov_index_name)
 
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
 
@@ -72,10 +74,6 @@ def build_tile_spec(image_path: Path,
     }
 
     return tile_spec
-
-
-# /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
-SFOV_PATTERN = re.compile(r".*/scan_(\d{3})/slabs/slab_(\d{4})/mfovs/mfov_(\d{4})/sfov_(\d{3}).png$")
 
 
 def build_tile_specs_for_slab_scan(slab_scan_path: Path,
@@ -105,23 +103,18 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     min_x = None
     min_y = None
 
-    for i in range(0, len(sfov_path_list)):
-        image_path = sfov_path_list[i]  # /nrs/.../scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
-        stage_x, stage_y = tuple(int(v) for v in sfov_xy_list[i])  # truncate float x and y values to int
-
-        sfov_pattern_match = SFOV_PATTERN.match(image_path.as_posix())
-        if not sfov_pattern_match:
-            raise RuntimeError(f"failed to parse image_path {image_path}")
-
-        p_scan_number = sfov_pattern_match.group(1)
-        p_slab_number = sfov_pattern_match.group(2)
-        p_mfov_number = sfov_pattern_match.group(3)
-        p_sfov_number = sfov_pattern_match.group(4) - 1
-
-        # w060_magc0002_scan001_m0003_s004
-        tile_id = f"{wafer_short_prefix}magc{p_slab_number}_scan{p_scan_number}_m{p_mfov_number}_s{p_sfov_number}"
-
-        mfov_number = int(p_mfov_number)   # 0022 => 22
+    for (mfov_id, sfov_id), image_path, (stage_x, stage_y) in zip(
+        product(mfovs, range(N_BEAMS)), sfov_path_list, sfov_xy_list
+    ):
+        # w060_magc0002_scan001_m0003_s04
+        tile_id = "_".join(
+            (
+                f"{wafer_short_prefix}magc{slab:04}",
+                f"scan{scan:04}",
+                f"m{mfov_id:04}",
+                f"s{sfov_id:02}",
+            )
+        )
 
         if not tile_width:
             image = Image.open(image_path)
@@ -134,7 +127,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
             min_y = min(min_y, stage_y)
 
         tile_data.append(
-            (tile_id, mfov_number, p_sfov_number, image_path, stage_x, stage_y))
+            (tile_id, mfov_id, sfov_id, image_path, stage_x, stage_y))
 
     tile_specs = [
         build_tile_spec(image_path=image_path,
@@ -145,13 +138,13 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                         tile_width=tile_width,
                         tile_height=tile_height,
                         layout=layout,
-                        mfov_number=mfov_number,
+                        mfov_id=mfov_id,
                         sfov_index_name=sfov_index_name,
                         min_x=min_x,
                         min_y=min_y,
                         scan_fit_parameters=scan_fit_parameters,
                         margin=400)
-        for (tile_id, mfov_number, sfov_index_name, image_path, stage_x, stage_y) in sorted(tile_data)
+        for (tile_id, mfov_id, sfov_index_name, image_path, stage_x, stage_y) in sorted(tile_data)
     ]
 
     logger.info(f'build_tile_specs_for_slab_scan: loaded {len(tile_specs)} tile specs from {slab_scan_path}')
