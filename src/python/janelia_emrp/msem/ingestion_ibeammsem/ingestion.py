@@ -11,6 +11,7 @@ Slab IDs are MagC IDs by default.
 from __future__ import annotations
 
 import argparse
+import sys
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -47,7 +48,18 @@ matplotlib.use("tkagg")
 def main(arguments) -> None:
     """See parse_arguments for the arguments."""
     xlog = xr.open_zarr(arguments.path_xlog)
-    # id
+    plot_tissue_sfovs(
+        xlog=xlog, slab=399, dilation=0, marker_size=500, fixed_color="blue"
+    )
+    plot_tissue_sfovs(
+        xlog=xlog,
+        slab=399,
+        dilation=0,
+        marker_size=500,
+        fixed_color="blue",
+        mfovs=[0, 1, 7, 8, 9],
+    )
+    sys.exit()    # id
     println(f"{get_all_magc_ids(xlog=xlog) = }")
 
     println(f"{get_serial_ids(xlog=xlog, magc_ids=[12]) = }")
