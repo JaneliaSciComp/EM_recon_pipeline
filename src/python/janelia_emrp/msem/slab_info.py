@@ -56,7 +56,7 @@ class SlabInfo:
     
     @property
     def mfovs(self)->list[int]:
-        """MFOV IDs of the slab."""
+        """MFOV IDs of the SlabInfo."""
         return list(range(self.first_mfov, self.last_mfov + 1))
 
 @dataclass
