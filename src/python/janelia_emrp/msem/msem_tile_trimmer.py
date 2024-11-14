@@ -44,8 +44,9 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
         roi_names = {}
         total_sfov_count = (slab_info.last_mfov - slab_info.first_mfov + 1) * N_BEAMS
         for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
-            for sfov_id in get_roi_sfovs(xlog=xlog, slab=slab_info.magc_id, mfov=mfov, dilation=dilation):
-                roi_names[f"{mfov:04}_s{sfov_id:03}"] = True
+            for zero_based_sfov_id in get_roi_sfovs(xlog=xlog, slab=slab_info.magc_id, mfov=mfov, dilation=dilation):
+                one_based_sfov_id = zero_based_sfov_id + 1 # to keep consistent with the scope SFOV file names
+                roi_names[f"{mfov:04}_s{one_based_sfov_id:03}"] = True
 
         if len(roi_names) == 0:
             logger.warning(f"{func_name}: skipping stack {stack} because no SFOVs are within the ROI, "
