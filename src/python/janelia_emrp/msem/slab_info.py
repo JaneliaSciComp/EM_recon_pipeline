@@ -141,10 +141,10 @@ def build_slab_info_from_stack_name(xlog: xarray.Dataset,
     serial_id = int(stack_pattern_match.group(2))
     region = int(stack_pattern_match.group(3))
 
-    magc_ids = get_magc_ids(xlog=xlog, serial_ids=[serial_id])
-    if len(magc_ids) != 1:
-        raise RuntimeError(f"failed to find magc_id for serial_id {serial_id}")
-    magc_id = magc_ids[0]
+    try:
+        magc_id = get_magc_ids(xlog=xlog, serial_ids=[serial_id])[0]
+    except ValueError as value_error:
+        raise RuntimeError from value_error
 
     mfovs = get_mfovs(xlog=xlog, slab=magc_id)
     region_ids = get_region_ids(xlog=xlog, slab=magc_id, mfovs=mfovs)
