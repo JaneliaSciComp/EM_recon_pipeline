@@ -1,6 +1,5 @@
 import argparse
 import logging
-import re
 import sys
 import time
 import traceback
@@ -11,7 +10,6 @@ import numpy as np
 
 import renderapi
 import xarray
-from PIL import Image
 from renderapi import Render
 from renderapi.errors import RenderError
 
