@@ -103,9 +103,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
 
     tile_data = []
-    min_x = np.inf
-    min_y = np.inf
-
+    min_x, min_y = np.array(sfov_xy_list).min(axis=0)
 
     for (mfov_id, sfov_id), image_path, (stage_x, stage_y) in zip(
         product(mfovs, range(N_BEAMS)), sfov_path_list, sfov_xy_list
@@ -119,9 +117,6 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                 f"s{sfov_id:02}",
             )
         )
-
-        min_x = min(min_x, stage_x)
-        min_y = min(min_y, stage_y)
 
         tile_data.append(
             (tile_id, mfov_id, sfov_id, image_path, stage_x, stage_y))
