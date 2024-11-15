@@ -138,7 +138,7 @@ def create_tile_id(wafer_short_prefix: str, slab: int, scan: int, mfov: int, sfo
     """
     return "_".join(
         (
-            f"w{wafer_short_prefix}"
+            f"w{wafer_short_prefix}",
             f"magc{slab:04}",
             f"scan{scan:03}",
             f"m{mfov:04}",
