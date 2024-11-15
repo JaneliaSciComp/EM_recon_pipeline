@@ -42,11 +42,17 @@ from janelia_emrp.msem.ingestion_ibeammsem.roi import (
     plot_tissue_sfovs,
 )
 
-matplotlib.use("tkagg")
-
 
 def main(arguments) -> None:
     """See parse_arguments for the arguments."""
+
+    """See parse_arguments for the arguments.
+    We use matplotlib tkagg backend for interactive plots.
+        The call for that use is encapsulated here to have a limited scope,
+        because the upstream ingestion application runs headless
+        and therefore cannot use tkagg.
+    """
+    matplotlib.use("tkagg")
     xlog = xr.open_zarr(arguments.path_xlog)
     plot_tissue_sfovs(
         xlog=xlog, slab=399, dilation=0, marker_size=500, fixed_color="blue", off_by=-1

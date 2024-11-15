@@ -6,7 +6,6 @@ import itertools
 from functools import partial
 from typing import TYPE_CHECKING
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from dask import bag
@@ -19,9 +18,6 @@ from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from matplotlib.transforms import Affine2D
 from skimage.io import imread
 from skimage.transform import EuclideanTransform
-
-#matplotlib.use("tkagg")
-matplotlib.use("Agg") # avoid "Cannot load backend 'tkagg' which requires the 'tk' interactive framework" error
 
 if TYPE_CHECKING:
     from pathlib import Path
