@@ -114,7 +114,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         tile_id = "_".join(
             (
                 f"{wafer_short_prefix}magc{slab:04}",
-                f"scan{scan:04}",
+                f"scan{scan:03}",
                 f"m{mfov_id:04}",
                 f"s{sfov_id:02}",
             )
