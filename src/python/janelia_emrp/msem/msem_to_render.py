@@ -258,7 +258,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                     str(get_slab_path(xlog=xlog, scan=scan,slab=slab_info.magc_id))
                     .replace("//nearline-msem.int.janelia.org", "/nrs")
                 )
-                for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
+                for mfov in slab_info.mfovs:
                     mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
                                                                       scan=scan,
                                                                       slab=slab_info.magc_id,
