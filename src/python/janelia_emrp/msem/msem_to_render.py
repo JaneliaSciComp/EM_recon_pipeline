@@ -289,7 +289,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
                 # scan_sfov_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
                 # slab_scan_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010
-                slab_scan_path = slab_scan_sfov_path_list[0].parent.parent.parent.parent.parent
+                slab_scan_path = slab_scan_sfov_path_list[0].parents[4]
 
                 fit_parameters_path = build_fit_parameters_path(slab_scan_path)
                 if not fit_parameters_path.exists():
