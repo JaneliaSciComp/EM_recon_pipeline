@@ -111,7 +111,8 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         # w060_magc0002_scan001_m0003_s04
         tile_id = "_".join(
             (
-                f"{wafer_short_prefix}magc{slab:04}",
+                f"w{wafer_short_prefix}"
+                f"magc{slab:04}",
                 f"scan{scan:03}",
                 f"m{mfov_id:04}",
                 f"s{sfov_id:02}",
@@ -397,7 +398,7 @@ def main(arg_list: List[str]):
     )
     parser.add_argument(
         "--wafer_short_prefix",
-        help="Short prefix for wafer that gets prepended to all project and stack names (e.g. 'w60_')",
+        help="Short wafer prefix, e.g. '60', so that 'w60_' gets prepended to all project and stack names", 
         type=str,
         default=""
     )
@@ -435,7 +436,7 @@ if __name__ == '__main__':
         # main([
         #     "--render_host", "10.40.3.113",
         #     "--render_owner", "trautmane",
-        #     "--wafer_short_prefix", "w60_",
+        #     "--wafer_short_prefix", "60",
         #     "--path_xlog", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr",
         #     "--import_magc_slab",
         #     "399", # s296
