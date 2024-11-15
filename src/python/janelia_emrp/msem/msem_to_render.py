@@ -119,7 +119,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                         stage_y=stage_y,
                         tile_id=create_tile_id(wafer_short_prefix, slab, scan, mfov, sfov),
                         mfov_id=mfov,
-                        sfov_index_name=sfov,
+                        sfov_index_name=f"{sfov:03}",
                         **fixed_tilespec_params,
         )
         for (mfov, sfov), image_path, (stage_x, stage_y) in zip(
