@@ -254,7 +254,7 @@ def get_effective_scans(xlog: xr.Dataset, slab: int) -> list[int]:
 
     The xlog is overdimensioned along XDim.SCAN,
         therefore many scans are left empty at the upper end.
-    Also, the number of scans is not constant across scans.
+    Also, the number of scans is not constant across slabs.
         Some slabs may have 65 scans, and others 67.
     """
     return (
