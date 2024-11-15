@@ -17,8 +17,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from skimage.io import imshow
-
 from assembly import (
     assemble_mfovs_straight,
     get_slab_rotation,
@@ -27,9 +25,23 @@ from assembly import (
     plot_aligned_slab,
 )
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
-from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_magc_ids, get_region_ids, get_serial_ids
-from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_raw_average, get_raw_stdev, get_timestamp
-from janelia_emrp.msem.ingestion_ibeammsem.path import get_mfov_path, get_sfov_path, get_slab_path, get_thumbnail_path
+from janelia_emrp.msem.ingestion_ibeammsem.id import (
+    get_all_magc_ids,
+    get_magc_ids,
+    get_region_ids,
+    get_serial_ids,
+)
+from janelia_emrp.msem.ingestion_ibeammsem.metrics import (
+    get_raw_average,
+    get_raw_stdev,
+    get_timestamp,
+)
+from janelia_emrp.msem.ingestion_ibeammsem.path import (
+    get_mfov_path,
+    get_sfov_path,
+    get_slab_path,
+    get_thumbnail_path,
+)
 from janelia_emrp.msem.ingestion_ibeammsem.roi import (
     get_distance_to_roi,
     get_mfovs,
@@ -41,12 +53,12 @@ from janelia_emrp.msem.ingestion_ibeammsem.roi import (
     plot_distance_roi,
     plot_tissue_sfovs,
 )
+from skimage.io import imshow
 
 
 def main(arguments) -> None:
-    """See parse_arguments for the arguments."""
-
     """See parse_arguments for the arguments.
+
     We use matplotlib tkagg backend for interactive plots.
         The call for that use is encapsulated here to have a limited scope,
         because the upstream ingestion application runs headless
@@ -65,7 +77,7 @@ def main(arguments) -> None:
         fixed_color="blue",
         mfovs=[0, 1, 7, 8, 9],
     )
-    sys.exit()    # id
+    sys.exit()  # id
     println(f"{get_all_magc_ids(xlog=xlog) = }")
 
     println(f"{get_serial_ids(xlog=xlog, magc_ids=[12]) = }")
