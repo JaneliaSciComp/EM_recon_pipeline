@@ -23,6 +23,9 @@ if [ ! -f "${PIPELINE_JSON}" ]; then
   exit 1
 fi
 
+PIPELINE_BASENAME=$(basename "${PIPELINE_JSON}")
+PIPELINE_BASENAME="${PIPELINE_BASENAME%.json}"
+
 ARGS="--pipelineJson ${PIPELINE_JSON}"
 
 export RUNTIME="243:59"
@@ -41,7 +44,7 @@ JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
 CLASS="org.janelia.render.client.spark.pipeline.AlignmentPipelineClient"
 
 LOG_DIR="${SCRIPT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/pipeline-$(date +"%Y%m%d_%H%M%S")-align.log"
+LOG_FILE="${LOG_DIR}/pipeline-$(date +"%Y%m%d_%H%M%S")-${PIPELINE_BASENAME}.log"
 
 mkdir -p "${LOG_DIR}"
 
