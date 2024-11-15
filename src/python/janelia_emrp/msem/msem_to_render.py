@@ -22,8 +22,8 @@ from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
     get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height, get_effective_scans
 )
+from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
-from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_timestamp
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, \
     build_fit_parameters_path, WAFER_60_61_SCAN_FIT_PARAMETERS
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
@@ -254,18 +254,19 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
             for scan in scans:
                 slab_scan_sfov_path_list: list[Path] = []
                 slab_scan_sfov_xy_list: list[tuple[int, int]] = []
+                # change //nearline-msem.int.janelia.org/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
+                # to     /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
+                slab_scan_path = Path(
+                    str(get_slab_path(xlog=xlog, scan=scan,slab=slab_info.magc_id))
+                    .replace("//nearline-msem.int.janelia.org", "/nrs")
+                )
                 for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
                     mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
                                                                       scan=scan,
                                                                       slab=slab_info.magc_id,
-                                                                      mfov=mfov)
-
-                    # change //nearline-msem.int.janelia.org/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
-                    # to     /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
-                    slab_scan_sfov_path_list.extend(
-                        [Path(str(mp).replace("//nearline-msem.int.janelia.org", "/nrs")) for mp in mfov_path_list]
-                    )
-
+                                                                      mfov=mfov,
+                                                                      slab_path=slab_scan_path)
+                    slab_scan_sfov_path_list.extend(mfov_path_list)
                     slab_scan_sfov_xy_list.extend(mfov_xys)
 
                 logger.info(f"{func_name}: loaded {len(slab_scan_sfov_path_list)} paths and xys for "
@@ -276,10 +277,6 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 if not first_sfov_path.exists():
                     logger.warning(f"{func_name}: skipping import of scan {scan} because {first_sfov_path} is missing")
                     continue
-
-                # scan_sfov_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/slabs/slab_0399/mfovs/mfov_0022/sfov_001.png
-                # slab_scan_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010
-                slab_scan_path = slab_scan_sfov_path_list[0].parents[4]
 
                 fit_parameters_path = build_fit_parameters_path(slab_scan_path)
                 if not fit_parameters_path.exists():
