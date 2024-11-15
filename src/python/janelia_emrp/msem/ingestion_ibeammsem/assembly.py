@@ -242,3 +242,21 @@ def get_SFOV_height(xlog: xr.Dataset) -> int:
     It remains fixed for a wafer.
     """
     return xlog[XDim.Y_SFOV].size
+
+
+def get_effective_scans(xlog: xr.Dataset, slab: int) -> list[int]:
+    """Gets the effective scans of a slab.
+
+    The effective scans are the scans during which the slab was actually acquired.
+
+    The xlog is overdimensioned along XDim.SCAN,
+        therefore many scans are left empty at the upper end.
+    Also, the number of scans is not constant across scans.
+        Some slabs may have 65 scans, and others 67.
+    """
+    return (
+        xlog[XVar.ACQUISITION]
+        .sel(scan=slice(0, None), mfov=0, slab=slab)
+        .dropna(XDim.SCAN)[XDim.SCAN]
+        .values.tolist()
+    )

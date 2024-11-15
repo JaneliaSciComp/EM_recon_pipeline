@@ -20,7 +20,7 @@ from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov_column_group, \
     NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y, NINETY_ONE_SFOV_NAME_TO_ROW_COL
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
-    get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height
+    get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height, get_effective_scans
 )
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_timestamp
@@ -229,8 +229,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
             stack = slab_info.stack_name
             stack_is_in_loading_state = False
             z = 1
-            scan_list = []
-
+                
             logger.info(f'{func_name}: building layout for stack {stack}')
 
             mfov_position_list = slab_info.build_mfov_position_list(xlog=xlog)
@@ -238,31 +237,21 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                                         NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y)
             stack_layout = FieldOfViewLayout(mfov_column_group, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
 
-            if len(include_scan_list) > 0:
-                # build scan list by looking for first mfov timestamps for explicitly included scans
-                for scan in include_scan_list:
-                    first_mfov_scan_timestamp = get_timestamp(xlog=xlog, scan=scan, slab=slab_info.magc_id, mfov=slab_info.first_mfov)
-                    if first_mfov_scan_timestamp is not None:
-                        scan_list.append(scan)
-                    else:
-                        logger.warning(f'{func_name}: scan {scan} not found for stack {stack}')
-            else:
-                # build scan list by looking for first mfov timestamps for all scans and ignoring excluded scans
-                for scan in range(0, n_scans_max):
-                    first_mfov_scan_timestamp = get_timestamp(xlog=xlog, scan=scan, slab=slab_info.magc_id, mfov=slab_info.first_mfov)
-                    if first_mfov_scan_timestamp is not None:
-                        if scan not in exclude_scan_list:
-                            scan_list.append(scan)
-                    else:
-                        break
+            effective_scans: set[int] = set(get_effective_scans(xlog=xlog, slab=slab_info.magc_id))
 
-            if len(scan_list) == 0:
+            for scan in set(include_scan_list) - effective_scans:
+                logger.warning(f'{func_name}: scan {scan} not found for stack {stack}')
+
+            scans: list[int] = sorted(
+                ((set(include_scan_list) or effective_scans) & effective_scans)
+                - set(exclude_scan_list)
+            )
+            if not scans:
                 logger.warning(f'{func_name}: found no scans to import for stack {stack}')
-                continue
 
-            logger.info(f'{func_name}: found {len(scan_list)} scans to import for stack {stack}')
+            logger.info(f'{func_name}: found {len(scans)} scans to import for stack {stack}')
 
-            for scan in scan_list:
+            for scan in scans:
                 slab_scan_sfov_path_list: list[Path] = []
                 slab_scan_sfov_xy_list: list[tuple[int, int]] = []
                 for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
