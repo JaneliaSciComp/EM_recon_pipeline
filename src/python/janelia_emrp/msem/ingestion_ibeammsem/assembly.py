@@ -81,7 +81,7 @@ def get_xys_sfov_and_paths(
         rotation=np.radians(get_slab_rotation(xlog=xlog, scan=scan, slab=slab))
     )(xys_center_rotated)
     xys_top_left_original = xys_center_original - np.array(
-        [xlog[XDim.X_SFOV].size / 2, xlog[XDim.Y_SFOV].size / 2]
+        [get_SFOV_width(xlog) / 2, get_SFOV_height(xlog) / 2]
     )
     return get_image_paths(
         slab_path=get_slab_path(xlog=xlog, scan=scan, slab=slab),
@@ -229,3 +229,19 @@ def plot_aligned_slab(
         sfov_patch.set_transform(transform + ax.transData)
     fig.suptitle("Slab assembled in local space. Recommended for ingestion.")
     plt.show()
+
+
+def get_SFOV_width(xlog: xr.Dataset) -> int:
+    """Gets the width of all SFOV images, in pixels.
+
+    It remains fixed for a wafer.
+    """
+    return xlog[XDim.X_SFOV].size
+
+
+def get_SFOV_height(xlog: xr.Dataset) -> int:
+    """Gets the height of all SFOV images, in pixels.
+
+    It remains fixed for a wafer.
+    """
+    return xlog[XDim.Y_SFOV].size

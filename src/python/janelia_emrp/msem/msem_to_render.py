@@ -7,6 +7,7 @@ import traceback
 from pathlib import Path
 from typing import List, Any, Optional
 from itertools import product
+import numpy as np
 
 import renderapi
 import xarray
@@ -18,7 +19,9 @@ from janelia_emrp.fibsem.render_api import RenderApi
 from janelia_emrp.fibsem.volume_transfer_info import params_to_render_connect
 from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov_column_group, \
     NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y, NINETY_ONE_SFOV_NAME_TO_ROW_COL
-from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths, get_max_scans
+from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
+    get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height
+)
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_timestamp
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, \
@@ -84,7 +87,9 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                                    sfov_xy_list: list[tuple[int, int]],
                                    stage_z: int,
                                    layout: FieldOfViewLayout,
-                                   wafer_short_prefix: str) -> list[dict[str, Any]]:
+                                   wafer_short_prefix: str,
+                                   tile_width: int,
+                                   tile_height: int) -> list[dict[str, Any]]:
     """
     Beware of the indexing mismatch between the ingestion code and the actual file images.
     See comment in path.get_sfov_path.
@@ -98,10 +103,8 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
 
     tile_data = []
-    tile_width = None
-    tile_height = None
-    min_x = None
-    min_y = None
+    min_x = np.inf
+    min_y = np.inf
 
 
     for (mfov_id, sfov_id), image_path, (stage_x, stage_y) in zip(
@@ -117,15 +120,8 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
             )
         )
 
-        if not tile_width:
-            image = Image.open(image_path)
-            tile_width = image.width
-            tile_height = image.height
-            min_x = stage_x
-            min_y = stage_y
-        else:
-            min_x = min(min_x, stage_x)
-            min_y = min(min_y, stage_y)
+        min_x = min(min_x, stage_x)
+        min_y = min(min_y, stage_y)
 
         tile_data.append(
             (tile_id, mfov_id, sfov_id, image_path, stage_x, stage_y))
@@ -191,6 +187,9 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                      number_of_slabs_per_group=number_of_slabs_per_render_project)
 
     logger.info(f"{func_name}: loaded {len(slab_group_list)} slab groups")
+    
+    tile_width = get_SFOV_width(xlog)
+    tile_height = get_SFOV_height(xlog)
 
     if len(import_magc_slab_list) > 0:
         logger.info(f"{func_name}: looking for magc slabs {import_magc_slab_list}")
@@ -310,7 +309,9 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                                             sfov_xy_list=slab_scan_sfov_xy_list,
                                                             stage_z=z,
                                                             layout=stack_layout,
-                                                            wafer_short_prefix=wafer_short_prefix)
+                                                            wafer_short_prefix=wafer_short_prefix,
+                                                            tile_width=tile_width,
+                                                            tile_height=tile_height)
 
                 if len(tile_specs) > 0:
 
