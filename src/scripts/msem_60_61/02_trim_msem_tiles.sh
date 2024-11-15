@@ -24,10 +24,10 @@ shift 3
 RENDER_STACKS="$*"
 
 WAFER_PREFIX="w${WAFER_NUMBER}"
-WAFER_XLOG="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_NUMBER}/xlog/xlog_wafer_${WAFER_NUMBER}.zarr"
+WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_NUMBER}/xlog/xlog_wafer_${WAFER_NUMBER}.zarr"
 
-if [ ! -f "${WAFER_XLOG}" ]; then
-  echo "ERROR: ${WAFER_XLOG} not found"
+if [ ! -d "${WAFER_XLOG_DIR}" ]; then
+  echo "ERROR: ${WAFER_XLOG_DIR} not found"
   exit 1
 fi
 
@@ -43,7 +43,7 @@ EMRP_ROOT="/groups/hess/hesslab/render/git/EM_recon_pipeline"
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/msem_tile_trimmer.py"
-ARGS="${ARGS} --dilation ${DILATION} --path_xlog ${WAFER_XLOG}"
+ARGS="${ARGS} --dilation ${DILATION} --path_xlog ${WAFER_XLOG_DIR}"
 ARGS="${ARGS} --render_host ${RENDER_HOST} --render_owner ${RENDER_OWNER}"
 ARGS="${ARGS} --render_project ${RENDER_PROJECT} --render_stack ${RENDER_STACKS}"
 
