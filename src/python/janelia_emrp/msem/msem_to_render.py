@@ -100,48 +100,51 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
 
     scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
 
-    tile_data = []
     min_x, min_y = np.array(sfov_xy_list).min(axis=0)
-
-    for (mfov_id, sfov_id), image_path, (stage_x, stage_y) in zip(
-        product(mfovs, range(N_BEAMS)), sfov_path_list, sfov_xy_list
-    ):
-        # w060_magc0002_scan001_m0003_s04
-        tile_id = "_".join(
-            (
-                f"w{wafer_short_prefix}"
-                f"magc{slab:04}",
-                f"scan{scan:03}",
-                f"m{mfov_id:04}",
-                f"s{sfov_id:02}",
-            )
-        )
-
-        tile_data.append(
-            (tile_id, mfov_id, sfov_id, image_path, stage_x, stage_y))
+    
+    fixed_tilespec_params = dict(
+        stage_z=stage_z,
+        tile_width=tile_width,
+        tile_height=tile_height,
+        layout=layout,
+        min_x=min_x,
+        min_y=min_y,
+        scan_fit_parameters=scan_fit_parameters,
+        margin=400,
+    )
 
     tile_specs = [
         build_tile_spec(image_path=image_path,
                         stage_x=stage_x,
                         stage_y=stage_y,
-                        stage_z=stage_z,
-                        tile_id=tile_id,
-                        tile_width=tile_width,
-                        tile_height=tile_height,
-                        layout=layout,
-                        mfov_id=mfov_id,
-                        sfov_index_name=sfov_index_name,
-                        min_x=min_x,
-                        min_y=min_y,
-                        scan_fit_parameters=scan_fit_parameters,
-                        margin=400)
-        for (tile_id, mfov_id, sfov_index_name, image_path, stage_x, stage_y) in sorted(tile_data)
+                        tile_id=create_tile_id(wafer_short_prefix, slab, scan, mfov, sfov),
+                        mfov_id=mfov,
+                        sfov_index_name=sfov,
+                        **fixed_tilespec_params,
+        )
+        for (mfov, sfov), image_path, (stage_x, stage_y) in zip(
+            product(mfovs, range(N_BEAMS)), sfov_path_list, sfov_xy_list
+    )
     ]
 
     logger.info(f'build_tile_specs_for_slab_scan: loaded {len(tile_specs)} tile specs from {slab_scan_path}')
 
     return tile_specs
 
+def create_tile_id(wafer_short_prefix: str, slab: int, scan: int, mfov: int, sfov: int)->str:
+    """Creates tile ID.
+    
+    E.g.: w060_magc0002_scan001_m0003_s04
+    """
+    return "_".join(
+        (
+            f"w{wafer_short_prefix}"
+            f"magc{slab:04}",
+            f"scan{scan:03}",
+            f"m{mfov:04}",
+            f"s{sfov:02}",
+        )
+    )
 
 def get_stack_metadata_or_none(render: Render,
                                stack_name: str) -> Optional[dict[str, Any]]:
