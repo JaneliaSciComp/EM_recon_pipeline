@@ -21,7 +21,7 @@ WAFER_NUMBER="${1}"
 shift
 MAGC_SLABS="$*"
 
-WAFER_PREFIX="w${WAFER_NUMBER}"
+WAFER_PREFIX="w${WAFER_NUMBER}_"
 WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_NUMBER}/xlog/xlog_wafer_${WAFER_NUMBER}.zarr"
 
 if [ "${WAFER_NUMBER}" == "60" ]; then

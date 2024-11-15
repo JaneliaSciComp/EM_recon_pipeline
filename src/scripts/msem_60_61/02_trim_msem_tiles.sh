@@ -23,7 +23,7 @@ RENDER_PROJECT="${3}"
 shift 3
 RENDER_STACKS="$*"
 
-WAFER_PREFIX="w${WAFER_NUMBER}"
+WAFER_PREFIX="w${WAFER_NUMBER}_"
 WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_NUMBER}/xlog/xlog_wafer_${WAFER_NUMBER}.zarr"
 
 if [ ! -d "${WAFER_XLOG_DIR}" ]; then
