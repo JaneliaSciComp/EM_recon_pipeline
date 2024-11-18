@@ -111,17 +111,22 @@ def load_slab_info(xlog: xarray.Dataset,
                 slabs[-1].last_mfov = j
 
     if len(magc_ids_without_regions) > 0:
-        print(f"found {len(magc_ids_without_regions)} magc ids without regions: {magc_ids_without_regions}, "
-              f"this occurs when the block is sectioned before the ROI starts")
+        print(
+            f"found {len(magc_ids_without_regions)} magc ids"
+            f" without regions: {magc_ids_without_regions}, "
+            "this occurs when the block is sectioned before/after the ROI starts/ends,"
+        )
 
     if len(slabs) == 0:
         return []
 
-    max_mfov_count = max(mfov_counts)
     mfov_counts = [len(slab.mfovs) for slab in slabs]
     average_mfov_count = sum(mfov_counts) / len(mfov_counts)
-    print(f"found {len(slabs)} region slabs with {max_mfov_count} max mfovs and {round(average_mfov_count)} average mfovs")
-
+    print(
+        f"found {len(slabs)} region slabs"
+        f" with {max(mfov_counts)} max mfovs"
+        f" and {average_mfov_count:.0f} average mfovs"
+    )    
     sorted_slabs = sorted(slabs, key=lambda si: si.stack_name)
 
     slab_group: ContiguousOrderedSlabGroup = ContiguousOrderedSlabGroup(ordered_slabs=[sorted_slabs[0]])
