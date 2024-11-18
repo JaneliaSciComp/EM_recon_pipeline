@@ -7,10 +7,11 @@ CONFIG_DIR=$(dirname "${ABSOLUTE_CONFIG}")
 export CONFIG_DIR
 
 export LAB_OR_PROJECT_GROUP="hess"
-export RENDER_OWNER="trautmane" # TODO: change to hess_wafers_60_61 when ready (and add back to DATA_MIPMAP_DIR definition below)
+export RENDER_OWNER="trautmane" # TODO: change to hess_wafers_60_61 when ready (and add back to BASE_DATA_DIR as RENDER_OWNER below)
 
-export BASE_DATA_DIR="/nrs/${LAB_OR_PROJECT_GROUP}/data"
-export DATA_MIPMAP_DIR="/nrs/hess/data/hess_wafers_60_61/mipmaps"
+export BASE_DATA_DIR="/nrs/${LAB_OR_PROJECT_GROUP}/data/hess_wafers_60_61"
+export DATA_MIPMAP_DIR="${BASE_DATA_DIR}/mipmaps"
+export BASE_N5_DIR="${BASE_DATA_DIR}/export/${RENDER_OWNER}.n5"
 
 # reduce total number of mipmap files by only going to level 3 which covers scales >= 0.0625 (125x109 pixels)
 export MAX_MIPMAP_LEVEL=3
@@ -26,6 +27,7 @@ export LSF_PROJECT="${LAB_OR_PROJECT_GROUP}" # needed for spark-janelia flintsto
 export RENDER_HOST="10.40.3.113" # e06u08
 export RENDER_PORT="8080"
 export SERVICE_HOST="${RENDER_HOST}:${RENDER_PORT}"
+export BASE_DATA_URL="http://${SERVICE_HOST}/render-ws/v1"
 export RENDER_CLIENT_SCRIPTS="/groups/hess/hesslab/render/client_scripts"
 export RENDER_CLIENT_SCRIPT="$RENDER_CLIENT_SCRIPTS/run_ws_client.sh"
 export RENDER_CLIENT_HEAP="1G"

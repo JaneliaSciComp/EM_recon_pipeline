@@ -79,10 +79,14 @@ def load_slab_info(xlog: xarray.Dataset,
     magc_ids = get_all_magc_ids(xlog=xlog).tolist()
 
     slabs: list[SlabInfo] = []
+    magc_ids_without_regions: list[int] = []
     for slab in magc_ids:
         id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
         region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
+        if len(region_ids) == 0:
+            magc_ids_without_regions.append(slab)
+            continue
         id_region = region_ids[0]
 
         slabs.append(
@@ -106,8 +110,17 @@ def load_slab_info(xlog: xarray.Dataset,
             else:
                 slabs[-1].last_mfov = j
 
+    if len(magc_ids_without_regions) > 0:
+        print(f"found {len(magc_ids_without_regions)} magc ids without regions: {magc_ids_without_regions}, "
+              f"this occurs when the block is sectioned before the ROI starts")
+
     if len(slabs) == 0:
         return []
+
+    mfov_counts = [slab.last_mfov - slab.first_mfov + 1 for slab in slabs]
+    max_mfov_count = max(mfov_counts)
+    average_mfov_count = sum(mfov_counts) / len(mfov_counts)
+    print(f"found {len(slabs)} region slabs with {max_mfov_count} max mfovs and {round(average_mfov_count)} average mfovs")
 
     sorted_slabs = sorted(slabs, key=lambda si: si.stack_name)
 
@@ -179,6 +192,7 @@ def main(argv: list[str]):
     slab_groups = load_slab_info(xlog=xlog,
                                  wafer_short_prefix=argv[2],
                                  number_of_slabs_per_group=number_of_slabs_per_group)
+    print("")
     for slab_group in slab_groups:
         print(f"render project: {slab_group.to_render_project_name(number_of_slabs_per_group)} "
               f"({len(slab_group.ordered_slabs)} slab regions):")
@@ -192,3 +206,4 @@ if __name__ == '__main__':
     else:
         print("USAGE: slab_info.py <xlog_path> <wafer_short_prefix> <number_of_slabs_per_group>")
         # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "w60_", "10"])
+        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_61/xlog/xlog_wafer_61.zarr", "w61_", "10"])
