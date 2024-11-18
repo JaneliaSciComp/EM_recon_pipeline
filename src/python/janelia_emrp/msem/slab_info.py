@@ -117,8 +117,8 @@ def load_slab_info(xlog: xarray.Dataset,
     if len(slabs) == 0:
         return []
 
-    mfov_counts = [slab.last_mfov - slab.first_mfov + 1 for slab in slabs]
     max_mfov_count = max(mfov_counts)
+    mfov_counts = [len(slab.mfovs) for slab in slabs]
     average_mfov_count = sum(mfov_counts) / len(mfov_counts)
     print(f"found {len(slabs)} region slabs with {max_mfov_count} max mfovs and {round(average_mfov_count)} average mfovs")
 
