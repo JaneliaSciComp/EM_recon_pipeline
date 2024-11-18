@@ -1,4 +1,3 @@
-import logging
 import re
 import sys
 from dataclasses import dataclass, field
@@ -9,8 +8,6 @@ from janelia_emrp.msem.field_of_view_layout import MFovPosition
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths
 from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_serial_ids, get_region_ids, get_magc_ids
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
-
-logger = logging.getLogger(__name__)
 
 SERIAL_NAME_LEN = 3  # 400+ slabs per wafer
 REGION_NAME_LEN = 2  # usually only a few regions per slab, but allow for up to 99
@@ -77,12 +74,13 @@ def load_slab_info(xlog: xarray.Dataset,
     magc_ids = get_all_magc_ids(xlog=xlog).tolist()
 
     slabs: list[SlabInfo] = []
+    magc_ids_without_regions: list[int] = []
     for slab in magc_ids:
         id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
         region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
         if len(region_ids) == 0:
-            logger.warning(f"skipping magc id {slab} because it has no regions")
+            magc_ids_without_regions.append(slab)
             continue
         id_region = region_ids[0]
 
@@ -107,8 +105,17 @@ def load_slab_info(xlog: xarray.Dataset,
             else:
                 slabs[-1].last_mfov = j
 
+    if len(magc_ids_without_regions) > 0:
+        print(f"found {len(magc_ids_without_regions)} magc ids without regions: {magc_ids_without_regions}, "
+              f"this occurs when the block is sectioned before the ROI starts")
+
     if len(slabs) == 0:
         return []
+
+    mfov_counts = [slab.last_mfov - slab.first_mfov + 1 for slab in slabs]
+    max_mfov_count = max(mfov_counts)
+    average_mfov_count = sum(mfov_counts) / len(mfov_counts)
+    print(f"found {len(slabs)} region slabs with {max_mfov_count} max mfovs and {round(average_mfov_count)} average mfovs")
 
     sorted_slabs = sorted(slabs, key=lambda si: si.stack_name)
 
@@ -180,6 +187,7 @@ def main(argv: list[str]):
     slab_groups = load_slab_info(xlog=xlog,
                                  wafer_short_prefix=argv[2],
                                  number_of_slabs_per_group=number_of_slabs_per_group)
+    print("")
     for slab_group in slab_groups:
         print(f"render project: {slab_group.to_render_project_name(number_of_slabs_per_group)} "
               f"({len(slab_group.ordered_slabs)} slab regions):")
