@@ -1,3 +1,4 @@
+import logging
 import re
 import sys
 from dataclasses import dataclass, field
@@ -8,6 +9,8 @@ from janelia_emrp.msem.field_of_view_layout import MFovPosition
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths
 from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_serial_ids, get_region_ids, get_magc_ids
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
+
+logger = logging.getLogger(__name__)
 
 SERIAL_NAME_LEN = 3  # 400+ slabs per wafer
 REGION_NAME_LEN = 2  # usually only a few regions per slab, but allow for up to 99
@@ -78,6 +81,9 @@ def load_slab_info(xlog: xarray.Dataset,
         id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
         region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
+        if len(region_ids) == 0:
+            logger.warning(f"skipping magc id {slab} because it has no regions")
+            continue
         id_region = region_ids[0]
 
         slabs.append(
@@ -187,3 +193,4 @@ if __name__ == '__main__':
     else:
         print("USAGE: slab_info.py <xlog_path> <wafer_short_prefix> <number_of_slabs_per_group>")
         # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "w60_", "10"])
+        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_61/xlog/xlog_wafer_61.zarr", "w61_", "10"])
