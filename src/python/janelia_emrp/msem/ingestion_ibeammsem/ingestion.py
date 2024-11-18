@@ -49,7 +49,7 @@ from janelia_emrp.msem.ingestion_ibeammsem.roi import (
     get_n_slabs,
     get_percentage_tissue,
     get_roi_sfovs,
-    get_slabs,
+    get_effective_slabs,
     plot_distance_roi,
     plot_tissue_sfovs,
 )
@@ -84,7 +84,7 @@ def main(arguments) -> None:
     println(f"{get_serial_ids(xlog=xlog, magc_ids=np.arange(4)) = }")
     println(f"{get_serial_ids(xlog=xlog, magc_ids=get_all_magc_ids(xlog)) = }")
 
-    println(f"{get_slabs(xlog=xlog, scan=2) = }")
+    println(f"{get_effective_slabs(xlog=xlog, scan=2) = }")
     n_slabs = get_n_slabs(xlog=xlog, scan=2)
     println(f"{n_slabs = }")
 

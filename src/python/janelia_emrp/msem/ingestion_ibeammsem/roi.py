@@ -97,7 +97,7 @@ def plot_tissue_sfovs(
     plt.show()
 
 
-def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
+def get_effective_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
     """Returns the IDs of effective slabs in a scan.
 
     The number of slabs in a scan can be smaller
@@ -116,7 +116,7 @@ def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
 
 
 def get_n_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
-    """Returns the number of effective slabs in a scan. See get_slabs."""
+    """Returns the number of effective slabs in a scan. See get_effective_slabs."""
     return (
         xlog[XVar.ACQUISITION]
         .sel(scan=scan, mfov=slice(0, None))
