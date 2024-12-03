@@ -28,11 +28,11 @@ Using transfer JSON directory: ${TRANSFER_JSON_DIR}
 "
 fi
 
-cd "${TRANSFER_JSON_DIR}"
-TRANSFER_JSON_FILES=$(ls volume_transfer_info.*.json)
-if [ -z "${TRANSFER_JSON_FILES}" ]; then
-  echo "ERROR: no volume_transfer_info JSON files found in ${TRANSFER_JSON_DIR}"
-  exit 1
+if compgen -G "${TRANSFER_JSON_DIR}/volume_transfer_info.*.json" > /dev/null; then
+    TRANSFER_JSON_FILES=$(ls volume_transfer_info.*.json)
+else
+  echo "WARNING: no volume_transfer_info JSON files found in ${TRANSFER_JSON_DIR}"
+  exit 0
 fi
 
 #-----------------------------------------------------------
