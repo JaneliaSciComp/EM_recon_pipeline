@@ -35,7 +35,7 @@
         "zNeighborDistance": 0, "excludeCornerNeighbors": false,
         "excludeCompletelyObscuredTiles": false, "excludeSameLayerNeighbors": false, "excludeSameSectionNeighbors": false,
         "excludeSameMfovNeighbors": true,
-        "excludePairsInMatchCollection": "pairsFromPriorMontageBorderRuns", "minExistingMatchCount": 0
+        "excludePairsInMatchCollection": "pairsFromPriorRuns", "minExistingMatchCount": 0
       },
       "matchStageParametersList": [
         {
