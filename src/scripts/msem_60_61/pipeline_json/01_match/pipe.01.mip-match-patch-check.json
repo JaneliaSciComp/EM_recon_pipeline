@@ -71,7 +71,8 @@
           "featureRenderClip": { "clipHeight": 1300, "clipWidth": 1300 },
           "geometricDescriptorAndMatch": { "gdEnabled": false }
         }
-      ]    },
+      ]
+    },
     {
       "runName": "montageRun",
       "matchCommon": {
