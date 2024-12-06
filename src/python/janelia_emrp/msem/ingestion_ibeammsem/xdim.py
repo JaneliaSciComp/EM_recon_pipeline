@@ -12,3 +12,7 @@ class XDim(StrEnum):
     SFOV = auto()
     BIN = auto()
     """histogram bins. [0, ..., 255], inclusive."""
+    X_SFOV = auto()
+    """pixels of an SFOV along the X axis"""
+    Y_SFOV = auto()
+    """pixels of an SFOV along the Y axis"""

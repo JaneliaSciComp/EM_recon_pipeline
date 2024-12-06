@@ -2,7 +2,7 @@
 Pipeline scripts and tools for reconstructing Electron Microscopy volumes.
 
 ### Setup
-1. If necessary, [install miniconda](https://docs.conda.io/en/latest/miniconda.html).
+1. If necessary, [install miniforge](https://github.com/conda-forge/miniforge?tab=readme-ov-file#install).
 
 ### Create Environment and Install 
 ```bash
@@ -10,8 +10,8 @@ git clone https://github.com/JaneliaSciComp/EM_recon_pipeline.git
 
 cd EM_recon_pipeline
 
-conda env create -f janelia_emrp.environment.yml
-conda activate janelia_emrp
+conda env create -f janelia_emrp_3_12.environment.yml
+conda activate janelia_emrp_3_12
 
 poetry install
 ```

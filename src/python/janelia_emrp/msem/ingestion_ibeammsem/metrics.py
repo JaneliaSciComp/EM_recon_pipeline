@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
-from xvar import XVar
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
 if TYPE_CHECKING:
     import xarray as xr

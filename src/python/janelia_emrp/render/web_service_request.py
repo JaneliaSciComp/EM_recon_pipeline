@@ -5,7 +5,7 @@ import requests
 
 
 def submit_get(url: str,
-               context: Optional[str] = None) -> Union[dict[str, Any], list[dict[str, Any]], list[str]]:
+               context: Optional[str] = None) -> Union[dict[str, Any], list[dict[str, Any]], list[str], list[float]]:
     extra_context = "" if context is None else f" {context}"
     print(f"submitting GET {url}{extra_context}")
     response = requests.get(url)
@@ -62,7 +62,7 @@ class RenderRequest:
         return submit_get(f'{self.stack_url(stack)}')
 
     def get_z_values(self,
-                     stack: str) -> dict[str, Any]:
+                     stack: str) -> list[float]:
         return submit_get(f'{self.stack_url(stack)}/zValues')
 
     def get_tile_bounds_for_z(self,
@@ -79,6 +79,19 @@ class RenderRequest:
                       stack: str,
                       tile_id: str) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/tile/{tile_id}')
+
+    def get_all_resolved_tiles_for_stack(self,
+                                         stack: str,
+                                         min_z: Optional[float] = None,
+                                         max_z: Optional[float] = None) -> dict[str, Any]:
+        query_params = ""
+        if min_z is not None:
+            query_params += f"?minZ={min_z}"
+            if max_z is not None:
+                query_params += f"&maxZ={max_z}"
+        elif max_z is not None:
+            query_params += f"?maxZ={max_z}"
+        return submit_get(f'{self.stack_url(stack)}/resolvedTiles{query_params}')
 
     def get_resolved_tiles_for_z(self,
                                  stack: str,

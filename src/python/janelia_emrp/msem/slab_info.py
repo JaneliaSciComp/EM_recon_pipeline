@@ -1,106 +1,196 @@
-import csv
+import re
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
 
-# determined by microscope operator
-NAME_LEN = 3
+import xarray
 
+from janelia_emrp.msem.field_of_view_layout import MFovPosition
+from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_xys_sfov_and_paths
+from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_serial_ids, get_region_ids, get_magc_ids
+from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
+
+SERIAL_NAME_LEN = 3  # 400+ slabs per wafer
+REGION_NAME_LEN = 2  # usually only a few regions per slab, but allow for up to 99
+
+MAX_NUMBER_OF_SCANS = 500
 
 @dataclass
 class SlabInfo:
-    id_serial: int
-    id_magc: int = field(compare=False)
-    id_stage: int = field(compare=False)
-    serial_name: str = field(init=False, repr=False)
-    dir_name: str = field(init=False)
-    stack_name: str = field(init=False)
+    wafer_short_prefix: str
+    """short prefix for wafer that gets prepended to all project and stack names
     
-    def __post_init__(self):
-        self.serial_name = f"{self.id_serial:0{NAME_LEN}}"
-        self.dir_name = f"{self.id_stage + 1:0{NAME_LEN}}_"
-        self.stack_name = f"s{self.serial_name}_m{self.id_magc:0{NAME_LEN}}"
+    For data sets that only have one wafer, this should be an empty string.
+    For data sets with multiple wafers, this should be something like 'w60_'.
+    """
+    serial_id: int
+    """order in which the slabs were physically cut"""
+    magc_id: int = field(compare=False)
+    """magc ID.
+    
+    order in which the slabs were originally defined by the user
+    with the MagFinder plugin in the .magc file
+    """
+    region: int
+    first_mfov: int = field(compare=False)
+    last_mfov: int = field(compare=False)
+    serial_name: str = field(init=False, repr=False)
+    stack_name: str = field(init=False)
 
+    def __post_init__(self):
+        self.serial_name = f"{self.serial_id:0{SERIAL_NAME_LEN}}"
+        self.stack_name = f"{self.wafer_short_prefix}s{self.serial_name}_r{self.region:0{REGION_NAME_LEN}}"
+
+    def build_mfov_position_list(self,
+                                 xlog: xarray.Dataset,
+                                 scan: int = 0) -> list[MFovPosition]:
+        mfov_position_list = []
+        for mfov in range(self.first_mfov, self.last_mfov + 1):
+            mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
+                                                              scan=scan,
+                                                              slab=self.magc_id,
+                                                              mfov=mfov)
+            sfov_1_stage_x, sfov_1_stage_y = mfov_xys[0]
+            mfov_position_list.append(MFovPosition(mfov, int(sfov_1_stage_x), int(sfov_1_stage_y)))
+
+        return mfov_position_list
 
 @dataclass
 class ContiguousOrderedSlabGroup:
     ordered_slabs: list[SlabInfo]
 
-    def to_render_project_name(self) -> str:
+    def to_render_project_name(self,
+                               slabs_per_group: int) -> str:
         assert len(self.ordered_slabs) > 0, "must have at least one ordered slab to derive a project name"
-        return f"slab_{self.ordered_slabs[0].serial_name}_to_{self.ordered_slabs[-1].serial_name}"
+        first_slab = self.ordered_slabs[0]
+        first_group_serial_id = int((first_slab.serial_id / slabs_per_group)) * slabs_per_group
+        last_group_serial_id = first_group_serial_id + slabs_per_group - 1
+        return f"{first_slab.wafer_short_prefix}serial_{first_group_serial_id:0{SERIAL_NAME_LEN}}_to_{last_group_serial_id:0{SERIAL_NAME_LEN}}"
 
 
-def load_slab_info(ordering_scan_csv_path: Path,
+def load_slab_info(xlog: xarray.Dataset,
+                   wafer_short_prefix: str,
                    number_of_slabs_per_group: int) -> list[ContiguousOrderedSlabGroup]:
-    """
-    Ordering Scan CSV Format:
-    
-    magc_to_serial,serial_to_magc,magc_to_stage,stage_to_magc,serial_to_stage,stage_to_serial,angles_in_serial_order
-    261,209,188,385,95,188,-18.261
-    
-    magc order:
-      order in which the slabs were originally defined by the user with the MagFinder plugin in the .magc file
-    stage order:
-      order in which the slabs are acquired by the microscope to minimize stage travel
-      encoded into scan subdirectories by the scope (e.g. wafer_53_scan_003_20220501_08-46-34/001_ , 002_, ...)
-    serial order:
-      order in which the slabs were physically cut
-      
-    note:
-        we cannot do the following because id_magc is not guaranteed to be contiguous:
-            for id_magc in range(0, len(magc_to_serial))
-        instead, if we only need to iterate through all id_magc in no particular order, then use
-            for id_magc in serial_to_magc:
-        because serial_to_magc is guaranteed to contain all id_magc
-    """
-    if not ordering_scan_csv_path.exists():
-        raise ValueError(f"cannot find {ordering_scan_csv_path}")
 
-    magc_to_serial: list[int] = []
-    magc_to_stage: list[int] = []
-    serial_to_magc: list[int] = []
-    with ordering_scan_csv_path.open('r') as ordering_scan_csv_file:
-        for row in csv.reader(ordering_scan_csv_file, delimiter=","):
-            if "magc_to_serial" == row[0]:
-                continue
-            magc_to_serial.append(int(row[0]))
-            magc_to_stage.append(int(row[2]))
-            serial_to_magc.append(int(row[1]))
+    magc_ids = get_all_magc_ids(xlog=xlog).tolist()
 
     slabs: list[SlabInfo] = []
-    for id_magc in serial_to_magc:
-        id_serial = magc_to_serial[id_magc]
-        id_stage = magc_to_stage[id_magc]
+    magc_ids_without_regions: list[int] = []
+    for slab in magc_ids:
+        id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
+        mfovs = get_mfovs(xlog=xlog, slab=slab)
+        region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
+        if len(region_ids) == 0:
+            magc_ids_without_regions.append(slab)
+            continue
+        id_region = region_ids[0]
+
         slabs.append(
-            SlabInfo(id_magc=id_magc,
-                     id_serial=id_serial,
-                     id_stage=id_stage))
+            SlabInfo(wafer_short_prefix=wafer_short_prefix,
+                     serial_id=id_serial,
+                     region=id_region,
+                     magc_id=slab,
+                     first_mfov=0,
+                     last_mfov=0))
 
-    slab_group: Optional[ContiguousOrderedSlabGroup] = None
+        for j in range(1, len(region_ids)):
+            if region_ids[j] != id_region:
+                id_region = region_ids[j]
+                slabs.append(
+                    SlabInfo(wafer_short_prefix=wafer_short_prefix,
+                             serial_id=id_serial,
+                             region=id_region,
+                             magc_id=slab,
+                             first_mfov=j,
+                             last_mfov=j))
+            else:
+                slabs[-1].last_mfov = j
+
+    if len(magc_ids_without_regions) > 0:
+        print(f"found {len(magc_ids_without_regions)} magc ids without regions: {magc_ids_without_regions}, "
+              f"this occurs when the block is sectioned before the ROI starts")
+
+    if len(slabs) == 0:
+        return []
+
+    mfov_counts = [slab.last_mfov - slab.first_mfov + 1 for slab in slabs]
+    max_mfov_count = max(mfov_counts)
+    average_mfov_count = sum(mfov_counts) / len(mfov_counts)
+    print(f"found {len(slabs)} region slabs with {max_mfov_count} max mfovs and {round(average_mfov_count)} average mfovs")
+
+    sorted_slabs = sorted(slabs, key=lambda si: si.stack_name)
+
+    slab_group: ContiguousOrderedSlabGroup = ContiguousOrderedSlabGroup(ordered_slabs=[sorted_slabs[0]])
     slab_groups: list[ContiguousOrderedSlabGroup] = []
+    last_serial_id = sorted_slabs[0].serial_id
+    serial_id_count = 1
 
-    for slab_info in sorted(slabs, key=lambda si: si.id_serial):
-        if slab_group is None or len(slab_group.ordered_slabs) >= number_of_slabs_per_group:
-            if slab_group is not None:
-                slab_groups.append(slab_group)
+    for i in range(1, len(sorted_slabs)):
+        slab_info = sorted_slabs[i]
+        if slab_info.serial_id != last_serial_id:
+            last_serial_id = slab_info.serial_id
+            serial_id_count += 1
+        if serial_id_count > number_of_slabs_per_group:
+            slab_groups.append(slab_group)
             slab_group = ContiguousOrderedSlabGroup(ordered_slabs=[slab_info])
+            serial_id_count = 1
         else:
             slab_group.ordered_slabs.append(slab_info)
 
-    if slab_group is not None:
-        slab_groups.append(slab_group)
+    slab_groups.append(slab_group)
 
     return slab_groups
 
+# w60_s296_r00...
+STACK_PATTERN = re.compile(r"(.*_)s(\d{3})_r(\d{2}).*")
+
+def build_slab_info_from_stack_name(xlog: xarray.Dataset,
+                                    stack_name: str) -> SlabInfo:
+    # w60_s296_r00
+    stack_pattern_match = STACK_PATTERN.match(stack_name)
+    if not stack_pattern_match:
+        raise RuntimeError(f"failed to parse stack_name {stack_name}")
+
+    wafer_short_prefix = stack_pattern_match.group(1)
+    serial_id = int(stack_pattern_match.group(2))
+    region = int(stack_pattern_match.group(3))
+
+    try:
+        magc_id = get_magc_ids(xlog=xlog, serial_ids=[serial_id])[0]
+    except ValueError as value_error:
+        raise RuntimeError from value_error
+
+    mfovs = get_mfovs(xlog=xlog, slab=magc_id)
+    region_ids = get_region_ids(xlog=xlog, slab=magc_id, mfovs=mfovs)
+    first_mfov = None
+    last_mfov = None
+    for i in range(len(region_ids)):
+        if region_ids[i] == region:
+            if first_mfov is None:
+                first_mfov = i
+            last_mfov = i
+        elif region_ids[i] > region:
+            break
+
+    return SlabInfo(wafer_short_prefix=wafer_short_prefix,
+                    serial_id=serial_id,
+                    region=region,
+                    magc_id=magc_id,
+                    first_mfov=first_mfov,
+                    last_mfov=last_mfov)
 
 def main(argv: list[str]):
-    slab_groups = load_slab_info(ordering_scan_csv_path=Path(argv[1]),
-                                 number_of_slabs_per_group=int(argv[2]))
+    print(f"opening {argv[1]} ...")
+    xlog = xarray.open_zarr(argv[1])
+
+    print(f"loading slab info with wafer_short_prefix {argv[2]} and {argv[3]} number_of_slabs_per_group ...")
+    number_of_slabs_per_group=int(argv[3])
+    slab_groups = load_slab_info(xlog=xlog,
+                                 wafer_short_prefix=argv[2],
+                                 number_of_slabs_per_group=number_of_slabs_per_group)
+    print("")
     for slab_group in slab_groups:
-        print(f"render project: {slab_group.to_render_project_name()} "
-              f"({len(slab_group.ordered_slabs)} slabs):")
+        print(f"render project: {slab_group.to_render_project_name(number_of_slabs_per_group)} "
+              f"({len(slab_group.ordered_slabs)} slab regions):")
         for slab_info in slab_group.ordered_slabs:
             print(f"  {slab_info}")
 
@@ -109,5 +199,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         main(sys.argv)
     else:
-        print("USAGE: slab_info.py <ordering_scan_csv_path> <number_of_slabs_per_group>")
-        # main(["go", "/nrs/hess/data/hess_wafer_53/raw/ordering/scan_001.csv", "10"])
+        print("USAGE: slab_info.py <xlog_path> <wafer_short_prefix> <number_of_slabs_per_group>")
+        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr", "w60_", "10"])
+        # main(["go", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_61/xlog/xlog_wafer_61.zarr", "w61_", "10"])
