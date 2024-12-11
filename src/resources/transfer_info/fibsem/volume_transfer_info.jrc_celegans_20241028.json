@@ -1,10 +1,10 @@
 {
-    "transfer_id": "fibsem::jrc_celegans_20241028::jeiss8",
+    "transfer_id": "fibsem::jrc_celegans-20241028::jeiss8",
     "scope_data_set": {
         "host": "jeiss8.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/C_elegans",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_celegans_20241028",
+        "data_set_id": "jrc_celegans-20241028",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6284_24-11-18_091435_0-0-0.dat",
@@ -14,13 +14,13 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/fibsem/fibsem/data/jrc_celegans_20241028/dat",
-        "raw_h5": "/groups/fibsem/fibsem/data/jrc_celegans_20241028/raw",
-        "align_h5": "/nrs/fibsem/data/jrc_celegans_20241028/align",
-        "export_n5": "/nrs/fibsem/data/jrc_celegans_20241028/jrc_celegans_20241028.n5"
+        "raw_dat": "/groups/fibsem/fibsem/data/jrc_celegans-20241028/dat",
+        "raw_h5": "/groups/fibsem/fibsem/data/jrc_celegans-20241028/raw",
+        "align_h5": "/nrs/fibsem/data/jrc_celegans-20241028/align",
+        "export_n5": "/nrs/fibsem/data/jrc_celegans-20241028/jrc_celegans-20241028.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/fibsem/data/jrc_celegans_20241028/raw"
+        "raw_h5": "/nearline/fibsem/data/jrc_celegans-20241028/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
