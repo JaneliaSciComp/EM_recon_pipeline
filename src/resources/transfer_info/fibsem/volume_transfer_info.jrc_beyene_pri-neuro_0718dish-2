@@ -25,7 +25,7 @@
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "fibsem",
-        "project": "jrc_beyene_pri-neuro_0718dish_2",
+        "project": "jrc_beyene_pri_neuro_0718dish_2",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
