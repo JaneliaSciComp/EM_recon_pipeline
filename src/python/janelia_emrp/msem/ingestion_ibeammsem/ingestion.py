@@ -22,13 +22,14 @@ from assembly import (
     assemble_mfovs_straight,
     get_slab_rotation,
     get_xy_slab,
+    get_xys_sfov_and_paths,
     plot_aligned_slab,
 )
-from constant import N_BEAMS
-from id import get_all_magc_ids, get_magc_ids, get_region_ids, get_serial_ids
-from metrics import get_raw_average, get_raw_stdev, get_timestamp
-from path import get_mfov_path, get_sfov_path, get_slab_path, get_thumbnail_path
-from roi import (
+from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.id import get_all_magc_ids, get_magc_ids, get_region_ids, get_serial_ids
+from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_raw_average, get_raw_stdev, get_timestamp
+from janelia_emrp.msem.ingestion_ibeammsem.path import get_mfov_path, get_sfov_path, get_slab_path, get_thumbnail_path
+from janelia_emrp.msem.ingestion_ibeammsem.roi import (
     get_distance_to_roi,
     get_mfovs,
     get_n_mfovs,
@@ -46,7 +47,6 @@ matplotlib.use("tkagg")
 def main(arguments) -> None:
     """See parse_arguments for the arguments."""
     xlog = xr.open_zarr(arguments.path_xlog)
-
     # id
     println(f"{get_all_magc_ids(xlog=xlog) = }")
 
@@ -91,6 +91,9 @@ def main(arguments) -> None:
     println(f"{get_percentage_tissue(xlog=xlog, scan=3, dilation=20) = :.2f}%")
 
     # assembly
+
+    println(get_xys_sfov_and_paths(xlog=xlog, scan=10, slab=10, mfov=2))
+
     println(f"{get_slab_rotation(xlog=xlog, scan=3, slab=2) = :.2f} degrees")
     println(f"{get_xy_slab(xlog=xlog, scan=2, slab=2).shape = }")
 

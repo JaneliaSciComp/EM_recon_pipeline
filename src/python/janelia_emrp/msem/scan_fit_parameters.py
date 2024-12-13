@@ -1,4 +1,3 @@
-import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,23 +19,36 @@ class ScanFitParameters:
             "dataString": f"{self.a},{self.b},{self.c},0"
         }
 
+# From Nov. 12, 2024 Slack conversation with Thomas:
+#
+#   You are right. There is indeed a sign inversion. Is it OK that you make a rule to invert the sign for wafers 60/61?
+#   I will then revert it back to what it was for the next samples.
+#   ...
+#   I think that as a first estimation and to start with, it might be better to use a fixed set of parameters
+#   for the entire 60/61 experiment. <The> scan 10 that you pointed at ... looks like an OK fit.
+WAFER_60_61_SCAN_FIT_PARAMETERS = \
+    ScanFitParameters(path=Path("/nearline/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/sfov_correction/results/fit_parameters.txt"),
+                      scan_name="scan_010",
+                      scan_index=10,
+                      a=3.164065083689898028e+00,  # inverted sign
+                      b=1.022359250655221867e-02,  # inverted sign
+                      c=0.000000000000000000e+00)
 
-# slab_scan_path: /nrs/hess/render/raw/wafer_53/imaging/msem/scan_001/wafer_53_scan_001_20220427_23-16-30/002_
-slab_scan_path_pattern = re.compile(r"^(.*)/imaging/msem/scan.*/wafer_\d+_scan_(\d+)_\d{8}_\d{2}-\d{2}-\d{2}/\d+_$")
-
+def build_fit_parameters_path(slab_scan_path: Path):
+    # /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/sfov_correction/results/fit_parameters.txt
+    return Path(slab_scan_path, "sfov_correction/results/fit_parameters.txt")
 
 def load_scan_fit_parameters(slab_scan_path: Path) -> ScanFitParameters:
 
-    slab_scan_path_match = slab_scan_path_pattern.match(str(slab_scan_path))
-    if not slab_scan_path_match:
-        raise RuntimeError(f"failed to parse slab_scan_path {slab_scan_path}")
+    # slab_scan_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010
+    scan_name = slab_scan_path.name
 
-    wafer_base_path = Path(slab_scan_path_match.group(1))
-    scan_name = slab_scan_path_match.group(2)
-    scan_index = int(scan_name)
+    if not scan_name.startswith("scan_"):
+        raise RuntimeError(f"expected scan name for {slab_scan_path} to start with 'scan_' but found {scan_name}")
 
-    fit_parameters_path = Path(wafer_base_path, f"sfov_correction/average_fit_parameters_for_all_scans.txt")
+    scan_index = int(scan_name.split("_")[1])
 
+    fit_parameters_path = build_fit_parameters_path(slab_scan_path)
     if not fit_parameters_path.exists():
         raise RuntimeError(f"{fit_parameters_path} not found")
 

@@ -6,10 +6,9 @@ from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from constant import N_BEAMS
-from xdim import XDim
-from xvar import XVar
+from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -70,8 +69,10 @@ def plot_tissue_sfovs(
 def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
     """Returns the IDs of effective slabs in a scan.
 
-    The number of slabs in a scan can be smaller than the total number of slabs:
-        1. some slabs do not have any tissue to be imaged
+    The number of slabs in a scan can be smaller
+        than the total number of slabs physically present on a wafer:
+        1. some slabs do not have any tissue to be imaged.
+            These slabs are not present in the xlog.
         2. some slabs have been entirely milled and they are not imaged any more
     """
     return (
@@ -102,6 +103,20 @@ def get_n_mfovs(xlog: xr.Dataset, scan: int) -> int:
     return (
         xlog[XVar.ACQUISITION].sel(scan=scan, mfov=slice(0, None)).count().values.item()
     )
+
+
+def get_max_mfovs_per_slab(xlog: xr.Dataset) -> int:
+    """Gets the maximum number of MFOVs per slab.
+
+    The xlog is dimensioned along XDim.MFOV to fit the slab with the most MFOVs.
+    E.g.: if the largest slab has 24 MFOVs,
+        then the positive labels of the XDim.MFOV are [0,...,23].
+
+    Note that MFOVs with strictly negative IDs exist,
+        but are internals of the IBEAM-MSEM acquisition
+        and are not part of the final dataset.
+    """
+    return 1 + xlog[XDim.MFOV].max().values.item()
 
 
 def get_mfovs(xlog: xr.Dataset, slab: int) -> np.ndarray:

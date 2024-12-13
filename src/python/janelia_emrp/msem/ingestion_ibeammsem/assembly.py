@@ -11,22 +11,39 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dask import bag
 from distributed import Client
+from janelia_emrp.msem.ingestion_ibeammsem.constant import FACTOR_THUMBNAIL, N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.path import get_image_paths, get_slab_path
+from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
+from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from matplotlib.transforms import Affine2D
 from skimage.io import imread
 from skimage.transform import EuclideanTransform
 
-from constant import FACTOR_THUMBNAIL, N_BEAMS
-from path import get_image_paths, get_slab_path
-from roi import get_mfovs
-from xdim import XDim
-from xvar import XVar
-
-matplotlib.use("tkagg")
+#matplotlib.use("tkagg")
+matplotlib.use("Agg") # avoid "Cannot load backend 'tkagg' which requires the 'tk' interactive framework" error
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     import xarray as xr
+
+
+def get_max_scans(xlog: xr.Dataset) -> int:
+    """Gets the maximum number of scans.
+
+    The xlog is conservatively over-dimensioned upfront along XDim.SCAN
+        to accommodate all anticipated scans.
+
+    The prediction of the number of scans is made by IBEAM-MSEM operators
+        considering the nominal slab thickness
+        and the material removal thickness at every scan.
+
+    Note that scans with strictly negative labels exist,
+        but they are internals of the IBEAM-MSEM process
+        and must not be ingested.
+    """
+    return 1 + xlog[XDim.SCAN].max().values.item()
 
 
 def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:
@@ -38,6 +55,40 @@ def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:
     The scan dependency is likely negligible, but it is conceptually correct.
     """
     return 180 + xlog[XVar.ROTATION_SLAB].sel(scan=scan, slab=slab).values.item()
+
+
+def get_xys_sfov_and_paths(
+    xlog: xr.Dataset, scan: int, slab: int, mfov: int
+) -> tuple[list[Path], np.ndarray]:
+    """Paths and top-left corner coordinates of SFOVs of an MFOV in straight orientation.
+
+    Paths:
+        type UNC
+        length N_BEAMS
+    Coordinates:
+        shape (N_BEAMS, 2)
+        unit: full-resolution pixel
+        orientation: original, that is, the SFOVs are "straight"
+        top-left corner of the SFOVs
+
+    To align multiple slabs with the correct offset and orientation,
+        apply the slab rotation around the center (0,0).
+    """
+    xys_center_rotated = (
+        get_xy_slab(xlog=xlog, scan=scan, slab=slab, mfovs=[mfov]).squeeze().T
+    )
+
+    xys_center_original: np.ndarray = EuclideanTransform(
+        rotation=np.radians(get_slab_rotation(xlog=xlog, scan=scan, slab=slab))
+    )(xys_center_rotated)
+    xys_top_left_original = xys_center_original - np.array(
+        [xlog[XDim.X_SFOV].size / 2, xlog[XDim.Y_SFOV].size / 2]
+    )
+    return get_image_paths(
+        slab_path=get_slab_path(xlog=xlog, scan=scan, slab=slab),
+        mfovs=[mfov],
+        thumbnail=False,
+    ), xys_top_left_original
 
 
 def get_xy_slab(

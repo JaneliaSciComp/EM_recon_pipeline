@@ -1,0 +1,10 @@
+name: janelia_emrp_3_12
+
+channels:
+  - default
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - urllib3=1.26
+  - poetry
