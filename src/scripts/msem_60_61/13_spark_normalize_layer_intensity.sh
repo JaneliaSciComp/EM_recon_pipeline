@@ -26,7 +26,7 @@ N_NODES="2" # 2 11-slot nodes took 30 minutes for w60_s296_r00_d00_align_avgshd
 SOURCE_DATASET="/render/${RENDER_PROJECT}/${STACK}"
 
 # /nrs/hess/data/hess_wafers_60_61/export/hess_wafers_60_61.n5/render/w60_serial_290_to_299/w60_s296_r00_d00_align_avgshd
-SOURCE_PATH="${BASE_N5_DIR}/${SOURCE_DATASET}"
+SOURCE_PATH="${BASE_N5_DIR}${SOURCE_DATASET}"
 if [[ ! -d "${SOURCE_PATH}" ]]; then
   echo "ERROR: ${SOURCE_PATH} not found"
   exit 1
