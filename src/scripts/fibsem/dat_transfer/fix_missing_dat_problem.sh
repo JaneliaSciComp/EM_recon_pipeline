@@ -6,15 +6,15 @@ umask 0002
 
 NUM_WORKERS="1"
 
-#TRANSFER_INFO="/groups/flyem/home/flyem/bin/dat_transfer/2022/config/volume_transfer_info.jrc_sepia_MPI-S-DEC_5A.json"
-#PARENT_WORK_DIR="/groups/reiser/reiserlab/data/jrc_sepia_MPI-S-DEC_5A/dat/logs/fix"
-#FIRST_DAT="Merlin-6285_24-05-13_161357_0-0-0.dat"
-#LAST_DAT="Merlin-6285_24-07-10_113208_0-1-2.dat"
+#TRANSFER_INFO="/groups/flyem/home/flyem/bin/dat_transfer/2022/config/volume_transfer_info.jrc_pri_neuron_0710Dish4.json"
+#PARENT_WORK_DIR="/groups/fibsem/fibsem/data/jrc_pri-neuron_0710Dish4/dat/logs/fix"
+#FIRST_DAT="Merlin-6285_24-09-24_093827_0-0-0.dat"
+#LAST_DAT="Merlin-6285_24-09-24_094238_0-0-0.dat"
 
-TRANSFER_INFO="/groups/flyem/home/flyem/bin/dat_transfer/2022/config/volume_transfer_info.jrc_pri_neuron_0710Dish4.json"
-PARENT_WORK_DIR="/groups/fibsem/fibsem/data/jrc_pri-neuron_0710Dish4/dat/logs/fix"
-FIRST_DAT="Merlin-6285_24-09-24_093827_0-0-0.dat"
-LAST_DAT="Merlin-6285_24-09-24_094238_0-0-0.dat"
+TRANSFER_INFO="/groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/resources/transfer_info/cellmap/volume_transfer_info.jrc_mus-cerebellum-2.json"
+PARENT_WORK_DIR="/groups/cellmap/cellmap/data/jrc_mus-cerebellum-2/dat/logs/fix"
+FIRST_DAT="Merlin-6257_24-07-19_134020_0-0-0.dat"
+LAST_DAT="Merlin-6257_24-08-13_113522_0-0-3.dat"
 
 mkdir -p ${PARENT_WORK_DIR}
 
