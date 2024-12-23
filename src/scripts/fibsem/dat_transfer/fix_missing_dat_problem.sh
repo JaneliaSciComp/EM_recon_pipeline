@@ -6,10 +6,10 @@ umask 0002
 
 NUM_WORKERS="1"
 
-TRANSFER_INFO="/groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/resources/transfer_info/cellmap/volume_transfer_info.jrc_mus-cerebellum-3.json"
-PARENT_WORK_DIR="/groups/cellmap/cellmap/data/jrc_mus-cerebellum-3/dat/logs/fix"
-FIRST_DAT="Merlin-6262_24-11-09_114644_0-0-0.dat"
-LAST_DAT="Merlin-6262_24-11-14_122222_0-1-3.dat"
+TRANSFER_INFO="/groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/resources/transfer_info/fibsem/volume_transfer_info.jrc_celegans-20241028_cond3.json"
+PARENT_WORK_DIR="/groups/fibsem/fibsem/data/jrc_celegans-20241028_cond3/dat/logs/fix"
+FIRST_DAT="Merlin-6284_24-12-12_091557_0-0-0.dat"
+LAST_DAT="Merlin-6284_24-12-12_104302_0-0-0.dat"
 
 mkdir -p ${PARENT_WORK_DIR}
 
