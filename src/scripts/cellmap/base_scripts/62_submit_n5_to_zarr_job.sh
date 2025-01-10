@@ -51,42 +51,67 @@ fi
 
 # jq '.dataType' /nrs/.../s0/attributes.json
 DATA_TYPE=$(${JQ} -r '.dataType' "${N5_S_ZERO_JSON}")
-if [[ "${DATA_TYPE}" == "uint8" ]]; then
-  FINAL_DATA_SET="/em/fibsem-uint8"
-elif [[ "${DATA_TYPE}" == "uint16" ]]; then
-  FINAL_DATA_SET="/em/fibsem-uint16"
-else
-  echo "ERROR: unknown data type: ${DATA_TYPE}"
-  exit 1
-fi
 
-# /nrs/${LAB_OR_GROUP_PROJECT}/data/${VOLUME}/${VOLUME}.zarr/em/fibsem-uint8
-ZARR_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.zarr"
-FINAL_ZARR_PATH="${ZARR_PATH}${FINAL_DATA_SET}"
+ZARR_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.zarr"            # /nrs/cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr
+FINAL_ZARR_PATH="${ZARR_PATH}/recon-1/em/fibsem-${DATA_TYPE}" # /nrs/cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr/recon-1/em/fibsem-uint8
+FINAL_ZARR_PATH_WITHOUT_NRS_ROOT="${FINAL_ZARR_PATH#/nrs/}"         # cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr/recon-1/em/fibsem-uint8
 
 if [ -d "${FINAL_ZARR_PATH}" ]; then
   echo "ERROR: ${FINAL_ZARR_PATH} already exists!"
   exit 1
 fi
 
-FINAL_ZARR_PARENT_DIR=$(dirname "${FINAL_ZARR_PATH}")
-mkdir -p "${FINAL_ZARR_PARENT_DIR}"
+mkdir -p "${ZARR_PATH}"
 
-LOG_DIR="${SCRIPT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/zarr-$(date +"%Y%m%d_%H%M%S").log"
+WORK_DIR="${SCRIPT_DIR}/logs/zarr-$(date +"%Y%m%d_%H%M%S")"
+BSUB_LOG_FILE="${WORK_DIR}/bsub.log"
+LAUNCH_LOG_FILE="${WORK_DIR}/launch.log"
 
-mkdir -p "${LOG_DIR}"
+mkdir -p "${WORK_DIR}"
+cd "${WORK_DIR}"
 
-echo "
-submitting job ...
-  source:   ${RENDERED_N5_PATH}
-  target:   ${FINAL_ZARR_PATH}
-  log file: ${LOG_FILE}
-"
+CONVERT_JOB_NAME="convert_to_zarr_${RENDER_PROJECT}_$(date +"%Y%m%d_%H%M%S")"
 
 ARGS="--num_workers=${NUM_DASK_WORKERS} --cluster=lsf"
 ARGS="${ARGS} --src=${RENDERED_N5_PATH}/"
-ARGS="${ARGS} --dest=${FINAL_ZARR_PATH}/"
+ARGS="${ARGS} --dest=${ZARR_PATH}/"
+ARGS="${ARGS} --lsf_runtime_limit=240:00"                     # 10 days - [hours:]minutes
+ARGS="${ARGS} --lsf_project_name=${BILL_TO}"
+ARGS="${ARGS} --lsf_worker_log_dir=${WORK_DIR}"
 
+NG_LAYER_SOURCE="zarr://http://renderer.int.janelia.org:8080/n5_sources/${FINAL_ZARR_PATH_WITHOUT_NRS_ROOT}"
+NG_LAYER_NAME="${VOLUME_NAME} ${DATA_TYPE}"
+NG_LAYERS='"layers":[{"type":"image","source":"'"${NG_LAYER_SOURCE}"'","tab":"source","name":"'"${NG_LAYER_NAME}"'"}]'
+NG_SELECTED_LAYER='"selectedLayer":{"visible":true,"layer":"'"${NG_LAYER_NAME}"'"}'
+NG_DATA='{'"${NG_LAYERS}"','"${NG_SELECTED_LAYER}"',"layout":"4panel"}'
+
+# jq options:
+#   --raw-output outputs the raw contents of strings instead of JSON string literals
+#   --raw-input  treats input lines as strings instead of parsing them as JSON
+#   --slurp      reads the input into a single string (omit if you don't want to replace linefeeds with %0A)
+#   @uri         applies percent-encoding, by mapping all reserved URI characters to a %XX sequence
+URL_ENCODED_NG_DATA=$(echo "${NG_DATA}" | ${JQ} --raw-output --raw-input --slurp @uri)
+NG_LINK="http://renderer.int.janelia.org:8080/ng/#!${URL_ENCODED_NG_DATA}"
+
+echo "
+submitting conversion job:
+
+  job name:  ${CONVERT_JOB_NAME}
+  source:    ${RENDERED_N5_PATH}
+  target:    ${FINAL_ZARR_PATH}
+  log:       ${BSUB_LOG_FILE}
+
+  script arguments:
+    ${ARGS}
+
+  neuroglancer link (will work after job completes):
+    http://renderer.int.janelia.org:8080/ng/#!${URL_ENCODED_NG_DATA}
+" | tee "${LAUNCH_LOG_FILE}"
+
+
+# submit job that converts n5 to zarr
 # shellcheck disable=SC2086
-bsub -P "${BILL_TO}" -n ${NUM_DASK_CLIENT_SLOTS} -o "${LOG_FILE}" "${SCRIPT_DIR}"/support/62_convert_n5_to_cellmap_zarr.sh ${ARGS}
+bsub -P "${BILL_TO}" -n ${NUM_DASK_CLIENT_SLOTS} -J "${CONVERT_JOB_NAME}" -o "${BSUB_LOG_FILE}" -e "${BSUB_LOG_FILE}" "${SCRIPT_DIR}"/support/62_convert_n5_to_cellmap_zarr.sh ${ARGS}
+
+# submit job that emails tail of launch log file when convert job completes
+bsub -P "${BILL_TO}" -n 1 -W 59 -J "tail_${CONVERT_JOB_NAME}" -w "ended(${CONVERT_JOB_NAME})" tail -50 "${BSUB_LOG_FILE}"
