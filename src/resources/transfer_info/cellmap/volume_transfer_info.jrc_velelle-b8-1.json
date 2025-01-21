@@ -1,5 +1,5 @@
 {
-    "transfer_id": "fibsem::jrc_velelle-b8-1::jeiss4",
+    "transfer_id": "cellmap::jrc_velelle-b8-1::jeiss4",
     "scope_data_set": {
         "host": "jeiss4.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cellmap",
@@ -14,17 +14,17 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/fibsem/fibsem/data/jrc_velelle-b8-1/dat",
-        "raw_h5": "/groups/fibsem/fibsem/data/jrc_velelle-b8-1/raw",
-        "align_h5": "/nrs/fibsem/data/jrc_velelle-b8-1/align",
-        "export_n5": "/nrs/fibsem/data/jrc_velelle-b8-1/jrc_velelle-b8-1.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_velelle-b8-1/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_velelle-b8-1/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_velelle-b8-1/align",
+        "export_n5": "/nrs/cellmap/data/jrc_velelle-b8-1/jrc_velelle-b8-1.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/fibsem/data/jrc_velelle-b8-1/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_velelle-b8-1/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
-        "owner": "fibsem",
+        "owner": "cellmap",
         "project": "jrc_velelle_b8_1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
