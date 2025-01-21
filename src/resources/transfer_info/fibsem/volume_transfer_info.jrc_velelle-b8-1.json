@@ -25,7 +25,7 @@
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "fibsem",
-        "project": "jrc_velelle-b8-1",
+        "project": "jrc_velelle_b8_1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
