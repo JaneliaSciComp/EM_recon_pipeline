@@ -23,6 +23,13 @@ if [ ! -f "${FIRST_COMMENT_TEXT_FILE}" ]; then
   exit 1
 fi
 
+if [ "${USER}" == "fibsemxfer" ]; then
+  echo "ERROR: This script should be run as a user other than fibsemxfer.
+The script will ask for the fibsemxfer password when it tries to connect to the scope.
+"
+  exit 1
+fi
+
 # ---------------------------
 # parse data from GitHub issue first comment file ...
 
