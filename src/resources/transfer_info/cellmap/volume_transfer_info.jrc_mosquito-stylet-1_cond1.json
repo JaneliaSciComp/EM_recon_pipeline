@@ -25,7 +25,7 @@
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "fibsem",
-        "project": "jrc_mosquito-stylet-1",
+        "project": "jrc_mosquito-stylet-1_cond1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
