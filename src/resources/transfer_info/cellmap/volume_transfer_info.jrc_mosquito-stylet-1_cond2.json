@@ -4,7 +4,7 @@
         "host": "jeiss8.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cellmap",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "rc_mosquito-stylet-1",
+        "data_set_id": "jrc_mosquito-stylet-1",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6284_25-01-27_094717_0-0-0.dat",
