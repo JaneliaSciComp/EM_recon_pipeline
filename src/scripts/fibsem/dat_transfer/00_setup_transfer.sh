@@ -97,20 +97,37 @@ echo "
 Checking keep files on ${SCOPE_HOST}.  Please enter the fibsemxfer user password when prompted.
 "
 
-FIRST_KEEP_FILE=$(
+set +e
+
+ALL_KEEP_FILES=$(
   su -c "ssh ${SCOPE_HOST} 'ls /cygdrive/d/UploadFlags'" fibsemxfer |
-  grep "keep" |
-  grep "${SCOPE_DATA_SET_ID}" |
-  grep "${FIRST_DAT}"
+  grep "keep"
 )
+
+set -e
+
+if [ -z "${ALL_KEEP_FILES}" ]; then
+  echo "
+ERROR: no keep files found on '${SCOPE_HOST}'
+"
+  exit 1
+fi
+
+unset FIRST_KEEP_FILE
+for KEEP_FILE in ${ALL_KEEP_FILES}; do
+  if [[ "${KEEP_FILE}" == "${SCOPE_DATA_SET_ID}"*"${FIRST_DAT}^keep" ]]; then
+    FIRST_KEEP_FILE="${KEEP_FILE}"
+    break
+  fi
+done
 
 if [ -z "${FIRST_KEEP_FILE}" ]; then
 
   echo "
-ERROR: no keep file found for data set '${SCOPE_DATA_SET_ID} and dat file ${FIRST_DAT}' on '${SCOPE_HOST}'
+ERROR: no keep file found for data set '${SCOPE_DATA_SET_ID}' and dat file '${FIRST_DAT}' on '${SCOPE_HOST}'
 
 Here are the first 10 files in /cygdrive/d/UploadFlags on ${SCOPE_HOST}:
-$(ssh "${SCOPE_HOST}" "ls /cygdrive/d/UploadFlags" | head -10)
+$(echo "${ALL_KEEP_FILES}" | head -n 10)
 "
   exit 1
 
