@@ -100,8 +100,7 @@ Checking keep files on ${SCOPE_HOST}.  Please enter the fibsemxfer user password
 set +e
 
 ALL_KEEP_FILES=$(
-  su -c "ssh ${SCOPE_HOST} 'ls /cygdrive/d/UploadFlags'" fibsemxfer |
-  grep "keep"
+  su -c "ssh ${SCOPE_HOST} 'ls /cygdrive/d/UploadFlags'" fibsemxfer | grep "keep" | sed 's/keep.*/keep/'
 )
 
 set -e
