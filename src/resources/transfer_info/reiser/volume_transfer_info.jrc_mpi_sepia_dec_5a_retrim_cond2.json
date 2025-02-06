@@ -1,5 +1,5 @@
 {
-    "transfer_id": "reiser::jrc_mpi_sepia_dec_5a_retrim_Cond2::jeiss6",
+    "transfer_id": "reiser::jrc_mpi_sepia_dec_5a_retrim_cond2::jeiss6",
     "scope_data_set": {
         "host": "jeiss6.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/mpi",
@@ -14,12 +14,12 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/reiser/reiserlab/data/jrc_mpi_sepia_dec_5a_retrim_Cond2/dat",
-        "raw_h5": "/groups/reiser/reiserlab/data/jrc_mpi_sepia_dec_5a_retrim_Cond2/raw",
-        "align_h5": "/nrs/reiser/render/data/jrc_mpi_sepia_dec_5a_retrim_Cond2/h5/align"
+        "raw_dat": "/groups/reiser/reiserlab/data/jrc_mpi_sepia_dec_5a_retrim_cond2/dat",
+        "raw_h5": "/groups/reiser/reiserlab/data/jrc_mpi_sepia_dec_5a_retrim_cond2/raw",
+        "align_h5": "/nrs/reiser/render/data/jrc_mpi_sepia_dec_5a_retrim_cond2/h5/align"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/reiser/data/jrc_mpi_sepia_dec_5a_retrim_Cond2/h5/raw"
+        "raw_h5": "/nearline/reiser/data/jrc_mpi_sepia_dec_5a_retrim_cond2/h5/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
