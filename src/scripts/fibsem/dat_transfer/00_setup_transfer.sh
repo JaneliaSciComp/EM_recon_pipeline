@@ -47,14 +47,15 @@ PARSED_VALUES=$(awk '
     } else if (previous_line ~ /Z nanometers per pixel/)                                { z_nm_per_pixel = $0;
     } else if (previous_line ~ /Group that will pay for data storage/)                  { storage_group = $0;
     } else if (previous_line ~ /Group that will pay for compute cluster time/)          { compute_group = $0;
+    } else if (previous_line ~ /Estimated dat file count/)                              { dat_file_count = $0;
     } else if (previous_line ~ /Generate preview volumes while imaging is in progress/) { generate_preview = $0;
     }
     previous_line = $0;
   }
   END {
-    printf("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n",
+    printf("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n",
            scope_data_set_id, scope_host, root_dat_path, first_dat, last_dat, number_columns, number_rows,
-           xy_nm_per_pixel, z_nm_per_pixel, storage_group, compute_group, generate_preview);
+           xy_nm_per_pixel, z_nm_per_pixel, storage_group, compute_group, dat_file_count, generate_preview);
   }
 ' "${FIRST_COMMENT_TEXT_FILE}")
 
@@ -82,12 +83,18 @@ XY_NM_PER_PIXEL="${PARSED_VALUES_ARRAY[7]}"
 Z_NM_PER_PIXEL="${PARSED_VALUES_ARRAY[8]}"
 STORAGE_GROUP="${PARSED_VALUES_ARRAY[9]}"
 COMPUTE_GROUP="${PARSED_VALUES_ARRAY[10]}"
+DAT_FILE_COUNT="${PARSED_VALUES_ARRAY[11]}"
 
-GENERATE_PREVIEW="${PARSED_VALUES_ARRAY[11]}"
+GENERATE_PREVIEW="${PARSED_VALUES_ARRAY[12]}"
 if [ "${GENERATE_PREVIEW}" == "Yes" ]; then
   LAST_TASKS="@APPLY_FIBSEM_CORRECTION_TRANSFORM@, @EXPORT_PREVIEW_VOLUME@"
 else
   LAST_TASKS="@APPLY_FIBSEM_CORRECTION_TRANSFORM@"
+fi
+
+MASK_HEIGHT=0
+if [ "${NUMBER_ROWS}" -gt 1 ]; then
+  MASK_HEIGHT=30  # mask off top of each image if there is more than one row
 fi
 
 # ---------------------------
@@ -140,11 +147,11 @@ Using the following keep file to validate values:
 fi
 
 # rc_mosquito-stylet-1^E^^Images^Cellmap^Y2025^M01^D21^Merlin-6284_25-01-21_134947_0-0-0.dat^keep
-IFS='^' read -r -a FIRST_KEEP_FILE_ARRAY <<< "${FIRST_KEEP_FILE}"
-LOWER_DRIVE=$(echo "${FIRST_KEEP_FILE_ARRAY[1]}" | tr '[:upper:]' '[:lower:]')
+IFS='^' read -r -a FIRST_KEEP_ARR <<< "${FIRST_KEEP_FILE}"
+LOWER_DRIVE=$(echo "${FIRST_KEEP_ARR[1]}" | tr '[:upper:]' '[:lower:]')
 
 # /cygdrive/e/Images/Cellmap
-FIRST_KEEP_FILE_ROOT_PATH="/cygdrive/${LOWER_DRIVE}/${FIRST_KEEP_FILE_ARRAY[3]}/${FIRST_KEEP_FILE_ARRAY[4]}"
+FIRST_KEEP_FILE_ROOT_PATH="/cygdrive/${LOWER_DRIVE}/${FIRST_KEEP_ARR[3]}/${FIRST_KEEP_ARR[4]}"
 
 if [ "${FIRST_KEEP_FILE_ROOT_PATH}" != "${ROOT_DAT_PATH}" ]; then
   echo "
@@ -232,6 +239,58 @@ fi
 NEARLINE_RAW_H5_DIR="${NEARLINE_VOLUME_DIR}/raw"
 
 # ---------------------------
+# calculate storage needs and current availability ...
+
+# convert
+#   jrc_mpi_sepia_dec_5a_retrim^E^^Images^mpi^Y2025^M02^D05^Merlin-6281_25-02-05_085159_0-1-4.dat^keep
+# to
+#   /cygdrive/e/Images/mpi/Y2025/M02/D05/Merlin-6281_25-02-05_085159_0-1-4.dat
+FIRST_DAT_SCOPE_PATH="${ROOT_DAT_PATH}${FIRST_KEEP_ARR[5]}/${FIRST_KEEP_ARR[6]}/${FIRST_KEEP_ARR[7]}/${FIRST_KEEP_ARR[8]}"
+
+echo "
+Fetching size of ${SCOPE_HOST}:${FIRST_DAT_SCOPE_PATH}.  Please enter the fibsemxfer user password again when prompted.
+"
+
+set +e
+
+# -rw-rw----   1 FIBSEM@JEISS6 None@JEISS6  413228239 2025-02-05  08:55 /cygdrive/e/Images/mpi/Y2025/M02/D05/Merlin-6281_25-02-05_085159_0-1-4.dat
+FIRST_DAT_LISTING=$(
+  su -c "ssh ${SCOPE_HOST} \"ls -l ${FIRST_DAT_SCOPE_PATH}\"" fibsemxfer
+)
+
+set -e
+
+echo "Retrieved this from ${SCOPE_HOST}:
+  ${FIRST_DAT_LISTING}
+"
+
+FIRST_DAT_SIZE_IN_MB=$(echo "${FIRST_DAT_LISTING}" | awk '{print ($5 / 1000000) + 1}' | cut -f1 -d'.')
+echo "The size of ${FIRST_DAT_SCOPE_PATH} is ${FIRST_DAT_SIZE_IN_MB} MB."
+
+TOTAL_DAT_SIZE_IN_GB=$(echo "${DAT_FILE_COUNT} * ${FIRST_DAT_SIZE_IN_MB} / 1000" | bc -l | cut -f1 -d'.')
+echo "The estimated total size of all ${DAT_FILE_COUNT} dat files is ${TOTAL_DAT_SIZE_IN_GB} GB.
+"
+
+GROUPS_GB_NEEDS=$(echo "${TOTAL_DAT_SIZE_IN_GB} / 10" | bc -l | cut -f1 -d'.')  #  10% of total
+NRS_GB_NEEDS=$(echo "${TOTAL_DAT_SIZE_IN_GB} / 2" | bc -l | cut -f1 -d'.')      #  50% of total
+NEARLINE_GB_NEEDS="${TOTAL_DAT_SIZE_IN_GB}"                                     # 100% of total
+
+GROUPS_FREE_STORAGE=$(df -H "${GROUPS_DATA_PARENT_DIR}" | grep -v "Filesystem" | awk '{print $4}')
+NRS_FREE_STORAGE=$(df -H "${NRS_DATA_PARENT_DIR}" | grep -v "Filesystem" | awk '{print $4}')
+NEARLINE_FREE_STORAGE=$(df -H "${NEARLINE_DATA_PARENT_DIR}" | grep -v "Filesystem" | awk '{print $4}')
+
+echo "Here is a comparison of current free storage and estimated needs:
+"
+printf "%-50s: %-9s %-9s\n" "Directory" "Free" "Needs"
+printf "%-50s: %9s %9s\n" "-------------------------------------------------" "---------" "---------"
+printf "%-50s: %8s %8sG\n" "${GROUPS_DATA_PARENT_DIR}" "${GROUPS_FREE_STORAGE}" "${GROUPS_GB_NEEDS}"
+printf "%-50s: %8s %8sG\n" "${NRS_DATA_PARENT_DIR}" "${NRS_FREE_STORAGE}" "${NRS_GB_NEEDS}"
+printf "%-50s: %8s %8sG\n" "${NEARLINE_DATA_PARENT_DIR}" "${NEARLINE_FREE_STORAGE}" "${NEARLINE_GB_NEEDS}"
+
+echo "
+If more storage is needed, please get that allocated before setting up the transfer process."
+
+# ---------------------------
 # create the paths ...
 
 function setupTransferPath() {
@@ -304,6 +363,7 @@ echo "{
         @stack@: @v1_acquire@,
         @restart_context_layer_count@: 1,
         @mask_width@: 100,
+        @mask_height@: @${MASK_HEIGHT}@,
         @connect@: {
             @host@: @10.40.3.113@,
             @port@: 8080,
