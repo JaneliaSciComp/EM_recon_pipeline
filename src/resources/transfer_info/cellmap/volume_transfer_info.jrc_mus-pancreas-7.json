@@ -29,6 +29,7 @@
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
+        "mask_height": 30,
         "connect": {
             "host": "10.40.3.113",
             "port": 8080,
