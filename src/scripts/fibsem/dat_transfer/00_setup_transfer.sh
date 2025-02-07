@@ -174,7 +174,9 @@ if [ ! -d "${GROUPS_DATA_PARENT_DIR}" ]; then
   SECOND_GROUPS_DIR="${STORAGE_GROUP}lab"
   GROUPS_DATA_PARENT_DIR="/groups/${STORAGE_GROUP}/${SECOND_GROUPS_DIR}/data"
 
-  if [ ! -d "${GROUPS_DATA_PARENT_DIR}" ]; then
+  if [ -d "${GROUPS_DATA_PARENT_DIR}" ]; then
+    echo "no problem, found ${GROUPS_DATA_PARENT_DIR}"
+  else
     echo "ERROR: ${GROUPS_DATA_PARENT_DIR} not found"
     exit 1
   fi
