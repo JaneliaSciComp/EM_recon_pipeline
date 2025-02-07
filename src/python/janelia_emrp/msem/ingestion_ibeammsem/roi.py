@@ -45,20 +45,51 @@ def get_roi_sfovs(
 
 
 def plot_tissue_sfovs(
-    xlog: xr.Dataset, slab: int, mfov: int | None = None, dilation: float = 15
+    xlog: xr.Dataset,
+    slab: int,
+    mfovs: list[int] | np.ndarray | None = None,
+    dilation: float = 15,
+    marker_size: float | None = None,
+    fixed_color: str | None = None,
+    off_by: int | None = None,
 ) -> None:
-    """Plots the ROI distance transform of SFOVs that are inside the dilated ROI."""
+    """Plots the ROI distance transform of SFOVs that are inside the dilated ROI.
+
+    If mfovs is None, then use all MFOVs of the slab.
+    If fixed_color provided, then tissue SFOVs are colorized with the same color.
+        If not, then they are colorized with their distance to nearest ROI boundary.
+
+    off_by: if provided, rolls the SFOV IDs by "off_by".
+        used for debugging to simulate e.g. off-by-one ID errors
+    """
+    mfovs = np.asarray(mfovs) if mfovs is not None else None
     xy_variables = dict(x=XVar.X_REFERENCE, y=XVar.Y_REFERENCE)
     distance = xlog[[*xy_variables.values(), XVar.DISTANCE_ROI]].sel(
-        slab=slab, mfov=mfov or slice(0, None)
+        slab=slab, mfov=mfovs if mfovs is not None else slice(0, None)
     )
     mask_tissue = distance[XVar.DISTANCE_ROI] < dilation
+    if off_by is not None:
+        mask_tissue = mask_tissue.roll(shifts={XDim.SFOV: off_by})
+    params_plot = dict(s=marker_size, marker="s")
     scatter = distance.where(mask_tissue).plot.scatter(
-        **xy_variables, hue=XVar.DISTANCE_ROI, cmap="jet"
+        **xy_variables,
+        hue=XVar.DISTANCE_ROI if fixed_color is None else None,
+        c=fixed_color,
+        cmap="jet",
+        alpha=0.5,
+        **params_plot,
     )
     distance.where(np.invert(mask_tissue)).plot.scatter(
-        **xy_variables, ax=scatter.axes, c="none", marker="o", edgecolors="k", alpha=0.3
+        **xy_variables,
+        ax=scatter.axes,
+        c="none",
+        edgecolors="k",
+        alpha=0.3,
+        **params_plot,
     )
+    scatter.axes.set_aspect(1)
+    scatter.axes.invert_xaxis()
+    scatter.axes.invert_yaxis()
     scatter.figure.suptitle(
         f"Distance transform of tissue SFOVs and excluded non-tissue SFOVs"
         f" | ROI dilation {dilation:.2f} micron"
@@ -66,14 +97,20 @@ def plot_tissue_sfovs(
     plt.show()
 
 
-def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
+def get_effective_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
     """Returns the IDs of effective slabs in a scan.
 
-    The number of slabs in a scan can be smaller
+    The number of effective slabs in a scan can be smaller
         than the total number of slabs physically present on a wafer:
         1. some slabs do not have any tissue to be imaged.
-            These slabs are not present in the xlog.
+            For example, slabs were cut and collected
+            before the ROI starts,
+            or after the ROI ends.
+            These slabs are never part of the effective slabs,
+            regardless of the scan.
         2. some slabs have been entirely milled and they are not imaged any more
+            That is, starting from a given scan,
+                these slabs are not effective slabs any more.
     """
     return (
         xlog[XVar.ACQUISITION]
@@ -85,7 +122,7 @@ def get_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
 
 
 def get_n_slabs(xlog: xr.Dataset, scan: int) -> np.ndarray:
-    """Returns the number of effective slabs in a scan. See get_slabs."""
+    """Returns the number of effective slabs in a scan. See get_effective_slabs."""
     return (
         xlog[XVar.ACQUISITION]
         .sel(scan=scan, mfov=slice(0, None))
