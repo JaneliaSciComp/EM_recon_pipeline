@@ -164,10 +164,20 @@ fi
 # ---------------------------
 # setup /groups path information ...
 
-GROUPS_DATA_PARENT_DIR="/groups/${STORAGE_GROUP}/${STORAGE_GROUP}/data"
+SECOND_GROUPS_DIR="${STORAGE_GROUP}"
+GROUPS_DATA_PARENT_DIR="/groups/${STORAGE_GROUP}/${SECOND_GROUPS_DIR}/data"
+
 if [ ! -d "${GROUPS_DATA_PARENT_DIR}" ]; then
-  echo "ERROR: ${GROUPS_DATA_PARENT_DIR} not found"
-  exit 1
+  echo "WARNING: ${GROUPS_DATA_PARENT_DIR} not found"
+
+  # add "lab" suffix amd try again (needed for some groups like /groups/reiser/reiserlab)
+  SECOND_GROUPS_DIR="${STORAGE_GROUP}lab"
+  GROUPS_DATA_PARENT_DIR="/groups/${STORAGE_GROUP}/${SECOND_GROUPS_DIR}/data"
+
+  if [ ! -d "${GROUPS_DATA_PARENT_DIR}" ]; then
+    echo "ERROR: ${GROUPS_DATA_PARENT_DIR} not found"
+    exit 1
+  fi
 fi
 
 GROUPS_VOLUME_DIR="${GROUPS_DATA_PARENT_DIR}/${ALIGNMENT_ID}"
