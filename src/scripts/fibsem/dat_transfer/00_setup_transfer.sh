@@ -389,7 +389,8 @@ echo "{
 
 chmod 644 "${TRANSFER_CONFIG_DIR}/${VOLUME_TRANSFER_JSON_FILE}"
 
-echo "Created ${TRANSFER_CONFIG_DIR}/${VOLUME_TRANSFER_JSON_FILE}
+echo "
+Created ${TRANSFER_CONFIG_DIR}/${VOLUME_TRANSFER_JSON_FILE}
 
 Please don't forget to commit and push this file to the EM_recon_pipeline repository in:
   src/resources/transfer_info/${STORAGE_GROUP}/${VOLUME_TRANSFER_JSON_FILE}
