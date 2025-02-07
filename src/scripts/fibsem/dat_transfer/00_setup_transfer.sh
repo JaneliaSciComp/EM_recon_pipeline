@@ -281,11 +281,11 @@ NEARLINE_FREE_STORAGE=$(df -H "${NEARLINE_DATA_PARENT_DIR}" | grep -v "Filesyste
 
 echo "Here is a comparison of current free storage and estimated needs:
 "
-printf "%-50s: %-9s %-9s\n" "Directory" "Free" "Needs"
-printf "%-50s: %9s %9s\n" "-------------------------------------------------" "---------" "---------"
-printf "%-50s: %8s %8sG\n" "${GROUPS_DATA_PARENT_DIR}" "${GROUPS_FREE_STORAGE}" "${GROUPS_GB_NEEDS}"
-printf "%-50s: %8s %8sG\n" "${NRS_DATA_PARENT_DIR}" "${NRS_FREE_STORAGE}" "${NRS_GB_NEEDS}"
-printf "%-50s: %8s %8sG\n" "${NEARLINE_DATA_PARENT_DIR}" "${NEARLINE_FREE_STORAGE}" "${NEARLINE_GB_NEEDS}"
+printf "%-50s %8s %12s\n" "Directory" "Free" "Needs"
+printf "%-50s %8s %12s\n" "-------------------------------------------------" "--------" "------------"
+printf "%-50s %8s %11sG\n" "${GROUPS_DATA_PARENT_DIR}" "${GROUPS_FREE_STORAGE}" "${GROUPS_GB_NEEDS}"
+printf "%-50s %8s %11sG\n" "${NRS_DATA_PARENT_DIR}" "${NRS_FREE_STORAGE}" "${NRS_GB_NEEDS}"
+printf "%-50s %8s %11sG\n" "${NEARLINE_DATA_PARENT_DIR}" "${NEARLINE_FREE_STORAGE}" "${NEARLINE_GB_NEEDS}"
 
 echo "
 If more storage is needed, please get that allocated before setting up the transfer process."
