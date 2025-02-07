@@ -18,12 +18,15 @@ RUN_DIR=$(readlink -m ".")
 cd "${TRANSFER_INFO_DIR}"
 
 unset TRANSFER_INFO_JSON_FILE
-shopt -s nullglob
-TI_FILES=$(find . -type f -name "volume_transfer_info.*.json" -mtime "-${MODIFICATION_DAYS}" | cut -c3-)
-shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
+mapfile -t TI_FILES < <(find . -type f -name "volume_transfer_info.*.json" -mtime "-${MODIFICATION_DAYS}" | cut -c3-)
+
+if [ ${#TI_FILES[@]} -eq 0 ]; then
+    echo "No volume_transfer_info files have been modified in the past ${MODIFICATION_DAYS} days"
+    exit 1
+fi
 
 echo "
-Version controlled volume_transfer_info files are:
+The following volume_transfer_info files have been modified in the past ${MODIFICATION_DAYS} days:
 "
 PS3="
 Choose number of volume_transfer_info file for new data set: "
