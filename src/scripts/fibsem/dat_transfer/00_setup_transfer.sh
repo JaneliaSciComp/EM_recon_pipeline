@@ -363,7 +363,7 @@ echo "{
         @stack@: @v1_acquire@,
         @restart_context_layer_count@: 1,
         @mask_width@: 100,
-        @mask_height@: @${MASK_HEIGHT}@,
+        @mask_height@: ${MASK_HEIGHT},
         @connect@: {
             @host@: @10.40.3.113@,
             @port@: 8080,
