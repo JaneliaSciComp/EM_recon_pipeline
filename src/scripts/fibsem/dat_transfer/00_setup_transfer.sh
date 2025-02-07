@@ -245,7 +245,7 @@ NEARLINE_RAW_H5_DIR="${NEARLINE_VOLUME_DIR}/raw"
 #   jrc_mpi_sepia_dec_5a_retrim^E^^Images^mpi^Y2025^M02^D05^Merlin-6281_25-02-05_085159_0-1-4.dat^keep
 # to
 #   /cygdrive/e/Images/mpi/Y2025/M02/D05/Merlin-6281_25-02-05_085159_0-1-4.dat
-FIRST_DAT_SCOPE_PATH="${ROOT_DAT_PATH}${FIRST_KEEP_ARR[5]}/${FIRST_KEEP_ARR[6]}/${FIRST_KEEP_ARR[7]}/${FIRST_KEEP_ARR[8]}"
+FIRST_DAT_SCOPE_PATH="${ROOT_DAT_PATH}/${FIRST_KEEP_ARR[5]}/${FIRST_KEEP_ARR[6]}/${FIRST_KEEP_ARR[7]}/${FIRST_KEEP_ARR[8]}"
 
 echo "
 Fetching size of ${SCOPE_HOST}:${FIRST_DAT_SCOPE_PATH}.  Please enter the fibsemxfer user password again when prompted.
