@@ -4,6 +4,10 @@ set -e
 
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+
+# only list recently modified transfer files (default is 30 days)
+MODIFICATION_DAYS="${1:-30}"
+
 BASE_SCRIPTS_DIR="${SCRIPT_DIR}/base_scripts"
 
 FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
@@ -15,7 +19,7 @@ cd "${TRANSFER_INFO_DIR}"
 
 unset TRANSFER_INFO_JSON_FILE
 shopt -s nullglob
-TI_FILES=(*/volume_transfer_info.*.json)
+TI_FILES=$(find . -type f -name "volume_transfer_info.*.json" -mtime "-${MODIFICATION_DAYS}" | cut -c3-)
 shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
 
 echo "
