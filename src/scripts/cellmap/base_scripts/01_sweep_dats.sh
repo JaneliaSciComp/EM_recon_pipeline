@@ -25,6 +25,10 @@ source "${SOURCE_MINIFORGE3_SCRIPT}"
 
 conda activate janelia_emrp
 
+# save environment python executable path so that it can be used when running as fibsemxfer user in last line below
+PYTHON_EXE=$(type python | awk '{print $3}')
+
+# export path to scripts
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/dat_sweeper.py"
@@ -37,7 +41,7 @@ echo """
 On ${HOSTNAME} at ${RUN_TIME}
 
 Running (as fibsemxfer user for connection to scope):
-  python ${ARGS}
+  ${PYTHON_EXE} ${ARGS}
 """ | tee -a "${LOG_FILE}"
 
-su -c "umask 0002; python ${ARGS} 2>&1 | tee -a ${LOG_FILE}" fibsemxfer
+su -c "umask 0002; ${PYTHON_EXE} ${ARGS} 2>&1 | tee -a ${LOG_FILE}" fibsemxfer
