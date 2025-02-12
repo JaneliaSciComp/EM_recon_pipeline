@@ -66,18 +66,18 @@ if [[ "${ROW_COUNT}" -eq "${NULL_VALUE}" || "${ROW_COUNT}" -eq "0" || "${ROW_COU
 fi
 
 # /groups/cellmap/cellmap
-RENDER_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render"
-if [[ ! -d "${RENDER_DIR}" ]]; then
+BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}"
+if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
   # /groups/reiser/reiserlab
-  PREV_RENDER_DIR="${RENDER_DIR}"
-  RENDER_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab/render"
-  if [[ ! -d "${RENDER_DIR}" ]]; then
-    echo "ERROR: can't find ${PREV_RENDER_DIR} or ${RENDER_DIR}"
+  PREV_BASE_GROUPS_DIR="${BASE_GROUPS_DIR}"
+  BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab"
+  if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
+    echo "ERROR: can't find ${PREV_BASE_GROUPS_DIR} or ${BASE_GROUPS_DIR}"
     exit 1
   fi
 fi
 
-ALIGN_DIR="${RENDER_DIR}/align/${VOLUME_NAME}"
+ALIGN_DIR="${BASE_GROUPS_DIR}/render/align/${VOLUME_NAME}"
 if [[ -d "${ALIGN_DIR}" ]]; then
   echo "ERROR: ${ALIGN_DIR} already exists!"
   exit 1

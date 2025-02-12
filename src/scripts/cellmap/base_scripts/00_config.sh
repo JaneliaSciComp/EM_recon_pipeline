@@ -20,6 +20,18 @@ export BILL_TO="${LAB_OR_PROJECT_GROUP}"
 # number of Dask workers for dat_to_render process
 DASK_DAT_TO_RENDER_WORKERS="32"
 
+# /groups/cellmap/cellmap
+BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}"
+if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
+  # /groups/reiser/reiserlab
+  PREV_BASE_GROUPS_DIR="${BASE_GROUPS_DIR}"
+  BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab"
+  if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
+    echo "ERROR: can't find ${PREV_BASE_GROUPS_DIR} or ${BASE_GROUPS_DIR}"
+    exit 1
+  fi
+fi
+
 #SCAPES_ROOT_DIR="${RENDER_NRS_ROOT}/scapes"
 N5_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.n5"
 
@@ -90,7 +102,7 @@ fi
 
 # Write spark logs to backed-up filesystem rather than user home so that they are readable by others for analysis.
 # NOTE: must consolidate logs when changing run parent dir
-export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/spark_output/${USER}"
+export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir ${BASE_GROUPS_DIR}/render/spark_output/${USER}"
 
 # Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
 # (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
