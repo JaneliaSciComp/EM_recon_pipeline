@@ -2,6 +2,7 @@
 Short script that shows a proof of concept for the background correction of
 multi-sem images using BaSiC.
 """
+import argparse
 import gc
 import logging
 import re
@@ -180,19 +181,20 @@ def group_by_beam_config(locations: str) -> Dict[BeamConfig, List[str]]:
     return beam_configs
 
 
-if __name__ == '__main__':
-    init_logger(__file__)
+def background_correct_and_upload(args: argparse.Namespace) -> None:
+    """Loads all images from the given slabs, computes background correction
+    using BaSiC, and uploads the corrected images of the trimmed versions of the
+    slabs to GCP."""
 
-    # parameters
-    slabs = [Slab(60, 296),]
+    slabs = [Slab(args.wafer, slab) for slab in args.slabs]
 
     # cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False)
-    cluster = LocalCluster(n_workers=1, threads_per_worker=20, processes=True)
+    cluster = LocalCluster(n_workers=1, threads_per_worker=8, processes=True)
     dask_client = cluster.get_client()
     plugin = CleanupPlugin()
     dask_client.register_worker_plugin(plugin)
 
-    print(f"Starting Dask cluster; see dashboard at {cluster.dashboard_link}")
+    logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
     logger.info("Processing %d slabs", len(slabs))
 
     futures = []
@@ -203,3 +205,36 @@ if __name__ == '__main__':
     for future in as_completed(futures):
         future.result()
         future.release()
+
+
+if __name__ == '__main__':
+    init_logger(__file__)
+
+    parser = argparse.ArgumentParser(description="Background correct and upload PNGs.")
+
+    parser.add_argument(
+        "-w", "--wafer",
+        help="Wafer to process images from (60 or 61).",
+        type=int,
+    )
+    parser.add_argument(
+        "-s", "--slabs",
+        help="(List of) slabs to process images from.",
+        type=int,
+        nargs='+',
+    )
+    parser.add_argument(
+        "--shading-storage-path",
+        help="Storage path for shading (shading is not stored if path is not given).",
+        type=str,
+        default=None,
+    )
+
+    # Test setup
+    cli_args = parser.parse_args("--w 60 -s 296".split())
+
+    # Production setup
+    # args = parser.parse_args()
+    logger.info("Called with %s", cli_args)
+
+    background_correct_and_upload(cli_args)
