@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class CleanupPlugin(WorkerPlugin):
     """Run garbage collection after each task to avoid memory leaks."""
     def transition(self, key, start, finish, *args, **kwargs):
-        if finish == 'released':
+        if finish == 'memory':
             gc.collect()
 
 
@@ -214,7 +214,7 @@ def background_correct_and_upload(args: argparse.Namespace) -> None:
 
     for future in as_completed(futures):
         future.result()
-        future.release()
+        del future
 
 
 if __name__ == '__main__':
