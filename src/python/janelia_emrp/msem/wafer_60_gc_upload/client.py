@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import requests
 
-from wafer_60_tools.config import Region, Slab
+from config import Region, Slab
 
 
 TIMEOUT = 10
