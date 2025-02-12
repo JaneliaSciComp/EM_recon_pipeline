@@ -3,6 +3,7 @@ Short script that shows a proof of concept for the background correction of
 multi-sem images using BaSiC.
 """
 import gc
+import logging
 import re
 import time
 from typing import Dict, List
@@ -11,12 +12,14 @@ from distributed import Future, WorkerPlugin, get_client
 from distributed.worker import logger
 from basicpy import BaSiC
 from dask.distributed import LocalCluster, as_completed
-from tqdm import tqdm
 
 from wafer_60_tools.client import MsemClient
 from wafer_60_tools.config import AcquisitionConfig, BeamConfig, Slab
 from wafer_60_tools.data import load_images_as_stack, store_beam_shading, MsemCloudWriter
+from janelia_emrp.root_logger import init_logger
 
+
+logger = logging.getLogger(__name__)
 
 SHADING_STORAGE_PATH = '/nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition'
 
@@ -126,7 +129,7 @@ def process_sfov(
     writer = MsemCloudWriter('janelia-spark-test', base_path='test_upload_mi')
 
     # Find out which images to upload
-    logger.info("%s: process and upload %d/%d images.",
+    logger.info("%s: Found %d images to process and %d to upload.",
                 beam_config, len(all_locs), len(locs_to_upload))
     locs_to_upload = set(locs_to_upload)
     keep = [loc in locs_to_upload for loc in all_locs]
@@ -178,6 +181,8 @@ def group_by_beam_config(locations: str) -> Dict[BeamConfig, List[str]]:
 
 
 if __name__ == '__main__':
+    init_logger(__file__)
+
     # parameters
     slabs = [Slab(60, 296),]
 
@@ -195,8 +200,6 @@ if __name__ == '__main__':
         logger.info("Processing %s", slab)
         futures += process_slab(slab, trim_padding=0)
 
-    for future in tqdm(as_completed(futures), total=len(futures), smoothing=0):
+    for future in as_completed(futures):
         future.result()
         future.release()
-
-    cluster.close()
