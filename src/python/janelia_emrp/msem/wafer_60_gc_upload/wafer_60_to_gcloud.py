@@ -207,14 +207,13 @@ def background_correct_and_upload(args: argparse.Namespace) -> None:
     logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
     logger.info("Processing %d slabs", len(slabs))
 
-    futures = []
     for slab in slabs:
         logger.info("Processing %s", slab)
-        futures += process_slab(slab, trim_padding=0, **vars(args))
+        futures = process_slab(slab, trim_padding=0, **vars(args))
 
-    for future in as_completed(futures):
-        future.result()
-        del future
+        for future in as_completed(futures):
+            future.result()
+            del future
 
 
 if __name__ == '__main__':
