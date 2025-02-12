@@ -5,6 +5,7 @@ multi-sem images using BaSiC.
 import argparse
 import gc
 import logging
+from pathlib import Path
 import re
 import time
 from typing import Dict, List
@@ -22,8 +23,6 @@ from janelia_emrp.root_logger import init_logger
 
 logger = logging.getLogger(__name__)
 
-SHADING_STORAGE_PATH = '/nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition'
-
 
 class CleanupPlugin(WorkerPlugin):
     """Run garbage collection after each task to avoid memory leaks."""
@@ -32,7 +31,7 @@ class CleanupPlugin(WorkerPlugin):
             gc.collect()
 
 
-def process_slab(slab: Slab, trim_padding: int = 0) -> List[Future]:
+def process_slab(slab: Slab, trim_padding: int = 0, **kwargs) -> List[Future]:
     """Divide a slab into layers and sfovs to process them."""
     client = MsemClient()
 
@@ -72,25 +71,27 @@ def process_slab(slab: Slab, trim_padding: int = 0) -> List[Future]:
     z_range = z_ranges.pop()
     logger.info("%s has %d layers.", slab, len(z_range))
 
-    return process_all_layers(download_stacks, upload_stacks, z_range)
+    return process_all_layers(download_stacks, upload_stacks, z_range, **kwargs)
 
 
 def process_all_layers(
         download_stacks: List[str],
         upload_stacks: List[str],
-        z_range: List[int]
+        z_range: List[int],
+        **kwargs
 ) -> List[Future]:
     """Process all layers of a slab."""
     futures = []
     for z in z_range:
-        futures += process_layer(download_stacks, upload_stacks, z)
+        futures += process_layer(download_stacks, upload_stacks, z, **kwargs)
     return futures
 
 
 def process_layer(
         download_stacks: List[str],
         upload_stacks: List[str],
-        z: int
+        z: int,
+        **kwargs
 ) -> List[Future]:
     """Process a single layer of a slab."""
     client = MsemClient()
@@ -115,7 +116,13 @@ def process_layer(
     futures = []
     for beam_config, locs in beam_to_all.items():
         acquisitions_to_upload = beam_to_upload[beam_config]
-        future = cluster.submit(process_sfov, beam_config, locs, acquisitions_to_upload)
+        future = cluster.submit(
+            process_sfov,
+            beam_config,
+            locs,
+            acquisitions_to_upload,
+            kwargs.get('shading_storage_path', None),
+        )
         futures.append(future)
 
     return futures
@@ -124,7 +131,8 @@ def process_layer(
 def process_sfov(
         beam_config: BeamConfig,
         all_locs: List[str],
-        locs_to_upload: List[str]
+        locs_to_upload: List[str],
+        shading_storage_path: Path | None
 ) -> None:
     """Process a single sfov (i.e., a beam configuration)."""
     writer = MsemCloudWriter('janelia-spark-test', base_path='test_upload_mi')
@@ -154,7 +162,9 @@ def process_sfov(
         "%s: loading: %.2fs, correcting: %.2fs, uploading: %.2fs",
         beam_config, correct - start, upload - correct, end - upload
     )
-    store_beam_shading(shading, SHADING_STORAGE_PATH, beam_config)
+
+    if shading_storage_path is not None:
+        store_beam_shading(shading, shading_storage_path, beam_config)
 
 
 def correct_beam_shading(all_images, indices_to_correct):
@@ -200,7 +210,7 @@ def background_correct_and_upload(args: argparse.Namespace) -> None:
     futures = []
     for slab in slabs:
         logger.info("Processing %s", slab)
-        futures += process_slab(slab, trim_padding=0)
+        futures += process_slab(slab, trim_padding=0, **vars(args))
 
     for future in as_completed(futures):
         future.result()
@@ -232,6 +242,7 @@ if __name__ == '__main__':
 
     # Test setup
     cli_args = parser.parse_args("--w 60 -s 296".split())
+    # cli_args = parser.parse_args("--w 60 -s 296 --shading-storage-path /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition".split())
 
     # Production setup
     # args = parser.parse_args()
