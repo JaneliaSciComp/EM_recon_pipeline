@@ -199,7 +199,7 @@ def background_correct_and_upload(args: argparse.Namespace) -> None:
     slabs = [Slab(args.wafer, slab) for slab in args.slabs]
 
     # cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False)
-    cluster = LocalCluster(n_workers=1, threads_per_worker=8, processes=True)
+    cluster = LocalCluster(n_workers=args.num_threads, threads_per_worker=1, processes=True)
     dask_client = cluster.get_client()
     plugin = CleanupPlugin()
     dask_client.register_worker_plugin(plugin)
@@ -238,6 +238,12 @@ if __name__ == '__main__':
         help="Storage path for shading (shading is not stored if path is not given).",
         type=str,
         default=None,
+    )
+    parser.add_argument(
+        "--num-threads",
+        help="Number of threads to use for processing.",
+        type=int,
+        default=8,
     )
 
     # Test setup
