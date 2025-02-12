@@ -128,7 +128,7 @@ def process_sfov(
         shading_storage_path: Path | None
 ) -> None:
     """Process a single sfov (i.e., a beam configuration)."""
-    writer = MsemCloudWriter('janelia-spark-test', base_path='test_upload_mi')
+    writer = MsemCloudWriter.get_cached('janelia-spark-test', base_path='test_upload_mi')
 
     # Find out which images to upload
     logger.info("%s: Found %d images to process and %d to upload.",
@@ -193,6 +193,7 @@ def background_correct_and_upload(args: argparse.Namespace) -> None:
 
     # cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False)
     cluster = LocalCluster(n_workers=args.num_threads, threads_per_worker=1, processes=True)
+    _ = cluster.get_client()
 
     logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
     logger.info("Processing %d slabs", len(slabs))

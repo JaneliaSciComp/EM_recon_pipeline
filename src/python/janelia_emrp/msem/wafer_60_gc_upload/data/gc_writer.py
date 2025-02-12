@@ -1,3 +1,4 @@
+import functools
 from typing import List
 from cv2 import imencode
 from google.cloud import storage
@@ -65,3 +66,18 @@ class MsemCloudWriter:
             f"mfov_{acquisition_config.mfov:04}/"
             f"sfov_{acquisition_config.sfov:03}.png"
         )
+
+
+    @classmethod
+    @functools.lru_cache(maxsize=100)
+    def get_cached(
+            cls,
+            bucket_name: str,
+            base_path: str,
+    ) -> 'MsemCloudWriter':
+        """
+        Get a cached instance of the MsemCloudWriter.
+        :param bucket_name: The name of the Google Cloud Storage bucket.
+        :param base_path: The base prefix for the data in the bucket.
+        """
+        return cls(bucket_name=bucket_name, base_path=base_path)
