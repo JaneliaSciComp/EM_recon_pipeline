@@ -9,9 +9,11 @@
 
 set -e
 
-for LAB in cellmap fibsem reiser; do
-  cd /opt/local/jetty_base/webapps/z_corr_plots/${LAB}
-  for Z_CORR_BASE_DIR in /nrs/"${LAB}"/data/*/z_corr/"${LAB}"/*; do
+BASE_PLOT_DIR="/opt/local/jetty_base/webapps/z_corr_plots"
+
+for GROUP in cellmap fibsem reiser; do
+  cd "${BASE_PLOT_DIR}/${GROUP}"
+  for Z_CORR_BASE_DIR in /nrs/"${GROUP}"/data/*/z_corr/"${GROUP}"/*; do
     NAME=$(basename "${Z_CORR_BASE_DIR}")
     if [ -e "${NAME}" ]; then
       echo "${NAME} already exists"
