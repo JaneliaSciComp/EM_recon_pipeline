@@ -10,7 +10,7 @@ import re
 import time
 from typing import Dict, List
 
-from distributed import Future, WorkerPlugin, get_client
+from distributed import Future, get_client
 from distributed.worker import logger
 from basicpy import BaSiC
 from dask.distributed import LocalCluster, as_completed
@@ -22,13 +22,6 @@ from janelia_emrp.root_logger import init_logger
 
 
 logger = logging.getLogger(__name__)
-
-
-class CleanupPlugin(WorkerPlugin):
-    """Run garbage collection after each task to avoid memory leaks."""
-    def transition(self, key, start, finish, *args, **kwargs):
-        if finish == 'memory':
-            gc.collect()
 
 
 def process_slab(slab: Slab, trim_padding: int = 0, **kwargs) -> List[Future]:
@@ -200,20 +193,21 @@ def background_correct_and_upload(args: argparse.Namespace) -> None:
 
     # cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False)
     cluster = LocalCluster(n_workers=args.num_threads, threads_per_worker=1, processes=True)
-    dask_client = cluster.get_client()
-    plugin = CleanupPlugin()
-    dask_client.register_worker_plugin(plugin)
 
     logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
     logger.info("Processing %d slabs", len(slabs))
 
     for slab in slabs:
         logger.info("Processing %s", slab)
+        start = time.time()
         futures = process_slab(slab, trim_padding=0, **vars(args))
+        logger.info("%s has %d tasks", slab, len(futures))
 
         for future in as_completed(futures):
             future.result()
             del future
+        end = time.time()
+        logger.info("Finished processing %s - took %.2fs", slab, end - start)
 
 
 if __name__ == '__main__':
