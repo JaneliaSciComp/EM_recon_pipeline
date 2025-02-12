@@ -3,7 +3,7 @@ from cv2 import imencode
 from google.cloud import storage
 import numpy as np
 
-from msem_tools.config import AcquisitionConfig
+from wafer_60_tools.config import AcquisitionConfig
 
 class MsemCloudWriter:
     """

@@ -13,9 +13,9 @@ from basicpy import BaSiC
 from dask.distributed import LocalCluster, as_completed
 from tqdm import tqdm
 
-from msem_tools.client import MsemClient
-from msem_tools.config import AcquisitionConfig, BeamConfig, Slab
-from msem_tools.data import load_images_as_stack, store_beam_shading, MsemCloudWriter
+from wafer_60_tools.client import MsemClient
+from wafer_60_tools.config import AcquisitionConfig, BeamConfig, Slab
+from wafer_60_tools.data import load_images_as_stack, store_beam_shading, MsemCloudWriter
 
 
 SHADING_STORAGE_PATH = '/nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition'
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     cluster = LocalCluster(n_workers=1, threads_per_worker=20, processes=True)
     dask_client = cluster.get_client()
     plugin = CleanupPlugin()
-    dask_client.register_plugin(plugin)
+    dask_client.register_worker_plugin(plugin)
 
     print(f"Starting Dask cluster; see dashboard at {cluster.dashboard_link}")
     logger.info("Processing %d slabs", len(slabs))

@@ -4,7 +4,7 @@ from typing import List
 from cv2 import imread, imwrite, IMREAD_GRAYSCALE
 import numpy as np
 
-from msem_tools.config import BeamConfig
+from wafer_60_tools.config import BeamConfig
 
 
 def trim_mime_type(file_path: str) -> str:
