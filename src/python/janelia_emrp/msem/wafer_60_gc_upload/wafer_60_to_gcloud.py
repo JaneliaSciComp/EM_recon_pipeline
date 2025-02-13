@@ -3,9 +3,7 @@ Short script that shows a proof of concept for the background correction of
 multi-sem images using BaSiC.
 """
 import argparse
-import gc
 import logging
-from pathlib import Path
 import re
 import time
 from typing import Dict, List
@@ -114,7 +112,7 @@ def process_layer(
             beam_config,
             locs,
             acquisitions_to_upload,
-            kwargs.get('shading_storage_path', None),
+            **kwargs
         )
         futures.append(future)
 
@@ -125,11 +123,9 @@ def process_sfov(
         beam_config: BeamConfig,
         all_locs: List[str],
         locs_to_upload: List[str],
-        shading_storage_path: Path | None
+        **kwargs
 ) -> None:
     """Process a single sfov (i.e., a beam configuration)."""
-    writer = MsemCloudWriter.get_cached('janelia-spark-test', base_path='test_upload_mi')
-
     # Find out which images to upload
     logger.info("%s: Found %d images to process and %d to upload.",
                 beam_config, len(all_locs), len(locs_to_upload))
@@ -145,6 +141,7 @@ def process_sfov(
 
     # Upload images
     upload = time.time()
+    writer = MsemCloudWriter.get_cached(kwargs["bucket_name"], kwargs["base_path"])
     all_locs = [AcquisitionConfig.from_storage_location(loc) for loc, k in zip(all_locs, keep) if k]
     succeeded = writer.write_all_images(corrected_images, all_locs)
     if not all(succeeded):
@@ -156,6 +153,8 @@ def process_sfov(
         beam_config, correct - start, upload - correct, end - upload
     )
 
+    # Save the shading to disk if desired
+    shading_storage_path = kwargs.get("shading_storage_path", None)
     if shading_storage_path is not None:
         store_beam_shading(shading, shading_storage_path, beam_config)
 
@@ -239,9 +238,20 @@ if __name__ == '__main__':
         type=int,
         default=8,
     )
+    parser.add_argument(
+        "--bucket-name",
+        help="Google Cloud Storage bucket to upload to.",
+        type=str,
+        default="janelia-spark-test",
+    )
+    parser.add_argument(
+        "--base-path",
+        help="Base path in the GC bucket to upload to.",
+        type=str,
+    )
 
     # Test setup
-    cli_args = parser.parse_args("--w 60 -s 296".split())
+    cli_args = parser.parse_args("--w 60 -s 296 --base-path test_upload_mi".split())
     # cli_args = parser.parse_args("--w 60 -s 296 --shading-storage-path /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition".split())
 
     # Production setup
