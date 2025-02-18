@@ -6,7 +6,6 @@ import itertools
 from functools import partial
 from typing import TYPE_CHECKING
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from dask import bag
@@ -19,9 +18,6 @@ from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from matplotlib.transforms import Affine2D
 from skimage.io import imread
 from skimage.transform import EuclideanTransform
-
-#matplotlib.use("tkagg")
-matplotlib.use("Agg") # avoid "Cannot load backend 'tkagg' which requires the 'tk' interactive framework" error
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -58,18 +54,21 @@ def get_slab_rotation(xlog: xr.Dataset, scan: int, slab: int) -> float:
 
 
 def get_xys_sfov_and_paths(
-    xlog: xr.Dataset, scan: int, slab: int, mfov: int
+    xlog: xr.Dataset, scan: int, slab: int, mfov: int, slab_path: Path | None = None
 ) -> tuple[list[Path], np.ndarray]:
     """Paths and top-left corner coordinates of SFOVs of an MFOV in straight orientation.
 
-    Paths:
-        type UNC
-        length N_BEAMS
-    Coordinates:
-        shape (N_BEAMS, 2)
-        unit: full-resolution pixel
-        orientation: original, that is, the SFOVs are "straight"
-        top-left corner of the SFOVs
+    slab_path can be provided if we do not use the original root stored in xlog 
+    
+    Returns:
+        Paths:
+            type UNC
+            length N_BEAMS
+        Coordinates:
+            shape (N_BEAMS, 2)
+            unit: full-resolution pixel
+            orientation: original, that is, the SFOVs are "straight"
+            top-left corner of the SFOVs
 
     To align multiple slabs with the correct offset and orientation,
         apply the slab rotation around the center (0,0).
@@ -82,10 +81,10 @@ def get_xys_sfov_and_paths(
         rotation=np.radians(get_slab_rotation(xlog=xlog, scan=scan, slab=slab))
     )(xys_center_rotated)
     xys_top_left_original = xys_center_original - np.array(
-        [xlog[XDim.X_SFOV].size / 2, xlog[XDim.Y_SFOV].size / 2]
+        [get_SFOV_width(xlog) / 2, get_SFOV_height(xlog) / 2]
     )
     return get_image_paths(
-        slab_path=get_slab_path(xlog=xlog, scan=scan, slab=slab),
+        slab_path=slab_path or get_slab_path(xlog=xlog, scan=scan, slab=slab),
         mfovs=[mfov],
         thumbnail=False,
     ), xys_top_left_original
@@ -230,3 +229,37 @@ def plot_aligned_slab(
         sfov_patch.set_transform(transform + ax.transData)
     fig.suptitle("Slab assembled in local space. Recommended for ingestion.")
     plt.show()
+
+
+def get_SFOV_width(xlog: xr.Dataset) -> int:
+    """Gets the width of all SFOV images, in pixels.
+
+    It remains fixed for a wafer.
+    """
+    return xlog[XDim.X_SFOV].size
+
+
+def get_SFOV_height(xlog: xr.Dataset) -> int:
+    """Gets the height of all SFOV images, in pixels.
+
+    It remains fixed for a wafer.
+    """
+    return xlog[XDim.Y_SFOV].size
+
+
+def get_effective_scans(xlog: xr.Dataset, slab: int) -> list[int]:
+    """Gets the effective scans of a slab.
+
+    The effective scans are the scans during which the slab was actually acquired.
+
+    The xlog is overdimensioned along XDim.SCAN,
+        therefore many scans are left empty at the upper end.
+    Also, the number of scans is not constant across slabs.
+        Some slabs may have 65 scans, and others 67.
+    """
+    return (
+        xlog[XVar.ACQUISITION]
+        .sel(scan=slice(0, None), mfov=0, slab=slab)
+        .dropna(XDim.SCAN)[XDim.SCAN]
+        .values.tolist()
+    )
