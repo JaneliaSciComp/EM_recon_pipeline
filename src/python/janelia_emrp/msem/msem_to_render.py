@@ -132,17 +132,21 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
     return tile_specs
 
 def create_tile_id(wafer_short_prefix: str, slab: int, scan: int, mfov: int, sfov: int)->str:
-    """Creates tile ID.
+    """Creates tile ID with a 1-based SFOV number component.
     
     E.g.: w060_magc0002_scan001_m0003_s04
     """
+
+    # scope SFOV numbering (and image paths) are 1-indexed, using that number in the tile ID for consistency
+    scope_sfov_number = sfov + 1
+
     return "_".join(
         (
             f"w{wafer_short_prefix}",
             f"magc{slab:04}",
             f"scan{scan:03}",
             f"m{mfov:04}",
-            f"s{sfov:02}",
+            f"s{scope_sfov_number:02}",
         )
     )
 
