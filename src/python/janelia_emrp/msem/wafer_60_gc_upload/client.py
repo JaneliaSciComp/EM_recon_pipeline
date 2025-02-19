@@ -3,7 +3,6 @@ Functions to background correct and upload PNGs to Google Cloud Storage.
 """
 from dataclasses import dataclass
 import logging
-import re
 import time
 
 from basicpy import BaSiC
@@ -30,7 +29,6 @@ class Parameters:
     host: str
     owner: str
     wafer: int
-    trim_padding: int
     num_threads: int
     bucket_name: str
     base_path: str
@@ -80,9 +78,6 @@ def process_slab(
     project = render_details.project_from_slab(slab.wafer, slab.serial_id)
     client = MsemClient(host=param.host, owner=param.owner, project=project)
 
-    download_pattern = re.compile('_r(\\d+)$')                  # no trimming
-    upload_pattern = re.compile(f'_d{param.trim_padding:02}$')  # trimmed with given padding
-
     # Check if all regions of the slab have consistent z ranges
     z_ranges = set()
     region_stacks = client.get_stack_ids(slab)
@@ -94,8 +89,8 @@ def process_slab(
 
             # Check if the stack is a download or upload stack
             stack_name = stack_id.stack
-            is_download = download_pattern.search(stack_name) is not None
-            is_upload = upload_pattern.search(stack_name) is not None
+            is_download = render_details.is_source_stack(stack_name)
+            is_upload = render_details.is_target_stack(stack_name)
 
             if not is_download and not is_upload:
                 continue

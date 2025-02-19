@@ -2,6 +2,7 @@
 Script to upload a first wafer 60 test stack to Google Cloud Storage.
 """
 import argparse
+import re
 
 from janelia_emrp.root_logger import init_logger
 from janelia_emrp.msem.wafer_60_gc_upload.client import Parameters, background_correct_and_upload
@@ -10,6 +11,14 @@ from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDe
 
 class RenderDetails(AbstractRenderDetails):
     """Details for the render database for a first test stack of wafer 60."""
+    def __init__(self, trim_padding: int):
+        super().__init__()
+
+        # No trimming for the source stack (e.g., w60_s296_r00)
+        self.source_pattern = re.compile('_r(\\d+)$')
+
+        # Trimming for the target stack (e.g., w60_s296_r00_d30)
+        self.destination_pattern = re.compile(f'_d{trim_padding:02}$')
 
     def project_from_slab(self, wafer: int, serial_id: int) -> str:
         """Get the project name from the wafer / serial ID combination."""
@@ -17,6 +26,13 @@ class RenderDetails(AbstractRenderDetails):
         upper_bound = lower_bound + 9
         return f"w{wafer}_serial_{lower_bound}_to_{upper_bound}"
 
+    def is_source_stack(self, stack_name: str) -> bool:
+        """Check if the stack is to be used as a source for background correction."""
+        return self.source_pattern.search(stack_name) is not None
+
+    def is_target_stack(self, stack_name: str) -> bool:
+        """Check if the stack is to be used as a target for background correction."""
+        return self.destination_pattern.search(stack_name) is not None
 
 
 if __name__ == '__main__':
@@ -97,7 +113,7 @@ if __name__ == '__main__':
         num_threads=args.num_threads,
         bucket_name=args.bucket_name,
         base_path=args.base_path,
-        trim_padding=args.trim_padding,
         shading_storage_path=args.shading_storage_path,
     )
-    background_correct_and_upload(args.slabs, RenderDetails(), param)
+    render_details = RenderDetails(args.trim_padding)
+    background_correct_and_upload(args.slabs, render_details, param)
