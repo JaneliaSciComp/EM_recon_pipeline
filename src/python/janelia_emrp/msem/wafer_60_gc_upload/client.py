@@ -2,6 +2,7 @@
 Functions to background correct and upload PNGs to Google Cloud Storage.
 """
 import argparse
+from dataclasses import dataclass
 import logging
 import re
 import time
@@ -23,28 +24,40 @@ from details import (
 logger = logging.getLogger(__name__)
 
 
-def background_correct_and_upload(
-        args: argparse.Namespace,
-    ) -> None:
+@dataclass
+class Parameters:
+    """Class to hold parameters for the background correction and upload."""
+    host: str
+    owner: str
+    wafer: int
+    trim_padding: int
+    num_threads: int
+    bucket_name: str
+    base_path: str
+    shading_storage_path: str | None
+
+
+def background_correct_and_upload(slabs: list[int], param: Parameters) -> None:
     """Loads all images from the given slabs, computes background correction
     using BaSiC, and uploads the corrected images of the trimmed versions of the
     slabs to GCP."""
 
-    logger.info("background_correct_and_upload: Called with %s", args)
+    logger.info("background_correct_and_upload: Called with %s", param)
 
-    slabs = [Slab(args.wafer, slab) for slab in args.slabs]
+    slabs = [Slab(param.wafer, slab) for slab in slabs]
 
-    # cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False)
-    cluster = LocalCluster(n_workers=args.num_threads, threads_per_worker=1, processes=True)
+    # Spin up local dask cluster (this is supposed to run on a single machine)
+    cluster = LocalCluster(n_workers=param.num_threads, threads_per_worker=1, processes=True)
     _ = cluster.get_client()
 
     logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
     logger.info("Processing %d slabs", len(slabs))
 
+    # Process slabs in order, but process sfovs in parallel
     for slab in slabs:
         logger.info("Processing %s", slab)
         start = time.time()
-        futures = process_slab(slab, trim_padding=0, **vars(args))
+        futures = process_slab(slab, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
         for future in as_completed(futures):
@@ -54,12 +67,12 @@ def background_correct_and_upload(
         logger.info("Finished processing %s - took %.2fs", slab, end - start)
 
 
-def process_slab(slab: Slab, trim_padding: int = 0, **kwargs) -> list[Future]:
+def process_slab(slab: Slab, param: Parameters) -> list[Future]:
     """Divide a slab into layers and sfovs to process them."""
-    client = MsemClient(host=kwargs["host"], owner=kwargs["owner"])
+    client = MsemClient(host=param.host, owner=param.owner)
 
-    download_pattern = re.compile('_r(\\d+)$')            # no trimming
-    upload_pattern = re.compile(f'_d{trim_padding:02}$')  # trimmed with given padding
+    download_pattern = re.compile('_r(\\d+)$')                  # no trimming
+    upload_pattern = re.compile(f'_d{param.trim_padding:02}$')  # trimmed with given padding
 
     # Check if all regions of the slab have consistent z ranges
     z_ranges = set()
@@ -94,7 +107,7 @@ def process_slab(slab: Slab, trim_padding: int = 0, **kwargs) -> list[Future]:
     z_range = z_ranges.pop()
     logger.info("%s has %d layers.", slab, len(z_range))
 
-    return process_all_layers(download_stacks, upload_stacks, z_range, client, **kwargs)
+    return process_all_layers(download_stacks, upload_stacks, z_range, client, param)
 
 
 def process_all_layers(
@@ -102,12 +115,12 @@ def process_all_layers(
         upload_stacks: list[str],
         z_range: list[int],
         render_client: MsemClient,
-        **kwargs
+        param: Parameters
 ) -> list[Future]:
     """Process all layers of a slab."""
     futures = []
     for z in z_range:
-        futures += process_layer(download_stacks, upload_stacks, render_client, z, **kwargs)
+        futures += process_layer(download_stacks, upload_stacks, render_client, z, param)
     return futures
 
 
@@ -116,7 +129,7 @@ def process_layer(
         upload_stacks: list[str],
         render_client: MsemClient,
         z: int,
-        **kwargs
+        param: Parameters
 ) -> list[Future]:
     """Process a single layer of a slab."""
     cluster = get_client()
@@ -145,7 +158,9 @@ def process_layer(
             beam_config,
             locs,
             acquisitions_to_upload,
-            **kwargs
+            param.bucket_name,
+            param.base_path,
+            param.shading_storage_path
         )
         futures.append(future)
 
@@ -156,7 +171,9 @@ def process_sfov(
         beam_config: BeamConfig,
         all_locs: list[str],
         locs_to_upload: list[str],
-        **kwargs
+        bucket_name: str,
+        base_path: str,
+        shading_storage_path: str
 ) -> None:
     """Process a single sfov (i.e., a beam configuration)."""
     # Find out which images to upload
@@ -174,7 +191,7 @@ def process_sfov(
 
     # Upload images
     upload = time.time()
-    writer = MsemCloudWriter.get_cached(kwargs["bucket_name"], kwargs["base_path"])
+    writer = MsemCloudWriter.get_cached(bucket_name, base_path)
     all_locs = [AcquisitionConfig.from_storage_location(loc) for loc, k in zip(all_locs, keep) if k]
     succeeded = writer.write_all_images(corrected_images, all_locs)
     if not all(succeeded):
@@ -187,7 +204,6 @@ def process_sfov(
     )
 
     # Save the shading to disk if desired
-    shading_storage_path = kwargs.get("shading_storage_path", None)
     if shading_storage_path is not None:
         store_beam_shading(shading, shading_storage_path, beam_config)
 
