@@ -39,34 +39,8 @@ def build_fit_parameters_path(slab_scan_path: Path):
     return Path(slab_scan_path, "sfov_correction/results/fit_parameters.txt")
 
 def load_scan_fit_parameters(slab_scan_path: Path) -> ScanFitParameters:
-
-    # slab_scan_path: /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010
-    scan_name = slab_scan_path.name
-
-    if not scan_name.startswith("scan_"):
-        raise RuntimeError(f"expected scan name for {slab_scan_path} to start with 'scan_' but found {scan_name}")
-
-    scan_index = int(scan_name.split("_")[1])
-
-    fit_parameters_path = build_fit_parameters_path(slab_scan_path)
-    if not fit_parameters_path.exists():
-        raise RuntimeError(f"{fit_parameters_path} not found")
-
-    values = []
-    with open(fit_parameters_path, 'r') as data_file:
-        for line in data_file:
-            values.append(float(line))
-
-    if len(values) < 3:
-        raise RuntimeError(f"expected at least 3 lines but found {len(values)} lines in {fit_parameters_path}")
-
-    return ScanFitParameters(path=fit_parameters_path,
-                             scan_name=scan_name,
-                             scan_index=scan_index,
-                             a=values[0],
-                             b=values[1],
-                             c=values[2])
-
+    # for wafers 60 and 61, we decided to hardcode the parameters rather than reading them in for each scan
+    return WAFER_60_61_SCAN_FIT_PARAMETERS
 
 def main(argv: List[str]):
     fit_parameters = load_scan_fit_parameters(slab_scan_path=Path(argv[1]))

@@ -22,8 +22,7 @@ from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
 )
 from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
-from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, \
-    build_fit_parameters_path, WAFER_60_61_SCAN_FIT_PARAMETERS
+from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_60_61_SCAN_FIT_PARAMETERS
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 from janelia_emrp.root_logger import init_logger
 
@@ -313,10 +312,8 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                     logger.warning(f"{func_name}: skipping import of scan {scan} because {first_sfov_path} is missing")
                     continue
 
-                fit_parameters_path = build_fit_parameters_path(slab_scan_path)
-                if not fit_parameters_path.exists():
-                    logger.warning(f"{func_name}: skipping import of scan {scan} because {fit_parameters_path} is missing")
-                    continue
+                # for wafers 60 and 61, we decided to hardcode the parameters in scan_fit_parameters.py
+                # WAFER_60_61_SCAN_FIT_PARAMETERS rather than reading them in for each scan
 
                 tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
                                                             scan=scan,
