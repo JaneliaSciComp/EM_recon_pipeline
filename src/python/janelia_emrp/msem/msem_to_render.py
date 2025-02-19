@@ -290,10 +290,10 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 slab_scan_sfov_path_list: list[Path] = []
                 slab_scan_sfov_xy_list: list[tuple[int, int]] = []
                 # change //nearline-msem.int.janelia.org/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
-                # to     /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
+                # to     /nearline/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_004/slabs/slab_0399
                 slab_scan_path = Path(
                     str(get_slab_path(xlog=xlog, scan=scan,slab=slab_info.magc_id))
-                    .replace("//nearline-msem.int.janelia.org", "/nrs")
+                    .replace("//nearline-msem.int.janelia.org", "/nearline")
                 )
                 for mfov in slab_info.mfovs:
                     mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
