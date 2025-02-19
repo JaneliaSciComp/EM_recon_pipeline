@@ -72,7 +72,11 @@ class MsemCloudWriter:
         """
         Get the path of a single image for the given acquisition configuration.
         """
-        return f"{self._bucket}/{self._sfov_path_for(acquisition_config)}"
+        return (
+            "https://storage.googleapis.com/"
+            f"{self._bucket.name}/"
+            f"{self._sfov_path_for(acquisition_config)}"
+        )
 
 
     @classmethod

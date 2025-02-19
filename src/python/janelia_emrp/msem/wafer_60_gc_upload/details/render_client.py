@@ -1,12 +1,8 @@
 import re
 from dataclasses import dataclass
 
-from janelia_emrp.msem.wafer_60_gc_upload.details import (
-    Region,
-    Slab,
-    MsemCloudWriter,
-    AcquisitionConfig
-)
+from janelia_emrp.msem.wafer_60_gc_upload.details.gc_writer import MsemCloudWriter
+from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig, Slab, Region
 from janelia_emrp.render.web_service_request import RenderRequest
 
 

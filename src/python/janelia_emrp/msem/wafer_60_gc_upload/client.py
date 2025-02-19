@@ -120,8 +120,8 @@ def process_slab(
     # Create render stacks with the google cloud paths
     gc_stacks = []
     for upload_stack in upload_stacks:
-        stack_with_gc_paths = render_details.gc_stack_from(upload_stack)
-        client.setup_new_stack(upload_stack, stack_with_gc_paths)
+        stack_with_gc_paths = render_details.gc_stack_from(upload_stack.stack)
+        client.setup_new_stack(upload_stack.stack, stack_with_gc_paths)
         gc_stacks.append(stack_with_gc_paths)
 
     return process_all_layers(
