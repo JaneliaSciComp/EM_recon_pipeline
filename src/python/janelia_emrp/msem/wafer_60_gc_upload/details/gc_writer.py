@@ -68,6 +68,13 @@ class MsemCloudWriter:
         )
 
 
+    def full_url(self, acquisition_config: AcquisitionConfig) -> str:
+        """
+        Get the path of a single image for the given acquisition configuration.
+        """
+        return f"{self._bucket}/{self._sfov_path_for(acquisition_config)}"
+
+
     @classmethod
     @functools.lru_cache(maxsize=100)
     def get_cached(

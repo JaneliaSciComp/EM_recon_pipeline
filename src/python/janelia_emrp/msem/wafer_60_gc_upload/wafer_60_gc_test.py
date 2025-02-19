@@ -34,6 +34,12 @@ class RenderDetails(AbstractRenderDetails):
         """Check if the stack is to be used as a target for background correction."""
         return self.destination_pattern.search(stack_name) is not None
 
+    def gc_stack_from(self, stack_name: str) -> str:
+        """Get the name of the stack with Google Cloud Storage paths from the original
+        stack name.
+        """
+        return stack_name + "_gc"
+
 
 if __name__ == '__main__':
     init_logger(__file__)

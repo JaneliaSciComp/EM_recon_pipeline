@@ -59,12 +59,20 @@ def background_correct_and_upload(
     for slab in slabs:
         logger.info("Processing %s", slab)
         start = time.time()
-        futures = process_slab(slab, render_details, param)
+
+        project = render_details.project_from_slab(slab.wafer, slab.serial_id)
+        client = MsemClient(host=param.host, owner=param.owner, project=project)
+
+        futures, gc_stacks = process_slab(slab, render_details, client, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
         for future in as_completed(futures):
             future.result()
-            del future
+            del future  # Free up memory to avoid memory leak
+
+        for gc_stack in gc_stacks:
+            client.complete_stack(gc_stack)
+
         end = time.time()
         logger.info("Finished processing %s - took %.2fs", slab, end - start)
 
@@ -72,12 +80,10 @@ def background_correct_and_upload(
 def process_slab(
         slab: Slab,
         render_details: AbstractRenderDetails,
+        client: MsemClient,
         param: Parameters
     ) -> list[Future]:
     """Divide a slab into layers and sfovs to process them."""
-    project = render_details.project_from_slab(slab.wafer, slab.serial_id)
-    client = MsemClient(host=param.host, owner=param.owner, project=project)
-
     # Check if all regions of the slab have consistent z ranges
     z_ranges = set()
     region_stacks = client.get_stack_ids(slab)
@@ -107,19 +113,31 @@ def process_slab(
     # There should be only one z range for all regions
     if len(z_ranges) != 1:
         raise ValueError(f"{slab} has inconsistent z ranges.")
-    
+
     z_range = z_ranges.pop()
     logger.info("%s has %d layers.", slab, len(z_range))
 
     # Create render stacks with the google cloud paths
-    
+    gc_stacks = []
+    for upload_stack in upload_stacks:
+        stack_with_gc_paths = render_details.gc_stack_from(upload_stack)
+        client.setup_new_stack(upload_stack, stack_with_gc_paths)
+        gc_stacks.append(stack_with_gc_paths)
 
-    return process_all_layers(download_stacks, upload_stacks, z_range, client, param)
+    return process_all_layers(
+        download_stacks,
+        upload_stacks,
+        gc_stacks,
+        z_range,
+        client,
+        param
+    ), gc_stacks
 
 
 def process_all_layers(
         download_stacks: list[str],
         upload_stacks: list[str],
+        gc_stacks: list[str],
         z_range: list[int],
         render_client: MsemClient,
         param: Parameters
@@ -127,28 +145,31 @@ def process_all_layers(
     """Process all layers of a slab."""
     futures = []
     for z in z_range:
-        futures += process_layer(download_stacks, upload_stacks, render_client, z, param)
+        futures += process_layer(download_stacks, upload_stacks, gc_stacks, render_client, z, param)
     return futures
 
 
 def process_layer(
         download_stacks: list[str],
         upload_stacks: list[str],
+        gc_stacks: list[str],
         render_client: MsemClient,
         z: int,
         param: Parameters
 ) -> list[Future]:
     """Process a single layer of a slab."""
-    cluster = get_client()
-
     # Collect storage locations across all regions
     all_locations = []
     for stack in download_stacks:
-        all_locations += render_client.get_storage_locations(stack_id=stack, z=z)
+        locations, _ = render_client.get_storage_locations(stack_id=stack, z=z)
+        all_locations += locations
 
     upload_locations = []
-    for stack in upload_stacks:
-        upload_locations += render_client.get_storage_locations(stack_id=stack, z=z)
+    gc_writer = MsemCloudWriter.get_cached(param.bucket_name, param.base_path)
+    for stack, gc_stack in zip(upload_stacks, gc_stacks):
+        locations, tile_specs = render_client.get_storage_locations(stack_id=stack, z=z)
+        upload_locations += locations
+        render_client.save_tilespecs_with_gc_paths(gc_stack, tile_specs, gc_writer)
 
     # Group locations by BeamConfig
     beam_to_all = group_by_beam_config(all_locations)
@@ -158,6 +179,7 @@ def process_layer(
         raise ValueError(f"Slab {first_beam.slab} has only {len(beam_to_all)} sfovs.")
 
     futures = []
+    cluster = get_client()
     for beam_config, locs in beam_to_all.items():
         acquisitions_to_upload = beam_to_upload[beam_config]
         future = cluster.submit(
