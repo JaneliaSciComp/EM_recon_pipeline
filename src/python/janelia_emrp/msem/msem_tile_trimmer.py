@@ -46,7 +46,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
         for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
             for zero_based_sfov_id in get_roi_sfovs(xlog=xlog, slab=slab_info.magc_id, mfov=mfov, dilation=dilation):
                 one_based_sfov_id = zero_based_sfov_id + 1 # to keep consistent with the scope SFOV file names
-                roi_names[f"{mfov:04}_s{one_based_sfov_id:03}"] = True
+                roi_names[f"{mfov:04}_s{one_based_sfov_id:02}"] = True
 
         if len(roi_names) == 0:
             logger.warning(f"{func_name}: skipping stack {stack} because no SFOVs are within the ROI, "
@@ -94,8 +94,11 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
 
             filtered_map = {}
             for tile_id in tile_id_to_spec_map.keys():
-                # w60_magc0399_scan049_m0043_s004 -> 0043_s004
-                roi_name = tile_id[len(tile_id) - 9:]
+                # w60_magc0399_scan049_m0043_r35_s04 -> 0043_s04
+                mfov_start = len(tile_id) - 12
+                mfov_stop = mfov_start + 4
+                sfov_start = mfov_stop + 4
+                roi_name = f"{tile_id[mfov_start:mfov_stop]}{tile_id[sfov_start:]}"
                 if roi_name in roi_names:
                     filtered_map[tile_id] = tile_id_to_spec_map[tile_id]
 
