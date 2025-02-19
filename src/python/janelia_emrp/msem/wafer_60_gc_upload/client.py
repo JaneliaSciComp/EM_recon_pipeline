@@ -1,7 +1,6 @@
 """
 Functions to background correct and upload PNGs to Google Cloud Storage.
 """
-import argparse
 from dataclasses import dataclass
 import logging
 import re
@@ -19,6 +18,7 @@ from details import (
     Slab,
     MsemClient
 )
+from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDetails
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,11 @@ class Parameters:
     shading_storage_path: str | None
 
 
-def background_correct_and_upload(slabs: list[int], param: Parameters) -> None:
+def background_correct_and_upload(
+        slabs: list[int],
+        render_details: AbstractRenderDetails,
+        param: Parameters
+    ) -> None:
     """Loads all images from the given slabs, computes background correction
     using BaSiC, and uploads the corrected images of the trimmed versions of the
     slabs to GCP."""
@@ -57,7 +61,7 @@ def background_correct_and_upload(slabs: list[int], param: Parameters) -> None:
     for slab in slabs:
         logger.info("Processing %s", slab)
         start = time.time()
-        futures = process_slab(slab, param)
+        futures = process_slab(slab, render_details, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
         for future in as_completed(futures):
@@ -67,9 +71,14 @@ def background_correct_and_upload(slabs: list[int], param: Parameters) -> None:
         logger.info("Finished processing %s - took %.2fs", slab, end - start)
 
 
-def process_slab(slab: Slab, param: Parameters) -> list[Future]:
+def process_slab(
+        slab: Slab,
+        render_details: AbstractRenderDetails,
+        param: Parameters
+    ) -> list[Future]:
     """Divide a slab into layers and sfovs to process them."""
-    client = MsemClient(host=param.host, owner=param.owner)
+    project = render_details.project_from_slab(slab.wafer, slab.serial_id)
+    client = MsemClient(host=param.host, owner=param.owner, project=project)
 
     download_pattern = re.compile('_r(\\d+)$')                  # no trimming
     upload_pattern = re.compile(f'_d{param.trim_padding:02}$')  # trimmed with given padding

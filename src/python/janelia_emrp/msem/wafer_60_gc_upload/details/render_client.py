@@ -34,9 +34,11 @@ class MsemClient():
             *,
             host: str,
             owner: str,
+            project: str
     ):
-        """Initialize the MultiSemClient with hostname and owner."""
+        """Initialize the MultiSemClient with hostname, project, and owner."""
         self.host = host
+        self.project = project
         self.owner = owner
 
 
@@ -45,8 +47,7 @@ class MsemClient():
         :param slab: Physical slab for which to get stack IDs
         :return: Dictionary mapping regions to lists of stack IDs.
         """
-        project = get_project(slab)
-        url = f"{self.host}/owner/{self.owner}/project/{project}/stackIds"
+        url = f"{self.host}/owner/{self.owner}/project/{self.project}/stackIds"
 
         response = requests.get(url, timeout=TIMEOUT)
 
@@ -118,14 +119,3 @@ class MsemClient():
             locations.append(tile_spec['mipmapLevels']['0']['imageUrl'])
 
         return locations
-
-
-def get_project(slab: Slab) -> str:
-    """Get the project name from the serial ID.
-    :param serial_id: Serial ID of the stack.
-    :return: Project name.
-    :raises ValueError: If the serial ID is not valid.
-    """
-    lower_bound = slab.serial_id // 10 * 10
-    upper_bound = lower_bound + 9
-    return f"w{slab.wafer}_serial_{lower_bound}_to_{upper_bound}"

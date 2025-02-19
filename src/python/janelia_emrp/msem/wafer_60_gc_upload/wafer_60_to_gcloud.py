@@ -5,6 +5,18 @@ import argparse
 
 from janelia_emrp.root_logger import init_logger
 from janelia_emrp.msem.wafer_60_gc_upload.client import Parameters, background_correct_and_upload
+from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDetails
+
+
+class RenderDetails(AbstractRenderDetails):
+    """Details for the render database for a first test stack of wafer 60."""
+
+    def project_from_slab(self, wafer: int, serial_id: int) -> str:
+        """Get the project name from the wafer / serial ID combination."""
+        lower_bound = serial_id // 10 * 10
+        upper_bound = lower_bound + 9
+        return f"w{wafer}_serial_{lower_bound}_to_{upper_bound}"
+
 
 
 if __name__ == '__main__':
@@ -88,4 +100,4 @@ if __name__ == '__main__':
         trim_padding=args.trim_padding,
         shading_storage_path=args.shading_storage_path,
     )
-    background_correct_and_upload(args.slabs, param)
+    background_correct_and_upload(args.slabs, RenderDetails(), param)
