@@ -38,12 +38,10 @@ CONNECTION_URI="mongodb://root:${MONGO_PWD}@render-mongodb4:27017,render-mongodb
 
 if [ "${DUMP_TYPE}" == "archive" ]; then
   echo "restoring ${DUMP_FILE_OR_DIR} ..."
-  # see https://www.mongodb.com/docs/database-tools/mongorestore/
   ${MONGORESTORE} --uri="${CONNECTION_URI}" --archive="${DUMP_FILE_OR_DIR}" --gzip
 else
   for DUMP_FILE in "${DUMP_FILE_OR_DIR}"/*.bson.gz; do
     echo "restoring ${DUMP_FILE} ..."
-
     ${MONGORESTORE} --uri="${CONNECTION_URI}" --gzip "${DUMP_FILE}"
   done
 fi
