@@ -206,9 +206,6 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
     n_scans_max = get_max_scans(xlog=xlog)
     logger.info(f"the maximum number of scans is {n_scans_max}")
 
-    if wafer_id < 0:
-        raise RuntimeError(f"wafer_id is {wafer_id} but must be non-negative")
-
     slab_group_list = load_slab_info(xlog=xlog,
                                      wafer_short_prefix=f"w{wafer_id}_",
                                      number_of_slabs_per_group=number_of_slabs_per_render_project)
