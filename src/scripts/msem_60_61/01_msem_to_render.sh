@@ -21,7 +21,6 @@ WAFER_NUMBER="${1}"
 shift
 MAGC_SLABS="$*"
 
-WAFER_PREFIX="w${WAFER_NUMBER}_"
 WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_NUMBER}/xlog/xlog_wafer_${WAFER_NUMBER}.zarr"
 
 if [ "${WAFER_NUMBER}" == "60" ]; then
@@ -51,7 +50,7 @@ export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/msem_to_render.py"
 ARGS="${ARGS} --render_host ${RENDER_HOST} --render_owner ${RENDER_OWNER}"
-ARGS="${ARGS} --wafer_short_prefix ${WAFER_PREFIX} --path_xlog ${WAFER_XLOG_DIR} ${WAFER_EXCLUDED_SCAN_ARG}"
+ARGS="${ARGS} --wafer_number ${WAFER_NUMBER} --path_xlog ${WAFER_XLOG_DIR} ${WAFER_EXCLUDED_SCAN_ARG}"
 ARGS="${ARGS} --import_magc_slab ${MAGC_SLABS}"
 
 #ARGS="${ARGS} --include_scan 6" # will override excluded scan arg
