@@ -107,9 +107,12 @@ def process_slab(
     # There should be only one z range for all regions
     if len(z_ranges) != 1:
         raise ValueError(f"{slab} has inconsistent z ranges.")
-
+    
     z_range = z_ranges.pop()
     logger.info("%s has %d layers.", slab, len(z_range))
+
+    # Create render stacks with the google cloud paths
+    
 
     return process_all_layers(download_stacks, upload_stacks, z_range, client, param)
 

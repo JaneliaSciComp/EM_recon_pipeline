@@ -2,12 +2,11 @@ import re
 from dataclasses import dataclass
 from typing import Dict, List
 
-import requests
-
 from janelia_emrp.msem.wafer_60_gc_upload.details.config import Region, Slab
+from janelia_emrp.render.web_service_request import RenderRequest
 
 
-TIMEOUT = 10
+CORE_HOST_PATTERN = re.compile(r'http://([^/]+)/')
 
 @dataclass
 class StackId:
@@ -27,7 +26,7 @@ class StackId:
 
 
 class MsemClient():
-    """Client for requesting multi-sem data from the render web service."""
+    """Wrapper class for interacting with the Render server."""
 
     def __init__(
             self,
@@ -37,9 +36,8 @@ class MsemClient():
             project: str
     ):
         """Initialize the MultiSemClient with hostname, project, and owner."""
-        self.host = host
-        self.project = project
-        self.owner = owner
+        core_host = CORE_HOST_PATTERN.match(host).group(1)
+        self._render_request = RenderRequest(host=core_host, owner=owner, project=project)
 
 
     def get_stack_ids(self, slab: Slab) -> Dict[Region, List[StackId]]:
@@ -47,24 +45,17 @@ class MsemClient():
         :param slab: Physical slab for which to get stack IDs
         :return: Dictionary mapping regions to lists of stack IDs.
         """
-        url = f"{self.host}/owner/{self.owner}/project/{self.project}/stackIds"
-
-        response = requests.get(url, timeout=TIMEOUT)
-
-        if response.status_code != 200:
-            response.raise_for_status()
-
-        ids = response.json()
+        stack_ids = self._render_request.get_stack_ids()
         pattern = re.compile(f"^w{slab.wafer}_s{slab.serial_id:03}_r(\\d+)")
 
         region_stacks = {}
-        for id in ids:
-            match = pattern.match(id['stack'])
+        for stack_id in stack_ids:
+            match = pattern.match(stack_id['stack'])
             region_id = int(match.group(1))
             region = Region(slab=slab, region_id=region_id)
             if region not in region_stacks:
                 region_stacks[region] = []
-            region_stacks[region].append(StackId.from_dict(id))
+            region_stacks[region].append(StackId.from_dict(stack_id))
 
         return region_stacks
 
@@ -74,19 +65,8 @@ class MsemClient():
         :param stack_id: Stack ID of the stack.
         :return: List of minimum and maximum Z values.
         """
-        url = (
-            f"{self.host}/"
-            f"owner/{stack_id.owner}/"
-            f"project/{stack_id.project}/"
-            f"stack/{stack_id.stack}/"
-            "zValues"
-        )
-
-        response = requests.get(url, timeout=TIMEOUT)
-        if response.status_code != 200:
-            response.raise_for_status()
-
-        return [int(z) for z in response.json()]
+        z_values = self._render_request.get_z_values(stack_id.stack)
+        return [int(z) for z in z_values]
 
 
     def get_storage_locations(
@@ -100,21 +80,10 @@ class MsemClient():
         :param z: z value for which to get storage locations.
         :return: List of storage locations.
         """
-        url = (
-            f"{self.host}/"
-            f"owner/{stack_id.owner}/"
-            f"project/{stack_id.project}/"
-            f"stack/{stack_id.stack}/"
-            "resolvedTiles"
-            f"?minZ={z}&maxZ={z}"
-        )
-
-        response = requests.get(url, timeout=TIMEOUT)
-        if response.status_code != 200:
-            response.raise_for_status()
+        response = self._render_request.get_resolved_tiles_for_z(stack_id.stack, z)
 
         locations = []
-        tile_id_to_spec_map = response.json()['tileIdToSpecMap']
+        tile_id_to_spec_map = response['tileIdToSpecMap']
         for tile_spec in tile_id_to_spec_map.values():
             locations.append(tile_spec['mipmapLevels']['0']['imageUrl'])
 
