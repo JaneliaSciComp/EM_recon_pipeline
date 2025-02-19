@@ -1,6 +1,5 @@
 """
-Short script that shows a proof of concept for the background correction of
-multi-sem images using BaSiC.
+Script to upload a first wafer 60 test stack to Google Cloud Storage.
 """
 import argparse
 
@@ -13,6 +12,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Background correct and upload PNGs.")
 
+    parser.add_argument(
+        "--host",
+        help="Host of the render web service.",
+        type=str
+    )
+    parser.add_argument(
+        "--owner",
+        help="Owner of the render project.",
+        type=str
+    )
     parser.add_argument(
         "-w", "--wafer",
         help="Wafer to process images from (60 or 61).",
@@ -49,10 +58,17 @@ if __name__ == '__main__':
     )
 
     # Test setup
-    cli_args = parser.parse_args("--w 60 -s 296 --base-path test_upload_mi".split())
-    # cli_args = parser.parse_args("--w 60 -s 296 --shading-storage-path /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition".split())
+    CLI_ARGS = (
+        "--host http://em-services-1.int.janelia.org:8080/render-ws/v1 "
+        "--owner trautmane "
+        "-w 60 "
+        "-s  296 "
+        "--base-path test_upload_mi "
+        # "--shading-storage-path /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition"
+    )
 
+    args = parser.parse_args(CLI_ARGS.split())
     # Production setup
     # args = parser.parse_args()
 
-    background_correct_and_upload(cli_args)
+    background_correct_and_upload(args)

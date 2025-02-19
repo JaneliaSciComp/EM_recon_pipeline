@@ -32,8 +32,8 @@ class MsemClient():
     def __init__(
             self,
             *,
-            host: str = "http://em-services-1.int.janelia.org:8080/render-ws/v1",
-            owner: str = "trautmane",
+            host: str,
+            owner: str,
     ):
         """Initialize the MultiSemClient with hostname and owner."""
         self.host = host

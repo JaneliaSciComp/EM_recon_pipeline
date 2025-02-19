@@ -1,3 +1,6 @@
+"""
+Functions to background correct and upload PNGs to Google Cloud Storage.
+"""
 import argparse
 import logging
 import re
@@ -53,7 +56,7 @@ def background_correct_and_upload(
 
 def process_slab(slab: Slab, trim_padding: int = 0, **kwargs) -> list[Future]:
     """Divide a slab into layers and sfovs to process them."""
-    client = MsemClient()
+    client = MsemClient(host=kwargs["host"], owner=kwargs["owner"])
 
     download_pattern = re.compile('_r(\\d+)$')            # no trimming
     upload_pattern = re.compile(f'_d{trim_padding:02}$')  # trimmed with given padding
@@ -91,40 +94,41 @@ def process_slab(slab: Slab, trim_padding: int = 0, **kwargs) -> list[Future]:
     z_range = z_ranges.pop()
     logger.info("%s has %d layers.", slab, len(z_range))
 
-    return process_all_layers(download_stacks, upload_stacks, z_range, **kwargs)
+    return process_all_layers(download_stacks, upload_stacks, z_range, client, **kwargs)
 
 
 def process_all_layers(
         download_stacks: list[str],
         upload_stacks: list[str],
         z_range: list[int],
+        render_client: MsemClient,
         **kwargs
 ) -> list[Future]:
     """Process all layers of a slab."""
     futures = []
     for z in z_range:
-        futures += process_layer(download_stacks, upload_stacks, z, **kwargs)
+        futures += process_layer(download_stacks, upload_stacks, render_client, z, **kwargs)
     return futures
 
 
 def process_layer(
         download_stacks: list[str],
         upload_stacks: list[str],
+        render_client: MsemClient,
         z: int,
         **kwargs
 ) -> list[Future]:
     """Process a single layer of a slab."""
-    client = MsemClient()
     cluster = get_client()
 
     # Collect storage locations across all regions
     all_locations = []
     for stack in download_stacks:
-        all_locations += client.get_storage_locations(stack_id=stack, z=z)
+        all_locations += render_client.get_storage_locations(stack_id=stack, z=z)
 
     upload_locations = []
     for stack in upload_stacks:
-        upload_locations += client.get_storage_locations(stack_id=stack, z=z)
+        upload_locations += render_client.get_storage_locations(stack_id=stack, z=z)
 
     # Group locations by BeamConfig
     beam_to_all = group_by_beam_config(all_locations)
