@@ -124,14 +124,37 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         )
         for (mfov, sfov), image_path, (stage_x, stage_y) in zip(
             product(mfovs, range(N_BEAMS)), sfov_path_list, sfov_xy_list
-    )
+        )
     ]
 
     logger.info(f'build_tile_specs_for_slab_scan: loaded {len(tile_specs)} tile specs from {slab_scan_path}')
 
     return tile_specs
 
-def create_tile_id(wafer_short_prefix: str, slab: int, scan: int, mfov: int, sfov: int)->str:
+# For each multi-SEM MFOV, SFOV numbers start at 1 in the center and spiral counter-clockwise out to 91.
+# This list supports mapping an SFOV index to its render order
+# with the assumption that rendering should occur top-to-bottom, left-to-right within each MFOV.
+#
+# This list was copied from
+#   https://github.com/saalfeldlab/render/blob/newsolver/render-ws-java-client/src/main/java/org/janelia/render/client/TileReorderingClient.java#L155-L165
+RENDER_SFOV_ORDER = [
+    46, 47, 36, 35, 45, 56, 57, 48, 37, 27,
+    26, 25, 34, 44, 55, 65, 66, 67, 58, 49,
+    38, 28, 19, 18, 17, 16, 24, 33, 43, 54,
+    64, 73, 74, 75, 76, 68, 59, 50, 39, 29,
+    20, 12, 11, 10,  9,  8, 15, 23, 32, 42,
+    53, 63, 72, 80, 81, 82, 83, 84, 77, 69,
+    60, 51, 40, 30, 21, 13,  6,  5,  4,  3,
+     2,  1,  7, 14, 22, 31, 41, 52, 62, 71,
+    79, 86, 87, 88, 89, 90, 91, 85, 78, 70,
+    61
+]
+
+def create_tile_id(wafer_short_prefix: str,
+                   slab: int,
+                   scan: int,
+                   mfov: int,
+                   sfov: int)->str:
     """Creates tile ID with a 1-based SFOV number component.
     
     E.g.: w060_magc0002_scan001_m0003_s04
@@ -146,6 +169,7 @@ def create_tile_id(wafer_short_prefix: str, slab: int, scan: int, mfov: int, sfo
             f"magc{slab:04}",
             f"scan{scan:03}",
             f"m{mfov:04}",
+            f"r{RENDER_SFOV_ORDER[sfov]:02}",
             f"s{scope_sfov_number:02}",
         )
     )
