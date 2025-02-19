@@ -4,7 +4,7 @@ from cv2 import imencode
 from google.cloud import storage
 import numpy as np
 
-from config import AcquisitionConfig
+from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig
 
 class MsemCloudWriter:
     """

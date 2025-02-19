@@ -13,9 +13,15 @@ from distributed.worker import logger
 from basicpy import BaSiC
 from dask.distributed import LocalCluster, as_completed
 
-from client import MsemClient
-from config import AcquisitionConfig, BeamConfig, Slab
-from data import load_images_as_stack, store_beam_shading, MsemCloudWriter
+from details import (
+    load_images_as_stack,
+    store_beam_shading,
+    MsemCloudWriter,
+    AcquisitionConfig,
+    BeamConfig,
+    Slab,
+    MsemClient
+)
 from janelia_emrp.root_logger import init_logger
 
 

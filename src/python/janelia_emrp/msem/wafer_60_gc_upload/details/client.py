@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import requests
 
-from config import Region, Slab
+from janelia_emrp.msem.wafer_60_gc_upload.details.config import Region, Slab
 
 
 TIMEOUT = 10
