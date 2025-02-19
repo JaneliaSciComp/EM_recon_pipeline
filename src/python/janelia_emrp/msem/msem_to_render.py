@@ -190,7 +190,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                  import_magc_slab_list: list[int],
                                  include_scan_list: list[int],
                                  exclude_scan_list: list[int],
-                                 wafer_short_prefix: str,
+                                 wafer_number: Optional[int],
                                  number_of_slabs_per_render_project: int):
 
     func_name = "import_slab_stacks_for_wafer"
@@ -202,10 +202,16 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
     else:
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
 
-    logger.info(f"{func_name}: loading slab info, wafer_short_prefix='{wafer_short_prefix}', number_of_slabs_per_group={number_of_slabs_per_render_project}")
+    logger.info(f"{func_name}: loading slab info, wafer_number='{wafer_number}', number_of_slabs_per_group={number_of_slabs_per_render_project}")
     
     n_scans_max = get_max_scans(xlog=xlog)
     logger.info(f"the maximum number of scans is {n_scans_max}")
+
+    wafer_short_prefix = ""
+    if wafer_number is not None:
+        if wafer_number < 0:
+            raise RuntimeError(f"wafer_number is {wafer_number} but must be non-negative")
+        wafer_short_prefix = f"w{wafer_number}_"  # e.g. "w60_" or "w61_"
 
     slab_group_list = load_slab_info(xlog=xlog,
                                      wafer_short_prefix=wafer_short_prefix,
@@ -412,10 +418,10 @@ def main(arg_list: List[str]):
         default=[]
     )
     parser.add_argument(
-        "--wafer_short_prefix",
-        help="Short wafer prefix, e.g. '60', so that 'w60_' gets prepended to all project and stack names", 
-        type=str,
-        default=""
+        "--wafer_number",
+        help="Wafer number, e.g. '60', so that 'w60_' gets prepended to all project and stack names",
+        type=int,
+        default=None
     )
     parser.add_argument(
         "--number_of_slabs_per_render_project",
@@ -431,7 +437,7 @@ def main(arg_list: List[str]):
                                  import_magc_slab_list=args.import_magc_slab,
                                  include_scan_list=args.include_scan,
                                  exclude_scan_list=args.exclude_scan,
-                                 wafer_short_prefix=args.wafer_short_prefix,
+                                 wafer_number=args.wafer_number,
                                  number_of_slabs_per_render_project=args.number_of_slabs_per_render_project)
 
 
