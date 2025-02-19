@@ -84,7 +84,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                                    sfov_xy_list: list[tuple[int, int]],
                                    stage_z: int,
                                    layout: FieldOfViewLayout,
-                                   wafer_short_prefix: str,
+                                   wafer_number: int,
                                    tile_width: int,
                                    tile_height: int) -> list[dict[str, Any]]:
     """
@@ -116,7 +116,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         build_tile_spec(image_path=image_path,
                         stage_x=stage_x,
                         stage_y=stage_y,
-                        tile_id=create_tile_id(wafer_short_prefix, slab, scan, mfov, sfov),
+                        tile_id=create_tile_id(wafer_number, slab, scan, mfov, sfov),
                         mfov_id=mfov,
                         sfov_index_name=f"{(sfov+1):03}",
                         **fixed_tilespec_params,
@@ -149,7 +149,7 @@ RENDER_SFOV_ORDER = [
     61                                       # s91
 ]
 
-def create_tile_id(wafer_short_prefix: str,
+def create_tile_id(wafer_number: int,
                    slab: int,
                    scan: int,
                    mfov: int,
@@ -164,7 +164,7 @@ def create_tile_id(wafer_short_prefix: str,
 
     return "_".join(
         (
-            f"w{wafer_short_prefix}",
+            f"w{wafer_number}",
             f"magc{slab:04}",
             f"scan{scan:03}",
             f"m{mfov:04}",
@@ -189,7 +189,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                  import_magc_slab_list: list[int],
                                  include_scan_list: list[int],
                                  exclude_scan_list: list[int],
-                                 wafer_number: Optional[int],
+                                 wafer_number: int,
                                  number_of_slabs_per_render_project: int):
 
     func_name = "import_slab_stacks_for_wafer"
@@ -201,19 +201,16 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
     else:
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
 
-    logger.info(f"{func_name}: loading slab info, wafer_number='{wafer_number}', number_of_slabs_per_group={number_of_slabs_per_render_project}")
+    logger.info(f"{func_name}: loading slab info, wafer_number={wafer_number}, number_of_slabs_per_group={number_of_slabs_per_render_project}")
     
     n_scans_max = get_max_scans(xlog=xlog)
     logger.info(f"the maximum number of scans is {n_scans_max}")
 
-    wafer_short_prefix = ""
-    if wafer_number is not None:
-        if wafer_number < 0:
-            raise RuntimeError(f"wafer_number is {wafer_number} but must be non-negative")
-        wafer_short_prefix = f"w{wafer_number}_"  # e.g. "w60_" or "w61_"
+    if wafer_number < 0:
+        raise RuntimeError(f"wafer_number is {wafer_number} but must be non-negative")
 
     slab_group_list = load_slab_info(xlog=xlog,
-                                     wafer_short_prefix=wafer_short_prefix,
+                                     wafer_short_prefix=f"w{wafer_number}_",
                                      number_of_slabs_per_group=number_of_slabs_per_render_project)
 
     logger.info(f"{func_name}: loaded {len(slab_group_list)} slab groups")
@@ -323,7 +320,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                                             sfov_xy_list=slab_scan_sfov_xy_list,
                                                             stage_z=z,
                                                             layout=stack_layout,
-                                                            wafer_short_prefix=wafer_short_prefix,
+                                                            wafer_number=wafer_number,
                                                             tile_width=tile_width,
                                                             tile_height=tile_height)
 
@@ -418,7 +415,7 @@ def main(arg_list: List[str]):
         "--wafer_number",
         help="Wafer number, e.g. '60', so that 'w60_' gets prepended to all project and stack names",
         type=int,
-        default=None
+        required=True
     )
     parser.add_argument(
         "--number_of_slabs_per_render_project",
@@ -454,7 +451,7 @@ if __name__ == '__main__':
         # main([
         #     "--render_host", "10.40.3.113",
         #     "--render_owner", "trautmane",
-        #     "--wafer_short_prefix", "60",
+        #     "--wafer_number", "60",
         #     "--path_xlog", "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr",
         #     "--import_magc_slab",
         #     "399", # s296
