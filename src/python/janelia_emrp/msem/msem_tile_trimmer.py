@@ -8,6 +8,7 @@ from typing import List
 import xarray
 
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_roi_sfovs
+from janelia_emrp.msem.tile_id import TileID
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.slab_info import build_slab_info_from_stack_name
 from janelia_emrp.render.web_service_request import RenderRequest
@@ -92,15 +93,11 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                                                                              max_z=max_z)
             tile_id_to_spec_map = resolved_tiles["tileIdToSpecMap"]
 
-            filtered_map = {}
-            for tile_id in tile_id_to_spec_map.keys():
-                # w60_magc0399_scan049_m0043_r35_s04 -> 0043_s04
-                mfov_start = len(tile_id) - 12
-                mfov_stop = mfov_start + 4
-                sfov_start = mfov_stop + 4
-                roi_name = f"{tile_id[mfov_start:mfov_stop]}{tile_id[sfov_start:]}"
-                if roi_name in roi_names:
-                    filtered_map[tile_id] = tile_id_to_spec_map[tile_id]
+            filtered_map: dict[str, Any] = {
+                tile_id_str : tile_id_to_spec_map[tile_id_str]
+                for tile_id_str in tile_id_to_spec_map.keys()
+                if TileID.from_string(tile_id_str).to_roi_name() in roi_names
+            }
 
             removed_count = len(tile_id_to_spec_map) - len(filtered_map)
             logger.info(f"{func_name}: loaded {len(tile_id_to_spec_map)} tiles, "

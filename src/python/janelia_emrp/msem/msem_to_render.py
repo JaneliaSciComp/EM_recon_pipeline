@@ -20,7 +20,10 @@ from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
     get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height, get_effective_scans
 )
+
+from janelia_emrp.msem.render_sfov_order import RENDER_SFOV_ORDER
 from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
+from janelia_emrp.msem.tile_id import TileID
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_60_61_SCAN_FIT_PARAMETERS
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
@@ -35,7 +38,7 @@ def build_tile_spec(image_path: Path,
                     stage_x: int,
                     stage_y: int,
                     stage_z: int,
-                    tile_id: str,
+                    tile_id: TileID,
                     tile_width: int,
                     tile_height: int,
                     layout: FieldOfViewLayout,
@@ -54,7 +57,7 @@ def build_tile_spec(image_path: Path,
     transform_data_string = f'1 0 0 1 {stage_x - min_x + margin} {stage_y - min_y + margin}'
 
     tile_spec = {
-        "tileId": tile_id, "z": stage_z,
+        "tileId": str(tile_id), "z": stage_z,
         "layout": {
             "sectionId": section_id,
             "imageRow": image_row, "imageCol": image_col,
@@ -116,7 +119,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         build_tile_spec(image_path=image_path,
                         stage_x=stage_x,
                         stage_y=stage_y,
-                        tile_id=create_tile_id(wafer_id, slab, scan, mfov, sfov),
+                        tile_id=TileID(wafer_id, slab, scan, mfov, sfov),
                         mfov_id=mfov,
                         sfov_index_name=f"{(sfov+1):03}",
                         **fixed_tilespec_params,
@@ -130,24 +133,6 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
 
     return tile_specs
 
-# For each multi-SEM MFOV, SFOV numbers start at 1 in the center and spiral counter-clockwise out to 91.
-# This list supports mapping an SFOV index to its render order
-# with the assumption that rendering should occur top-to-bottom, left-to-right within each MFOV.
-#
-# This list was copied from
-#   https://github.com/saalfeldlab/render/blob/newsolver/render-ws-java-client/src/main/java/org/janelia/render/client/TileReorderingClient.java#L155-L165
-RENDER_SFOV_ORDER = [
-    46, 47, 36, 35, 45, 56, 57, 48, 37, 27,  #  s1 to s10
-    26, 25, 34, 44, 55, 65, 66, 67, 58, 49,  # s11 to s20
-    38, 28, 19, 18, 17, 16, 24, 33, 43, 54,  # s21 to s30
-    64, 73, 74, 75, 76, 68, 59, 50, 39, 29,  # s31 to s40
-    20, 12, 11, 10,  9,  8, 15, 23, 32, 42,  # s41 to s50
-    53, 63, 72, 80, 81, 82, 83, 84, 77, 69,  # s51 to s60
-    60, 51, 40, 30, 21, 13,  6,  5,  4,  3,  # s61 to s70
-     2,  1,  7, 14, 22, 31, 41, 52, 62, 71,  # s71 to s80
-    79, 86, 87, 88, 89, 90, 91, 85, 78, 70,  # s81 to s90
-    61                                       # s91
-]
 
 def create_tile_id(wafer_id: str,
                    slab: int,
