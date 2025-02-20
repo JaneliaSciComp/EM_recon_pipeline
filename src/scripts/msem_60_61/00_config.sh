@@ -7,9 +7,9 @@ CONFIG_DIR=$(dirname "${ABSOLUTE_CONFIG}")
 export CONFIG_DIR
 
 export LAB_OR_PROJECT_GROUP="hess"
-export RENDER_OWNER="trautmane" # TODO: change to hess_wafers_60_61 when ready (and add back to BASE_DATA_DIR as RENDER_OWNER below)
+export RENDER_OWNER="hess_wafers_60_61"
 
-export BASE_DATA_DIR="/nrs/${LAB_OR_PROJECT_GROUP}/data/hess_wafers_60_61"
+export BASE_DATA_DIR="/nrs/${LAB_OR_PROJECT_GROUP}/data/${RENDER_OWNER}"
 export DATA_MIPMAP_DIR="${BASE_DATA_DIR}/mipmaps"
 export BASE_N5_DIR="${BASE_DATA_DIR}/export/${RENDER_OWNER}.n5"
 
