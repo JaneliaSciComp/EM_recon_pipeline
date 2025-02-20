@@ -96,7 +96,7 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 RUN_TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-DUMP_DIR="janelia/dump_${RUN_TIMESTAMP}"
+DUMP_DIR="mongodb_janelia/dump_${RUN_TIMESTAMP}"
 
 mkdir -p "${DUMP_DIR}"
 

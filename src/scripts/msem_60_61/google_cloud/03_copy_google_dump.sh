@@ -47,12 +47,12 @@ VM_DUMP_PARENT_BASENAME=$(basename "${VM_DUMP_FULL_PARENT_DIR}")
 
 if [ "${DUMP_TYPE}" == "archive" ]; then
   VM_NAME="${VM_DUMP_PARENT_BASENAME}"
-  LOCAL_DUMP_DIR="google/${VM_NAME}"
+  LOCAL_DUMP_DIR="mongodb_google/${VM_NAME}"
   SCP_OPTIONS=""
 else
   VM_DIR=$(dirname "${VM_DUMP_FULL_PARENT_DIR}")
   VM_NAME=$(basename "${VM_DIR}")
-  LOCAL_DUMP_DIR="google/${VM_NAME}/${VM_DUMP_PARENT_BASENAME}"
+  LOCAL_DUMP_DIR="mongodb_google/${VM_NAME}/${VM_DUMP_PARENT_BASENAME}"
   SCP_OPTIONS="--recurse"
 fi
 
