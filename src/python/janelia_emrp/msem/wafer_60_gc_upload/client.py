@@ -261,13 +261,13 @@ def correct_beam_shading(all_images, indices_to_correct):
     corrected_min = corrected_images.min(axis=(1, 2))
     too_small = corrected_min < 0
     if any(too_small):
-        corrected_images[too_small] -= corrected_min[too_small]
-    
+        corrected_images[too_small] -= corrected_min[too_small, None, None]
+
     # The content is more important, so we finally make sure that there is no clipping
     corrected_max = corrected_images.max(axis=(1, 2)) - 255
     too_large = corrected_max > 0
     if any(too_large):
-        corrected_images[too_large] -= corrected_max[too_large]
+        corrected_images[too_large] -= corrected_max[too_large, None, None]
 
     return corrected_images, basic.flatfield
 
