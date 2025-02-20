@@ -7,8 +7,8 @@ Usage:    $0 <render-ws-internal-ip> <pipeline-json-rel-path> <number-spark-exec
           number-spark-exec-instances must be at least 2
           number-spark-exec-cores must be 4, 8, or 16
 
-Examples: $0 10.150.0.84 01_match/pipe.01.match-patch-check.google_cluster0.json 16 4
-          $0 10.150.0.84 02_align/pipe.02.align.w60-serial-290-299.google_cluster0.json 2 16
+Examples: $0 10.150.0.12 01_match/pipe.01.360.match.json 16 4
+          $0 10.150.0.84 02_align/pipe.02.360.align.json 2 16
   "
   exit 1
 fi
