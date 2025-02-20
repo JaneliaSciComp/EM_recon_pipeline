@@ -19,7 +19,7 @@ CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE
 # - Disk size: '50 GB' is larger than image size: '10 GB'. ...
 BOOT_DISK_SIZE="50GB"
 
-# Create vm-metadata.txt with current container image id.
+# Create vm_metadata.txt with current container image id.
 # The template mounts the shared dump disk from 10.138.206.2 and restarts the container
 # if it was started before the dump disk was mounted.
 VM_METADATA_FILE="/tmp/vm_metadata.$$.txt"
