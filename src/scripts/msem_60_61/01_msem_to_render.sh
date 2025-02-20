@@ -24,7 +24,7 @@ MAGC_SLABS="$*"
 WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_ID}/xlog/xlog_wafer_${WAFER_ID}.zarr"
 
 if [ "${WAFER_ID}" == "60" ]; then
-  WAFER_EXCLUDED_SCAN_ARG="--exclude_scan 0 1 2 3 7 18"
+  WAFER_EXCLUDED_SCAN_ARG="--exclude_scan 0 1 2 3 7 19"
 elif [ "${WAFER_ID}" == "61" ]; then
   WAFER_EXCLUDED_SCAN_ARG="--exclude_scan TBD"
 else
