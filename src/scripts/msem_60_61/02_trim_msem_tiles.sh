@@ -12,19 +12,18 @@ mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/trim_${RUN_TIME}.log"
 
 if (( $# < 4 )); then
-  echo "USAGE $0 <wafer number> <dilation> <render project> <stack> [stack] ... (e.g. 60 15 w60_serial_290_to_299 w60_s296_r00)
+  echo "USAGE $0 <wafer id> <dilation> <render project> <stack> [stack] ... (e.g. 60 15 w60_serial_290_to_299 w60_s296_r00)
 "
   exit 1
 fi
 
-WAFER_NUMBER="${1}"
+WAFER_ID="${1}"
 DILATION="${2}"
 RENDER_PROJECT="${3}"
 shift 3
 RENDER_STACKS="$*"
 
-WAFER_PREFIX="w${WAFER_NUMBER}_"
-WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_NUMBER}/xlog/xlog_wafer_${WAFER_NUMBER}.zarr"
+WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_ID}/xlog/xlog_wafer_${WAFER_ID}.zarr"
 
 if [ ! -d "${WAFER_XLOG_DIR}" ]; then
   echo "ERROR: ${WAFER_XLOG_DIR} not found"
