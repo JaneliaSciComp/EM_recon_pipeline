@@ -1,0 +1,7 @@
+#cloud-config
+
+bootcmd:
+- sudo mkdir -p /mnt/disks/mongodb_dump_fs
+- sudo chmod 777 /mnt/disks/mongodb_dump_fs
+- sudo mount --options defaults 10.138.206.2:/mongodb_dump_fs /mnt/disks/mongodb_dump_fs
+- sleep 5; RUNNING_WS=$(sudo docker ps -a | grep "render-ws"); if [ -n "${RUNNING_WS}" ]; then date >> /tmp/docker-ps.out; docker ps -a >> /tmp/docker-ps.out; CID=$(docker ps -q); echo "removing ${CID}" >> /tmp/docker-ps.out; sudo docker rm -f "${CID}"; sudo docker run --publish 8080:8080 --detach --rm --mount type=bind,source=/mnt/disks/mongodb_dump_fs/dump,target=/mnt/disks/mongodb_dump_fs/dump CONTAINER_IMAGE; date >> /tmp/docker-ps.out; docker ps -a >> /tmp/docker-ps.out; fi
