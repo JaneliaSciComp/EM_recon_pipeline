@@ -1,27 +1,19 @@
 {
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
-    "owner" : "trautmane", "project" : "w60_serial_290_to_299",
-    "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
+    "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w60_s2.._r.._d20_gc$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d00$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d00_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d00_align_ic$" }
+    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc$" },
+    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_align$" },
+    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
   },
   "pipelineSteps": [
-    "GENERATE_MIPMAPS",
     "DERIVE_TILE_MATCHES",
     "PATCH_MFOV_MONTAGE_MATCHES",
     "FIND_UNCONNECTED_MFOVS"
   ],
-  "mipmap" : {
-    "rootDirectory" : "/nrs/hess/data/hess_wafers_60_61/mipmaps",
-    "minLevel" : 1,
-    "maxLevel" : 3,
-    "format" : "tiff",
-    "forceGeneration" : false
-  },
   "matchRunList": [
     {
       "runName": "montageMfovRun",

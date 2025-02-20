@@ -1,18 +1,16 @@
 {
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
-    "owner" : "trautmane", "project" : "w60_serial_290_to_299",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_290_to_299$", "stackPattern": "^w60_s2.._r.._d00_google_cluster0$", "zValuesPerBatch": 1 }
+    "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w60_s2.._r.._d20_gc$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d00_google_cluster0$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d00_google_cluster0_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d00_google_cluster0_align_ic$" }
+    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc$" },
+    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_align$" },
+    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
   },
   "pipelineSteps": [
-    "DERIVE_TILE_MATCHES",
-    "PATCH_MFOV_MONTAGE_MATCHES",
-    "FIND_UNCONNECTED_MFOVS"
+    "DERIVE_TILE_MATCHES"
   ],
   "matchRunList": [
     {
@@ -151,16 +149,5 @@
         }
       ]
     }
-  ],
-  "mfovMontagePatch": {
-    "sameLayerDerivedMatchWeight" : 0.15,
-    "crossLayerDerivedMatchWeight" : 0.1,
-    "secondPassDerivedMatchWeight" : 0.05,
-    "xyNeighborFactor" : 0.6,
-    "numberOfMFOVsPerBatch": 19
-  },
-  "unconnectedCrossMfov": {
-    "minPairsForConnection": 6,
-    "numberOfStacksPerBatch": 20
-  }
+  ]
 }
