@@ -43,8 +43,8 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
         logger.info(f"{func_name}: loaded slab_info: {slab_info}")
 
         roi_names = {}
-        for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
         total_sfov_count = len(slab_info) * N_BEAMS
+        for mfov in slab_info.mfovs:
             for zero_based_sfov_id in get_roi_sfovs(xlog=xlog, slab=slab_info.magc_id, mfov=mfov, dilation=dilation):
                 one_based_sfov_id = zero_based_sfov_id + 1 # to keep consistent with the scope SFOV file names
                 roi_names[f"{mfov:04}_s{one_based_sfov_id:02}"] = True
