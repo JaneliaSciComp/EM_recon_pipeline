@@ -67,12 +67,13 @@ def background_correct_and_upload(
         futures, gc_stacks = process_slab(slab, render_details, client, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
+        for gc_stack in gc_stacks:
+            logger.info("completing stack %s", gc_stack)
+            client.complete_stack(gc_stack)
+
         for future in as_completed(futures):
             future.result()
             del future  # Free up memory to avoid memory leak
-
-        for gc_stack in gc_stacks:
-            client.complete_stack(gc_stack)
 
         end = time.time()
         logger.info("Finished processing %s - took %.2fs", slab, end - start)
