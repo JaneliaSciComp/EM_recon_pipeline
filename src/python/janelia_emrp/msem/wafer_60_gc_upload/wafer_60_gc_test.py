@@ -80,6 +80,12 @@ if __name__ == '__main__':
         default=0
     )
     parser.add_argument(
+        "--invert",
+        help="Invert the images after background correction.",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
         "--shading-storage-path",
         help="Storage path for shading (shading is not stored if path is not given).",
         type=str,
@@ -105,6 +111,7 @@ if __name__ == '__main__':
         "-w 60 "
         "-s  296 "
         "--base-path test_upload_mi "
+        "--invert "
         # "--shading-storage-path /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition"
     )
 
@@ -120,6 +127,7 @@ if __name__ == '__main__':
         bucket_name=args.bucket_name,
         base_path=args.base_path,
         shading_storage_path=args.shading_storage_path,
+        invert=args.invert,
     )
     render_details = RenderDetails(args.trim_padding)
     background_correct_and_upload(args.slabs, render_details, param)

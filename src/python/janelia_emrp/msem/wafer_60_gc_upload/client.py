@@ -33,6 +33,7 @@ class Parameters:
     bucket_name: str
     base_path: str
     shading_storage_path: str | None
+    invert: bool = False
 
 
 def background_correct_and_upload(
@@ -189,7 +190,8 @@ def process_layer(
             acquisitions_to_upload,
             param.bucket_name,
             param.base_path,
-            param.shading_storage_path
+            param.shading_storage_path,
+            param.invert
         )
         futures.append(future)
 
@@ -202,7 +204,8 @@ def process_sfov(
         locs_to_upload: list[str],
         bucket_name: str,
         base_path: str,
-        shading_storage_path: str
+        shading_storage_path: str,
+        invert: bool
 ) -> None:
     """Process a single sfov (i.e., a beam configuration)."""
     # Find out which images to upload
@@ -217,6 +220,10 @@ def process_sfov(
 
     correct = time.time()
     corrected_images, shading = correct_beam_shading(images, keep)
+
+    # Invert the images if desired
+    if invert:
+        corrected_images = 255 - corrected_images
 
     # Upload images
     upload = time.time()
@@ -246,6 +253,20 @@ def correct_beam_shading(all_images, indices_to_correct):
     # Only a specified subset of images is corrected
     corrected_images = all_images[indices_to_correct]
     corrected_images = basic.transform(corrected_images)
+
+    # Check bounds of the corrected images
+    # We want to prevent clipping, so we only shift the images
+    # The minimum is resin (less important), shift that first
+    corrected_min = corrected_images.min(axis=(1, 2))
+    too_small = corrected_min < 0
+    if any(too_small):
+        corrected_images[too_small] -= corrected_min[too_small]
+    
+    # The content is more important, so we finally make sure that there is no clipping
+    corrected_max = corrected_images.max(axis=(1, 2)) - 255
+    too_large = corrected_max > 0
+    if any(too_large):
+        corrected_images[too_large] -= corrected_max[too_large]
 
     return corrected_images, basic.flatfield
 
