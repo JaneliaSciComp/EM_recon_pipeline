@@ -96,9 +96,9 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 RUN_TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-DUMP_DIR="dump_${RUN_TIMESTAMP}"
+DUMP_DIR="janelia/dump_${RUN_TIMESTAMP}"
 
-mkdir "${DUMP_DIR}"
+mkdir -p "${DUMP_DIR}"
 
 for COLLECTION in ${COLLECTIONS}; do
   "${MONGODUMP}" --uri="${CONNECTION_URI}" --db="${DB}" --collection="${COLLECTION}" --gzip --out="${DUMP_DIR}"

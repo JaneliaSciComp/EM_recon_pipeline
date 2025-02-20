@@ -46,28 +46,21 @@ VM_DUMP_FULL_PARENT_DIR=$(dirname "${VM_DUMP}")
 VM_DUMP_PARENT_BASENAME=$(basename "${VM_DUMP_FULL_PARENT_DIR}")
 
 if [ "${DUMP_TYPE}" == "archive" ]; then
-
   VM_NAME="${VM_DUMP_PARENT_BASENAME}"
-  mkdir -p "${VM_NAME}"
-
-  echo "
-  Running:
-    gcloud compute scp ${GOOGLE_VM}:${VM_DUMP} ${VM_NAME} --zone=${ZONE}
-  "
-  gcloud compute scp "${GOOGLE_VM}:${VM_DUMP}" "${VM_NAME}" --zone=${ZONE}
-
+  LOCAL_DUMP_DIR="google/${VM_NAME}"
+  SCP_OPTIONS=""
 else
-
   VM_DIR=$(dirname "${VM_DUMP_FULL_PARENT_DIR}")
   VM_NAME=$(basename "${VM_DIR}")
-  LOCAL_DUMP_DIR="${VM_NAME}/${VM_DUMP_PARENT_BASENAME}"
-
-  mkdir -p "${LOCAL_DUMP_DIR}"
-
-  echo "
-  Running:
-    gcloud compute scp --recurse ${GOOGLE_VM}:${VM_DUMP} ${LOCAL_DUMP_DIR} --zone=${ZONE}
-  "
-  gcloud compute scp --recurse "${GOOGLE_VM}:${VM_DUMP}" "${LOCAL_DUMP_DIR}" --zone=${ZONE}
-
+  LOCAL_DUMP_DIR="google/${VM_NAME}/${VM_DUMP_PARENT_BASENAME}"
+  SCP_OPTIONS="--recurse"
 fi
+
+mkdir -p "${LOCAL_DUMP_DIR}"
+
+echo "
+Running:
+  gcloud compute scp ${SCP_OPTIONS} ${GOOGLE_VM}:${VM_DUMP} ${LOCAL_DUMP_DIR} --zone=${ZONE}
+"
+# shellcheck disable=SC2086
+gcloud compute scp ${SCP_OPTIONS} "${GOOGLE_VM}:${VM_DUMP}" "${LOCAL_DUMP_DIR}" --zone=${ZONE}
