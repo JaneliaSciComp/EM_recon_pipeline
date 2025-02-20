@@ -3,7 +3,7 @@ import logging
 import sys
 import traceback
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 import xarray
 
@@ -30,10 +30,10 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
 
     logger.info(f"{func_name}: opening {wafer_xlog_path}")
 
-    if wafer_xlog_path.exists():
-        xlog = xarray.open_zarr(wafer_xlog_path)
-    else:
+    if not wafer_xlog_path.exists():
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
+
+    xlog = xarray.open_zarr(wafer_xlog_path)
 
     for stack in render_stack_list:
         logger.info(f"{func_name}: trimming stack {stack} with dilation {dilation}")
@@ -53,7 +53,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
             logger.warning(f"{func_name}: skipping stack {stack} because no SFOVs are within the ROI, "
                            f"consider using a dilation value larger than {dilation}")
             continue
-        elif len(roi_names) == total_sfov_count:
+        if len(roi_names) == total_sfov_count:
             logger.warning(f"{func_name}: skipping stack {stack} because all SFOVs are within the ROI, "
                            f"consider using a dilation value smaller than {dilation}")
             continue
