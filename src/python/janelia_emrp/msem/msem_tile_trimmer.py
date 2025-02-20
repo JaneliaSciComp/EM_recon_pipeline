@@ -3,11 +3,12 @@ import logging
 import sys
 import traceback
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 import xarray
 
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_roi_sfovs
+from janelia_emrp.msem.tile_id import TileID
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.slab_info import build_slab_info_from_stack_name
 from janelia_emrp.render.web_service_request import RenderRequest
@@ -29,10 +30,10 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
 
     logger.info(f"{func_name}: opening {wafer_xlog_path}")
 
-    if wafer_xlog_path.exists():
-        xlog = xarray.open_zarr(wafer_xlog_path)
-    else:
+    if not wafer_xlog_path.exists():
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
+
+    xlog = xarray.open_zarr(wafer_xlog_path)
 
     for stack in render_stack_list:
         logger.info(f"{func_name}: trimming stack {stack} with dilation {dilation}")
@@ -42,8 +43,8 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
         logger.info(f"{func_name}: loaded slab_info: {slab_info}")
 
         roi_names = {}
-        total_sfov_count = (slab_info.last_mfov - slab_info.first_mfov + 1) * N_BEAMS
-        for mfov in range(slab_info.first_mfov, slab_info.last_mfov + 1):
+        total_sfov_count = len(slab_info) * N_BEAMS
+        for mfov in slab_info.mfovs:
             for zero_based_sfov_id in get_roi_sfovs(xlog=xlog, slab=slab_info.magc_id, mfov=mfov, dilation=dilation):
                 one_based_sfov_id = zero_based_sfov_id + 1 # to keep consistent with the scope SFOV file names
                 roi_names[f"{mfov:04}_s{one_based_sfov_id:02}"] = True
@@ -52,7 +53,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
             logger.warning(f"{func_name}: skipping stack {stack} because no SFOVs are within the ROI, "
                            f"consider using a dilation value larger than {dilation}")
             continue
-        elif len(roi_names) == total_sfov_count:
+        if len(roi_names) == total_sfov_count:
             logger.warning(f"{func_name}: skipping stack {stack} because all SFOVs are within the ROI, "
                            f"consider using a dilation value smaller than {dilation}")
             continue
@@ -92,15 +93,11 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                                                                              max_z=max_z)
             tile_id_to_spec_map = resolved_tiles["tileIdToSpecMap"]
 
-            filtered_map = {}
-            for tile_id in tile_id_to_spec_map.keys():
-                # w60_magc0399_scan049_m0043_r35_s04 -> 0043_s04
-                mfov_start = len(tile_id) - 12
-                mfov_stop = mfov_start + 4
-                sfov_start = mfov_stop + 4
-                roi_name = f"{tile_id[mfov_start:mfov_stop]}{tile_id[sfov_start:]}"
-                if roi_name in roi_names:
-                    filtered_map[tile_id] = tile_id_to_spec_map[tile_id]
+            filtered_map: dict[str, Any] = {
+                tile_id_str : tile_id_to_spec_map[tile_id_str]
+                for tile_id_str in tile_id_to_spec_map.keys()
+                if TileID.from_string(tile_id_str).to_roi_name() in roi_names
+            }
 
             removed_count = len(tile_id_to_spec_map) - len(filtered_map)
             logger.info(f"{func_name}: loaded {len(tile_id_to_spec_map)} tiles, "

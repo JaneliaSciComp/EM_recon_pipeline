@@ -39,6 +39,10 @@ class SlabInfo:
     def __post_init__(self):
         self.serial_name = f"{self.serial_id:0{SERIAL_NAME_LEN}}"
         self.stack_name = f"{self.wafer_short_prefix}s{self.serial_name}_r{self.region:0{REGION_NAME_LEN}}"
+        
+    def __len__(self)->int:
+        """Number of MFOVs."""
+        return self.last_mfov - self.first_mfov + 1
 
     def build_mfov_position_list(self,
                                  xlog: xarray.Dataset,
