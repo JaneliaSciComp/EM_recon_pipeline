@@ -16,8 +16,8 @@ class TileID:
     E.g. w60_magc0002_scan001_m0003_s04 has sfov = 3 and is sfov_004.png
     """
     wafer_id: str
-    scan: int
     slab: int
+    scan: int
     mfov: int
     sfov: int
     """0-based indexing"""

@@ -21,7 +21,6 @@ from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
     get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height, get_effective_scans
 )
 
-from janelia_emrp.msem.render_sfov_order import RENDER_SFOV_ORDER
 from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
 from janelia_emrp.msem.tile_id import TileID
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
@@ -119,7 +118,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         build_tile_spec(image_path=image_path,
                         stage_x=stage_x,
                         stage_y=stage_y,
-                        tile_id=TileID(wafer_id, slab, scan, mfov, sfov),
+                        tile_id=TileID(wafer_id=wafer_id, slab=slab, scan=scan, mfov=mfov, sfov=sfov),
                         mfov_id=mfov,
                         sfov_index_name=f"{(sfov+1):03}",
                         **fixed_tilespec_params,
@@ -133,30 +132,6 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
 
     return tile_specs
 
-
-def create_tile_id(wafer_id: str,
-                   slab: int,
-                   scan: int,
-                   mfov: int,
-                   sfov: int)->str:
-    """Creates tile ID with a 1-based SFOV number component.
-    
-    E.g.: w060_magc0002_scan001_m0003_s04
-    """
-
-    # scope SFOV numbering (and image paths) are 1-indexed, using that number in the tile ID for consistency
-    scope_sfov_number = sfov + 1
-
-    return "_".join(
-        (
-            f"w{wafer_id}",
-            f"magc{slab:04}",
-            f"scan{scan:03}",
-            f"m{mfov:04}",
-            f"r{RENDER_SFOV_ORDER[sfov]:02}",
-            f"s{scope_sfov_number:02}",
-        )
-    )
 
 def get_stack_metadata_or_none(render: Render,
                                stack_name: str) -> Optional[dict[str, Any]]:
