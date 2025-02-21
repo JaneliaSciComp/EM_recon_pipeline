@@ -4,7 +4,7 @@
         "host": "jeiss7.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/C_elegans",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_celegan",
+        "data_set_id": "jrc_celegans-20241028",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6282_25-02-16_112319_0-0-0.dat",
