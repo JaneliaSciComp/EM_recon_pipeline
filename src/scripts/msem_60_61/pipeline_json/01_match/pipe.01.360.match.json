@@ -16,7 +16,7 @@
     {
       "runName": "montageMfovRun",
       "matchCommon": {
-        "maxPairsPerStackBatch" : 30,
+        "maxPairsPerStackBatch" : 4,
         "featureStorage": { "maxFeatureSourceCacheGb": 6 },
         "maxPeakCacheGb" : 2
       },
@@ -63,7 +63,7 @@
     {
       "runName": "montageRun",
       "matchCommon": {
-        "maxPairsPerStackBatch" : 30,
+        "maxPairsPerStackBatch" : 4,
         "featureStorage": { "maxFeatureSourceCacheGb": 6 },
         "maxPeakCacheGb" : 2
       },
@@ -102,7 +102,7 @@
     {
       "runName": "crossRun",
       "matchCommon": {
-        "maxPairsPerStackBatch" : 50,
+        "maxPairsPerStackBatch" : 10,
         "featureStorage": { "maxFeatureSourceCacheGb": 6 },
         "maxPeakCacheGb" : 2
       },
