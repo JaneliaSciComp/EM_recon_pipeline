@@ -4,7 +4,7 @@ from typing import List
 from cv2 import imread, imwrite, IMREAD_GRAYSCALE
 import numpy as np
 
-from config import BeamConfig
+from janelia_emrp.msem.wafer_60_gc_upload.details.config import BeamConfig
 
 
 def trim_mime_type(file_path: str) -> str:
