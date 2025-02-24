@@ -51,7 +51,7 @@ def background_correct_and_upload(
 
     # Spin up local dask cluster (this is supposed to run on a single machine)
     cluster = LocalCluster(n_workers=param.num_threads, threads_per_worker=1, processes=True)
-    _ = cluster.get_client()
+    dask_client = cluster.get_client()
 
     logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
     logger.info("Processing %d slabs", len(slabs))
@@ -62,14 +62,14 @@ def background_correct_and_upload(
         start = time.time()
 
         project = render_details.project_from_slab(slab.wafer, slab.serial_id)
-        client = MsemClient(host=param.host, owner=param.owner, project=project)
+        msem_client = MsemClient(host=param.host, owner=param.owner, project=project)
 
-        futures, gc_stacks = process_slab(slab, render_details, client, param)
+        futures, gc_stacks = process_slab(slab, render_details, msem_client, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
         for gc_stack in gc_stacks:
             logger.info("completing stack %s", gc_stack)
-            client.complete_stack(gc_stack)
+            msem_client.complete_stack(gc_stack)
 
         for future in as_completed(futures):
             future.result()
@@ -77,6 +77,7 @@ def background_correct_and_upload(
 
         end = time.time()
         logger.info("Finished processing %s - took %.2fs", slab, end - start)
+        dask_client.restart()  # Restart the client to free up memory
 
 
 def process_slab(
@@ -248,7 +249,7 @@ def process_sfov(
 def correct_beam_shading(all_images, indices_to_correct):
     """Correct the background of the images caused by beam shading using BaSiC."""
     # Use all images to compute the flatfield
-    basic = BaSiC(get_darkfield=False)
+    basic = BaSiC(get_darkfield=False, max_workers=4)
     basic.fit(all_images)
 
     # Only a specified subset of images is corrected
