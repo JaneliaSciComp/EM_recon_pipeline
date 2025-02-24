@@ -106,11 +106,10 @@ if __name__ == '__main__':
     try:
         main(sys.argv[1:])
         # main(["--render_host", "em-services-1.int.janelia.org:8080",
-        #       "--match_owner", "hess_wafer_53c",
-        #       "--match_collections", "s002_m395_match",
+        #       "--match_owner", "hess_wafers_60_61",
+        #       "--match_collections", "w60_s360_r00_d20_gc_match",
         #       "--pair_type", "within",
-        #       "--min_keep_weight", "0.20",
-        #       "--explain"])
+        #       "--min_keep_weight", "0.20"])
     except Exception as e:
         # ensure exit code is a non-zero value when Exception occurs
         traceback.print_exc()
