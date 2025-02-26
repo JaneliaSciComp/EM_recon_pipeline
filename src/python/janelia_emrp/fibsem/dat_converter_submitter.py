@@ -86,7 +86,6 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
 
 def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
                            convert_script_path: Path,
-                           num_workers: int,
                            max_batch_count: Optional[int],
                            dats_per_hour: int,
                            processed_batch_count: int,
@@ -135,6 +134,10 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
             log_dir = base_log_dir / f"batch_{processed_batch_count:06}"
             log_dir.mkdir(parents=True, exist_ok=False)
 
+            # request 1 worker for 1x1, 2x2, 2x3, request 2 workers for 2x4, 3x3, 2x5, ...
+            sds = transfer_info.scope_data_set
+            num_workers = int(sds.rows_per_z_layer * sds.columns_per_z_layer / 7) + 1
+
             bsub_convert_dat_batch(dat_batch=dat_batch,
                                    cluster_job_project_for_billing=transfer_info.cluster_job_project_for_billing,
                                    log_file=(log_dir / "convert_dat.log"),
@@ -167,12 +170,6 @@ def main(arg_list: list[str]):
         "--convert_script",
         help="Path of convert script to be called by bsub job",
         default="/groups/fibsem/home/fibsemxfer/bin/02_convert_dats.sh"
-    )
-    parser.add_argument(
-        "--num_workers",
-        help="The number of workers to use for distributed processing",
-        type=int,
-        default=1
     )
     parser.add_argument(
         "--lsf_runtime_limit",
@@ -217,7 +214,6 @@ def main(arg_list: list[str]):
         try:
             processed_batch_count = submit_jobs_for_volume(transfer_info=transfer_info,
                                                            convert_script_path=convert_script_path,
-                                                           num_workers=args.num_workers,
                                                            max_batch_count=args.max_batch_count,
                                                            dats_per_hour=dats_per_hour,
                                                            processed_batch_count=processed_batch_count,
