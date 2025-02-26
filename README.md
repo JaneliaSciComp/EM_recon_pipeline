@@ -13,7 +13,7 @@ cd EM_recon_pipeline
 conda env create -f janelia_emrp.environment.yml
 conda activate janelia_emrp
 
-poetry install
+poetry install --no-root
 ```
 
 ### Development Library Management
