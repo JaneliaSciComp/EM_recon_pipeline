@@ -49,6 +49,6 @@
         "APPLY_FIBSEM_CORRECTION_TRANSFORM"
     ],
     "cluster_job_project_for_billing": "reiser",
-    "number_of_dats_converted_per_hour": 80,
+    "number_of_dats_converted_per_hour": 20,
     "number_of_preview_workers": 10
 }
