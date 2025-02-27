@@ -31,7 +31,7 @@ export OPENBLAS_NUM_THREADS=1
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
-ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/h5_raw_to_dat.py"
+ARGS="${EMRP_ROOT}/src/python/janelia_emrp/fibsem/h5_to_dat.py"
 ARGS="${ARGS} --dat_parent_path ${DAT_OUTPUT_DIR}"
 ARGS="${ARGS} --restore_dat_files"
 ARGS="${ARGS} --h5_path $*"
