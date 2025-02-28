@@ -2,6 +2,13 @@
 
 set -e
 
+#-----------------------------------------------------------------------------
+# This script creates a 16-bit stack from the raw data of an align stack.
+#
+# It assumes that the raw h5s have been copied from nearline to nrs so that export process can read them.
+# Usually Globus ( https://app.globus.org/ ) is used to copy the data.
+# A Globus copy of 53T from /nearline/cellmap/data/jrc_mus-cerebellum-2 to /nrs took 3 hours 37 minutes.
+
 ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}"/00_config.sh
