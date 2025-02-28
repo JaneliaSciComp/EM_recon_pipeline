@@ -4,12 +4,12 @@ set -e
 
 umask 0002
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-source ${SCRIPT_DIR}/00_config.sh
+ABSOLUTE_SCRIPT=$(readlink -m "${0}")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+source "${SCRIPT_DIR}"/00_config.sh
 
 if (( $# < 2 )); then
-  echo "USAGE $0 <stack> <number of nodes> [review | Zcoords.txt]"
+  echo "USAGE $0 <stack> <number of nodes> [review | 16bit | Zcoords.txt]"
   exit 1
 fi
 
@@ -29,7 +29,10 @@ export N_OVERHEAD_CORES_PER_WORKER=1
 export N_CORES_DRIVER=1
 
 #-----------------------------------------------------------
-RUN_TIME=`date +"%Y%m%d_%H%M%S"`
+RUN_TIME=$(date +"%Y%m%d_%H%M%S")
+
+JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
+CLASS="org.janelia.render.client.spark.n5.N5Client"
 
 ARGS="--baseDataUrl http://${SERVICE_HOST}/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STACK}"
@@ -39,14 +42,21 @@ ARGS="${ARGS} --tileWidth 4096 --tileHeight 4096 --blockSize 128,128,64"
 ARGS="${ARGS} --factors 2,2,2"
 
 if (( $# > 2 )); then
+
   if [[ "${3}" == "review" ]]; then
     ARGS="${ARGS} --reviewFactors 2,2,1"
+
+  elif [[ "${3}" == "16bit" ]]; then
+    CLASS="org.janelia.render.client.spark.n5.ShortN5Client"
+
   elif [[ -f ${Z_COORDS_FILE} ]]; then
     ARGS="${ARGS} --z_coords ${Z_COORDS_FILE}"
+
   else
     echo "ERROR: ${Z_COORDS_FILE} not found"
     exit 1
   fi
+
 fi
 
 # must export this for flintstone
@@ -54,13 +64,10 @@ export LSF_PROJECT="${BILL_TO}"
 export RUNTIME="333:59"
 
 #-----------------------------------------------------------
-JAR="/groups/flyTEM/flyTEM/render/lib/current-spark-standalone.jar"
-CLASS="org.janelia.render.client.spark.n5.N5Client"
-
 LOG_DIR="${SCRIPT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/n5-`date +"%Y%m%d_%H%M%S"`.log"
+LOG_FILE="${LOG_DIR}/n5-${RUN_TIME}.log"
 
-mkdir -p ${LOG_DIR}
+mkdir -p "${LOG_DIR}"
 
 #export SPARK_JANELIA_ARGS="--consolidate_logs"
 
@@ -70,6 +77,7 @@ mkdir -p ${LOG_DIR}
   echo "Running with arguments:
 ${ARGS}
 "
+  # shellcheck disable=SC2086
   /groups/flyTEM/flyTEM/render/spark/spark-janelia/flintstone.sh $N_NODES $JAR $CLASS $ARGS
 
 echo "
@@ -77,4 +85,4 @@ To get n5_view.sh command:
   grep n5_view 04-driver.log
 "
 
-} 2>&1 | tee -a ${LOG_FILE}
+} 2>&1 | tee -a "${LOG_FILE}"
