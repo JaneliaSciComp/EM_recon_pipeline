@@ -111,7 +111,10 @@
         "zNeighborDistance" : 3, "excludeCornerNeighbors" : false, 
         "excludeCompletelyObscuredTiles" : true, "excludeSameLayerNeighbors" : true, "excludeSameSectionNeighbors" : false,
         "excludeSameMfovNeighbors": false,
-        "excludePairsInMatchCollection": "pairsFromPriorRuns", "minExistingMatchCount": 0
+        "excludePairsInMatchCollection": "pairsFromPriorRuns", "minExistingMatchCount": 0,
+        "layerShiftList": [
+          "w60_serial_360_to_369|w60_s360_r00_d20_gc|-4764|-197|76"
+        ]
       },
       "matchStageParametersList": [
         {
