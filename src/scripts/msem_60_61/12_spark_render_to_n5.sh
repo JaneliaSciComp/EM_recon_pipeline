@@ -8,18 +8,19 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh"
 
-if (( $# < 2 )); then
-  echo "USAGE $0 <project> <stack> [export mask y|n]
+if (( $# < 3 )); then
+  echo "USAGE $0 <project> <stack> <big|small> [export mask y|n]
 
-  e.g. w60_serial_290_to_299 w60_s296_r00_d00_align_avgshd
-       w60_serial_290_to_299 w60_s296_r00_d00_align y
+  e.g. w60_serial_360_to_369  w60_s360_r00_d20_gc_align  small  n
+       w60_serial_290_to_299  w60_s296_r00_d00_align     big    y
 "
   exit 1
 fi
 
 RENDER_PROJECT="${1}"
 STACK="${2}"
-EXPORT_MASK="${3}"
+BLOCK_TYPE="${3}"
+EXPORT_MASK="${4}"
 
 STACK_URL="${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${STACK}"
 MAX_Z=$(curl -s "${STACK_URL}"  | jq -r '.stats.stackBounds.maxZ' | cut -d'.' -f1) # some curl versions return float so cut off decimal
@@ -27,7 +28,16 @@ if (( MAX_Z > 128 )); then
   MAX_Z=128
 fi
 
-N_NODES="2" # with 2 11-core worker nodes, export should take less than 2 hours
+if [[ "${BLOCK_TYPE}" == "big" ]]; then
+  BLOCK_SIZE="1024,1024,${MAX_Z}"
+elif [[ "${BLOCK_TYPE}" == "small" ]]; then
+  BLOCK_SIZE="128,128,${MAX_Z}"
+else
+  echo "ERROR: block type specified as ${BLOCK_TYPE} but it must be 'big' or 'small'"
+  exit 1
+fi
+
+N_NODES="20" # with 20 11-core worker nodes, export of w60_s360_r00_d20_gc_align with small blocks took 51 minutes
 
 #-----------------------------------------------------------
 # Spark executor setup with 11 cores per worker defined in 00_config.sh
