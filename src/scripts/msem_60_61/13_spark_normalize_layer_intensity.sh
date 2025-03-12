@@ -13,7 +13,7 @@ if (( $# < 2 )); then
 USAGE: $0 <render project> <stack>
 
 Examples:
-  $0 w60_serial_290_to_299 w60_s296_r00_d00_align_avgshd
+  $0  w60_serial_360_to_369  w60_s360_r00_d20_gc_align_small_block
 """
   exit 1
 fi
@@ -22,7 +22,7 @@ RENDER_PROJECT="${1}"
 STACK="${2}"
 
 #-----------------------------------------------------------
-N_NODES="2" # 2 11-slot nodes took 30 minutes for w60_s296_r00_d00_align_avgshd
+N_NODES="2" # 2 11-slot nodes took 228 minutes for w60_s360_r00_d20_gc_align_small_block
 SOURCE_DATASET="/render/${RENDER_PROJECT}/${STACK}"
 
 # /nrs/hess/data/hess_wafers_60_61/export/hess_wafers_60_61.n5/render/w60_serial_290_to_299/w60_s296_r00_d00_align_avgshd
@@ -31,6 +31,9 @@ if [[ ! -d "${SOURCE_PATH}" ]]; then
   echo "ERROR: ${SOURCE_PATH} not found"
   exit 1
 fi
+
+# TODO: remove this hack when hotknife repo gets updated
+cp "${BASE_N5_DIR}"/attributes.3.json "${BASE_N5_DIR}"/attributes.json
 
 # must export this for flintstone
 export RUNTIME="233:59"
