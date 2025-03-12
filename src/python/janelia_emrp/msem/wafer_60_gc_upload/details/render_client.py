@@ -1,3 +1,4 @@
+import logging
 import re
 from dataclasses import dataclass
 
@@ -7,6 +8,8 @@ from janelia_emrp.render.web_service_request import RenderRequest
 
 
 CORE_HOST_PATTERN = re.compile(r'http://([^/]+)/')
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class StackId:
@@ -49,11 +52,18 @@ class MsemClient():
         :return: Dictionary mapping regions to lists of stack IDs.
         """
         stack_ids = self._render_request.get_stack_ids()
-        pattern = re.compile(f"^w{slab.wafer}_s{slab.serial_id:03}_r(\\d+)")
+        regexp = f"^w{slab.wafer}_s{slab.serial_id:03}_r(\\d+)"
+        pattern = re.compile(regexp)
 
         region_stacks = {}
         for stack_id in stack_ids:
             match = pattern.match(stack_id['stack'])
+            if match is None:
+                logger.debug("Stack %s does not match regexp %s, skipping.",
+                             stack_id['stack'], regexp)
+                continue
+
+            logger.info("Stack %s is considered for upload.", stack_id['stack'])
             region_id = int(match.group(1))
             region = Region(slab=slab, region_id=region_id)
             if region not in region_stacks:
