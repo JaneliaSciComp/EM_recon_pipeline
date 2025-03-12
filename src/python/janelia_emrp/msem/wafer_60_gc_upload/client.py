@@ -46,6 +46,7 @@ def background_correct_and_upload(
     slabs to GCP."""
 
     logger.info("background_correct_and_upload: Called with %s", param)
+    logger.info("background_correct_and_upload: Slabs to process: %s", slabs)
 
     slabs = [Slab(param.wafer, slab) for slab in slabs]
 
@@ -54,7 +55,6 @@ def background_correct_and_upload(
     dask_client = cluster.get_client()
 
     logger.info("Starting Dask cluster; see dashboard at %s", cluster.dashboard_link)
-    logger.info("Processing %d slabs", len(slabs))
 
     # Process slabs in order, but process sfovs in parallel
     for slab in slabs:
@@ -88,7 +88,7 @@ def process_slab(
     ) -> list[Future]:
     """Divide a slab into layers and sfovs to process them."""
     # Check if all regions of the slab have consistent z ranges
-    z_ranges = set()
+    z_ranges = []
     region_stacks = client.get_stack_ids(slab)
     download_stacks = []
     upload_stacks = []
@@ -111,13 +111,13 @@ def process_slab(
 
             # Compare the z range of the stack with the others
             current_z_range = client.get_z_range(stack_id)
-            z_ranges.add(tuple(current_z_range))
+            z_ranges.append(tuple(current_z_range))
 
     # There should be only one z range for all regions
-    if len(z_ranges) != 1:
-        raise ValueError(f"{slab} has inconsistent z ranges.")
+    if len(set(z_ranges)) != 1:
+        raise ValueError(f"{slab} has inconsistent z ranges: {z_ranges}")
 
-    z_range = z_ranges.pop()
+    z_range = z_ranges[0]
     logger.info("%s has %d layers.", slab, len(z_range))
 
     # Create render stacks with the google cloud paths

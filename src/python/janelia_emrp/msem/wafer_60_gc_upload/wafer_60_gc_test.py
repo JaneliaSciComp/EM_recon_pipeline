@@ -107,12 +107,13 @@ if __name__ == '__main__':
     # Test setup
     CLI_ARGS = (
         "--host http://em-services-1.int.janelia.org:8080/render-ws/v1 "
-        "--owner trautmane "
+        "--owner hess_wafers_60_61 "
         "-w 60 "
-        "-s  296 "
-        "--base-path test_upload_mi "
+        "-s 363 364 365 366 367 368 369 "
+        "--trim-padding 30 "
+        "--num-threads  16 "
+        "--base-path hess_wafer_60_data "
         "--invert "
-        # "--shading-storage-path /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition"
     )
 
     args = parser.parse_args(CLI_ARGS.split())
