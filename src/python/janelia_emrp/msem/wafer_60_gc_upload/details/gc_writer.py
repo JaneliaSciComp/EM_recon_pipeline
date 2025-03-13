@@ -2,6 +2,8 @@ import functools
 from typing import List
 from cv2 import imencode
 from google.cloud import storage
+from google.api_core.retry import Retry
+from google.api_core.exceptions import ServiceUnavailable
 import numpy as np
 
 from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig
@@ -20,6 +22,12 @@ class MsemCloudWriter:
         self._base_path = base_path
         self._client = storage.Client()
         self._bucket = self._client.bucket(bucket_name)
+        self._retry = Retry(
+            initial=1.0,
+            maximum=33.0,
+            multiplier=2.0,
+            predicate=lambda e: isinstance(e, ServiceUnavailable)
+        )
 
 
     def write_image(
