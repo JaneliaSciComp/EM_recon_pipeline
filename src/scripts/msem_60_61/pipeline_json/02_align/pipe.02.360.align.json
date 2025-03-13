@@ -30,11 +30,11 @@
       "sizeZ": 100
     },
     "blockOptimizer": {
-      "lambdasRigid": [ 1.0, 1.0, 0.9, 0.3, 0.01 ],
+      "lambdasRigid": [ 1.0, 1.0, 0.9, 0.3, 0.0 ],
       "lambdasTranslation": [ 1.0, 0.0, 0.0, 0.0, 0.0 ],
       "lambdasRegularization": [ 0.0, 0.0, 0.0, 0.0, 0.0 ],
-      "iterations": [ 1000, 1000, 500, 250, 250 ],
-      "maxPlateauWidth": [ 250, 250, 150, 100, 100 ],
+      "iterations": [ 1000, 1000, 500, 250, 1000 ],
+      "maxPlateauWidth": [ 250, 250, 150, 100, 250 ],
       "maxAllowedError": 10.0
     },
     "maxNumMatches": 0,
