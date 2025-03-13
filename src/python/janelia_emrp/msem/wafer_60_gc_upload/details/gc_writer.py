@@ -43,7 +43,7 @@ class MsemCloudWriter:
         file_path = self._sfov_path_for(acquisition_config)
         blob = self._bucket.blob(file_path)
         raw_image = imencode('.png', image)[1].tostring()
-        blob.upload_from_string(raw_image, content_type='image/png')
+        blob.upload_from_string(raw_image, content_type='image/png', retry=self._retry)
         return blob.exists()
 
 
