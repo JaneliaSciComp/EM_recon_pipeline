@@ -12,7 +12,8 @@ if (( $# < 1 )); then
 Usage:    $0 <archive dump file> | <collection dump directory>
 
 Examples: $0 render-ws-mongodb-8c-32gb-abc/20250216_213836.render.dump.gz
-          $0 render-ws-mongodb-8c-32gb-abc/20250217_215500/render
+          $0 mongodb_google/archives/20250222_003111.match.dump.gz
+          $0 mongodb_janelia/dump_20250304_080118_before_match_patch/match
 "
   exit 1
 fi
