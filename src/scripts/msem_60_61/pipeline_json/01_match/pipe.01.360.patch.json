@@ -17,6 +17,7 @@
     "startPositionMatchWeight":0.000001,
     "xyNeighborFactor": 0.6,
     "numberOfMFOVsPerBatch": 10,
-    "trimMfovsWithNoConnectedTiles": true
+    "trimMfovsWithNoConnectedTiles": true,
+    "onlyPatchCompletelyUnconnectedTiles": true
   }
 }
