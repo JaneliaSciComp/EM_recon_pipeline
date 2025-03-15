@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 import numpy as np
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.metrics import get_resin_mask
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 
@@ -33,14 +34,28 @@ def plot_distance_roi(xlog: xr.Dataset, slab: int, mfov: int | None = None) -> N
 
 
 def get_roi_sfovs(
-    xlog: xr.Dataset, slab: int, mfov: int, dilation: float = 15
+    xlog: xr.Dataset,
+    slab: int,
+    mfov: int,
+    dilation: float = 15,
+    exclude_resin: bool = False,
+    scan: int | None = None,
 ) -> list[int]:
     """Returns SFOV IDs of an MFOV that are inside the dilated ROI boundaries.
 
     The boundary grows outwards with a positive dilation.
     The boundary grows inwards  with a negative dilation.
+
+    Raises:
+        RuntimeError: scan is needed if exclude_resin is True
     """
     mask = xlog[XVar.DISTANCE_ROI].sel(slab=slab, mfov=mfov) < dilation
+
+    if exclude_resin:
+        if scan is None:
+            raise RuntimeError("scan is required if exclude_resin is True")
+        mask *= get_resin_mask(xlog=xlog, scan=scan, slab=slab, mfov=mfov).__invert__()
+
     return mask.where(mask).dropna(XDim.SFOV)[XDim.SFOV].astype(int).values
 
 
