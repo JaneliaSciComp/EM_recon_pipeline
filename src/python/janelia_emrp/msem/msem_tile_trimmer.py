@@ -94,19 +94,29 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                                                                              max_z=max_z)
             tile_id_to_spec_map = resolved_tiles["tileIdToSpecMap"]
 
-            filtered_map: dict[str, Any] = {}
+            dilation_tile_ids: [TileID] = []
             for tile_id_str in tile_id_to_spec_map.keys():
                 tile_id = TileID.from_string(tile_id_str)
-                if tile_id.to_roi_name() not in roi_names or get_resin_mask(
-                    xlog=xlog, scan=tile_id.scan, slab=tile_id.slab, mfov=tile_id.mfov
-                ).sel(sfov=tile_id.sfov):
-                    continue
-                filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
+                if tile_id.to_roi_name() in roi_names:
+                    dilation_tile_ids.append(tile_id)
 
-            removed_count = len(tile_id_to_spec_map) - len(filtered_map)
-            logger.info(f"{func_name}: loaded {len(tile_id_to_spec_map)} tiles, "
-                        f"removed {removed_count} outside the ROI, "
-                        f"saving {len(filtered_map)} for z {min_z} to {max_z} to stack {trimmed_stack}")
+            removed_count = len(tile_id_to_spec_map) - len(dilation_tile_ids)
+            logger.info(f"{func_name}: loaded {len(tile_id_to_spec_map)} tiles and "
+                        f"removed {removed_count} outside the ROI for z {min_z} to {max_z} in stack {stack}")
+
+            filtered_map: dict[str, Any] = {}
+            for tile_id in dilation_tile_ids:
+                is_resin = get_resin_mask(xlog=xlog,
+                                          scan=tile_id.scan,
+                                          slab=tile_id.slab,
+                                          mfov=tile_id.mfov).sel(sfov=tile_id.sfov)
+                if not is_resin:
+                    tile_id_str = tile_id.__str__()
+                    filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
+
+            removed_count = len(dilation_tile_ids) - len(filtered_map)
+            logger.info(f"{func_name}: removed {removed_count} resin tiles, "
+                        f"saving {len(filtered_map)} tiles for z {min_z} to {max_z} to stack {trimmed_stack}")
 
             if len(filtered_map) > 0:
                 resolved_tiles["tileIdToSpecMap"] = filtered_map
@@ -114,7 +124,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                 render_request.save_resolved_tiles(stack=trimmed_stack,
                                                    resolved_tiles=resolved_tiles)
             else:
-                logger.warning(f"{func_name}: skipping z {min_z} to {max_z} because no tiles are within the ROI")
+                logger.warning(f"{func_name}: skipping z {min_z} to {max_z} because no non-resin tiles are within the ROI")
 
         render_request.set_stack_state_to_complete(stack=trimmed_stack)
 
