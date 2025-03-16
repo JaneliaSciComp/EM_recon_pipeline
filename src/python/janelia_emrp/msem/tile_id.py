@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from janelia_emrp.msem.render_sfov_order import RENDER_SFOV_ORDER
 
-@dataclass
+@dataclass(order=True)
 class TileID:
     """Render TileID.
     
