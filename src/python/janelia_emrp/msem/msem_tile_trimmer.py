@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from itertools import groupby
 import traceback
 from pathlib import Path
 from typing import List, Any
@@ -94,7 +95,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                                                                              max_z=max_z)
             tile_id_to_spec_map = resolved_tiles["tileIdToSpecMap"]
 
-            dilation_tile_ids: [TileID] = []
+            dilation_tile_ids: list[TileID] = []
             for tile_id_str in tile_id_to_spec_map.keys():
                 tile_id = TileID.from_string(tile_id_str)
                 if tile_id.to_roi_name() in roi_names:
@@ -105,14 +106,16 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                         f"removed {removed_count} outside the ROI for z {min_z} to {max_z} in stack {stack}")
 
             filtered_map: dict[str, Any] = {}
-            for tile_id in dilation_tile_ids:
-                is_resin = get_resin_mask(xlog=xlog,
-                                          scan=tile_id.scan,
-                                          slab=tile_id.slab,
-                                          mfov=tile_id.mfov).sel(sfov=tile_id.sfov)
-                if not is_resin:
-                    tile_id_str = tile_id.__str__()
-                    filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
+            for (scan, mfov), group in groupby(sorted(dilation_tile_ids), lambda x: (x.scan,x.mfov)):
+                mfov_resin_mask = get_resin_mask(xlog=xlog,
+                                          scan=scan,
+                                          slab=slab_info.serial_id,
+                                          mfov=mfov).load()
+                for tile_id in group:
+                    is_resin = mfov_resin_mask.sel(sfov=tile_id.sfov)
+                    if not is_resin:
+                        tile_id_str = str(tile_id)
+                        filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
 
             removed_count = len(dilation_tile_ids) - len(filtered_map)
             logger.info(f"{func_name}: removed {removed_count} resin tiles, "
