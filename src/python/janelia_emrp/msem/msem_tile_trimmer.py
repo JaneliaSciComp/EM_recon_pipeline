@@ -107,10 +107,13 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
 
             filtered_map: dict[str, Any] = {}
             for (scan, mfov), group in groupby(sorted(dilation_tile_ids), lambda x: (x.scan,x.mfov)):
+
+                logger.info(f"{func_name}: looking for resin tiles within scan {scan} mfov {mfov} in stack {stack}")
+
                 mfov_resin_mask = get_resin_mask(xlog=xlog,
-                                          scan=scan,
-                                          slab=slab_info.serial_id,
-                                          mfov=mfov).load()
+                                                 scan=scan,
+                                                 slab=slab_info.serial_id,
+                                                 mfov=mfov).load()
                 for tile_id in group:
                     is_resin = mfov_resin_mask.sel(sfov=tile_id.sfov)
                     if not is_resin:
