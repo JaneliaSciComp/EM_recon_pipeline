@@ -8,7 +8,7 @@
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6284_25-02-21_150501_0-0-0.dat",
-        "last_dat_name": "Merlin-6284_25-02-21_150501_0-0-0.dat",
+        "last_dat_name": "Merlin-6284_25-02-26_095915_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 4,
         "dat_z_nm_per_pixel": 4,
         "dat_tile_overlap_microns": 2
