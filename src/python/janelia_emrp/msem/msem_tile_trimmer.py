@@ -106,9 +106,12 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                         f"removed {removed_count} outside the ROI for z {min_z} to {max_z} in stack {stack}")
 
             filtered_map: dict[str, Any] = {}
+            previous_scan = None
             for (scan, mfov), group in groupby(sorted(dilation_tile_ids), lambda x: (x.scan,x.mfov)):
 
-                logger.info(f"{func_name}: looking for resin tiles within scan {scan} mfov {mfov} in stack {stack}")
+                if scan != previous_scan:
+                    logger.info(f"{func_name}: looking for resin tiles within scan {scan} in stack {stack}")
+                    previous_scan = scan
 
                 mfov_resin_mask = get_resin_mask(xlog=xlog,
                                                  scan=scan,
