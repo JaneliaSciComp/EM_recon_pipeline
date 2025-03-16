@@ -94,7 +94,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                                                                              max_z=max_z)
             tile_id_to_spec_map = resolved_tiles["tileIdToSpecMap"]
 
-            dilation_tile_ids: [TileID] = []
+            dilation_tile_ids: list[TileID] = []
             for tile_id_str in tile_id_to_spec_map.keys():
                 tile_id = TileID.from_string(tile_id_str)
                 if tile_id.to_roi_name() in roi_names:
