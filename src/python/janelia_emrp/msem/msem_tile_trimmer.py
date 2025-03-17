@@ -112,7 +112,7 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
             filtered_map: dict[str, Any] = {}
             if exclude_resin:
                 resin_mask = get_resin_mask(xlog=xlog,
-                                            scan=[tile_id.scan for tile_id in dilation_tile_ids],
+                                            scan=list({tile_id.scan for tile_id in dilation_tile_ids}),
                                             slab=slab_info.magc_id).load()
                 previous_scan = None
                 # noinspection PyTypeChecker
