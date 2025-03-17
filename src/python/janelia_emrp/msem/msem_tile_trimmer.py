@@ -26,7 +26,8 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                           render_project: str,
                           render_stack_list: list[str],
                           dilation: int,
-                          wafer_xlog_path: Path):
+                          wafer_xlog_path: Path,
+                          exclude_resin: bool) -> None:
 
     func_name = "create_trimmed_stacks"
 
@@ -71,7 +72,8 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
             logger.warning(f"{func_name}: skipping stack {stack} because it does not exist in the project")
             continue
 
-        trimmed_stack = f"{stack}_d{dilation:02}"
+        trimmed_stack_suffix = f"xr" if exclude_resin else ""
+        trimmed_stack = f"{stack}_d{dilation:02}{trimmed_stack_suffix}"
         if trimmed_stack in project_stack_names:
             logger.warning(f"{func_name}: skipping stack {stack} because trimmed stack {trimmed_stack} already exists")
             continue
@@ -106,34 +108,40 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                         f"removed {removed_count} outside the ROI for z {min_z} to {max_z} in stack {stack}")
 
             filtered_map: dict[str, Any] = {}
-            previous_scan = None
-            for (scan, mfov), group in groupby(sorted(dilation_tile_ids), lambda x: (x.scan,x.mfov)):
+            if exclude_resin:
+                previous_scan = None
+                # noinspection PyTypeChecker
+                for (scan, mfov), group in groupby(sorted(dilation_tile_ids), lambda x: (x.scan,x.mfov)):
 
-                if scan != previous_scan:
-                    logger.info(f"{func_name}: looking for resin tiles within scan {scan} in stack {stack}")
-                    previous_scan = scan
+                    if scan != previous_scan:
+                        logger.info(f"{func_name}: looking for resin tiles within scan {scan} in stack {stack}")
+                        previous_scan = scan
 
-                mfov_resin_mask = get_resin_mask(xlog=xlog,
-                                                 scan=scan,
-                                                 slab=slab_info.serial_id,
-                                                 mfov=mfov).load()
-                for tile_id in group:
-                    is_resin = mfov_resin_mask.sel(sfov=tile_id.sfov)
-                    if not is_resin:
-                        tile_id_str = str(tile_id)
-                        filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
+                    mfov_resin_mask = get_resin_mask(xlog=xlog,
+                                                     scan=scan,
+                                                     slab=slab_info.serial_id,
+                                                     mfov=mfov).load()
+                    for tile_id in group:
+                        is_resin = mfov_resin_mask.sel(sfov=tile_id.sfov)
+                        if not is_resin:
+                            tile_id_str = str(tile_id)
+                            filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
 
-            removed_count = len(dilation_tile_ids) - len(filtered_map)
-            logger.info(f"{func_name}: removed {removed_count} resin tiles, "
-                        f"saving {len(filtered_map)} tiles for z {min_z} to {max_z} to stack {trimmed_stack}")
+                removed_count = len(dilation_tile_ids) - len(filtered_map)
+                logger.info(f"{func_name}: removed {removed_count} resin tiles for z {min_z} to {max_z} in stack {stack}")
+            else:
+                for tile_id in dilation_tile_ids:
+                    tile_id_str = str(tile_id)
+                    filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
 
             if len(filtered_map) > 0:
+                logger.info(f"{func_name}: saving {len(filtered_map)} tiles for z {min_z} to {max_z} to stack {trimmed_stack}")
                 resolved_tiles["tileIdToSpecMap"] = filtered_map
-
                 render_request.save_resolved_tiles(stack=trimmed_stack,
                                                    resolved_tiles=resolved_tiles)
             else:
-                logger.warning(f"{func_name}: skipping z {min_z} to {max_z} because no non-resin tiles are within the ROI")
+                tiles_type = "non-resin tiles" if exclude_resin else "tiles"
+                logger.warning(f"{func_name}: skipping z {min_z} to {max_z} because no {tiles_type} are within the ROI")
 
         render_request.set_stack_state_to_complete(stack=trimmed_stack)
 
@@ -179,6 +187,11 @@ def main(arg_list: List[str]):
         help="Path of the wafer xarray (e.g. /groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr)",
         required=True,
     )
+    parser.add_argument(
+        "--exclude_resin",
+        help="If specified, exclude resin tiles from the trimmed stacks",
+        action='store_true',
+    )
     args = parser.parse_args(args=arg_list)
 
     create_trimmed_stacks(render_ws_host_and_port=f"{args.render_host}:{args.render_port}",
@@ -186,7 +199,8 @@ def main(arg_list: List[str]):
                           render_project=args.render_project,
                           render_stack_list=args.render_stack,
                           dilation=args.dilation,
-                          wafer_xlog_path=Path(args.path_xlog))
+                          wafer_xlog_path=Path(args.path_xlog),
+                          exclude_resin=args.exclude_resin)
 
 
 if __name__ == '__main__':
