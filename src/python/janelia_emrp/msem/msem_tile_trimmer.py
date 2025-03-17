@@ -1,7 +1,7 @@
 import argparse
 import logging
 import sys
-from itertools import groupby
+from itertools import groupby, batched
 import traceback
 from pathlib import Path
 from typing import List, Any
@@ -88,9 +88,10 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
 
         # process 10 z layers at a time to reduce the total number of requests
         # while ensuring we don't exceed the maximum number of tiles per request (currently 100,000)
-        for i in range(0, len(z_values), 10):
-            min_z = z_values[i]
-            max_z = z_values[min(i + 9, len(z_values) - 1)]
+        for z_batch in batched(z_values, 10):
+            min_z = min(z_batch)
+            max_z = max(z_batch)
+
 
             resolved_tiles = render_request.get_all_resolved_tiles_for_stack(stack=stack,
                                                                              min_z=min_z,
