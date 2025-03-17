@@ -23,7 +23,7 @@
       "deriveThreadsUsingSparkConfig": true
     },
     "targetStack": {
-      "stackSuffix": "_align_a",
+      "stackSuffix": "_align_b",
       "completeStack": true
     },
     "blockPartition": {
