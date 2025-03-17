@@ -2,13 +2,12 @@
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
-    "matchCollection": "w60_s360_r00_d20_gc_match",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w.._s.._r.._d20_gc_trim_b$", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w.._s.._r.._d20_gc$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc_trim_b$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_trim_b_align_b$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_trim_b_align_b_ic$" }
+    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc$" },
+    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_align_a$" },
+    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_a_ic$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
@@ -24,7 +23,7 @@
       "deriveThreadsUsingSparkConfig": true
     },
     "targetStack": {
-      "stackSuffix": "_align_b",
+      "stackSuffix": "_align_a",
       "completeStack": true
     },
     "blockPartition": {
@@ -34,8 +33,8 @@
       "lambdasRigid": [ 1.0, 1.0, 0.9, 0.3, 0.0 ],
       "lambdasTranslation": [ 1.0, 0.0, 0.0, 0.0, 0.0 ],
       "lambdasRegularization": [ 0.0, 0.0, 0.0, 0.0, 0.0 ],
-      "iterations": [ 2000, 2000, 1000, 500, 2000 ],
-      "maxPlateauWidth": [ 500, 500, 300, 200, 500 ],
+      "iterations": [ 1000, 1000, 500, 250, 1000 ],
+      "maxPlateauWidth": [ 250, 250, 150, 100, 250 ],
       "maxAllowedError": 10.0
     },
     "maxNumMatches": 0,
