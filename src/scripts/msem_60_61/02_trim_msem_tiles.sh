@@ -11,16 +11,23 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/trim_${RUN_TIME}.log"
 
-if (( $# < 4 )); then
-  echo "USAGE $0 <wafer id> <dilation> <render project> <stack> [stack] ... (e.g. 60 15 w60_serial_290_to_299 w60_s296_r00)
+if (( $# < 5 )); then
+  echo "
+USAGE:
+  $0 <wafer id> <dilation> <exclude resin flag: y|n> <render project> <stack> [stack] ...
+
+EXAMPLES:
+  $0 60 30 n w60_serial_360_to_369 w60_s360_r00
+  $0 60 20 y w60_serial_360_to_369 w60_s360_r00
 "
   exit 1
 fi
 
 WAFER_ID="${1}"
 DILATION="${2}"
-RENDER_PROJECT="${3}"
-shift 3
+EXCLUDE_RESIN="${3}"
+RENDER_PROJECT="${4}"
+shift 4
 RENDER_STACKS="$*"
 
 WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_ID}/xlog/xlog_wafer_${WAFER_ID}.zarr"
@@ -45,6 +52,12 @@ ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/msem_tile_trimmer.py"
 ARGS="${ARGS} --dilation ${DILATION} --path_xlog ${WAFER_XLOG_DIR}"
 ARGS="${ARGS} --render_host ${RENDER_HOST} --render_owner ${RENDER_OWNER}"
 ARGS="${ARGS} --render_project ${RENDER_PROJECT} --render_stack ${RENDER_STACKS}"
+
+case "${EXCLUDE_RESIN}" in
+  y|Y) ARGS="${ARGS} --exclude_resin" ;;
+  n|N) ;;
+  *) echo "ERROR: exclude resin flag must be 'y' or 'n'"; exit 1 ;;
+esac
 
 echo """
 On ${HOSTNAME} at ${RUN_TIME}
