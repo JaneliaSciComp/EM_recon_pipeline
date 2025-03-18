@@ -54,9 +54,9 @@ def get_timestamp(xlog: xr.Dataset, scan: int, slab: int, mfov: int) -> datetime
 
 def get_resin_mask(
     xlog: xr.Dataset,
-    scan: int,
+    scan: slice | list[int],
     slab: int,
-    mfov: int,
+    mfov: slice | list[int] = slice(0, None),
     n_pixels_low: int = 50**2,
     n_pixels_high: int = 50**2,
     threshold_width: int = 35,
@@ -86,7 +86,7 @@ def get_resin_mask(
     sel = dict(scan=scan, slab=slab, mfov=mfov)
     cumulative_histogram = xlog[XVar.HISTOGRAM].sel(sel).cumulative(XDim.BIN).sum()
 
-    n_pixels = cumulative_histogram.isel(sfov=0, bin=-1).values.item()
+    n_pixels = cumulative_histogram.isel(scan=0, mfov=0, sfov=0, bin=-1).values.item()
     threshold_low = n_pixels_low
     threshold_high = n_pixels - n_pixels_high
 
