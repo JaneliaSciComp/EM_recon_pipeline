@@ -37,7 +37,8 @@ else
   exit 1
 fi
 
-N_NODES="20" # with 20 11-core worker nodes, export of w60_s360_r00_d20_gc_align with small blocks took 51 minutes
+# N_NODES="20" # with 20 11-core worker nodes, export of w60_s360_r00_d20_gc_align with small blocks took 51 minutes
+N_NODES="40" # with 40 11-core worker nodes, export of w60_s360_r00_d20_gc_align_a with small blocks took 36 minutes
 
 #-----------------------------------------------------------
 # Spark executor setup with 11 cores per worker defined in 00_config.sh
