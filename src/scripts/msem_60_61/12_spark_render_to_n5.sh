@@ -8,11 +8,13 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh"
 
-if (( $# < 3 )); then
-  echo "USAGE $0 <project> <stack> <big|small> [export mask y|n]
+if (( $# < 5 )); then
+  echo "USAGE $0 <project> <stack> <big|small> <export mask y|n> <number of workers>
 
-  e.g. w60_serial_360_to_369  w60_s360_r00_d20_gc_align  small  n
-       w60_serial_290_to_299  w60_s296_r00_d00_align     big    y
+  e.g. w60_serial_360_to_369  w60_s360_r00_d20_gc_align  small  n  20
+       w60_serial_290_to_299  w60_s296_r00_d00_align     big    y  40
+
+  With  40 11-core 'fast' worker nodes, export of 212K-tile w60_s360_r00_d20_gc_align_a with small blocks took 36 minutes.
 "
   exit 1
 fi
@@ -21,6 +23,7 @@ RENDER_PROJECT="${1}"
 STACK="${2}"
 BLOCK_TYPE="${3}"
 EXPORT_MASK="${4}"
+N_NODES="${5}"
 
 STACK_URL="${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${STACK}"
 MAX_Z=$(curl -s "${STACK_URL}"  | jq -r '.stats.stackBounds.maxZ' | cut -d'.' -f1) # some curl versions return float so cut off decimal
@@ -36,9 +39,6 @@ else
   echo "ERROR: block type specified as ${BLOCK_TYPE} but it must be 'big' or 'small'"
   exit 1
 fi
-
-# N_NODES="20" # with 20 11-core worker nodes, export of w60_s360_r00_d20_gc_align with small blocks took 51 minutes
-N_NODES="40" # with 40 11-core worker nodes, export of w60_s360_r00_d20_gc_align_a with small blocks took 36 minutes
 
 #-----------------------------------------------------------
 # Spark executor setup with 11 cores per worker defined in 00_config.sh
