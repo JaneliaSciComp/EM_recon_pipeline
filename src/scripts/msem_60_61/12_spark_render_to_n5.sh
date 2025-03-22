@@ -14,7 +14,8 @@ if (( $# < 5 )); then
   e.g. w60_serial_360_to_369  w60_s360_r00_d20_gc_align  small  n  20
        w60_serial_290_to_299  w60_s296_r00_d00_align     big    y  40
 
-  With  40 11-core 'fast' worker nodes, export of 212K-tile w60_s360_r00_d20_gc_align_a with small blocks took 36 minutes.
+  With 20 11-core 'slow' worker nodes, export of 214K-tile w60_s360_r00_d20_gc_align with small blocks took 55 minutes.
+  With 40 11-core 'fast' worker nodes, export of 212K-tile w60_s360_r00_d20_gc_align_a with small blocks took 36 minutes.
 "
   exit 1
 fi
