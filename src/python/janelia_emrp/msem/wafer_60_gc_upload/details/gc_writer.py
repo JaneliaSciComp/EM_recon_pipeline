@@ -2,9 +2,11 @@ import functools
 from typing import List
 from cv2 import imencode
 from google.cloud import storage
+from google.api_core.retry import Retry
+from google.api_core.exceptions import ServiceUnavailable
 import numpy as np
 
-from config import AcquisitionConfig
+from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig
 
 class MsemCloudWriter:
     """
@@ -20,6 +22,12 @@ class MsemCloudWriter:
         self._base_path = base_path
         self._client = storage.Client()
         self._bucket = self._client.bucket(bucket_name)
+        self._retry = Retry(
+            initial=1.0,
+            maximum=33.0,
+            multiplier=2.0,
+            predicate=lambda e: isinstance(e, ServiceUnavailable)
+        )
 
 
     def write_image(
@@ -35,7 +43,7 @@ class MsemCloudWriter:
         file_path = self._sfov_path_for(acquisition_config)
         blob = self._bucket.blob(file_path)
         raw_image = imencode('.png', image)[1].tostring()
-        blob.upload_from_string(raw_image, content_type='image/png')
+        blob.upload_from_string(raw_image, content_type='image/png', retry=self._retry)
         return blob.exists()
 
 
@@ -65,6 +73,17 @@ class MsemCloudWriter:
             f"slab_{acquisition_config.slab:04}/"
             f"mfov_{acquisition_config.mfov:04}/"
             f"sfov_{acquisition_config.sfov:03}.png"
+        )
+
+
+    def full_url(self, acquisition_config: AcquisitionConfig) -> str:
+        """
+        Get the path of a single image for the given acquisition configuration.
+        """
+        return (
+            "https://storage.googleapis.com/"
+            f"{self._bucket.name}/"
+            f"{self._sfov_path_for(acquisition_config)}"
         )
 
 
