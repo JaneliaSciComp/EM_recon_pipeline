@@ -132,11 +132,12 @@ class MsemClient():
         :param tile_specs: Tile specs to modify and save.
         :param gc_writer: MsemCloudWriter instance for inferring Google Cloud paths.
         """
-        # Add the Google Cloud paths to the tile specs
+        # Add the Google Cloud paths and an appropriate image loader type to the tile specs
         for tile_spec in tile_specs['tileIdToSpecMap'].values():
             loc = tile_spec['mipmapLevels']['0']['imageUrl']
             gc_loc = gc_writer.full_url(AcquisitionConfig.from_storage_location(loc))
             tile_spec['mipmapLevels']['0']['imageUrl'] = gc_loc
+            tile_spec['mipmapLevels']['0']['imageLoaderType'] = "IMAGEJ_DEFAULT_W_TIMEOUT"
 
         # Save the tile specs to the stack
         self._render_request.save_resolved_tiles(stack=stack, resolved_tiles=tile_specs)
