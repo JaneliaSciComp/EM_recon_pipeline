@@ -4,14 +4,14 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
 if (( $# < 1 )); then
-  echo "USAGE $0 <vm suffix>   (e.g. abc)"
+  echo "USAGE $0 <vm suffix>   (e.g. abe)"
   exit 1
 fi
 
 VM_NAME="render-ws-mongodb-8c-32gb-${1}"
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
-CONTAINER_IMAGE_VERSION="0.0.5"
+CONTAINER_IMAGE_VERSION="0.0.6"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
 # The boot disk needs to be big enough to hold the container image and any MongoDB data.

@@ -96,6 +96,18 @@
           "featureRender": { "renderScale": 1.0, "renderWithFilter": true, "renderWithoutMask": false },
           "featureRenderClip": { "clipHeight": 150, "clipWidth": 150 },
           "geometricDescriptorAndMatch": { "gdEnabled": false }
+        },
+        {
+          "stageName": "montagePass3",
+          "startPositionMatchWeight": 0.000001,
+          "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
+          "featureMatchDerivation": {
+            "matchFilter": "SINGLE_SET", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchMinCoveragePercentage": 0.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 10, "matchModelType": "TRANSLATION", "matchRod": 0.92
+          },
+          "featureRender": { "renderScale": 1.0, "renderWithFilter": true, "renderWithoutMask": false },
+          "featureRenderClip": { "clipHeight": 150, "clipWidth": 150 },
+          "geometricDescriptorAndMatch": { "gdEnabled": false }
         }
       ]
     },
