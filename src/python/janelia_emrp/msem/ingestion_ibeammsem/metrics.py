@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.constant import PIXEL_SIZE
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -54,9 +55,9 @@ def get_timestamp(xlog: xr.Dataset, scan: int, slab: int, mfov: int) -> datetime
 
 def get_resin_mask(
     xlog: xr.Dataset,
-    scan: int,
+    scan: slice | list[int],
     slab: int,
-    mfov: int,
+    mfov: slice | list[int] = slice(0, None),
     n_pixels_low: int = 50**2,
     n_pixels_high: int = 50**2,
     threshold_width: int = 35,
@@ -86,7 +87,7 @@ def get_resin_mask(
     sel = dict(scan=scan, slab=slab, mfov=mfov)
     cumulative_histogram = xlog[XVar.HISTOGRAM].sel(sel).cumulative(XDim.BIN).sum()
 
-    n_pixels = cumulative_histogram.isel(sfov=0, bin=-1).values.item()
+    n_pixels = cumulative_histogram.isel(scan=0, mfov=0, sfov=0, bin=-1).values.item()
     threshold_low = n_pixels_low
     threshold_high = n_pixels - n_pixels_high
 
@@ -98,3 +99,54 @@ def get_resin_mask(
     normalized_sharpness = 100 * xlog[XVar.SHARPNESS].sel(sel) / average
 
     return (width < threshold_width) * (normalized_sharpness < threshold_sharpness)
+
+
+def get_scan_to_scan_translation(
+    xlog: xr.Dataset, scan: list[int] | slice, slab: int
+) -> np.ndarray:
+    """The scan to scan translation of a slab, in pixels.
+
+    See XVar.TRANSLATION_AFFINE_X/Y.
+
+    The method here takes the median of the MFOV translation values
+        for a given slab at a given scan.
+
+    Returns:
+        ndarray of shape (2 , number of scans)
+        the first axis is translation_x, translation_y
+        values may be np.nan when
+            computations failed
+            the slab does not have enough MFOVs with enough tissue.
+            scan == 0
+    """
+    return (
+        xlog[[XVar.TRANSLATION_AFFINE_X, XVar.TRANSLATION_AFFINE_Y]]
+        .sel(scan=scan, slab=slab, mfov=slice(0, None))
+        .median(XDim.MFOV)
+        .to_dataarray()
+        .values.T
+        / PIXEL_SIZE
+    )
+
+
+def get_scan_to_scan_scale(
+    xlog: xr.Dataset, scan: list[int] | slice, slab: int, mfov: list[int] | slice
+) -> np.ndarray:
+    """The scan to scan scale factor of an MFOV, dimensionless.
+
+    See XVar.SCALE_AFFINE_X/Y.
+
+    Returns:
+        ndarray of shape (2 , number of scans, number of MFOVs)
+        the first axis is scale_x, scale_y
+        Values may be np.nan when
+            computations failed
+            the slab does not have enough MFOVs with enough tissue.
+            scan == 0
+    """
+    return (
+        xlog[[XVar.SCALE_AFFINE_X, XVar.SCALE_AFFINE_Y]]
+        .sel(scan=scan, slab=slab, mfov=mfov)
+        .to_dataarray()
+        .values.T
+    )

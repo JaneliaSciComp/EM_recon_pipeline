@@ -1,7 +1,7 @@
 import argparse
 import logging
 import sys
-from itertools import groupby
+from itertools import groupby, batched
 import traceback
 from pathlib import Path
 from typing import List, Any
@@ -88,9 +88,10 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
 
         # process 10 z layers at a time to reduce the total number of requests
         # while ensuring we don't exceed the maximum number of tiles per request (currently 100,000)
-        for i in range(0, len(z_values), 10):
-            min_z = z_values[i]
-            max_z = z_values[min(i + 9, len(z_values) - 1)]
+        for z_batch in batched(z_values, 10):
+            min_z = min(z_batch)
+            max_z = max(z_batch)
+
 
             resolved_tiles = render_request.get_all_resolved_tiles_for_stack(stack=stack,
                                                                              min_z=min_z,
@@ -107,8 +108,12 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
             logger.info(f"{func_name}: loaded {len(tile_id_to_spec_map)} tiles and "
                         f"removed {removed_count} outside the ROI for z {min_z} to {max_z} in stack {stack}")
 
+
             filtered_map: dict[str, Any] = {}
             if exclude_resin:
+                resin_mask = get_resin_mask(xlog=xlog,
+                                            scan=list({tile_id.scan for tile_id in dilation_tile_ids}),
+                                            slab=slab_info.magc_id).load()
                 previous_scan = None
                 # noinspection PyTypeChecker
                 for (scan, mfov), group in groupby(sorted(dilation_tile_ids), lambda x: (x.scan,x.mfov)):
@@ -117,15 +122,12 @@ def create_trimmed_stacks(render_ws_host_and_port: str,
                         logger.info(f"{func_name}: looking for resin tiles within scan {scan} in stack {stack}")
                         previous_scan = scan
 
-                    mfov_resin_mask = get_resin_mask(xlog=xlog,
-                                                     scan=scan,
-                                                     slab=slab_info.magc_id,
-                                                     mfov=mfov).load()
                     for tile_id in group:
-                        is_resin = mfov_resin_mask.sel(sfov=tile_id.sfov)
-                        if not is_resin:
-                            tile_id_str = str(tile_id)
-                            filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
+                        is_resin = resin_mask.sel(scan=tile_id.scan, mfov=tile_id.mfov, sfov=tile_id.sfov)
+                        if is_resin:
+                            continue
+                        tile_id_str = str(tile_id)
+                        filtered_map[tile_id_str] = tile_id_to_spec_map[tile_id_str]
 
                 removed_count = len(dilation_tile_ids) - len(filtered_map)
                 logger.info(f"{func_name}: removed {removed_count} resin tiles for z {min_z} to {max_z} in stack {stack}")
