@@ -215,6 +215,6 @@ def get_percentage_tissue(xlog: xr.Dataset, scan: int, dilation: float = 15) -> 
 def plot_histogram_mfovs_per_slab(xlog: xr.Dataset) -> None:
     """Plots the histogram of number of MFOVs per slab."""
     xlog[XVar.X_REFERENCE].sel(mfov=slice(0, None), sfov=0).notnull().sum(
-        "mfov"
+        XDim.MFOV
     ).rename("number of MFOVs per slab").plot.hist(bins=xlog[XDim.MFOV].size)
     plt.show()
