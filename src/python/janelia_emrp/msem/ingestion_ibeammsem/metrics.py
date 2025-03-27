@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
+from janelia_emrp.msem.ingestion_ibeammsem.constant import PIXEL_SIZE
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -98,3 +99,31 @@ def get_resin_mask(
     normalized_sharpness = 100 * xlog[XVar.SHARPNESS].sel(sel) / average
 
     return (width < threshold_width) * (normalized_sharpness < threshold_sharpness)
+
+
+def get_scan_to_scan_translation(
+    xlog: xr.Dataset, scan: list[int] | slice, slab: int
+) -> np.ndarray:
+    """The scan to scan translation of a slab, in pixels.
+
+    See XVar.TRANSLATION_AFFINE_X/Y.
+
+    The method here takes the median of the MFOV translation values
+        for a given slab at a given scan.
+
+    Returns:
+        ndarray of shape (2 , number of scans)
+        the first axis is translation_x, translation_y
+        values may be np.nan when
+            computations failed
+            the slab does not have enough MFOVs with enough tissue.
+            scan == 0
+    """
+    return (
+        xlog[[XVar.TRANSLATION_AFFINE_X, XVar.TRANSLATION_AFFINE_Y]]
+        .sel(scan=scan, slab=slab, mfov=slice(0, None))
+        .median(XDim.MFOV)
+        .to_dataarray()
+        .values.T
+        / PIXEL_SIZE
+    )

@@ -112,12 +112,25 @@ class XVar(StrEnum):
 
     SHARPNESS = auto()
     SUBSTRATE_SCAN = auto()
+    TRANSLATION_AFFINE_X = auto()
+    """Translation on X axis across two consecutive scans.
+    
+    Dimensions: scan, slab, mfov
+    For every MFOV that contains enough tissue,
+        we compute an affine transform between
+        the sharpest SFOV in an MFOV
+        and the same SFOV in the previous scan.
+    If the computation fails,
+        then we suspect a large stage offset
+        and compute a translation transform
+        using the whole MFOV instead of a single SFOV.
+    """
+    TRANSLATION_AFFINE_Y = auto()
+    """Translation on Y axis across two consecutive scans. See TRANSLATION_AFFINE_X."""
     SCALE_AFFINE_X = auto()
     SCALE_AFFINE_Y = auto()
     SHEAR_AFFINE_X = auto()
     SHEAR_AFFINE_Y = auto()
-    TRANSLATION_AFFINE_X = auto()
-    TRANSLATION_AFFINE_Y = auto()
     ROTATION_SIMILARITY = auto()
     X_REFERENCE = auto()
     Y_REFERENCE = auto()
