@@ -127,3 +127,26 @@ def get_scan_to_scan_translation(
         .values.T
         / PIXEL_SIZE
     )
+
+
+def get_scan_to_scan_scale(
+    xlog: xr.Dataset, scan: list[int] | slice, slab: int, mfov: list[int] | slice
+) -> np.ndarray:
+    """The scan to scan scale factor of an MFOV, dimensionless.
+
+    See XVar.SCALE_AFFINE_X/Y.
+
+    Returns:
+        ndarray of shape (2 , number of scans, number of MFOVs)
+        the first axis is scale_x, scale_y
+        Values may be np.nan when
+            computations failed
+            the slab does not have enough MFOVs with enough tissue.
+            scan == 0
+    """
+    return (
+        xlog[[XVar.SCALE_AFFINE_X, XVar.SCALE_AFFINE_Y]]
+        .sel(scan=scan, slab=slab, mfov=mfov)
+        .to_dataarray()
+        .values.T
+    )

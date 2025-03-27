@@ -128,7 +128,16 @@ class XVar(StrEnum):
     TRANSLATION_AFFINE_Y = auto()
     """Translation on Y axis across two consecutive scans. See TRANSLATION_AFFINE_X."""
     SCALE_AFFINE_X = auto()
+    """Scale on X axis across two consecutive scans.
+
+    See TRANSLATION_AFFINE_X.
+    If the SFOV computation fails,
+        then unlike for translation variables,
+        there is no fallback to using the whole MFOV
+        and the value remains np.nan.
+    """
     SCALE_AFFINE_Y = auto()
+    """Scale on Y axis across two consecutive scans."""
     SHEAR_AFFINE_X = auto()
     SHEAR_AFFINE_Y = auto()
     ROTATION_SIMILARITY = auto()
