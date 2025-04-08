@@ -214,6 +214,13 @@ class MatchRequest:
                        json=match_pairs,
                        context=f"for {len(match_pairs)} pairs with groupId {group_id}")
 
+    def get_match_pair(self,
+                       p_group_id: str,
+                       p_id: str,
+                       q_group_id: str,
+                       q_id: str):
+        return submit_get(f"{self.collection_url()}/group/{p_group_id}/id/{p_id}/matchesWith/{q_group_id}/id/{q_id}")
+
     def delete_match_pair(self,
                           p_group_id: str,
                           p_id: str,
