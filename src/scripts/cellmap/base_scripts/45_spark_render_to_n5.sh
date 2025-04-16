@@ -9,7 +9,7 @@ SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}"/00_config.sh
 
 if (( $# < 2 )); then
-  echo "USAGE $0 <stack> <number of nodes> [review | 16bit | Zcoords.txt]"
+  echo "USAGE $0 <stack> <number of nodes> [review | 16bit | 16bit-review | Zcoords.txt]"
   exit 1
 fi
 
@@ -48,6 +48,10 @@ if (( $# > 2 )); then
 
   elif [[ "${3}" == "16bit" ]]; then
     CLASS="org.janelia.render.client.spark.n5.ShortN5Client"
+
+  elif [[ "${3}" == "16bit-review" ]]; then
+    CLASS="org.janelia.render.client.spark.n5.ShortN5Client"
+    ARGS="${ARGS} --reviewFactors 2,2,1"
 
   elif [[ -f ${Z_COORDS_FILE} ]]; then
     ARGS="${ARGS} --z_coords ${Z_COORDS_FILE}"
