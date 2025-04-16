@@ -132,7 +132,7 @@ def copy_pair(host,
                 }
             )
         else:
-            raise Exception(f'could not find patch pair for z {z}')
+            raise Exception(f'could not find patch pair for z {z}, p {p_image_row}_{p_image_col}, q {q_image_row}_{q_image_col}')
 
     save_matches(host, owner, to_collection, patched_match_list)
 
