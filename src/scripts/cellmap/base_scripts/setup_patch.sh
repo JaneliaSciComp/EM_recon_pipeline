@@ -46,8 +46,10 @@ sed -i "
 " ${PATCH_DIR}/06_patch_tile_specs.py
 
 sed -i "
-  s/'RENDER_OWNER', 'RENDER_PROJECT', 'ACQUIRE_TRIMMED_STACK'/\"${RENDER_OWNER}\", \"${RENDER_PROJECT}\", \"${ACQUIRE_TRIMMED_STACK}\"/
-  s/'MATCH_COLLECTION'/\"${MATCH_COLLECTION}\"/g
+  s/owner='RENDER_OWNER'/owner='${RENDER_OWNER}'/
+  s/project='RENDER_PROJECT'/project='${RENDER_PROJECT}'/
+  s/stack='ACQUIRE_TRIMMED_STACK'/stack='${ACQUIRE_TRIMMED_STACK}'/
+  s/'MATCH_COLLECTION'/'${MATCH_COLLECTION}'/g
 " ${PATCH_DIR}/copy_match_pair_for_edge_gap.py
 
 EXCLUDED_COLUMNS_JSON="${SCRIPT_DIR}/excluded_columns.json"
