@@ -10,10 +10,12 @@
     "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
   },
   "pipelineSteps": [
+    "LABEL_UNCONNECTED_MONTAGE_MFOV_EDGES",
     "PATCH_MFOV_MONTAGE_MATCHES"
   ],
+  "unconnectedMfovEdgeStartPositionMatchWeight": 0.001,
   "mfovMontagePatch": {
-    "startPositionMatchWeight":0.001,
+    "startPositionMatchWeight": 0.001,
     "xyNeighborFactor": 0.6,
     "numberOfMFOVsPerBatch": 10,
     "patchAllUnconnectedPairsWithStageCoordinates": true
