@@ -10,8 +10,8 @@
     "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
   },
   "pipelineSteps": [
-    "LABEL_UNCONNECTED_MONTAGE_MFOV_EDGES",
-    "PATCH_MFOV_MONTAGE_MATCHES"
+    "PATCH_MFOV_MONTAGE_MATCHES_USING_SAME_LAYER_DATA",
+    "PATCH_MFOV_MONTAGE_MATCHES_USING_CROSS_LAYER_DATA"
   ],
   "unconnectedMfovEdgeStartPositionMatchWeight": 0.001,
   "mfovMontagePatch": {
