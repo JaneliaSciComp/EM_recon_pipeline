@@ -22,9 +22,8 @@
     "checkLayerConnectedClusters": true
   },
   "tileCluster": {
-    "maxLayersPerBatch": 1000,
+    "maxLayersPerBatch": 100,
     "maxOverlapLayers": 10,
-    "includeMatchesOutsideGroup": false,
-    "maxLayersForUnconnectedEdge": 50
+    "includeMatchesOutsideGroup": false
   }
 }
