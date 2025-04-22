@@ -10,14 +10,15 @@
     "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
   },
   "pipelineSteps": [
-    "PATCH_MFOV_MONTAGE_MATCHES_USING_SAME_LAYER_DATA",
-    "PATCH_MFOV_MONTAGE_MATCHES_USING_CROSS_LAYER_DATA"
+    "PATCH_MFOV_MONTAGE_MATCHES"
   ],
-  "unconnectedMfovEdgeStartPositionMatchWeight": 0.001,
   "mfovMontagePatch": {
+    "addIsolatedEdgeLabel": true,
+    "resinMfovStartPositionMatchWeight": 0.0001,
     "startPositionMatchWeight": 0.001,
     "xyNeighborFactor": 0.6,
     "numberOfMFOVsPerBatch": 10,
-    "patchAllUnconnectedPairsWithStageCoordinates": true
+    "patchAllUnconnectedPairsWithStageCoordinates": true,
+    "checkLayerConnectedClusters": true
   }
 }
