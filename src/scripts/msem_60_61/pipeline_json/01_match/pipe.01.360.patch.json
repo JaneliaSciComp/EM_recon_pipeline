@@ -18,7 +18,7 @@
     "startPositionMatchWeight": 0.001,
     "xyNeighborFactor": 0.6,
     "numberOfMFOVsPerBatch": 10,
-    "patchAllUnconnectedPairsWithStageCoordinates": true,
+    "patchUnconnectedPairsWithinAnMfovUsingStageCoordinates": true,
     "checkLayerConnectedClusters": true
   }
 }
