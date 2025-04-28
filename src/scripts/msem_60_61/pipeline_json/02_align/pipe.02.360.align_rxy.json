@@ -13,7 +13,7 @@
     "ALIGN_TILES"
   ],
   "affineBlockSolverSetup": {
-    "preAlign": "MULTI_SEM",
+    "preAlign": "TRANSLATION",
     "distributedSolve": {
       "maxAllowedErrorGlobal": 10.0,
       "maxIterationsGlobal": 1000,
@@ -29,12 +29,19 @@
     "blockPartition": {
       "sizeZ": 100
     },
+    "stitching": {
+        "lambda": 0.0,
+        "maxAllowedError": 5.0,
+        "maxIterations": 5000,
+        "maxPlateauWidth": 1000,
+        "minInliers": 25
+    },
     "blockOptimizer": {
-      "lambdasRigid": [ 1.0, 1.0, 0.9, 0.3, 0.01 ],
-      "lambdasTranslation": [ 1.0, 0.0, 0.0, 0.0, 0.0 ],
-      "lambdasRegularization": [ 0.0, 0.0, 0.0, 0.0, 0.0 ],
-      "iterations": [ 1000, 1000, 500, 250, 250 ],
-      "maxPlateauWidth": [ 250, 250, 150, 100, 100 ],
+      "lambdasRigid": [],
+      "lambdasTranslation": [],
+      "lambdasRegularization": [],
+      "iterations": [],
+      "maxPlateauWidth": [],
       "maxAllowedError": 5.0
     },
     "maxNumMatches": 0,
