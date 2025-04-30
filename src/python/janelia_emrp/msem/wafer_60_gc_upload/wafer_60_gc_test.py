@@ -18,7 +18,11 @@ class RenderDetails(AbstractRenderDetails):
         self.source_pattern = re.compile('_r(\\d+)$')
 
         # Trimming for the target stack (e.g., w60_s296_r00_d30)
-        self.destination_pattern = re.compile(f'_d{trim_padding:02}$')
+        if trim_padding is None or trim_padding < 0:
+            self.destination_pattern = self.source_pattern
+        else:
+            self.destination_pattern = re.compile(f'_d{trim_padding:02}$')
+
 
     def project_from_slab(self, wafer: int, serial_id: int) -> str:
         """Get the project name from the wafer / serial ID combination."""
@@ -75,9 +79,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "--trim-padding",
         help="Padding when trimming the full stacks " \
-            "(refers to an existing trimmed render stack with that padding).",
+            "(refers to an existing trimmed render stack with that padding). " \
+            "If not given, the full source stack is uploaded.",
         type=int,
-        default=0
+        default=None
     )
     parser.add_argument(
         "--invert",
@@ -109,8 +114,7 @@ if __name__ == '__main__':
         "--host http://em-services-1.int.janelia.org:8080/render-ws/v1 "
         "--owner hess_wafers_60_61 "
         "-w 60 "
-        "-s 363 364 365 366 367 368 369 "
-        "--trim-padding 30 "
+        "-s 360 "
         "--num-threads  16 "
         "--base-path hess_wafer_60_data "
         "--invert "
