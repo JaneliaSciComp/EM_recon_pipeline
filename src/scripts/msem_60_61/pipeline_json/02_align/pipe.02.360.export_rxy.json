@@ -2,7 +2,7 @@
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w.._s.._r.._d20_gc_rxy$", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
     "raw":                { "stackPattern": "^w.._s..._r.._d20_gc_rxy$" }
