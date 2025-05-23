@@ -35,7 +35,7 @@ fi
 
 mapfile -t STACK_NAMES < <(curl -s "${PROJECT_URL}/stackIds" | ${JQ} -r '.[].stack | select(contains("align"))' | sort)
 
-echo "Which align stack should be de-streaked?"
+echo "Which align stack should serve as the source reference for the 16-bit stack?"
 select STACK_NAME in "${STACK_NAMES[@]}"; do
   if [ -n "${STACK_NAME}" ]; then
     break
