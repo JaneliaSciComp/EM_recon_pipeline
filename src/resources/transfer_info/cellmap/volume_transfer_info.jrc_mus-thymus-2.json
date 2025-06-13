@@ -2,7 +2,7 @@
     "transfer_id": "cellmap::jrc_mus-thymus-2::jeiss4.hhmi.org",
     "scope_data_set": {
         "host": "jeiss4.hhmi.org",
-        "root_dat_path": "/cygdrive/e/Images/Cellmap",
+        "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
         "data_set_id": "jrc_mus-thymus-2",
         "rows_per_z_layer": 2,
