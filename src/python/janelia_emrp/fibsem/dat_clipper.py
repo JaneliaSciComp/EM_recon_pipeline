@@ -34,7 +34,7 @@ def clip_dat(source_path: Path,
         recipe_size = source_size - original_file_length
         recipe = bytearray(raw_source_file.read(recipe_size))
 
-    # stole locations of header values from fibsem_tools.io.fibsem
+    # store locations of header values from fibsem_tools.io.fibsem
     number_of_channels = int.from_bytes(header[32:33], "big")  # 'ChanNum': 2
     eight_bit = int.from_bytes(header[33:34], "big")           # 'EightBit': 0
     original_width = int.from_bytes(header[100:104], "big")    # 'XResolution': 8250
