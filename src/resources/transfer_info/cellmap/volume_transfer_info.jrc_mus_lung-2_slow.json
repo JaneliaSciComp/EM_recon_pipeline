@@ -4,7 +4,7 @@
         "host": "jeiss8.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mus-lung-2_slow",
+        "data_set_id": "jrc_mus-lung-2",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6284_25-06-06_161005_0-0-0.dat",
