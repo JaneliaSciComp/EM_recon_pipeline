@@ -14,7 +14,7 @@
   ],
   "mfovAsTile": {
     "mfovRenderScale": 0.2,
-    "mfovRootDirectory": "gs://storage.googleapis.com/janelia-spark-test/tiles_mfov",
+    "mfovRootDirectory": "gs://janelia-spark-test/tiles_mfov",
     "dynamicMfovStackSuffix": "_mat",
     "renderedMfovStackSuffix": "_render",
     "alignedMfovStackSuffix" : "_align",
