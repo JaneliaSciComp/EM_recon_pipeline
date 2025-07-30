@@ -1,31 +1,31 @@
 {
-    "transfer_id": "cellmap::jrc_mus-thymus-2_slow::jeiss4.hhmi.org",
+    "transfer_id": "cellmap::jrc_mus-skel-muscle-1::jeiss4.hhmi.org",
     "scope_data_set": {
         "host": "jeiss4.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mus-thymus-2",
+        "data_set_id": "jrc_mus-skel-muscle-1",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 2,
-        "first_dat_name": "Merlin-4238_25-06-17_161628_0-0-0.dat",
-        "last_dat_name": "Merlin-4238_25-07-15_080814_0-0-1.dat",
+        "first_dat_name": "Merlin-4238_25-07-16_000253_0-0-0.dat",
+        "last_dat_name": "Merlin-4238_25-07-23_085735_0-0-1.dat",
         "dat_x_and_y_nm_per_pixel": 8,
         "dat_z_nm_per_pixel": 8,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-thymus-2_slow/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-thymus-2_slow/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus-thymus-2_slow/align",
-        "export_n5": "/nrs/cellmap/data/jrc_mus-thymus-2_slow/jrc_mus-thymus-2_slow.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-skel-muscle-1/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-skel-muscle-1/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_mus-skel-muscle-1/align",
+        "export_n5": "/nrs/cellmap/data/jrc_mus-skel-muscle-1/jrc_mus-skel-muscle-1.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_mus-thymus-2_slow/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_mus-skel-muscle-1/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "cellmap",
-        "project": "jrc_mus_thymus_2_slow",
+        "project": "jrc_mus_skel_muscle_1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
