@@ -33,16 +33,28 @@ read -rsp "Enter password for MongoDB root account: " MONGO_PWD
 echo
 
 # see https://www.mongodb.com/docs/database-tools/mongorestore/
-MONGORESTORE="/groups/hess/hesslab/render/mongodb/mongodb-database-tools-rhel93-x86_64-100.10.0/bin/mongorestore"
+MONGO_BIN="/groups/hess/hesslab/render/mongodb/mongodb-database-tools-rhel93-x86_64-100.10.0/bin"
 
 CONNECTION_URI="mongodb://root:${MONGO_PWD}@render-mongodb4:27017,render-mongodb5:27017,render-mongodb6:27017/${DB}?authSource=admin&replicaSet=rsRender"
 
 if [ "${DUMP_TYPE}" == "archive" ]; then
+
   echo "restoring ${DUMP_FILE_OR_DIR} ..."
-  ${MONGORESTORE} --uri="${CONNECTION_URI}" --archive="${DUMP_FILE_OR_DIR}" --gzip
+  ${MONGO_BIN}/mongorestore --uri="${CONNECTION_URI}" --archive="${DUMP_FILE_OR_DIR}" --gzip
+
 else
+
+  # restore bson.gz files ...
   for DUMP_FILE in "${DUMP_FILE_OR_DIR}"/*.bson.gz; do
     echo "restoring ${DUMP_FILE} ..."
-    ${MONGORESTORE} --uri="${CONNECTION_URI}" --gzip "${DUMP_FILE}"
+    ${MONGO_BIN}/mongorestore --uri="${CONNECTION_URI}" --gzip "${DUMP_FILE}"
   done
+
+  # import "hacked" admin__stack_meta_data.json if it exists
+  DUMP_FILE="${DUMP_FILE_OR_DIR}/admin__stack_meta_data.json"
+  if [ -f "${DUMP_FILE}" ]; then
+    echo "importing ${DUMP_FILE} ..."
+    ${MONGO_BIN}/mongoimport --uri="${CONNECTION_URI}" --file="${DUMP_FILE}"
+  fi
+
 fi
