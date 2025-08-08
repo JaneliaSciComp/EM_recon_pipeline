@@ -66,6 +66,6 @@ or:
   ./db-restore-google.sh
 
 To verify that the data was loaded correctly, from within the container or the VM run:
-  curl \"http://localhost:8080/render-ws/v1/versionInfo\"
+  curl \"http://localhost:8080/render-ws/v1/versionInfo\" | jq '.'
   curl \"http://localhost:8080/render-ws/v1/owners\"
 "
