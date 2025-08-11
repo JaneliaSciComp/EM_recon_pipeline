@@ -80,6 +80,11 @@ class RenderRequest:
                       tile_id: str) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/tile/{tile_id}')
 
+    def delete_tile_spec(self,
+                         stack: str,
+                         tile_id: str):
+        submit_delete(f'{self.stack_url(stack)}/tile/{tile_id}')
+
     def get_resolved_tiles_for_z(self,
                                  stack: str,
                                  z: [float, int, str]) -> dict[str, Any]:
