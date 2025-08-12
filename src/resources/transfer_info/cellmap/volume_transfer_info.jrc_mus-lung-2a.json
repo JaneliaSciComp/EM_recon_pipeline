@@ -1,5 +1,5 @@
 {
-    "transfer_id": "cellmap::jrc_mus_lung-2_slow::jeiss8.hhmi.org",
+    "transfer_id": "cellmap::jrc_mus-lung-2a::jeiss8.hhmi.org",
     "scope_data_set": {
         "host": "jeiss8.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
@@ -14,18 +14,18 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus_lung-2_slow/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus_lung-2_slow/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus_lung-2_slow/align",
-        "export_n5": "/nrs/cellmap/data/jrc_mus_lung-2_slow/jrc_mus_lung-2_slow.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-lung-2a/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-lung-2a/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_mus-lung-2a/align",
+        "export_n5": "/nrs/cellmap/data/jrc_mus-lung-2a/jrc_mus-lung-2a.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_mus_lung-2_slow/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_mus-lung-2a/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "cellmap",
-        "project": "jrc_mus_lung_2_slow",
+        "project": "jrc_mus_lung_2a",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,
