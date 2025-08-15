@@ -7,18 +7,20 @@
 
 set -e
 
-if (( $# < 1 )); then
+if (( $# < 2 )); then
   echo "
-Usage:    $0 <archive dump file> | <collection dump directory>
+Usage:    $0 <DB> <archive dump file>
+          $0 <DB> <collection dump directory>
 
-Examples: $0 render-ws-mongodb-8c-32gb-abc/20250216_213836.render.dump.gz
-          $0 mongodb_google/archives/20250222_003111.match.dump.gz
-          $0 mongodb_janelia/dump_20250304_080118_before_match_patch/match
+Examples: $0  render  render-ws-mongodb-8c-32gb-abc/20250216_213836.render.dump.gz
+          $0  match   mongodb_google/archives/20250222_003111.match.dump.gz
+          $0  match   mongodb_janelia/dump_20250304_080118_before_match_patch/match
 "
   exit 1
 fi
 
-DUMP_FILE_OR_DIR="${1}"
+DB="${1}"
+DUMP_FILE_OR_DIR="${2}"
 
 if [ -f "${DUMP_FILE_OR_DIR}" ]; then
   DUMP_TYPE="archive"
