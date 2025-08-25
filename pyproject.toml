@@ -21,6 +21,7 @@ matplotlib = "*"
 google-cloud-storage = "2.19.0"
 opencv-python = "4.10.0.84"
 basicpy = "1.2.0"
+pillow = "^11.3.0"
 
 [tool.poetry.dev-dependencies]
 

@@ -3,11 +3,11 @@ import logging
 import sys
 import time
 import traceback
+from itertools import product
 from pathlib import Path
 from typing import List, Any, Optional
-from itertools import product
-import numpy as np
 
+import numpy as np
 import renderapi
 import xarray
 from renderapi import Render
@@ -20,12 +20,12 @@ from janelia_emrp.msem.field_of_view_layout import FieldOfViewLayout, build_mfov
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
     get_xys_sfov_and_paths, get_max_scans, get_SFOV_width, get_SFOV_height, get_effective_scans
 )
-
-from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
-from janelia_emrp.msem.tile_id import TileID
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
+from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_60_61_SCAN_FIT_PARAMETERS
+from janelia_emrp.msem.single_slab_info import load_single_slab_info, ScanMfov
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
+from janelia_emrp.msem.tile_id import TileID
 from janelia_emrp.root_logger import init_logger
 
 program_name = "msem_to_render.py"
@@ -45,7 +45,7 @@ def build_tile_spec(image_path: Path,
                     sfov_index_name: str,
                     min_x: int,
                     min_y: int,
-                    scan_fit_parameters: ScanFitParameters,
+                    scan_fit_parameters: Optional[ScanFitParameters],
                     margin: int) -> dict[str, Any]:
 
     section_id = f'{stage_z}.0'
@@ -54,6 +54,11 @@ def build_tile_spec(image_path: Path,
     mipmap_level_zero = {"imageUrl": f'file:{image_path}'}
 
     transform_data_string = f'1 0 0 1 {stage_x - min_x + margin} {stage_y - min_y + margin}'
+
+    spec_list = []
+    if scan_fit_parameters:
+        spec_list.append(scan_fit_parameters.to_transform_spec())
+    spec_list.append({"className": "mpicbg.trakem2.transform.AffineModel2D", "dataString": transform_data_string})
 
     tile_spec = {
         "tileId": str(tile_id), "z": stage_z,
@@ -68,10 +73,7 @@ def build_tile_spec(image_path: Path,
         },
         "transforms": {
             "type": "list",
-            "specList": [
-                scan_fit_parameters.to_transform_spec(),
-                {"className": "mpicbg.trakem2.transform.AffineModel2D", "dataString": transform_data_string}
-            ]
+            "specList": spec_list
         }
     }
 
@@ -80,7 +82,8 @@ def build_tile_spec(image_path: Path,
 
 def build_tile_specs_for_slab_scan(slab_scan_path: Path,
                                    scan: int,
-                                   slab: int,
+                                   scan_fit_parameters: Optional[ScanFitParameters],
+                                   magc_id: int,
                                    mfovs: list[int],
                                    sfov_path_list: list[Path],
                                    sfov_xy_list: list[tuple[int, int]],
@@ -99,8 +102,6 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
             and must remain 1-indexed.
     """
 
-    scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
-
     min_x, min_y = np.array(sfov_xy_list).min(axis=0)
     
     fixed_tilespec_params = dict(
@@ -118,7 +119,7 @@ def build_tile_specs_for_slab_scan(slab_scan_path: Path,
         build_tile_spec(image_path=image_path,
                         stage_x=stage_x,
                         stage_y=stage_y,
-                        tile_id=TileID(wafer_id=wafer_id, slab=slab, scan=scan, mfov=mfov, sfov=sfov),
+                        tile_id=TileID(wafer_id=wafer_id, slab=magc_id, scan=scan, mfov=mfov, sfov=sfov),
                         mfov_id=mfov,
                         sfov_index_name=f"{(sfov+1):03}",
                         **fixed_tilespec_params,
@@ -268,10 +269,12 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
                 # for wafers 60 and 61, we decided to hardcode the parameters in scan_fit_parameters.py
                 # WAFER_60_61_SCAN_FIT_PARAMETERS rather than reading them in for each scan
+                scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
 
                 tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
                                                             scan=scan,
-                                                            slab=slab_info.magc_id,
+                                                            scan_fit_parameters=scan_fit_parameters,
+                                                            magc_id=slab_info.magc_id,
                                                             mfovs=slab_info.mfovs,
                                                             sfov_path_list=slab_scan_sfov_path_list,
                                                             sfov_xy_list=slab_scan_sfov_xy_list,
@@ -303,6 +306,106 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
             if stack_is_in_loading_state:
                 renderapi.stack.set_stack_state(stack, 'COMPLETE', render=render)
+
+
+def import_single_slab(single_slab_json_path: Path):
+
+    func_name = "import_single_slab"
+
+    logger.info(f"{func_name}: loading {single_slab_json_path}")
+
+    slab_info = load_single_slab_info(single_slab_json_path)
+
+    tile_width, tile_height = slab_info.get_tile_width_and_height()
+
+    render_connect_params = {
+        "host": slab_info.render_host,
+        "port": 8080,
+        "owner": slab_info.owner,
+        "project": slab_info.project,
+        "web_only": True,
+        "validate_client": False,
+        "client_scripts": "/groups/hess/hesslab/render/client_scripts",
+        "memGB": "1G"
+    }
+
+    render = renderapi.connect(**render_connect_params)
+
+    render_api = RenderApi(render_owner=render_connect_params["owner"],
+                           render_project=render_connect_params["project"],
+                           render_connect=params_to_render_connect(render_connect_params))
+
+    stack_is_in_loading_state = False
+    z = 1
+
+    logger.info(f'{func_name}: building layout for stack {slab_info.stack}')
+
+    scan_to_mfov_list: dict[int, list[ScanMfov]] = slab_info.map_sfov_info_list()
+    sorted_scan_list = sorted(scan_to_mfov_list.keys())
+
+    first_scan = min(sorted_scan_list)
+    first_scan_mfov_list = scan_to_mfov_list[first_scan]
+    first_scan_mfov_position_list = [
+        scan_mfov.to_mfov_position() for scan_mfov in first_scan_mfov_list
+    ]
+    mfov_column_group = build_mfov_column_group(first_scan_mfov_position_list,
+                                                NINETY_ONE_SFOV_ADJACENT_MFOV_DELTA_Y)
+    stack_layout = FieldOfViewLayout(mfov_column_group, NINETY_ONE_SFOV_NAME_TO_ROW_COL)
+    # stack_layout.print_sfov_index_name_matrix()
+    mfov_number_list: list[int] = [sm.mfov_number for sm in scan_to_mfov_list[first_scan]]
+
+    for scan in sorted_scan_list:
+        scan_mfov_list: list[ScanMfov] = scan_to_mfov_list[scan]
+        slab_scan_path = scan_mfov_list[0].get_scan_path()
+
+        slab_scan_sfov_path_list: list[Path] = []
+        slab_scan_sfov_xy_list: list[tuple[int, int]] = []
+        for scan_mfov in scan_mfov_list:
+            for sfov in scan_mfov.sfov_list:
+                slab_scan_sfov_path_list.append(sfov.fullpath)
+                slab_scan_sfov_xy_list.append((sfov.x, sfov.y))
+
+        logger.info(f"{func_name}: loaded {len(slab_scan_sfov_path_list)} paths and xys for "
+                    f"{slab_info.stack} scan {scan}, mfovs {scan_mfov_list[0].mfov_number} to {scan_mfov_list[-1].mfov_number}, "
+                    f"first path is {slab_scan_sfov_path_list[0]}, first xy is {slab_scan_sfov_xy_list[0]}")
+
+        first_sfov_path = slab_scan_sfov_path_list[0]
+        if not first_sfov_path.exists():
+            logger.warning(f"{func_name}: skipping import of scan {scan} because {first_sfov_path} is missing")
+            continue
+
+        tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
+                                                    scan=scan,
+                                                    scan_fit_parameters=None,
+                                                    magc_id=0,
+                                                    mfovs=mfov_number_list,
+                                                    sfov_path_list=slab_scan_sfov_path_list,
+                                                    sfov_xy_list=slab_scan_sfov_xy_list,
+                                                    stage_z=z,
+                                                    layout=stack_layout,
+                                                    wafer_id=slab_info.wafer_id,
+                                                    tile_width=tile_width,
+                                                    tile_height=tile_height)
+        if len(tile_specs) > 0:
+            if not stack_is_in_loading_state:
+                ensure_stack_is_in_loading_state(render=render,
+                                                 stack=slab_info.stack,
+                                                 resolution_x=slab_info.resolution_x,
+                                                 resolution_y=slab_info.resolution_y,
+                                                 resolution_z=slab_info.resolution_z)
+                stack_is_in_loading_state = True
+
+            tile_id_range = f'{tile_specs[0]["tileId"]} to {tile_specs[-1]["tileId"]}'
+            logger.info(f"{func_name}: saving tiles {tile_id_range} in stack {slab_info.stack}")
+            render_api.save_tile_specs(stack=slab_info.stack,
+                                       tile_specs=tile_specs,
+                                       derive_data=True)
+            z += 1
+        else:
+          logger.debug(f'{func_name}: no tile specs in {slab_scan_path.name} for stack {slab_info.stack}')
+
+    if stack_is_in_loading_state:
+        renderapi.stack.set_stack_state(slab_info.stack, 'COMPLETE', render=render)
 
 
 def ensure_stack_is_in_loading_state(render: Render,
@@ -344,7 +447,12 @@ def main(arg_list: List[str]):
     parser.add_argument(
         "--path_xlog",
         help="Path of the wafer xarray (e.g. /groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr)",
-        required=True,
+        required=False,
+    )
+    parser.add_argument(
+        "--path_single_slab_json",
+        help="Path of the single slab JSON file (e.g. /nrs/hess/Hayworth/DATA_Wafer66_ForRenderTest/full_image_coordinates.txt.json)",
+        required=False,
     )
     parser.add_argument(
         "--import_magc_slab",
@@ -382,14 +490,19 @@ def main(arg_list: List[str]):
     )
     args = parser.parse_args(args=arg_list)
 
-    import_slab_stacks_for_wafer(render_ws_host=args.render_host,
-                                 render_owner=args.render_owner,
-                                 wafer_xlog_path=Path(args.path_xlog),
-                                 import_magc_slab_list=args.import_magc_slab,
-                                 include_scan_list=args.include_scan,
-                                 exclude_scan_list=args.exclude_scan,
-                                 wafer_id=args.wafer_id,
-                                 number_of_slabs_per_render_project=args.number_of_slabs_per_render_project)
+    if args.path_xlog is None or args.path_xlog.strip() == "":
+        if args.path_single_slab_json is None or args.path_single_slab_json.strip() == "":
+            raise RuntimeError("either --path_xlog or --path_single_slab_json must be specified")
+        import_single_slab(Path(args.path_single_slab_json))
+    else:
+        import_slab_stacks_for_wafer(render_ws_host=args.render_host,
+                                     render_owner=args.render_owner,
+                                     wafer_xlog_path=Path(args.path_xlog),
+                                     import_magc_slab_list=args.import_magc_slab,
+                                     include_scan_list=args.include_scan,
+                                     exclude_scan_list=args.exclude_scan,
+                                     wafer_id=args.wafer_id,
+                                     number_of_slabs_per_render_project=args.number_of_slabs_per_render_project)
 
 
 if __name__ == '__main__':
@@ -405,6 +518,12 @@ if __name__ == '__main__':
     # noinspection PyBroadException
     try:
         main(sys.argv[1:])
+        # main([
+        #     "--render_host", "em-services-1.int.janelia.org",
+        #     "--render_owner", "hess_wafer_66",
+        #     "--wafer_id", "66",
+        #     "--path_single_slab_json", "/nrs/hess/Hayworth/DATA_Wafer66_ForRenderTest/full_image_coordinates.txt.json",
+        # ])
         # main([
         #     "--render_host", "10.40.3.113",
         #     "--render_owner", "trautmane",
