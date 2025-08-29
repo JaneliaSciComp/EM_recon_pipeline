@@ -15,9 +15,11 @@
   "mfovAsTile": {
     "mfovRenderScale": 0.2,
     "mfovRootDirectory": "gs://janelia-spark-test/tiles_mfov",
+    "prealignedSfovStackSuffix": "_pa",
     "dynamicMfovStackSuffix": "_mat",
     "renderedMfovStackSuffix": "_render",
     "alignedMfovStackSuffix" : "_align",
-    "roughSfovStackSuffix": "_rough"
+    "roughSfovStackSuffix": "_pa_rough",
+    "crossMatchIdList": ["A", "B", "C"]
   }
 }
