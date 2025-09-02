@@ -20,6 +20,7 @@
     "renderedMfovStackSuffix": "_render",
     "alignedMfovStackSuffix" : "_align",
     "roughSfovStackSuffix": "_pa_rough",
-    "crossMatchIdList": ["A", "B", "C"]
+    "crossMatchIdList": ["E"],
+    "minCrossMatchPixelDistance": 5.0
   }
 }
