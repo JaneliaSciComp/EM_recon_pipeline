@@ -20,6 +20,6 @@
     "renderedMfovStackSuffix": "_render",
     "alignedMfovStackSuffix" : "_align",
     "roughSfovStackSuffix": "_pa_rough",
-    "crossMatchIdList": ["F"]
+    "crossMatchIdList": ["H"]
   }
 }
