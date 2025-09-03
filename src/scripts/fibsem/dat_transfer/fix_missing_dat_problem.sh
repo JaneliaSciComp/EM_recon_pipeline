@@ -7,31 +7,6 @@ umask 0002
 NUM_WORKERS="1"
 
 # -------------------------------
-# jrc_velella-b8-1
-
-# TRANSFER_INFO="/groups/cellmap/cellmap/render/align/jrc_velella-b8-1/volume_transfer_info.jrc_velella-b8-1.json"
-# PARENT_WORK_DIR="/groups/cellmap/cellmap/data/jrc_velella-b8-1/dat/logs/fix"
-
-# Merlin-4238_25-01-17_153354_0-0-0.dat
-# Merlin-4238_25-01-18_135145_0-0-0.dat
-# Merlin-4238_25-01-18_135621_0-0-0.dat
-# Merlin-4238_25-01-27_223352_0-0-0.dat
-# Merlin-4238_25-01-27_223830_0-0-0.dat
-# Merlin-4238_25-01-31_095852_0-0-0.dat
-# Merlin-4238_25-02-03_185442_0-0-0.dat
-# Merlin-4238_25-02-20_113856_0-0-0.dat
-# Merlin-4238_25-02-20_114616_0-0-0.dat
-# Merlin-4238_25-02-20_115337_0-0-0.dat
-# Merlin-4238_25-02-20_120119_0-0-0.dat
-# Merlin-4238_25-02-20_121558_0-0-0.dat
-# Merlin-4238_25-03-01_211553_0-0-0.dat
-# Merlin-4238_25-03-02_111057_0-0-0.dat
-# Merlin-4238_25-03-04_090747_0-0-0.dat
-# Merlin-4238_25-03-04_091308_0-0-0.dat
-# Merlin-4238_25-03-04_091846_0-0-0.dat
-# Merlin-4238_25-03-04_093155_0-0-0.dat
-
-# -------------------------------
 # jrc_mus_liver-8
 
 # succeeded: Merlin-6285_25-05-30_160202_0-0-0.dat Merlin-6285_25-05-30_160202_0-0-1.dat
@@ -40,11 +15,20 @@ NUM_WORKERS="1"
 # succeeded: Merlin-6285_25-06-14_070928_0-0-0.dat Merlin-6285_25-06-14_070928_0-0-1.dat
 # ???: Merlin-6285_25-06-17_111827_0-0-0.dat
 
-FIRST_DAT="Merlin-6285_25-06-17_111827_0-0-0.dat"
-LAST_DAT="Merlin-6285_25-06-17_111827_0-0-1.dat"
+#FIRST_DAT="Merlin-6285_25-06-17_111827_0-0-0.dat"
+#LAST_DAT="Merlin-6285_25-06-17_111827_0-0-1.dat"
 
-TRANSFER_INFO="/groups/fibsem/home/fibsemxfer/config/volume_transfer_info.jrc_mus_liver-8.json"
-PARENT_WORK_DIR="/groups/cellmap/cellmap/data/jrc_mus_liver-8/dat/logs/fix"
+#TRANSFER_INFO="/groups/fibsem/home/fibsemxfer/config/volume_transfer_info.jrc_mus_liver-8.json"
+#PARENT_WORK_DIR="/groups/cellmap/cellmap/data/jrc_mus_liver-8/dat/logs/fix"
+
+# -------------------------------
+# jrc_hum-glioblastoma-1
+
+FIRST_DAT="Merlin-6257_25-08-22_085444_0-0-0.dat"
+LAST_DAT="Merlin-6257_25-08-22_085444_0-1-1.dat"
+
+TRANSFER_INFO="/groups/cellmap/cellmap/render/align/jrc_hum-glioblastoma-1/volume_transfer_info.jrc_hum-glioblastoma-1.json"
+PARENT_WORK_DIR="/groups/cellmap/cellmap/data/jrc_hum-glioblastoma-1/dat/logs/fix"
 
 mkdir -p ${PARENT_WORK_DIR}
 
