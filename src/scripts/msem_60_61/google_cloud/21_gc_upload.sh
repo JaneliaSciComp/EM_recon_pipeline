@@ -10,18 +10,18 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/gc_upload_${RUN_TIME}.log"
 
-if (( $# < 2 )); then
-  echo "USAGE $0 <wafer> <serial slab> [serial slab] ...     (e.g. 60 360 361)
+if (( $# < 3 )); then
+  echo "USAGE $0 <number of threads> <wafer> <serial slab> [serial slab] ...     (e.g. 32 60 360 361)
 "
   exit 1
 fi
 
-WAFER="$1"
-shift
+NUM_THREADS="$1"
+WAFER="$2"
+shift 2
 SERIAL_SLABS="$*"
 
 RENDER_OWNER="hess_wafers_60_61"
-NUM_THREADS=32
 
 source /groups/hess/hesslab/render/bin/source_miniforge3.sh
 
