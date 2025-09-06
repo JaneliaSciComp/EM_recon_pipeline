@@ -2,7 +2,7 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=$(readlink -m "$0")
+ABSOLUTE_SCRIPT=$(realpath --no-symlinks "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
