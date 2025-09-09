@@ -34,8 +34,8 @@ NUM_WORKERS="1"
 
 # jrc_pristi-20250718
 
-FIRST_DAT="Merlin-4238_25-08-07_000109_0-0-0.dat"
-LAST_DAT="Merlin-4238_25-09-01_131829_0-0-1.dat"
+FIRST_DAT="Merlin-4238_25-08-12_134120_0-0-0.dat"
+LAST_DAT="Merlin-4238_25-08-26_111225_0-0-1.dat"
 
 TRANSFER_INFO="/groups/shroff/shrofflab/render/align/jrc_pristi-20250718/volume_transfer_info.jrc_pristi-20250718.json"
 PARENT_WORK_DIR="/groups/shroff/shrofflab/data/jrc_pristi-20250718/dat/logs/fix"
