@@ -9,12 +9,15 @@ set -e
 
 if (( $# < 2 )); then
   echo "
-Usage:    $0 <DB> <archive dump file>
-          $0 <DB> <collection dump directory>
+Usage: $0 <DB> <collection dump directory>
+       $0 <DB> <archive dump file>
 
-Examples: $0  render  render-ws-mongodb-8c-32gb-abc/20250216_213836.render.dump.gz
-          $0  match   mongodb_google/archives/20250222_003111.match.dump.gz
-          $0  match   mongodb_janelia/dump_20250304_080118_before_match_patch/match
+Collection Dump Examples:
+  $0  render  mongodb_google/render-ws-mongodb-8c-32gb-abf/collections/20250907_360_361/render
+  $0  match   mongodb_google/render-ws-mongodb-8c-32gb-abf/collections/20250907_360_361/match
+
+Archive Dump Example:
+  $0  match   mongodb_google/archives/20250222_003111.match.dump.gz
 "
   exit 1
 fi
