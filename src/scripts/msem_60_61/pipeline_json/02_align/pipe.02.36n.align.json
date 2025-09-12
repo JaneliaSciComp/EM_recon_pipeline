@@ -5,9 +5,9 @@
     "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
+    "raw":                { "stackPattern": "^w.._s..._r.._gc_par$" },
+    "aligned":            { "stackPattern": "^w.._s..._r.._gc_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w.._s..._r.._gc_par_align_ic$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
