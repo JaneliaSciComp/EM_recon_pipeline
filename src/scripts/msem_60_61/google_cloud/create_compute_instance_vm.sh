@@ -61,9 +61,7 @@ Click on the SSH link for the VM and then run:
   docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 Finally, to load mongodb data from the shared storage within the container, run
-  ./db-restore-janelia.sh
-or:
-  ./db-restore-google.sh
+  ./db-restore-collection.sh
 
 To verify that the data was loaded correctly, from within the container or the VM run:
   curl \"http://localhost:8080/render-ws/v1/versionInfo\" | jq '.'
