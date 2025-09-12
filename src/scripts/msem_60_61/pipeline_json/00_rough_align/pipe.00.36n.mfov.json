@@ -4,11 +4,6 @@
     "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
     "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w60_s36._r00_gc$", "zValuesPerBatch": 1 }
   },
-  "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._gc$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._gc_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._gc_align_ic$" }
-  },
   "pipelineSteps": [
     "MFOV_AS_TILE"
   ],
