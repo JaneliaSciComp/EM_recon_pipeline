@@ -11,8 +11,7 @@
   },
   "pipelineSteps": [
     "DERIVE_TILE_MATCHES",
-    "PATCH_MFOV_MONTAGE_MATCHES",
-    "FIND_UNCONNECTED_MFOVS"
+    "PATCH_MFOV_MONTAGE_MATCHES"
   ],
   "matchRunList": [
     {
