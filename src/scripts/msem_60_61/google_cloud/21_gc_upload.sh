@@ -22,6 +22,7 @@ shift 2
 SERIAL_SLABS="$*"
 
 RENDER_OWNER="hess_wafers_60_61"
+BASE_PATH="hess_wafer_${WAFER}_data"
 
 source /groups/hess/hesslab/render/bin/source_miniforge3.sh
 
@@ -39,7 +40,7 @@ ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/wafer_60_gc_upload/gc_upload.py"
 ARGS="${ARGS} --host http://em-services-1.int.janelia.org:8080/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --wafer ${WAFER} --slabs ${SERIAL_SLABS}"
 ARGS="${ARGS} --num-threads ${NUM_THREADS}"
-ARGS="${ARGS} --base-path  hess_wafer_60_data"
+ARGS="${ARGS} --base-path ${BASE_PATH}"
 ARGS="${ARGS} --invert"
 
 echo """
