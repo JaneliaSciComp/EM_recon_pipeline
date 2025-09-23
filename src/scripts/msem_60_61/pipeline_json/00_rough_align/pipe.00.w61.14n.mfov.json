@@ -1,8 +1,8 @@
 {
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
-    "owner" : "hess_wafers_60_61", "project" : "w61_serial_090_to_099",
-    "stackIdWithZ" : { "projectPattern": "^w61_serial_090_to_099", "stackPattern": "^w61_s09._r0._gc$", "zValuesPerBatch": 1 }
+    "owner" : "hess_wafers_60_61", "project" : "w61_serial_140_to_149",
+    "stackIdWithZ" : { "projectPattern": "^w61_serial_140_to_149", "stackPattern": "^w61_s14._r0._gc$", "zValuesPerBatch": 1 }
   },
   "pipelineSteps": [
     "MFOV_AS_TILE"
@@ -13,7 +13,7 @@
     "prealignedSfovStackSuffix": "_pa",
     "dynamicMfovStackSuffix": "_mat",
     "renderedMfovStackSuffix": "_render",
-    "renderedMfovRunTimestamp": "20250923_000000",
+    "renderedMfovRunTimestamp": "20250924_000000",
     "alignedMfovStackSuffix" : "_align",
     "roughSfovStackSuffix": "_pa_rough",
     "minCrossMatchPixelDistance": 1.0
