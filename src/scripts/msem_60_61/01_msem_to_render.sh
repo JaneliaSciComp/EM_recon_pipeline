@@ -26,7 +26,7 @@ WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_ID
 if [ "${WAFER_ID}" == "60" ]; then
   WAFER_EXCLUDED_SCAN_ARG="--exclude_scan 0 1 2 3 7 19"
 elif [ "${WAFER_ID}" == "61" ]; then
-  WAFER_EXCLUDED_SCAN_ARG="--exclude_scan TBD"
+  WAFER_EXCLUDED_SCAN_ARG="--exclude_scan 0 1 2 3 17"
 else
   echo "ERROR: invalid wafer number ${WAFER_ID}"
   exit 1

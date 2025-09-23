@@ -28,7 +28,7 @@ class RenderDetails(AbstractRenderDetails):
         """Get the project name from the wafer / serial ID combination."""
         lower_bound = serial_id // 10 * 10
         upper_bound = lower_bound + 9
-        return f"w{wafer}_serial_{lower_bound}_to_{upper_bound}"
+        return f"w{wafer}_serial_{lower_bound:03}_to_{upper_bound:03}"
 
     def is_source_stack(self, stack_name: str) -> bool:
         """Check if the stack is to be used as a source for background correction."""

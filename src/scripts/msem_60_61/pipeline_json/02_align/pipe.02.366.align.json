@@ -5,9 +5,9 @@
     "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
+    "raw":                { "stackPattern": "^w.._s366_r.._gc_par$" },
+    "aligned":            { "stackPattern": "^w.._s366_r.._gc_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w.._s366_r.._gc_par_align_ic$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
@@ -35,7 +35,8 @@
       "lambdasRegularization": [ 0.0, 0.0, 0.0, 0.0, 0.0 ],
       "iterations": [ 1000, 1000, 500, 250, 250 ],
       "maxPlateauWidth": [ 250, 250, 150, 100, 100 ],
-      "maxAllowedError": 5.0
+      "maxAllowedError": 5.0,
+      "weightModificationDeciles": "50x500"
     },
     "maxNumMatches": 0,
     "alternatingRuns": {

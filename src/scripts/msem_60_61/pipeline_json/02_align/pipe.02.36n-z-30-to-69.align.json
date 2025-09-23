@@ -5,14 +5,18 @@
     "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc_trim_try3$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_trim_try3_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_trim_try3_align_ic$" }
+    "raw":                { "stackPattern": "^w.._s..._r.._gc_par$" },
+    "aligned":            { "stackPattern": "^w.._s..._r.._gc_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w.._s..._r.._gc_par_align_ic$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
   ],
   "affineBlockSolverSetup": {
+    "zRange": {
+      "minZ": 30.0,
+      "maxZ": 69.0
+    },
     "preAlign": "MULTI_SEM",
     "distributedSolve": {
       "maxAllowedErrorGlobal": 10.0,
@@ -23,7 +27,7 @@
       "deriveThreadsUsingSparkConfig": true
     },
     "targetStack": {
-      "stackSuffix": "_align",
+      "stackSuffix": "_align_z_30_to_69",
       "completeStack": true
     },
     "blockPartition": {
@@ -35,7 +39,8 @@
       "lambdasRegularization": [ 0.0, 0.0, 0.0, 0.0, 0.0 ],
       "iterations": [ 1000, 1000, 500, 250, 250 ],
       "maxPlateauWidth": [ 250, 250, 150, 100, 100 ],
-      "maxAllowedError": 5.0
+      "maxAllowedError": 5.0,
+      "weightModificationDeciles": "50x500"
     },
     "maxNumMatches": 0,
     "alternatingRuns": {
