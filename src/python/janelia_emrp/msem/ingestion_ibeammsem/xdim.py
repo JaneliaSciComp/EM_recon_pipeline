@@ -16,3 +16,5 @@ class XDim(StrEnum):
     """pixels of an SFOV along the X axis"""
     Y_SFOV = auto()
     """pixels of an SFOV along the Y axis"""
+    REVIEW_FLAG = auto()
+    """review flags. See ReviewFlag for numbering reference."""
