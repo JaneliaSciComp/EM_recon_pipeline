@@ -40,12 +40,14 @@ def get_sfov_path(slab_path: Path, mfov: int, sfov: int) -> Path:
         The microscope numbering is 1-indexed:
             the sfov with ID=0 points to sfov_001.png
     """
-    return get_mfov_path(slab_path=slab_path, mfov=mfov) / f"sfov_{sfov+1:03}.png"
+    return get_mfov_path(slab_path=slab_path, mfov=mfov) / f"sfov_{sfov + 1:03}.png"
 
 
 def get_thumbnail_path(slab_path: Path, mfov: int, sfov: int) -> Path:
     """Returns the path of the SFOV thumbnail given the slab path."""
-    return get_mfov_path(slab_path=slab_path, mfov=mfov) / f"thumbnail_{sfov+1:03}.png"
+    return (
+        get_mfov_path(slab_path=slab_path, mfov=mfov) / f"thumbnail_{sfov + 1:03}.png"
+    )
 
 
 def get_image_paths(
