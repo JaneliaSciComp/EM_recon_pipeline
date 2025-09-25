@@ -58,7 +58,6 @@ SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 SPARK_PROPS="spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.executor.compute.tier=${COMPUTE_TIER}"
 SPARK_PROPS="${SPARK_PROPS},spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
-SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=50g"
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 
