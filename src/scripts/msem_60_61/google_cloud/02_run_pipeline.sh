@@ -9,9 +9,9 @@ Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
           number-spark-exec-instances must be at least 2
           number-spark-exec-cores must be 4, 8, or 16
 
-Examples: $0 10.150.0.2 01_match/pipe.01.360.match.json 16 4 standard 200
-          $0 10.150.0.2 02_align/pipe.02.360.align.json 2 16 premium 10
-          $0 10.150.0.2 03_correct_intensity/pipe.03.36n.ic.json 32 4 standard 500
+Examples: $0 10.150.0.7 01_match/pipe.01.360.match.json 16 4 standard 200
+          $0 10.150.0.7 02_align/pipe.02.360.align.json 2 16 premium 10
+          $0 10.150.0.7 03_correct_intensity/pipe.03.36n.ic.json 32 4 standard 500
   "
   exit 1
 fi
