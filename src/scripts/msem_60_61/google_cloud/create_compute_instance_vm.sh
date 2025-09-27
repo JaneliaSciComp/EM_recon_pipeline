@@ -7,13 +7,13 @@ if (( $# < 1 )); then
   echo "USAGE $0 <vm suffix> [private-network-ip]
 
 Examples:
-  $0 abg
+  $0 aaa
   $0 abm 10.150.0.7
 "
   exit 1
 fi
 
-VM_NAME="render-ws-mongodb-8c-32gb-${1}"
+VM_NAME="render-ws-mongodb-16c-64gb-${1}"
 
 NETWORK_INTERFACE="address=,stack-type=IPV4_ONLY"
 if (( $# > 1 )); then
@@ -21,7 +21,7 @@ if (( $# > 1 )); then
 fi
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
-CONTAINER_IMAGE_VERSION="0.0.10"
+CONTAINER_IMAGE_VERSION="0.0.11"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
 # The boot disk needs to be big enough to hold the container image and any MongoDB data.
@@ -55,7 +55,7 @@ gcloud compute instances create-with-container "${VM_NAME}" \
   --container-privileged --container-restart-policy=never --container-stdin --container-tty \
   --description='' \
   --labels=container-vm="${VM_NAME}" \
-  --machine-type=n2-standard-8 \
+  --machine-type=n2-standard-16 \
   --metadata-from-file=user-data="${VM_METADATA_FILE}" \
   --network-interface="${NETWORK_INTERFACE}" \
   --tags=http-server,https-server,lb-health-check,https-egress \
