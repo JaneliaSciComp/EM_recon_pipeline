@@ -15,7 +15,7 @@
     "renderedMfovStackSuffix": "_render",
     "renderedMfovRunTimestamp": "20250923_000000",
     "alignedMfovStackSuffix" : "_align",
-    "roughSfovStackSuffix": "_pa_rough",
+    "roughSfovStackSuffix": "_par",
     "minCrossMatchPixelDistance": 1.0
   }
 }
