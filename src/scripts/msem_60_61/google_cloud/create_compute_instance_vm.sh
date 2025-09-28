@@ -21,7 +21,7 @@ if (( $# > 1 )); then
 fi
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
-CONTAINER_IMAGE_VERSION="0.0.11"
+CONTAINER_IMAGE_VERSION="0.0.12"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
 # The boot disk needs to be big enough to hold the container image and any MongoDB data.
