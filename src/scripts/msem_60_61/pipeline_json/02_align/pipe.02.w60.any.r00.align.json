@@ -2,12 +2,12 @@
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_..._to_...$", "stackPattern": "^w60_s.._r00_gc_par$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s366_r.._gc_par$" },
-    "aligned":            { "stackPattern": "^w.._s366_r.._gc_par_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s366_r.._gc_par_align_ic$" }
+    "raw":                { "stackPattern": "^w60_s..._r00_gc_par$" },
+    "aligned":            { "stackPattern": "^w60_s..._r00_gc_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w60_s..._r00_gc_par_align_ic$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
