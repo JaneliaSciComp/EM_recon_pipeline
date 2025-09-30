@@ -1,10 +1,11 @@
 import argparse
 import logging
 import sys
+import json
 from collections import namedtuple
 from pathlib import Path
 from typing import Any, Sequence, Union
-from urllib.parse import parse_qs, unquote, urlparse
+import urllib.parse as urlparse
 
 import h5py
 import pandas as pd
@@ -51,7 +52,6 @@ def aggregate_metadata(tiles: list[Tile]) -> None:
     """Aggregate metadata from HDF5 datasets into a DataFrame."""
     metadata_rows = []
     for tile in tiles:
-        print(tile.image_url)
         try:
             metadata = load_hdf5_metadata(tile.image_url)
             metadata["z"] = tile.z
@@ -67,13 +67,13 @@ def aggregate_metadata(tiles: list[Tile]) -> None:
 def load_hdf5_metadata(image_url: str) -> dict[str, Union[int, float]]:
     """Resolve an HDF5-backed image URL and return structural metadata."""
     # Extract the file path from the image URL
-    parsed_url = urlparse(image_url)
+    parsed_url = urlparse.urlparse(image_url)
     if parsed_url.scheme != "file":
         raise ValueError(f"unsupported URL scheme for HDF5 access: {parsed_url.scheme}")
-    file_path = unquote(parsed_url.path)
+    file_path = urlparse.unquote(parsed_url.path)
 
     # Extract the full dataset path from the query parameters
-    query_params = parse_qs(parsed_url.query)
+    query_params = urlparse.parse_qs(parsed_url.query)
     position_and_mipmap = query_params.get("dataSet", [None])[0]
     if position_and_mipmap is None or not position_and_mipmap.strip():
         raise ValueError(f"imageUrl {image_url} does not include a dataSet query parameter")
@@ -108,103 +108,159 @@ def extract_attributes_of_interest(all_attributes: dict[str, Any]) -> dict[str, 
     return attributes_of_interest
 
 
-def generate_attribute_plots(
-    dataframe,
-    attributes: list[str],
-    output_dir: Path,
-    owner: str,
-    project: str,
-    stack: str,
+def generate_plots(
+    render_request: RenderRequest, stack: str, dataframe: pd.DataFrame, output_dir: Path
 ) -> None:
+    """Generate Bokeh plots for selected attributes over z."""
     output_dir.mkdir(parents=True, exist_ok=True)
+    columns_to_exclude = {"z", "tile_x", "tile_y"}
 
-    for attribute in attributes:
-        if attribute not in dataframe.columns:
-            print(
-                f"Attribute '{attribute}' not found in dataframe; skipping plot generation."
-            )
-            continue
+    # Prepare data for plotting
+    dataframe = dataframe.dropna().sort_values("z")
+    z_values = dataframe["z"].tolist()
+    location, urls = create_tap_links(render_request, stack, dataframe)
 
-        attribute_df = (
-            dataframe[["z", "image_url", attribute]].dropna().sort_values("z")
-        )
-        if attribute_df.empty:
-            print(
-                f"No valid values for attribute '{attribute}'; skipping plot generation."
-            )
-            continue
+    for attribute in set(dataframe.columns) - columns_to_exclude:
+        # Determine axes ranges
+        attr_values = dataframe[attribute].tolist()
+        x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
+        y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
 
-        z_values = attribute_df["z"].tolist()
-        attr_values = attribute_df[attribute].tolist()
-        image_urls = attribute_df["image_url"].tolist()
-
-        slope, intercept, low_slope, high_slope = stats.theilslopes(z_values, attr_values)
-
-        x_min = min(z_values)
-        x_max = max(z_values)
-        if x_min == x_max:
-            x_min -= 0.5
-            x_max += 0.5
-
-        y_min = min(attr_values)
-        y_max = max(attr_values)
-        if y_min == y_max:
-            delta = 1 if y_min == 0 else abs(y_min) * 0.1
-            y_min -= delta
-            y_max += delta
-
-        padding = max((y_max - y_min) * 0.05, 1e-6)
-
-        regression_x = [x_min, x_max]
-        regression_y = [slope * x + intercept for x in regression_x]
-
-        source = ColumnDataSource(
-            data=dict(z=z_values, value=attr_values, url=image_urls)
-        )
-        regression_source = ColumnDataSource(
-            data=dict(z=regression_x, value=regression_y)
-        )
-
-        title = f"{project} / {stack} — {attribute} over z"
-        tooltips = [("z", "@z"), (attribute, "@value"), ("image", "@url")]
-
+        # Create plot with neuroglancer links on click
+        tooltips = [("location", "@location"), ("value", "@value")]
         plot = figure(
-            title=title,
+            title=attribute,
             x_axis_label="z",
             y_axis_label=attribute,
             tooltips=tooltips,
             tools="tap,pan,box_zoom,wheel_zoom,save,reset",
-            plot_width=1200,
+            plot_width=2400,
             plot_height=400,
-            y_range=Range1d(y_min - padding, y_max + padding),
+            x_range=Range1d(x_min, x_max),
+            y_range=Range1d(y_min, y_max),
         )
-
-        plot.circle(
-            source=source, x="z", y="value", size=6, line_color="navy", fill_alpha=0.6
-        )
-        plot.line(source=source, x="z", y="value", line_color="gray", line_alpha=0.3)
-        plot.line(
-            source=regression_source,
-            x="z",
-            y="value",
-            line_width=2,
-            line_color="tomato",
-            legend_label="Robust fit",
-        )
-
-        plot.legend.location = "top_left"
-        plot.legend.click_policy = "hide"
-
         tap_tool = plot.select_one(TapTool)
         if tap_tool is None:
             tap_tool = TapTool()
             plot.add_tools(tap_tool)
         tap_tool.callback = OpenURL(url="@url")
 
+        # Scatter plot of data
+        source = ColumnDataSource(
+            {"z": z_values, "value": attr_values, "location": location, "url": urls}
+        )
+        plot.circle(
+            source=source,
+            x="z",
+            y="value",
+            size=6,
+            line_color="navy",
+            fill_alpha=0.6
+        )
+
+        # Add robust linear regression line
+        slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
+        regression_x = [x_min, x_max]
+        regression_y = [slope * x + intercept for x in regression_x]
+        regression_source = ColumnDataSource({"z": regression_x, "value": regression_y})
+
+        plot.line(
+            source=regression_source,
+            x="z",
+            y="value",
+            line_width=2,
+            line_color="tomato",
+            legend_label=f"Linear regression: y={slope:.3f}x+{intercept:.3f}",
+        )
+        
+        plot.legend.location = "top_left"
+        plot.legend.click_policy = "hide"
+
+        # Save plot to HTML file
         output_path = output_dir / f"{attribute}_over_z.html"
-        output_file(str(output_path), title=title)
+        output_file(str(output_path), title=attribute)
         save(plot)
-        print(f"Wrote {output_path}")
+        logger.info("Wrote %s", output_path)
+
+
+def create_tap_links(
+    render_request: RenderRequest, stack: str, df: pd.DataFrame
+) -> tuple[list[str], list[str]]:
+    """Create descriptions and links for each tile in the DataFrame."""
+    zs = df["z"].tolist()
+    ys = df["tile_y"].tolist()
+    xs = df["tile_x"].tolist()
+
+    # Get stack info for constructing URLs
+    owner = render_request.owner
+    project = render_request.project
+
+    stack_metadata = render_request.get_stack_metadata(stack)
+    bounds = stack_metadata["stats"]["stackBounds"]
+    stack_version = stack_metadata["currentVersion"]
+    res_x = stack_version["stackResolutionX"]
+    res_y = stack_version["stackResolutionY"]
+    res_z = stack_version["stackResolutionZ"]
+
+    center_x = int(bounds["minX"] + (bounds["maxX"] - bounds["minX"]) / 2)
+    center_y = int(bounds["minY"] + (bounds["maxY"] - bounds["minY"]) / 2)
+
+    links = []
+    for z in zs:
+        # Encode Neuroglancer URL
+        x_y_z_position = f"{center_x},{center_y},@x"
+        ng_source_url = f'render://http://renderer.int.janelia.org:8080/{owner}/{project}/{stack}'
+        layer_name = f'{project} {stack}'
+        replace_later = 0.12345678987654321
+        ng_state = {
+            "dimensions": {"x": [res_x, "nm"], "y": [res_y, "nm"], "z": [res_z, "nm"]},
+            "position": [replace_later],
+            "crossSectionScale": 32,
+            "projectionScale": 32768,
+            "layers": [
+                {
+                    "type": "image",
+                    "source": {
+                        "url": ng_source_url,
+                        "subsources": {"default": True, "bounds": True},
+                        "enableDefaultSubsources": False,
+                    },
+                    "tab": "source",
+                    "name": layer_name,
+                }
+            ],
+            "selectedLayer": {"layer": layer_name},
+            "layout": "xy",
+        }
+        ng_state_json_string = json.dumps(ng_state)
+        encoded_ng_state = urlparse.quote(ng_state_json_string)
+        encoded_ng_state_with_at_z = encoded_ng_state.replace(str(replace_later), x_y_z_position)
+
+        links.append(f'http://renderer.int.janelia.org:8080/ng/#!{encoded_ng_state_with_at_z}')
+        print(links[-1])
+        print()
+
+    descriptions = [f"z={int(z)}, y={int(y)}, x={int(x)}" for x, y, z in zip(xs, ys, zs)]
+
+    return descriptions, links
+
+
+
+def range_with_padding(
+    values: Sequence[float], padding_fraction: float = 0.1
+) -> tuple[float, float]:
+    """Compute min and max of a sequence with padding."""
+    if not values:
+        raise ValueError("cannot compute range of empty sequence")
+
+    min_value = min(values)
+    max_value = max(values)
+    if min_value == max_value:
+        padding = 1 if min_value == 0 else abs(min_value) * 0.1
+    else:
+        padding = (max_value - min_value) * padding_fraction
+
+    return (min_value - padding, max_value + padding)
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
@@ -256,9 +312,10 @@ def main(argv: Sequence[str] = None) -> None:
 
     # Load and aggregate metadata from the HDF5 datasets
     metadata = aggregate_metadata(tiles)
-    print(metadata)
 
     # Generate plots for selected attributes
+    generate_plots(render_request, args.stack, metadata, Path(args.output_dir))
+
 
 if __name__ == "__main__":
     # main()
