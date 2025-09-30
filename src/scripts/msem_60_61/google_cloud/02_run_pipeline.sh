@@ -1,17 +1,27 @@
 #!/bin/bash
 
-if (( $# < 6 )); then
+if (( $# < 7 )); then
   echo "
 Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
                             <number-spark-exec-instances> <number-spark-exec-cores>
-                            <premium | standard> <max-executors>
+                            <premium | standard> <max-executors> <batch-id-suffix>
 
           number-spark-exec-instances must be at least 2
           number-spark-exec-cores must be 4, 8, or 16
 
-Examples: $0 10.150.0.7 01_match/pipe.01.360.match.json 16 4 standard 200
-          $0 10.150.0.7 02_align/pipe.02.360.align.json 2 16 premium 10
-          $0 10.150.0.7 03_correct_intensity/pipe.03.36n.ic.json 32 4 standard 500
+Examples:
+
+  Rough Align:
+    $0 10.150.0.7 00_rough_align/pipe.w61.any.mfov.json 150 4 standard 150 rough-w61-s000-009
+
+  Match:
+    $0 10.150.0.2 01_match/pipe.w61.any.r00.match-patch.json 150 4 standard 150 match-w61-s135-139-r00
+
+  Align:
+    $0 10.150.0.3 02_align/pipe.w61.any.r00.align.json 5 16 premium 5 align-w61-s070-074-r00
+
+  Correct Intensity:
+    $0 10.150.0.4 03_correct_intensity/pipe.03.w61.any.r00.ic.json 150 4 standard 150 ic2d-w61-s075-079-r00
   "
   exit 1
 fi
@@ -22,6 +32,7 @@ SPARK_EXEC_INSTANCES="${3}"
 SPARK_EXEC_CORES=${4}
 COMPUTE_TIER="${5}"
 MAX_EXECUTORS="${6}"
+BATCH_ID_SUFFIX="${7}"
 
 if (( SPARK_EXEC_INSTANCES < 2 )); then
   echo "ERROR: must request at least 2 spark executors"
@@ -96,7 +107,7 @@ gcloud dataproc batches submit spark \
   --region=us-east4 \
   --jars=${GS_JAR_URL} \
   --class=org.janelia.render.client.spark.pipeline.AlignmentPipelineClient \
-  --batch=render-alignment-pipeline-"${RUN_TIMESTAMP}" \
+  --batch=rp-"${RUN_TIMESTAMP}-${BATCH_ID_SUFFIX}" \
   --version=${SPARK_VERSION} \
   --properties="${SPARK_PROPS}" \
   --async \
