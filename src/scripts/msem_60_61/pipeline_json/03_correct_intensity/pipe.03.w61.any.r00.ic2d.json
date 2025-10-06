@@ -17,6 +17,9 @@
       "deriveThreadsUsingSparkConfig" : true
     },
     "intensityAdjust" : {
+      "maxAllowedError" : 0.01,
+      "maxIterations" : 10000,
+      "maxPlateauWidth" : 2000,
       "lambda1" : 0.01,
       "lambda2" : 0.01,
       "maxPixelCacheGb" : 1,
@@ -35,6 +38,10 @@
     },
     "blockPartition": {
       "sizeZ": 1
+    },
+    "alternatingRuns": {
+      "nRuns": 1,
+      "keepIntermediateStacks": false
     }
   }
 }
