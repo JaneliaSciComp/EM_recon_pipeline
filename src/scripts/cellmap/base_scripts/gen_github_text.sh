@@ -156,8 +156,15 @@ VIEW_PME_URL="${VIEW_URL}/point-match-explorer.html"
 
 STACK_DATA_URL="http://em-services-1.int.janelia.org:8080/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
 
+FOUND_ATS=$(curl -s "${STACK_DATA_URL}" | ${JQ} -r '.[].stack' 2>/dev/null | grep -c "${ACQUIRE_TRIMMED_STACK}" || true)
+if (( FOUND_ATS == 0 )); then
+  STACK_AND_MATCH_PARAMS=""
+else
+  STACK_AND_MATCH_PARAMS="&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}"
+fi
+
 VIEW_STACK_PARAMS="renderStackOwner=${RENDER_OWNER}&renderStackProject=${RENDER_PROJECT}&dynamicRenderHost=renderer.int.janelia.org%3A8080&catmaidHost=renderer-catmaid.int.janelia.org%3A8000"
-VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}&renderDataHost=em-services-1.int.janelia.org%3A8080"
+VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}${STACK_AND_MATCH_PARAMS}&renderDataHost=em-services-1.int.janelia.org%3A8080"
 
 echo "
 ## Filesystem Paths
