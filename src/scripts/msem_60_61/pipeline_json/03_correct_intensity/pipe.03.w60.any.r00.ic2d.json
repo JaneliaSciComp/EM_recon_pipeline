@@ -1,13 +1,8 @@
 {
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
-    "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
-    "stackIdWithZ" : { "projectPattern": "^w61_serial_..._to_...$", "stackPattern": "^w61_s.._r00_gc_par$", "zValuesPerBatch": 1 }
-  },
-  "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w61_s..._r00_gc_par$" },
-    "aligned":            { "stackPattern": "^w61_s..._r00_gc_par_align$" },
-    "intensityCorrected": { "stackPattern": "^w61_s..._r00_gc_par_align_ic$" }
+    "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_..._to_...", "stackPattern": "^w60_s..._r00_gc_par_align$", "zValuesPerBatch": 1 }
   },
   "pipelineSteps": [
     "CORRECT_INTENSITY"
@@ -35,7 +30,7 @@
       "equilibrationWeight" : 0.0
     },
     "targetStack": {
-      "stackSuffix": "_ic",
+      "stackSuffix": "_ic2d",
       "completeStack": true
     },
     "blockPartition": {
