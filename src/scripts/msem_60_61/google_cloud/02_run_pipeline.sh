@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if (( $# < 7 )); then
+if (( $# != 7 )); then
   echo "
 Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
                             <number-spark-exec-instances> <number-spark-exec-cores>

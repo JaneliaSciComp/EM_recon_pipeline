@@ -2,11 +2,13 @@
 
 if (( $# != 5 )); then
   echo "
-Usage:    $0 <render-ws-internal-ip> <render-project> <render-stack> <max-z> <number-spark-exec-instances>
+Usage:    ./11_run_n5_export.sh <render-ws-internal-ip> <render-project> <render-stack> <max-z> <max-executors>
 
-          number-spark-exec-instances must be at least 2
+          max-executors must be at least 2
 
-Examples: $0 10.150.0.5 w60_serial_360_to_369 w60_s360_r00_d20_gc_align 76 100
+Examples:
+
+  $0 10.150.0.4 w61_serial_100_to_109 w61_s109_r00_gc_par_align_ic2d 82 100
   "
   exit 1
 fi
@@ -15,10 +17,15 @@ RENDER_WS_IP="${1}"
 RENDER_PROJECT="${2}"
 STACK="${3}"
 MAX_Z="${4}"
-SPARK_EXEC_INSTANCES="${5}"
+MAX_EXECUTORS="${5}"
 
-if (( SPARK_EXEC_INSTANCES < 2 )); then
-  echo "ERROR: must request at least 2 spark executors"
+if (( MAX_EXECUTORS < 2 )); then
+  echo "ERROR: max-executors must be at least 2"
+  exit 1
+fi
+
+if (( MAX_EXECUTORS > 500 )); then
+  echo "ERROR: max-executors must be at most 500"
   exit 1
 fi
 
@@ -37,7 +44,8 @@ N5_DATASET="/render/${RENDER_PROJECT}/${STACK}___${RUN_TIMESTAMP}"  # /render/w6
 SINGLE_CORE_MB=6700 # leave room for spark.executor.memoryOverhead, 6700 + 670 = 7370 < 7424
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
-SPARK_PROPS="spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
+SPARK_PROPS="spark.default.parallelism=240,spark.executor.instances=${MAX_EXECUTORS}"
+SPARK_PROPS="${SPARK_PROPS},spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 
 # see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/spark-runtime-1.1
@@ -69,6 +77,7 @@ gcloud dataproc batches submit spark \
   --region=us-east4 \
   --jars=${GS_JAR_URL} \
   --class=${CLASS} \
+  --batch=rex-"${RUN_TIMESTAMP}-${STACK}" \
   --batch=render-n5-export-"${RUN_TIMESTAMP}" \
   --version=${SPARK_VERSION} \
   --properties="${SPARK_PROPS}" \
