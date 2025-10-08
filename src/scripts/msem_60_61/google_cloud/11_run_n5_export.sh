@@ -18,6 +18,7 @@ RENDER_PROJECT="${2}"
 STACK="${3}"
 MAX_Z="${4}"
 MAX_EXECUTORS="${5}"
+BATCH_ID_SUFFIX=$(echo "${STACK}" | tr '_' '-')
 
 if (( MAX_EXECUTORS < 2 )); then
   echo "ERROR: max-executors must be at least 2"
@@ -77,8 +78,7 @@ gcloud dataproc batches submit spark \
   --region=us-east4 \
   --jars=${GS_JAR_URL} \
   --class=${CLASS} \
-  --batch=rex-"${RUN_TIMESTAMP}-${STACK}" \
-  --batch=render-n5-export-"${RUN_TIMESTAMP}" \
+  --batch=rex-"${RUN_TIMESTAMP}-${BATCH_ID_SUFFIX}" \
   --version=${SPARK_VERSION} \
   --properties="${SPARK_PROPS}" \
   --async \
