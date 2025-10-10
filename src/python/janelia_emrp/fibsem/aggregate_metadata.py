@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import dataclass
 import logging
 import sys
 import json
@@ -20,6 +21,125 @@ from janelia_emrp.render.web_service_request import RenderRequest
 logger = logging.getLogger(__name__)
 
 Tile = namedtuple("Tile", ["tile_id", "z", "image_url"])
+
+
+# Manually curated list of plot instructions for all known properties
+@dataclass(frozen=True)
+class PlotSpec:
+    """Specification for how to plot a property over z."""
+    plot: bool = True
+    constant: bool = False
+    per_tile: bool = False
+    regression: bool = True
+    unit: str = ""
+
+
+IGNORED = PlotSpec(plot=False)
+PLOT_INSTRUCTIONS: dict[str, PlotSpec] = {
+    "z": IGNORED,
+    "tile_x": IGNORED,
+    "tile_y": IGNORED,
+    "AI1": IGNORED,
+    "AI2": IGNORED,
+    "AI3": IGNORED,
+    "AI4": IGNORED,
+    "BeamDump1I": PlotSpec(),
+    "BeamDump2I": PlotSpec(),
+    "BrightnessA": PlotSpec(constant=True),
+    "BrightnessB": PlotSpec(constant=True),
+    "ChamVac": PlotSpec(),
+    "ChanNum": IGNORED,
+    "ContrastA": PlotSpec(constant=True),
+    "ContrastB": PlotSpec(constant=True),
+    "DecimatingFactor": IGNORED,
+    "DetA": PlotSpec(constant=True),
+    "DetB": PlotSpec(constant=True),
+    "DetC": IGNORED,
+    "DetD": IGNORED,
+    "Detmax": IGNORED,
+    "Detmin": IGNORED,
+    "EHT": PlotSpec(constant=True),
+    "EightBit": PlotSpec(constant=True),
+    "FIBAlnX": PlotSpec(),
+    "FIBAlnY": PlotSpec(),
+    "FIBCurr": PlotSpec(),
+    "FIBFOV": PlotSpec(constant=True),
+    "FIBFocus": PlotSpec(),
+    "FIBProb": PlotSpec(constant=True),
+    "FIBRot": PlotSpec(constant=True),
+    "FIBShiftX": PlotSpec(),
+    "FIBShiftY": PlotSpec(),
+    "FIBSliceNum": IGNORED,
+    "FIBSpecimenI": IGNORED,
+    "FIBStiX": PlotSpec(per_tile=True),
+    "FIBStiY": PlotSpec(per_tile=True),
+    "FaradayCupI": PlotSpec(),
+    "FileLength": IGNORED,
+    "FileMagicNum": IGNORED,
+    "FileType": IGNORED,
+    "FileVersion": IGNORED,
+    "FirstX": IGNORED,
+    "FirstY": IGNORED,
+    "FocusIndex": PlotSpec(),
+    "FramelineRampdownRatio": IGNORED,
+    "GunVac": PlotSpec(),
+    "HighCurrent": IGNORED,
+    "MachineID": PlotSpec(constant=True),
+    "Mag": PlotSpec(constant=True),
+    "MillingI": PlotSpec(),
+    "MillingLineTime": PlotSpec(),
+    "MillingLinesPerImage": PlotSpec(constant=True),
+    "MillingPIDD": IGNORED,
+    "MillingPIDI": IGNORED,
+    "MillingPIDMeasured": IGNORED,
+    "MillingPIDOn": IGNORED,
+    "MillingPIDP": IGNORED,
+    "MillingPIDTarget": IGNORED,
+    "MillingPIDTargetSlope": IGNORED,
+    "MillingULAng": IGNORED,
+    "MillingURAng": IGNORED,
+    "MillingXResolution": PlotSpec(constant=True),
+    "MillingXSize": PlotSpec(constant=True),
+    "MillingYResolution": PlotSpec(constant=True),
+    "MillingYSize": PlotSpec(constant=True),
+    "MillingYVoltage": PlotSpec(constant=True),
+    "Mode": IGNORED,
+    "Notes": PlotSpec(constant=True),
+    "Oversampling": PlotSpec(constant=True),
+    "PixelSize": PlotSpec(constant=True),
+    "Restart": PlotSpec(),
+    "SEMAlnX": IGNORED,
+    "SEMAlnY": IGNORED,
+    "SEMApr": PlotSpec(constant=True),
+    "SEMCurr": PlotSpec(constant=True),
+    "SEMRot": PlotSpec(constant=True),
+    "SEMShiftX": PlotSpec(constant=True),
+    "SEMShiftY": PlotSpec(constant=True),
+    "SEMSpecimenI": IGNORED,
+    "SEMSpecimenICurrent": PlotSpec(),
+    "SEMStiX": PlotSpec(per_tile=True),
+    "SEMStiY": PlotSpec(per_tile=True),
+    "SWdate": IGNORED,
+    "SampleID": PlotSpec(constant=True),
+    "Scaling": IGNORED,
+    "ScanRate": PlotSpec(),
+    "StageM": IGNORED,
+    "StageMove": IGNORED,
+    "StageR": IGNORED,
+    "StageT": IGNORED,
+    "StageX": PlotSpec(),
+    "StageY": PlotSpec(),
+    "StageZ": PlotSpec(),
+    "Temperature": PlotSpec(),
+    "TimeStep": IGNORED,
+    "WD": PlotSpec(),
+    "XResolution": PlotSpec(),
+    "Xmax": IGNORED,
+    "Xmin": IGNORED,
+    "YResolution": PlotSpec(),
+    "ZeissScanSpeed": PlotSpec(constant=True),
+    "dat_file_name": PlotSpec(constant=True),
+}
 
 
 def fetch_tiles(render_request: RenderRequest, stack: str) -> list[Tile]:
@@ -101,9 +221,16 @@ def extract_attributes_of_interest(all_attributes: dict[str, Any]) -> dict[str, 
     """Hand-crafted extraction of selected attributes from HDF5 group attributes."""
     attributes_of_interest = {}
 
-    # Easy attributes first
-    for key in ["SEMStiX", "SEMStiY", "SEMShiftX", "SEMShiftY", "Temperature"]:
-        attributes_of_interest[key] = float(all_attributes.get(key, "nan"))
+    # Extract all non-ignored attributes and convert to float if possible
+    for key, value in all_attributes.items():
+        plot_spec = PLOT_INSTRUCTIONS.get(key, IGNORED)
+        if not plot_spec.plot:
+            continue
+
+        try:
+            attributes_of_interest[key] = float(value)
+        except (ValueError, TypeError):
+            attributes_of_interest[key] = value  # Keep as is if conversion fails
 
     return attributes_of_interest
 
@@ -113,16 +240,27 @@ def generate_plots(
 ) -> None:
     """Generate Bokeh plots for selected attributes over z."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    columns_to_exclude = {"z", "tile_x", "tile_y"}
+    z_layer_properties = [
+        column
+        for column, plot_spec in PLOT_INSTRUCTIONS.items()
+        if plot_spec.plot and not plot_spec.constant and not plot_spec.per_tile
+    ]
 
-    # Prepare data for plotting
-    dataframe = dataframe.dropna().sort_values("z")
-    z_values = dataframe["z"].tolist()
     tap_url = create_tap_link(render_request, stack)
 
-    for attribute in set(dataframe.columns) - columns_to_exclude:
+    for attribute in z_layer_properties:
+        attribute_frame = dataframe[["z", attribute]].dropna().sort_values(by="z")
+        if attribute_frame.empty:
+            logger.info("No data to plot for attribute %s", attribute)
+            continue
+
+        z_values = attribute_frame["z"].tolist()
+        attr_values = attribute_frame[attribute].tolist()
+        if not z_values or not attr_values:
+            logger.info("Skipping attribute %s due to missing values", attribute)
+            continue
+
         # Determine axes ranges
-        attr_values = dataframe[attribute].tolist()
         x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
         y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
 
@@ -154,22 +292,24 @@ def generate_plots(
         )
 
         # Add robust linear regression line
-        slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
-        regression_x = [x_min, x_max]
-        regression_y = [slope * x + intercept for x in regression_x]
-        regression_source = ColumnDataSource({"z": regression_x, "value": regression_y})
+        if len(z_values) >= 2:
+            slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
+            regression_x = [x_min, x_max]
+            regression_y = [slope * x + intercept for x in regression_x]
+            regression_source = ColumnDataSource({"z": regression_x, "value": regression_y})
 
-        plot.line(
-            source=regression_source,
-            x="z",
-            y="value",
-            line_width=2,
-            line_color="tomato",
-            legend_label=f"Linear regression: y={slope:.3f}x+{intercept:.3f}",
-        )
+            plot.line(
+                source=regression_source,
+                x="z",
+                y="value",
+                line_width=2,
+                line_color="tomato",
+                legend_label=f"Linear regression: y={slope:.3f}x+{intercept:.3f}",
+            )
 
-        plot.legend.location = "top_left"
-        plot.legend.click_policy = "hide"
+        if plot.legend:
+            plot.legend.location = "top_left"
+            plot.legend.click_policy = "hide"
 
         # Save plot to HTML file
         output_path = output_dir / f"{attribute}_over_z.html"
