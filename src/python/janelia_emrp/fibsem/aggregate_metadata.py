@@ -118,7 +118,7 @@ def generate_plots(
     # Prepare data for plotting
     dataframe = dataframe.dropna().sort_values("z")
     z_values = dataframe["z"].tolist()
-    location, urls = create_tap_links(render_request, stack, dataframe)
+    tap_url = create_tap_link(render_request, stack)
 
     for attribute in set(dataframe.columns) - columns_to_exclude:
         # Determine axes ranges
@@ -127,7 +127,7 @@ def generate_plots(
         y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
 
         # Create plot with neuroglancer links on click
-        tooltips = [("location", "@location"), ("value", "@value")]
+        tooltips = [("z", "@z"), ("value", "@value")]
         plot = figure(
             title=attribute,
             x_axis_label="z",
@@ -140,15 +140,10 @@ def generate_plots(
             y_range=Range1d(y_min, y_max),
         )
         tap_tool = plot.select_one(TapTool)
-        if tap_tool is None:
-            tap_tool = TapTool()
-            plot.add_tools(tap_tool)
-        tap_tool.callback = OpenURL(url="@url")
+        tap_tool.callback = OpenURL(url=tap_url)
 
         # Scatter plot of data
-        source = ColumnDataSource(
-            {"z": z_values, "value": attr_values, "location": location, "url": urls}
-        )
+        source = ColumnDataSource({"z": z_values, "value": attr_values})
         plot.circle(
             source=source,
             x="z",
@@ -172,7 +167,7 @@ def generate_plots(
             line_color="tomato",
             legend_label=f"Linear regression: y={slope:.3f}x+{intercept:.3f}",
         )
-        
+
         plot.legend.location = "top_left"
         plot.legend.click_policy = "hide"
 
@@ -183,67 +178,57 @@ def generate_plots(
         logger.info("Wrote %s", output_path)
 
 
-def create_tap_links(
-    render_request: RenderRequest, stack: str, df: pd.DataFrame
-) -> tuple[list[str], list[str]]:
-    """Create descriptions and links for each tile in the DataFrame."""
-    zs = df["z"].tolist()
-    ys = df["tile_y"].tolist()
-    xs = df["tile_x"].tolist()
-
-    # Get stack info for constructing URLs
+def create_tap_link(
+    render_request: RenderRequest,
+    stack: str,
+    cross_section_scale: int = 16,
+    projection_scale: int = 32768,
+) -> str:
+    """Create a neuroglancer link pointing to the specified stack."""
     owner = render_request.owner
     project = render_request.project
 
+    # Fetch stack metadata for resolution and bounds
     stack_metadata = render_request.get_stack_metadata(stack)
     bounds = stack_metadata["stats"]["stackBounds"]
-    stack_version = stack_metadata["currentVersion"]
-    res_x = stack_version["stackResolutionX"]
-    res_y = stack_version["stackResolutionY"]
-    res_z = stack_version["stackResolutionZ"]
+    stack_metadata = stack_metadata["currentVersion"]
 
+    # Build the neuroglancer state and encode it for URL inclusion
+    ng_source_url = f"render://http://renderer.int.janelia.org:8080/{owner}/{project}/{stack}"
+    position_to_replace = 0.12345678987654321
+    ng_state = {
+        "dimensions": {
+            "x": [stack_metadata["stackResolutionX"], "nm"],
+            "y": [stack_metadata["stackResolutionY"], "nm"],
+            "z": [stack_metadata["stackResolutionZ"], "nm"],
+        },
+        "position": [position_to_replace],
+        "crossSectionScale": cross_section_scale,
+        "projectionScale": projection_scale,
+        "layers": [
+            {
+                "type": "image",
+                "source": {
+                    "url": ng_source_url,
+                    "subsources": {"default": True, "bounds": True},
+                    "enableDefaultSubsources": False,
+                },
+                "tab": "source",
+                "name": stack,
+            }
+        ],
+        "selectedLayer": {"layer": stack},
+        "layout": "xy",
+    }
+    encoded_state = urlparse.quote(json.dumps(ng_state, separators=(",", ":")))
+
+    # Replace the position placeholder with actual x,y center and @x for z (substituted by bokeh)
+    # This needs to be done after URL encoding to avoid encoding the '@' character
     center_x = int(bounds["minX"] + (bounds["maxX"] - bounds["minX"]) / 2)
     center_y = int(bounds["minY"] + (bounds["maxY"] - bounds["minY"]) / 2)
+    encoded_state = encoded_state.replace(str(position_to_replace), f"{center_x},{center_y},1")
 
-    links = []
-    for z in zs:
-        # Encode Neuroglancer URL
-        x_y_z_position = f"{center_x},{center_y},@x"
-        ng_source_url = f'render://http://renderer.int.janelia.org:8080/{owner}/{project}/{stack}'
-        layer_name = f'{project} {stack}'
-        replace_later = 0.12345678987654321
-        ng_state = {
-            "dimensions": {"x": [res_x, "nm"], "y": [res_y, "nm"], "z": [res_z, "nm"]},
-            "position": [replace_later],
-            "crossSectionScale": 32,
-            "projectionScale": 32768,
-            "layers": [
-                {
-                    "type": "image",
-                    "source": {
-                        "url": ng_source_url,
-                        "subsources": {"default": True, "bounds": True},
-                        "enableDefaultSubsources": False,
-                    },
-                    "tab": "source",
-                    "name": layer_name,
-                }
-            ],
-            "selectedLayer": {"layer": layer_name},
-            "layout": "xy",
-        }
-        ng_state_json_string = json.dumps(ng_state)
-        encoded_ng_state = urlparse.quote(ng_state_json_string)
-        encoded_ng_state_with_at_z = encoded_ng_state.replace(str(replace_later), x_y_z_position)
-
-        links.append(f'http://renderer.int.janelia.org:8080/ng/#!{encoded_ng_state_with_at_z}')
-        print(links[-1])
-        print()
-
-    descriptions = [f"z={int(z)}, y={int(y)}, x={int(x)}" for x, y, z in zip(xs, ys, zs)]
-
-    return descriptions, links
-
+    return f"http://renderer.int.janelia.org:8080/ng/#!{encoded_state}"
 
 
 def range_with_padding(
