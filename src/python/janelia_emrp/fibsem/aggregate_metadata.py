@@ -1,5 +1,6 @@
 import argparse
 from dataclasses import dataclass
+import html
 import logging
 import sys
 import json
@@ -102,7 +103,7 @@ PLOT_INSTRUCTIONS: dict[str, PlotSpec] = {
     "MillingXSize": PlotSpec(constant=True),
     "MillingYResolution": PlotSpec(constant=True),
     "MillingYSize": PlotSpec(constant=True),
-    "MillingYVoltage": PlotSpec(constant=True),
+    "MillingYVoltage": PlotSpec(),
     "Mode": IGNORED,
     "Notes": PlotSpec(constant=True),
     "Oversampling": PlotSpec(constant=True),
@@ -138,8 +139,32 @@ PLOT_INSTRUCTIONS: dict[str, PlotSpec] = {
     "Xmin": IGNORED,
     "YResolution": PlotSpec(),
     "ZeissScanSpeed": PlotSpec(constant=True),
-    "dat_file_name": PlotSpec(constant=True),
+    "dat_file_name": IGNORED,
 }
+
+
+def _normalize_scalar(value: Any) -> Any:
+    """Convert numpy/pandas scalar types to Python scalars when possible."""
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except Exception:  # pragma: no cover - defensive fallback
+            return value
+    return value
+
+
+def _format_property_value(value: Any, unit: str = "") -> str:
+    """Human-readable string for values that may be numeric or textual."""
+    normalized = _normalize_scalar(value)
+    if isinstance(normalized, float):
+        if pd.isna(normalized):
+            rendered = "nan"
+        else:
+            rendered = f"{normalized:.6g}"
+    else:
+        rendered = str(normalized)
+
+    return f"{rendered} {unit}".rstrip()
 
 
 def fetch_tiles(render_request: RenderRequest, stack: str) -> list[Tile]:
@@ -240,6 +265,11 @@ def generate_plots(
 ) -> None:
     """Generate Bokeh plots for selected attributes over z."""
     output_dir.mkdir(parents=True, exist_ok=True)
+    constant_properties = [
+        column
+        for column, plot_spec in PLOT_INSTRUCTIONS.items()
+        if plot_spec.plot and plot_spec.constant
+    ]
     z_layer_properties = [
         column
         for column, plot_spec in PLOT_INSTRUCTIONS.items()
@@ -248,7 +278,11 @@ def generate_plots(
 
     tap_url = create_tap_link(render_request, stack)
 
+    plotted_attributes: list[tuple[str, Path]] = []
+
     for attribute in z_layer_properties:
+        if attribute not in dataframe.columns:
+            continue
         attribute_frame = dataframe[["z", attribute]].dropna().sort_values(by="z")
         if attribute_frame.empty:
             logger.info("No data to plot for attribute %s", attribute)
@@ -316,6 +350,139 @@ def generate_plots(
         output_file(str(output_path), title=attribute)
         save(plot)
         logger.info("Wrote %s", output_path)
+        plotted_attributes.append((attribute, output_path))
+
+    landing_page_path = output_dir / "index.html"
+    write_landing_page(
+        render_request,
+        stack,
+        dataframe,
+        constant_properties,
+        plotted_attributes,
+        landing_page_path,
+    )
+    logger.info("Wrote %s", landing_page_path)
+
+
+def collect_constant_entries(
+    dataframe: pd.DataFrame, constant_properties: list[str]
+) -> list[tuple[str, str, bool]]:
+    """Extract representative values for dataset-constant properties."""
+    entries: list[tuple[str, str, bool]] = []
+    for column in constant_properties:
+        if column not in dataframe.columns:
+            continue
+
+        plot_spec = PLOT_INSTRUCTIONS.get(column, PlotSpec())
+        series = dataframe[column].dropna()
+        if series.empty:
+            value_text = "N/A"
+            consistent = True
+        else:
+            unique_values = list(pd.unique(series))
+            consistent = len(unique_values) <= 1
+            if not consistent:
+                logger.warning(
+                    "Expected a single value for dataset constant %s but found %d unique values",
+                    column,
+                    len(unique_values),
+                )
+
+            preview_values = [
+                _format_property_value(value, plot_spec.unit if len(unique_values) == 1 else "")
+                for value in unique_values[:5]
+            ]
+            value_text = ", ".join(preview_values)
+            if len(unique_values) > 5:
+                value_text += ", …"
+            if plot_spec.unit and len(unique_values) != 1:
+                value_text = f"{value_text} {plot_spec.unit}"
+
+        entries.append((column, value_text, consistent))
+
+    return entries
+
+
+def write_landing_page(
+    render_request: RenderRequest,
+    stack: str,
+    dataframe: pd.DataFrame,
+    constant_properties: list[str],
+    plotted_attributes: list[tuple[str, Path]],
+    output_path: Path,
+) -> None:
+    """Write an HTML landing page summarizing constants and linking to plots."""
+    constant_entries = collect_constant_entries(dataframe, constant_properties)
+    title = "Metadata overview"
+    owner = html.escape(render_request.owner)
+    project = html.escape(render_request.project)
+    stack_name = html.escape(stack)
+
+    lines = [
+        "<!DOCTYPE html>",
+        "<html lang=\"en\">",
+        "<head>",
+        "<meta charset=\"utf-8\">",
+        f"<title>{html.escape(title)}</title>",
+        "<style>",
+        "body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.5; }",
+        "h1 { margin-bottom: 0.5rem; }",
+        "h2 { margin-top: 1.5rem; }",
+        "table { border-collapse: collapse; min-width: 40%; }",
+        "th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }",
+        "th { background-color: #f5f5f5; }",
+        ".warning { color: #b44; font-size: 0.9em; margin-left: 0.4rem; }",
+        "ul { padding-left: 1.2rem; }",
+        ".summary-sections { display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start; }",
+        ".summary-block { flex: 1 1 320px; }",
+        ".summary-block table { min-width: 100%; }",
+        "</style>",
+        "</head>",
+        "<body>",
+        f"<h1>{html.escape(title)}</h1>",
+        f"<p><strong>Owner:</strong> {owner} &nbsp; <strong>Project:</strong> "
+        f"{project} &nbsp; <strong>Stack:</strong> {stack_name}</p>",
+    ]
+
+    lines.append('<div class="summary-sections">')
+
+    lines.append('<section class="summary-block constants">')
+    lines.append("<h2>Dataset constants</h2>")
+    if constant_entries:
+        lines.extend(
+            [
+                "<table>",
+                "<thead><tr><th>Property</th><th>Value</th></tr></thead>",
+                "<tbody>",
+            ]
+        )
+        for column, value_text, consistent in constant_entries:
+            warning = "" if consistent else "<span class=\"warning\">(multiple unique values found)</span>"
+            lines.append(
+                f"<tr><th>{html.escape(column)}</th><td>{html.escape(value_text)}{warning}</td></tr>"
+            )
+        lines.extend(["</tbody>", "</table>"])
+    else:
+        lines.append("<p>No dataset-constant properties found.</p>")
+    lines.append("</section>")
+
+    lines.append('<section class="summary-block plots">')
+    lines.append("<h2>Z-layer plots</h2>")
+    if plotted_attributes:
+        lines.append("<ul>")
+        for attribute, path in sorted(plotted_attributes, key=lambda item: item[0]):
+            href = html.escape(path.name)
+            label = html.escape(attribute)
+            lines.append(f'<li><a href="{href}">{label}</a></li>')
+        lines.append("</ul>")
+    else:
+        lines.append("<p>No z-layer plots were generated.</p>")
+    lines.append("</section>")
+
+    lines.append("</div>")
+
+    lines.extend(["</body>", "</html>"])
+    output_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def create_tap_link(
