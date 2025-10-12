@@ -383,7 +383,7 @@ def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_til
                 y="value",
                 line_width=2,
                 line_color="tomato",
-                legend_label=f"Linear regression: y={slope:.3f}x+{intercept:.3f}",
+                legend_label=f"Linear regression: y={slope:.3g}z+{intercept:.3g}",
             )
 
         if fig.legend:
