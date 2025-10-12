@@ -13,8 +13,10 @@ import h5py
 import pandas as pd
 from scipy import stats
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, OpenURL, Range1d, TapTool
+from bokeh.layouts import column
+from bokeh.models import ColumnDataSource, Div, OpenURL, Range1d, TapTool
 from bokeh.plotting import figure
+from bokeh.palettes import Turbo256
 
 from janelia_emrp.render.web_service_request import RenderRequest
 
@@ -167,6 +169,17 @@ def _format_property_value(value: Any, unit: str = "") -> str:
     return f"{rendered} {unit}".rstrip()
 
 
+def _color_for_index(index: int, total: int) -> str:
+    """Pick an aesthetically spaced color for overlay plots."""
+    if total <= 0:
+        total = 1
+    if total == 1:
+        return Turbo256[128]
+    palette_size = len(Turbo256) - 1
+    position = int(round(index * palette_size / (total - 1)))
+    return Turbo256[position]
+
+
 def fetch_tiles(render_request: RenderRequest, stack: str) -> list[Tile]:
     """Load tile specs for the stack and build lightweight descriptors."""
     # Load all z values for the stack
@@ -275,6 +288,11 @@ def generate_plots(
         for column, plot_spec in PLOT_INSTRUCTIONS.items()
         if plot_spec.plot and not plot_spec.constant and not plot_spec.per_tile
     ]
+    per_tile_properties = [
+        column
+        for column, plot_spec in PLOT_INSTRUCTIONS.items()
+        if plot_spec.plot and plot_spec.per_tile
+    ]
 
     tap_url = create_tap_link(render_request, stack)
 
@@ -351,6 +369,121 @@ def generate_plots(
         save(plot)
         logger.info("Wrote %s", output_path)
         plotted_attributes.append((attribute, output_path))
+
+    for attribute in per_tile_properties:
+        required_columns = {"z", "tile_x", "tile_y", attribute}
+        if not required_columns.issubset(dataframe.columns):
+            missing = required_columns - set(dataframe.columns)
+            logger.info(
+                "Skipping per-tile plot for %s; missing columns: %s",
+                attribute,
+                ", ".join(sorted(missing)),
+            )
+            continue
+
+        attribute_frame = (
+            dataframe[list(required_columns)]
+            .dropna()
+            .sort_values(by=["tile_x", "tile_y", "z"])
+        )
+        if attribute_frame.empty:
+            logger.info("No data to plot for per-tile attribute %s", attribute)
+            continue
+
+        grouped_by_tile = list(attribute_frame.groupby(["tile_x", "tile_y"]))
+        if not grouped_by_tile:
+            logger.info("No tile groups found for attribute %s", attribute)
+            continue
+
+        figures = []
+        for idx, ((tile_x, tile_y), group) in enumerate(grouped_by_tile):
+            series = group.groupby("z", as_index=False).first().sort_values("z")
+            if series.empty:
+                continue
+
+            z_values = series["z"].tolist()
+            attr_values = series[attribute].tolist()
+            if not z_values or not attr_values:
+                continue
+
+            tile_label = f"{tile_x}-{tile_y}"
+            color = _color_for_index(idx, len(grouped_by_tile))
+            x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
+            y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
+            tooltips = [("z", "@z"), ("value", "@value")]
+            fig = figure(
+                title=f"Tile {tile_label}",
+                x_axis_label="z",
+                y_axis_label=attribute,
+                tooltips=tooltips,
+                tools="tap,pan,box_zoom,wheel_zoom,save,reset",
+                plot_width=2400,
+                plot_height=320,
+                x_range=Range1d(x_min, x_max),
+                y_range=Range1d(y_min, y_max),
+            )
+            tap_tool = fig.select_one(TapTool)
+            if tap_tool is not None:
+                tap_tool.callback = OpenURL(url=tap_url)
+
+            source = ColumnDataSource(
+                {
+                    "z": z_values,
+                    "value": attr_values,
+                }
+            )
+
+            fig.line(
+                source=source,
+                x="z",
+                y="value",
+                line_width=2,
+                line_color=color,
+                alpha=0.6,
+            )
+            fig.circle(
+                source=source,
+                x="z",
+                y="value",
+                size=5,
+                line_color=color,
+                fill_color=color,
+                alpha=0.6,
+            )
+
+            plot_spec = PLOT_INSTRUCTIONS.get(attribute, PlotSpec())
+            if plot_spec.regression and len(z_values) >= 2:
+                slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
+                regression_x = [z_values[0], z_values[-1]]
+                regression_y = [slope * x + intercept for x in regression_x]
+                regression_source = ColumnDataSource(
+                    {"z": regression_x, "value": regression_y}
+                )
+                fig.line(
+                    source=regression_source,
+                    x="z",
+                    y="value",
+                    line_width=1,
+                    line_dash="dashed",
+                    line_color=color,
+                )
+
+            figures.append(fig)
+
+        if not figures:
+            logger.info("All per-tile groups empty for attribute %s", attribute)
+            continue
+
+        layout = column(
+            Div(text=f"<h1>{html.escape(attribute)} (per tile)</h1>"),
+            *figures,
+            sizing_mode="stretch_width",
+        )
+        output_path = output_dir / f"{attribute}_per_tile_over_z.html"
+        output_file(str(output_path), title=f"{attribute} (per tile)")
+        save(layout)
+        logger.info("Wrote %s", output_path)
+        plotted_attributes.append((f"{attribute} (per tile)", output_path))
 
     landing_page_path = output_dir / "index.html"
     write_landing_page(
