@@ -2,7 +2,6 @@ import argparse
 from enum import Enum
 import html
 import logging
-import sys
 import json
 from collections import namedtuple
 from pathlib import Path
@@ -141,11 +140,37 @@ PLOT_INSTRUCTIONS: dict[str, tuple[Category, str]] = {
 }
 
 
-def main(argv: Sequence[str] = None) -> None:
+def main() -> None:
     """Main entry point for CLI."""
-    if argv is None:
-        argv = sys.argv[1:]
-    args = parse_args(argv)
+    parser = argparse.ArgumentParser(
+        description="Fetch all tile specs for a render stack and print each 0th mipmap image URL."
+    )
+    parser.add_argument(
+        "--base-data-url",
+        required=True,
+        help="Render web services host (e.g. em-services-1.int.janelia.org:8080).",
+    )
+    parser.add_argument(
+        "--owner",
+        required=True,
+        help="Render owner for the project.",
+    )
+    parser.add_argument(
+        "--project",
+        required=True,
+        help="Render project name.",
+    )
+    parser.add_argument(
+        "--stack",
+        required=True,
+        help="Render stack to query for tile specs.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=".",
+        help="Directory where HTML files for plots will be written.",
+    )
+    args = parser.parse_args()
 
     # Get tile specs for the stack
     render_request = RenderRequest(
@@ -174,7 +199,6 @@ def fetch_tiles(render_request: RenderRequest, stack: str) -> list[Tile]:
     """Load tile specs for the stack and build lightweight descriptors."""
     # Load all z values for the stack
     z_values = render_request.get_z_values(stack)
-    z_values = z_values[:10]  # TODO: remove limit after initial testing
 
     # Request tile specs for each z value
     tiles = []
@@ -556,52 +580,5 @@ def collect_constant_entries(
     return entries
 
 
-def parse_args(argv: Sequence[str]) -> argparse.Namespace:
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Fetch all tile specs for a render stack and print each 0th mipmap image URL."
-    )
-    parser.add_argument(
-        "--base-data-url",
-        required=True,
-        help="Render web services host (e.g. em-services-1.int.janelia.org:8080).",
-    )
-    parser.add_argument(
-        "--owner",
-        required=True,
-        help="Render owner for the project.",
-    )
-    parser.add_argument(
-        "--project",
-        required=True,
-        help="Render project name.",
-    )
-    parser.add_argument(
-        "--stack",
-        required=True,
-        help="Render stack to query for tile specs.",
-    )
-    parser.add_argument(
-        "--output-dir",
-        default=".",
-        help="Directory where HTML files for plots will be written.",
-    )
-    return parser.parse_args(argv)
-
-
 if __name__ == "__main__":
-    # main()
-    main(
-        [
-            "--base-data-url",
-            "em-services-1.int.janelia.org:8080",
-            "--owner",
-            "cellmap",
-            "--project",
-            "jrc_mus_heart_4",
-            "--stack",
-            "imaging_preview",
-            "--output-dir",
-            "./plots",
-        ]
-    )
+    main()
