@@ -1,5 +1,5 @@
 import argparse
-from dataclasses import dataclass
+from enum import Enum
 import html
 import logging
 import sys
@@ -26,121 +26,118 @@ Tile = namedtuple("Tile", ["tile_id", "z", "image_url"])
 
 
 # Manually curated list of plot instructions for all known properties
-@dataclass(frozen=True)
-class PlotSpec:
-    """Specification for how to plot a property over z."""
-    plot: bool = True
-    constant: bool = False
-    per_tile: bool = False
-    regression: bool = True
-    unit: str = ""
+class Category(str, Enum):
+    """Category of property for plotting purposes."""
+    IGNORED = "ignored"          # Do not plot
+    CONSTANT = "constant"        # Plot as constant, no regression
+    Z_LAYER = "z_layer"          # Plot over z, with regression
+    PER_TILE = "per_tile"        # Plot per tile (tile_x, tile_y), with regression
 
 
-IGNORED = PlotSpec(plot=False)
-PLOT_INSTRUCTIONS: dict[str, PlotSpec] = {
-    "z": IGNORED,
-    "tile_x": IGNORED,
-    "tile_y": IGNORED,
-    "AI1": IGNORED,
-    "AI2": IGNORED,
-    "AI3": IGNORED,
-    "AI4": IGNORED,
-    "BeamDump1I": PlotSpec(),
-    "BeamDump2I": PlotSpec(),
-    "BrightnessA": PlotSpec(constant=True),
-    "BrightnessB": PlotSpec(constant=True),
-    "ChamVac": PlotSpec(),
-    "ChanNum": IGNORED,
-    "ContrastA": PlotSpec(constant=True),
-    "ContrastB": PlotSpec(constant=True),
-    "DecimatingFactor": IGNORED,
-    "DetA": PlotSpec(constant=True),
-    "DetB": PlotSpec(constant=True),
-    "DetC": IGNORED,
-    "DetD": IGNORED,
-    "Detmax": IGNORED,
-    "Detmin": IGNORED,
-    "EHT": PlotSpec(constant=True),
-    "EightBit": PlotSpec(constant=True),
-    "FIBAlnX": PlotSpec(),
-    "FIBAlnY": PlotSpec(),
-    "FIBCurr": PlotSpec(),
-    "FIBFOV": PlotSpec(constant=True),
-    "FIBFocus": PlotSpec(),
-    "FIBProb": PlotSpec(constant=True),
-    "FIBRot": PlotSpec(constant=True),
-    "FIBShiftX": PlotSpec(),
-    "FIBShiftY": PlotSpec(),
-    "FIBSliceNum": IGNORED,
-    "FIBSpecimenI": IGNORED,
-    "FIBStiX": PlotSpec(per_tile=True),
-    "FIBStiY": PlotSpec(per_tile=True),
-    "FaradayCupI": PlotSpec(),
-    "FileLength": IGNORED,
-    "FileMagicNum": IGNORED,
-    "FileType": IGNORED,
-    "FileVersion": IGNORED,
-    "FirstX": IGNORED,
-    "FirstY": IGNORED,
-    "FocusIndex": PlotSpec(),
-    "FramelineRampdownRatio": IGNORED,
-    "GunVac": PlotSpec(),
-    "HighCurrent": IGNORED,
-    "MachineID": PlotSpec(constant=True),
-    "Mag": PlotSpec(constant=True),
-    "MillingI": PlotSpec(),
-    "MillingLineTime": PlotSpec(),
-    "MillingLinesPerImage": PlotSpec(constant=True),
-    "MillingPIDD": IGNORED,
-    "MillingPIDI": IGNORED,
-    "MillingPIDMeasured": IGNORED,
-    "MillingPIDOn": IGNORED,
-    "MillingPIDP": IGNORED,
-    "MillingPIDTarget": IGNORED,
-    "MillingPIDTargetSlope": IGNORED,
-    "MillingULAng": IGNORED,
-    "MillingURAng": IGNORED,
-    "MillingXResolution": PlotSpec(constant=True),
-    "MillingXSize": PlotSpec(constant=True),
-    "MillingYResolution": PlotSpec(constant=True),
-    "MillingYSize": PlotSpec(constant=True),
-    "MillingYVoltage": PlotSpec(),
-    "Mode": IGNORED,
-    "Notes": PlotSpec(constant=True),
-    "Oversampling": PlotSpec(constant=True),
-    "PixelSize": PlotSpec(constant=True),
-    "Restart": PlotSpec(),
-    "SEMAlnX": IGNORED,
-    "SEMAlnY": IGNORED,
-    "SEMApr": PlotSpec(constant=True),
-    "SEMCurr": PlotSpec(constant=True),
-    "SEMRot": PlotSpec(constant=True),
-    "SEMShiftX": PlotSpec(constant=True),
-    "SEMShiftY": PlotSpec(constant=True),
-    "SEMSpecimenI": IGNORED,
-    "SEMSpecimenICurrent": PlotSpec(),
-    "SEMStiX": PlotSpec(per_tile=True),
-    "SEMStiY": PlotSpec(per_tile=True),
-    "SWdate": IGNORED,
-    "SampleID": PlotSpec(constant=True),
-    "Scaling": IGNORED,
-    "ScanRate": PlotSpec(),
-    "StageM": IGNORED,
-    "StageMove": IGNORED,
-    "StageR": IGNORED,
-    "StageT": IGNORED,
-    "StageX": PlotSpec(),
-    "StageY": PlotSpec(),
-    "StageZ": PlotSpec(),
-    "Temperature": PlotSpec(),
-    "TimeStep": IGNORED,
-    "WD": PlotSpec(),
-    "XResolution": PlotSpec(),
-    "Xmax": IGNORED,
-    "Xmin": IGNORED,
-    "YResolution": PlotSpec(),
-    "ZeissScanSpeed": PlotSpec(constant=True),
-    "dat_file_name": IGNORED,
+PLOT_INSTRUCTIONS: dict[str, tuple[Category, str]] = {
+    "z": (Category.IGNORED, ""),
+    "tile_x": (Category.IGNORED, ""),
+    "tile_y": (Category.IGNORED, ""),
+    "AI1": (Category.IGNORED, ""),
+    "AI2": (Category.IGNORED, ""),
+    "AI3": (Category.IGNORED, ""),
+    "AI4": (Category.IGNORED, ""),
+    "BeamDump1I": (Category.Z_LAYER, ""),
+    "BeamDump2I": (Category.Z_LAYER, ""),
+    "BrightnessA": (Category.CONSTANT, ""),
+    "BrightnessB": (Category.CONSTANT, ""),
+    "ChamVac": (Category.Z_LAYER, ""),
+    "ChanNum": (Category.IGNORED, ""),
+    "ContrastA": (Category.CONSTANT, ""),
+    "ContrastB": (Category.CONSTANT, ""),
+    "DecimatingFactor": (Category.IGNORED, ""),
+    "DetA": (Category.CONSTANT, ""),
+    "DetB": (Category.CONSTANT, ""),
+    "DetC": (Category.IGNORED, ""),
+    "DetD": (Category.IGNORED, ""),
+    "Detmax": (Category.IGNORED, ""),
+    "Detmin": (Category.IGNORED, ""),
+    "EHT": (Category.CONSTANT, ""),
+    "EightBit": (Category.CONSTANT, ""),
+    "FIBAlnX": (Category.Z_LAYER, ""),
+    "FIBAlnY": (Category.Z_LAYER, ""),
+    "FIBCurr": (Category.Z_LAYER, ""),
+    "FIBFOV": (Category.CONSTANT, ""),
+    "FIBFocus": (Category.Z_LAYER, ""),
+    "FIBProb": (Category.CONSTANT, ""),
+    "FIBRot": (Category.CONSTANT, ""),
+    "FIBShiftX": (Category.Z_LAYER, ""),
+    "FIBShiftY": (Category.Z_LAYER, ""),
+    "FIBSliceNum": (Category.IGNORED, ""),
+    "FIBSpecimenI": (Category.IGNORED, ""),
+    "FIBStiX": (Category.PER_TILE, ""),
+    "FIBStiY": (Category.PER_TILE, ""),
+    "FaradayCupI": (Category.Z_LAYER, ""),
+    "FileLength": (Category.IGNORED, ""),
+    "FileMagicNum": (Category.IGNORED, ""),
+    "FileType": (Category.IGNORED, ""),
+    "FileVersion": (Category.IGNORED, ""),
+    "FirstX": (Category.IGNORED, ""),
+    "FirstY": (Category.IGNORED, ""),
+    "FocusIndex": (Category.Z_LAYER, ""),
+    "FramelineRampdownRatio": (Category.IGNORED, ""),
+    "GunVac": (Category.Z_LAYER, ""),
+    "HighCurrent": (Category.IGNORED, ""),
+    "MachineID": (Category.CONSTANT, ""),
+    "Mag": (Category.CONSTANT, ""),
+    "MillingI": (Category.Z_LAYER, ""),
+    "MillingLineTime": (Category.Z_LAYER, ""),
+    "MillingLinesPerImage": (Category.CONSTANT, ""),
+    "MillingPIDD": (Category.IGNORED, ""),
+    "MillingPIDI": (Category.IGNORED, ""),
+    "MillingPIDMeasured": (Category.IGNORED, ""),
+    "MillingPIDOn": (Category.IGNORED, ""),
+    "MillingPIDP": (Category.IGNORED, ""),
+    "MillingPIDTarget": (Category.IGNORED, ""),
+    "MillingPIDTargetSlope": (Category.IGNORED, ""),
+    "MillingULAng": (Category.IGNORED, ""),
+    "MillingURAng": (Category.IGNORED, ""),
+    "MillingXResolution": (Category.CONSTANT, ""),
+    "MillingXSize": (Category.CONSTANT, ""),
+    "MillingYResolution": (Category.CONSTANT, ""),
+    "MillingYSize": (Category.CONSTANT, ""),
+    "MillingYVoltage": (Category.Z_LAYER, ""),
+    "Mode": (Category.IGNORED, ""),
+    "Notes": (Category.CONSTANT, ""),
+    "Oversampling": (Category.CONSTANT, ""),
+    "PixelSize": (Category.CONSTANT, ""),
+    "Restart": (Category.Z_LAYER, ""),
+    "SEMAlnX": (Category.IGNORED, ""),
+    "SEMAlnY": (Category.IGNORED, ""),
+    "SEMApr": (Category.CONSTANT, ""),
+    "SEMCurr": (Category.CONSTANT, ""),
+    "SEMRot": (Category.CONSTANT, ""),
+    "SEMShiftX": (Category.CONSTANT, ""),
+    "SEMShiftY": (Category.CONSTANT, ""),
+    "SEMSpecimenI": (Category.IGNORED, ""),
+    "SEMSpecimenICurrent": (Category.Z_LAYER, ""),
+    "SEMStiX": (Category.PER_TILE, ""),
+    "SEMStiY": (Category.PER_TILE, ""),
+    "SWdate": (Category.IGNORED, ""),
+    "SampleID": (Category.CONSTANT, ""),
+    "Scaling": (Category.IGNORED, ""),
+    "ScanRate": (Category.Z_LAYER, ""),
+    "StageM": (Category.IGNORED, ""),
+    "StageMove": (Category.IGNORED, ""),
+    "StageR": (Category.IGNORED, ""),
+    "StageT": (Category.IGNORED, ""),
+    "StageX": (Category.Z_LAYER, ""),
+    "StageY": (Category.Z_LAYER, ""),
+    "StageZ": (Category.Z_LAYER, ""),
+    "Temperature": (Category.Z_LAYER, ""),
+    "TimeStep": (Category.IGNORED, ""),
+    "WD": (Category.Z_LAYER, ""),
+    "XResolution": (Category.Z_LAYER, ""),
+    "Xmax": (Category.IGNORED, ""),
+    "Xmin": (Category.IGNORED, ""),
+    "YResolution": (Category.Z_LAYER, ""),
+    "ZeissScanSpeed": (Category.CONSTANT, ""),
+    "dat_file_name": (Category.IGNORED, ""),
 }
 
 
@@ -254,8 +251,8 @@ def extract_attributes_of_interest(all_attributes: dict[str, Any]) -> dict[str, 
 
     # Extract all non-ignored attributes and convert to float if possible
     for key, value in all_attributes.items():
-        plot_spec = PLOT_INSTRUCTIONS.get(key, IGNORED)
-        if not plot_spec.plot:
+        category, _ = PLOT_INSTRUCTIONS.get(key, (Category.IGNORED, ""))
+        if category == Category.IGNORED:
             continue
 
         try:
@@ -273,13 +270,13 @@ def generate_plots(
     output_dir.mkdir(parents=True, exist_ok=True)
     z_layer_properties = [
         column
-        for column, plot_spec in PLOT_INSTRUCTIONS.items()
-        if plot_spec.plot and not plot_spec.constant and not plot_spec.per_tile
+        for column, (category, _) in PLOT_INSTRUCTIONS.items()
+        if category == Category.Z_LAYER
     ]
     per_tile_properties = [
         column
-        for column, plot_spec in PLOT_INSTRUCTIONS.items()
-        if plot_spec.plot and plot_spec.per_tile
+        for column, (category, _) in PLOT_INSTRUCTIONS.items()
+        if category == Category.PER_TILE
     ]
 
     tap_url = create_tap_link(render_request, stack)
@@ -435,8 +432,7 @@ def generate_plots(
                 alpha=0.6,
             )
 
-            plot_spec = PLOT_INSTRUCTIONS.get(attribute, PlotSpec())
-            if plot_spec.regression and len(z_values) >= 2:
+            if len(z_values) >= 2:
                 slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
                 regression_x = [z_values[0], z_values[-1]]
                 regression_y = [slope * x + intercept for x in regression_x]
@@ -551,8 +547,8 @@ def create_landing_page(
     """Write an HTML landing page summarizing constants and linking to plots."""
     constant_properties = [
         column
-        for column, plot_spec in PLOT_INSTRUCTIONS.items()
-        if plot_spec.plot and plot_spec.constant
+        for column, (category, _) in PLOT_INSTRUCTIONS.items()
+        if category == Category.CONSTANT
     ]
     constant_entries = collect_constant_entries(dataframe, constant_properties)
     output_path = output_path / "index.html"
@@ -650,7 +646,7 @@ def collect_constant_entries(
         if column not in dataframe.columns:
             continue
 
-        plot_spec = PLOT_INSTRUCTIONS.get(column, PlotSpec())
+        _, unit = PLOT_INSTRUCTIONS.get(column, (Category.IGNORED, ""))
         series = dataframe[column].dropna()
         if series.empty:
             value_text = "N/A"
@@ -666,14 +662,14 @@ def collect_constant_entries(
                 )
 
             preview_values = [
-                _format_property_value(value, plot_spec.unit if len(unique_values) == 1 else "")
+                _format_property_value(value, unit if len(unique_values) == 1 else "")
                 for value in unique_values[:5]
             ]
             value_text = ", ".join(preview_values)
             if len(unique_values) > 5:
                 value_text += ", …"
-            if plot_spec.unit and len(unique_values) != 1:
-                value_text = f"{value_text} {plot_spec.unit}"
+            if unit and len(unique_values) != 1:
+                value_text = f"{value_text} {unit}"
 
         entries.append((column, value_text, consistent))
 
