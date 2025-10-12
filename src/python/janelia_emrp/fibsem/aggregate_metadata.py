@@ -13,7 +13,7 @@ import h5py
 import pandas as pd
 from scipy import stats
 from bokeh.io import output_file, save
-from bokeh.layouts import column
+from bokeh.layouts import column, Column
 from bokeh.models import ColumnDataSource, Div, OpenURL, Range1d, TapTool
 from bokeh.plotting import figure
 
@@ -268,43 +268,58 @@ def generate_plots(
 ) -> None:
     """Generate Bokeh plots for selected attributes over z."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    z_layer_properties = [
-        column
-        for column, (category, _) in PLOT_INSTRUCTIONS.items()
-        if category == Category.Z_LAYER
-    ]
-    per_tile_properties = [
-        column
-        for column, (category, _) in PLOT_INSTRUCTIONS.items()
-        if category == Category.PER_TILE
-    ]
-
     tap_url = create_tap_link(render_request, stack)
 
     plotted_attributes: list[tuple[str, Path]] = []
+    sorted_data = dataframe.sort_values(by=["tile_x", "tile_y", "z"])
+    for attribute, (category, _) in PLOT_INSTRUCTIONS.items():
+        if category not in (Category.Z_LAYER, Category.PER_TILE):
+            continue
 
-    for attribute in z_layer_properties:
+        # Extract data for the attribute
         if attribute not in dataframe.columns:
             continue
-        attribute_frame = dataframe[["z", attribute]].dropna().sort_values(by="z")
-        if attribute_frame.empty:
-            logger.info("No data to plot for attribute %s", attribute)
-            continue
 
+        # Create plot with neuroglancer links on click
+        layout = plot_values_over_z(sorted_data, attribute, tap_url, category == Category.PER_TILE)
+
+        # Save plot to HTML file
+        output_path = output_dir / f"{attribute}_over_z.html"
+        output_file(str(output_path), title=attribute)
+        save(layout)
+        logger.info("Wrote %s", output_path)
+        plotted_attributes.append((attribute, output_path))
+
+    return plotted_attributes
+
+
+def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_tile: bool) -> Column:
+    """Placeholder for future plotting function."""
+    # Extract data for the attribute
+    data = data[["tile_x", "tile_y", "z", attribute]]
+    grouped_by_tile = list(data.dropna().groupby(["tile_x", "tile_y"]))
+
+    if per_tile:
+        plot_specs = [
+            (f"Tile x={tile_x}, y={tile_y}", group)
+            for (tile_x, tile_y), group in grouped_by_tile
+        ]
+    else:
+        first_group = grouped_by_tile[0][1]
+        plot_specs = [("", first_group)]
+
+    figures = []
+    for title, attribute_frame in plot_specs:
+        # Determine axes ranges
         z_values = attribute_frame["z"].tolist()
         attr_values = attribute_frame[attribute].tolist()
-        if not z_values or not attr_values:
-            logger.info("Skipping attribute %s due to missing values", attribute)
-            continue
-
-        # Determine axes ranges
         x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
         y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
 
         # Create plot with neuroglancer links on click
         tooltips = [("z", "@z"), ("value", "@value")]
-        plot = figure(
-            title=attribute,
+        fig = figure(
+            title=title,
             x_axis_label="z",
             y_axis_label=attribute,
             tooltips=tooltips,
@@ -314,12 +329,9 @@ def generate_plots(
             x_range=Range1d(x_min, x_max),
             y_range=Range1d(y_min, y_max),
         )
-        tap_tool = plot.select_one(TapTool)
-        tap_tool.callback = OpenURL(url=tap_url)
-
         # Scatter plot of data
         source = ColumnDataSource({"z": z_values, "value": attr_values})
-        plot.circle(
+        circle_renderer = fig.circle(
             source=source,
             x="z",
             y="value",
@@ -328,6 +340,12 @@ def generate_plots(
             fill_alpha=0.6
         )
 
+        # Add clickable links to neuroglancer (only for the circles)
+        tap_tool = fig.select_one(TapTool)
+        if tap_tool is not None:
+            tap_tool.callback = OpenURL(url=tap_url)
+            tap_tool.renderers = [circle_renderer]
+
         # Add robust linear regression line
         if len(z_values) >= 2:
             slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
@@ -335,7 +353,7 @@ def generate_plots(
             regression_y = [slope * x + intercept for x in regression_x]
             regression_source = ColumnDataSource({"z": regression_x, "value": regression_y})
 
-            plot.line(
+            fig.line(
                 source=regression_source,
                 x="z",
                 y="value",
@@ -344,127 +362,17 @@ def generate_plots(
                 legend_label=f"Linear regression: y={slope:.3f}x+{intercept:.3f}",
             )
 
-        if plot.legend:
-            plot.legend.location = "top_left"
-            plot.legend.click_policy = "hide"
+        if fig.legend:
+            fig.legend.location = "top_left"
+            fig.legend.click_policy = "hide"
 
-        # Save plot to HTML file
-        output_path = output_dir / f"{attribute}_over_z.html"
-        output_file(str(output_path), title=attribute)
-        save(plot)
-        logger.info("Wrote %s", output_path)
-        plotted_attributes.append((attribute, output_path))
+        figures.append(fig)
 
-    for attribute in per_tile_properties:
-        required_columns = {"z", "tile_x", "tile_y", attribute}
-        if not required_columns.issubset(dataframe.columns):
-            missing = required_columns - set(dataframe.columns)
-            logger.info(
-                "Skipping per-tile plot for %s; missing columns: %s",
-                attribute,
-                ", ".join(sorted(missing)),
-            )
-            continue
-
-        attribute_frame = (
-            dataframe[list(required_columns)]
-            .dropna()
-            .sort_values(by=["tile_x", "tile_y", "z"])
-        )
-        if attribute_frame.empty:
-            logger.info("No data to plot for per-tile attribute %s", attribute)
-            continue
-
-        grouped_by_tile = list(attribute_frame.groupby(["tile_x", "tile_y"]))
-        if not grouped_by_tile:
-            logger.info("No tile groups found for attribute %s", attribute)
-            continue
-
-        figures = []
-        for (tile_x, tile_y), group in grouped_by_tile:
-            series = group.groupby("z", as_index=False).first().sort_values("z")
-            if series.empty:
-                continue
-
-            z_values = series["z"].tolist()
-            attr_values = series[attribute].tolist()
-            if not z_values or not attr_values:
-                continue
-
-            tile_label = f"{tile_x}-{tile_y}"
-            x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
-            y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
-            tooltips = [("z", "@z"), ("value", "@value")]
-            fig = figure(
-                title=f"Tile {tile_label}",
-                x_axis_label="z",
-                y_axis_label=attribute,
-                tooltips=tooltips,
-                tools="tap,pan,box_zoom,wheel_zoom,save,reset",
-                plot_width=2400,
-                plot_height=320,
-                x_range=Range1d(x_min, x_max),
-                y_range=Range1d(y_min, y_max),
-            )
-            tap_tool = fig.select_one(TapTool)
-            if tap_tool is not None:
-                tap_tool.callback = OpenURL(url=tap_url)
-
-            source = ColumnDataSource(
-                {
-                    "z": z_values,
-                    "value": attr_values,
-                }
-            )
-
-            fig.line(
-                source=source,
-                x="z",
-                y="value",
-                line_width=2,
-                alpha=0.6,
-            )
-            fig.circle(
-                source=source,
-                x="z",
-                y="value",
-                size=5,
-                alpha=0.6,
-            )
-
-            if len(z_values) >= 2:
-                slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
-                regression_x = [z_values[0], z_values[-1]]
-                regression_y = [slope * x + intercept for x in regression_x]
-                regression_source = ColumnDataSource(
-                    {"z": regression_x, "value": regression_y}
-                )
-                fig.line(
-                    source=regression_source,
-                    x="z",
-                    y="value",
-                    line_width=1,
-                    line_dash="dashed",
-                )
-
-            figures.append(fig)
-
-        if not figures:
-            logger.info("All per-tile groups empty for attribute %s", attribute)
-            continue
-
-        layout = column(
-            Div(text=f"<h1>{html.escape(attribute)} (per tile)</h1>"),
-            *figures,
-            sizing_mode="stretch_width",
-        )
-        output_path = output_dir / f"{attribute}_per_tile_over_z.html"
-        output_file(str(output_path), title=f"{attribute} (per tile)")
-        save(layout)
-        logger.info("Wrote %s", output_path)
-        plotted_attributes.append((f"{attribute} (per tile)", output_path))
-
-    return plotted_attributes
+    return column(
+        Div(text=f"<h1>{html.escape(attribute)}</h1>"),
+        *figures,
+        sizing_mode="stretch_width",
+    )
 
 
 def create_tap_link(
