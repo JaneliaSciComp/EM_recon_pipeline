@@ -16,7 +16,6 @@ from bokeh.io import output_file, save
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, Div, OpenURL, Range1d, TapTool
 from bokeh.plotting import figure
-from bokeh.palettes import Turbo256
 
 from janelia_emrp.render.web_service_request import RenderRequest
 
@@ -145,19 +144,9 @@ PLOT_INSTRUCTIONS: dict[str, PlotSpec] = {
 }
 
 
-def _normalize_scalar(value: Any) -> Any:
-    """Convert numpy/pandas scalar types to Python scalars when possible."""
-    if hasattr(value, "item"):
-        try:
-            return value.item()
-        except Exception:  # pragma: no cover - defensive fallback
-            return value
-    return value
-
-
 def _format_property_value(value: Any, unit: str = "") -> str:
     """Human-readable string for values that may be numeric or textual."""
-    normalized = _normalize_scalar(value)
+    normalized = value.item() if hasattr(value, "item") else value
     if isinstance(normalized, float):
         if pd.isna(normalized):
             rendered = "nan"
@@ -167,17 +156,6 @@ def _format_property_value(value: Any, unit: str = "") -> str:
         rendered = str(normalized)
 
     return f"{rendered} {unit}".rstrip()
-
-
-def _color_for_index(index: int, total: int) -> str:
-    """Pick an aesthetically spaced color for overlay plots."""
-    if total <= 0:
-        total = 1
-    if total == 1:
-        return Turbo256[128]
-    palette_size = len(Turbo256) - 1
-    position = int(round(index * palette_size / (total - 1)))
-    return Turbo256[position]
 
 
 def fetch_tiles(render_request: RenderRequest, stack: str) -> list[Tile]:
@@ -396,7 +374,7 @@ def generate_plots(
             continue
 
         figures = []
-        for idx, ((tile_x, tile_y), group) in enumerate(grouped_by_tile):
+        for (tile_x, tile_y), group in grouped_by_tile:
             series = group.groupby("z", as_index=False).first().sort_values("z")
             if series.empty:
                 continue
@@ -407,7 +385,6 @@ def generate_plots(
                 continue
 
             tile_label = f"{tile_x}-{tile_y}"
-            color = _color_for_index(idx, len(grouped_by_tile))
             x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
             y_min, y_max = range_with_padding(attr_values, padding_fraction=0.05)
             tooltips = [("z", "@z"), ("value", "@value")]
@@ -438,7 +415,6 @@ def generate_plots(
                 x="z",
                 y="value",
                 line_width=2,
-                line_color=color,
                 alpha=0.6,
             )
             fig.circle(
@@ -446,8 +422,6 @@ def generate_plots(
                 x="z",
                 y="value",
                 size=5,
-                line_color=color,
-                fill_color=color,
                 alpha=0.6,
             )
 
@@ -465,7 +439,6 @@ def generate_plots(
                     y="value",
                     line_width=1,
                     line_dash="dashed",
-                    line_color=color,
                 )
 
             figures.append(fig)
