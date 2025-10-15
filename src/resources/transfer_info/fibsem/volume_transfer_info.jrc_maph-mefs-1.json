@@ -48,7 +48,7 @@
         "IMPORT_H5_ALIGN_INTO_RENDER",
         "APPLY_FIBSEM_CORRECTION_TRANSFORM", "EXPORT_PREVIEW_VOLUME"
     ],
-    "cluster_job_project_for_billing": "lippincott-schwartz",
+    "cluster_job_project_for_billing": "lippincottschwartz",
     "number_of_dats_converted_per_hour": 80,
     "number_of_preview_workers": 10
 }
