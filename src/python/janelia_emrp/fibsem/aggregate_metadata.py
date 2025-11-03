@@ -546,6 +546,10 @@ def collect_constant_entries(
             normalized = value.item() if hasattr(value, "item") else value
             value_text = str(normalized)
 
+        series_unique = series.unique()
+        if len(series_unique) > 1:
+            value_text += f' 🔴 WARNING: {len(series_unique)} unique values found'
+
         entries.append((attribute, value_text))
 
     return entries
