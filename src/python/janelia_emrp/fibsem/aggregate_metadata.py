@@ -33,110 +33,110 @@ class Category(str, Enum):
     PER_TILE = "per_tile"        # Plot per tile (tile_x, tile_y)
 
 
-PLOT_INSTRUCTIONS: dict[str, tuple[Category, str]] = {
-    "z": (Category.IGNORED, ""),
-    "tile_x": (Category.IGNORED, ""),
-    "tile_y": (Category.IGNORED, ""),
-    "AI1": (Category.IGNORED, ""),
-    "AI2": (Category.IGNORED, ""),
-    "AI3": (Category.IGNORED, ""),
-    "AI4": (Category.IGNORED, ""),
-    "BeamDump1I": (Category.Z_LAYER, ""),
-    "BeamDump2I": (Category.Z_LAYER, ""),
-    "BrightnessA": (Category.CONSTANT, ""),
-    "BrightnessB": (Category.CONSTANT, ""),
-    "ChamVac": (Category.PER_TILE, ""),
-    "ChanNum": (Category.IGNORED, ""),
-    "ContrastA": (Category.CONSTANT, ""),
-    "ContrastB": (Category.CONSTANT, ""),
-    "DecimatingFactor": (Category.IGNORED, ""),
-    "DetA": (Category.CONSTANT, ""),
-    "DetB": (Category.CONSTANT, ""),
-    "DetC": (Category.IGNORED, ""),
-    "DetD": (Category.IGNORED, ""),
-    "Detmax": (Category.IGNORED, ""),
-    "Detmin": (Category.IGNORED, ""),
-    "EHT": (Category.CONSTANT, ""),
-    "EightBit": (Category.CONSTANT, ""),
-    "FIBAlnX": (Category.Z_LAYER, ""),
-    "FIBAlnY": (Category.Z_LAYER, ""),
-    "FIBCurr": (Category.PER_TILE, ""),
-    "FIBFOV": (Category.CONSTANT, ""),
-    "FIBFocus": (Category.Z_LAYER, ""),
-    "FIBProb": (Category.CONSTANT, ""),
-    "FIBRot": (Category.CONSTANT, ""),
-    "FIBShiftX": (Category.Z_LAYER, ""),
-    "FIBShiftY": (Category.Z_LAYER, ""),
-    "FIBSliceNum": (Category.IGNORED, ""),
-    "FIBSpecimenI": (Category.IGNORED, ""),
-    "FIBStiX": (Category.Z_LAYER, ""),
-    "FIBStiY": (Category.Z_LAYER, ""),
-    "FaradayCupI": (Category.Z_LAYER, ""),
-    "FileLength": (Category.IGNORED, ""),
-    "FileMagicNum": (Category.IGNORED, ""),
-    "FileType": (Category.IGNORED, ""),
-    "FileVersion": (Category.IGNORED, ""),
-    "FirstX": (Category.IGNORED, ""),
-    "FirstY": (Category.IGNORED, ""),
-    "FocusIndex": (Category.PER_TILE, ""),
-    "FramelineRampdownRatio": (Category.IGNORED, ""),
-    "GunVac": (Category.Z_LAYER, ""),
-    "HighCurrent": (Category.IGNORED, ""),
-    "MachineID": (Category.CONSTANT, ""),
-    "Mag": (Category.CONSTANT, ""),
-    "MillingI": (Category.Z_LAYER, ""),
-    "MillingLineTime": (Category.Z_LAYER, ""),
-    "MillingLinesPerImage": (Category.CONSTANT, ""),
-    "MillingPIDD": (Category.IGNORED, ""),
-    "MillingPIDI": (Category.IGNORED, ""),
-    "MillingPIDMeasured": (Category.IGNORED, ""),
-    "MillingPIDOn": (Category.IGNORED, ""),
-    "MillingPIDP": (Category.IGNORED, ""),
-    "MillingPIDTarget": (Category.IGNORED, ""),
-    "MillingPIDTargetSlope": (Category.IGNORED, ""),
-    "MillingULAng": (Category.IGNORED, ""),
-    "MillingURAng": (Category.IGNORED, ""),
-    "MillingXResolution": (Category.CONSTANT, ""),
-    "MillingXSize": (Category.CONSTANT, ""),
-    "MillingYResolution": (Category.CONSTANT, ""),
-    "MillingYSize": (Category.CONSTANT, ""),
-    "MillingYVoltage": (Category.Z_LAYER, ""),
-    "Mode": (Category.IGNORED, ""),
-    "Notes": (Category.CONSTANT, ""),
-    "Oversampling": (Category.CONSTANT, ""),
-    "PixelSize": (Category.CONSTANT, ""),
-    "Restart": (Category.Z_LAYER, ""),
-    "SEMAlnX": (Category.IGNORED, ""),
-    "SEMAlnY": (Category.IGNORED, ""),
-    "SEMApr": (Category.CONSTANT, ""),
-    "SEMCurr": (Category.CONSTANT, ""),
-    "SEMRot": (Category.CONSTANT, ""),
-    "SEMShiftX": (Category.CONSTANT, ""),
-    "SEMShiftY": (Category.CONSTANT, ""),
-    "SEMSpecimenI": (Category.IGNORED, ""),
-    "SEMSpecimenICurrent": (Category.PER_TILE, ""),
-    "SEMStiX": (Category.PER_TILE, ""),
-    "SEMStiY": (Category.PER_TILE, ""),
-    "SWdate": (Category.IGNORED, ""),
-    "SampleID": (Category.CONSTANT, ""),
-    "Scaling": (Category.IGNORED, ""),
-    "ScanRate": (Category.Z_LAYER, ""),
-    "StageM": (Category.IGNORED, ""),
-    "StageMove": (Category.IGNORED, ""),
-    "StageR": (Category.IGNORED, ""),
-    "StageT": (Category.IGNORED, ""),
-    "StageX": (Category.Z_LAYER, ""),
-    "StageY": (Category.Z_LAYER, ""),
-    "StageZ": (Category.Z_LAYER, ""),
-    "Temperature": (Category.Z_LAYER, ""),
-    "TimeStep": (Category.IGNORED, ""),
-    "WD": (Category.PER_TILE, ""),
-    "XResolution": (Category.Z_LAYER, ""),
-    "Xmax": (Category.IGNORED, ""),
-    "Xmin": (Category.IGNORED, ""),
-    "YResolution": (Category.Z_LAYER, ""),
-    "ZeissScanSpeed": (Category.CONSTANT, ""),
-    "dat_file_name": (Category.IGNORED, ""),
+PLOT_CATEGORIES: dict[str, Category] = {
+    "z": Category.IGNORED,
+    "tile_x": Category.IGNORED,
+    "tile_y": Category.IGNORED,
+    "AI1": Category.IGNORED,
+    "AI2": Category.IGNORED,
+    "AI3": Category.IGNORED,
+    "AI4": Category.IGNORED,
+    "BeamDump1I": Category.Z_LAYER,
+    "BeamDump2I": Category.Z_LAYER,
+    "BrightnessA": Category.CONSTANT,
+    "BrightnessB": Category.CONSTANT,
+    "ChamVac": Category.PER_TILE,
+    "ChanNum": Category.IGNORED,
+    "ContrastA": Category.CONSTANT,
+    "ContrastB": Category.CONSTANT,
+    "DecimatingFactor": Category.IGNORED,
+    "DetA": Category.CONSTANT,
+    "DetB": Category.CONSTANT,
+    "DetC": Category.IGNORED,
+    "DetD": Category.IGNORED,
+    "Detmax": Category.IGNORED,
+    "Detmin": Category.IGNORED,
+    "EHT": Category.CONSTANT,
+    "EightBit": Category.CONSTANT,
+    "FIBAlnX": Category.Z_LAYER,
+    "FIBAlnY": Category.Z_LAYER,
+    "FIBCurr": Category.PER_TILE,
+    "FIBFOV": Category.CONSTANT,
+    "FIBFocus": Category.Z_LAYER,
+    "FIBProb": Category.CONSTANT,
+    "FIBRot": Category.CONSTANT,
+    "FIBShiftX": Category.Z_LAYER,
+    "FIBShiftY": Category.Z_LAYER,
+    "FIBSliceNum": Category.IGNORED,
+    "FIBSpecimenI": Category.IGNORED,
+    "FIBStiX": Category.Z_LAYER,
+    "FIBStiY": Category.Z_LAYER,
+    "FaradayCupI": Category.Z_LAYER,
+    "FileLength": Category.IGNORED,
+    "FileMagicNum": Category.IGNORED,
+    "FileType": Category.IGNORED,
+    "FileVersion": Category.IGNORED,
+    "FirstX": Category.IGNORED,
+    "FirstY": Category.IGNORED,
+    "FocusIndex": Category.PER_TILE,
+    "FramelineRampdownRatio": Category.IGNORED,
+    "GunVac": Category.Z_LAYER,
+    "HighCurrent": Category.IGNORED,
+    "MachineID": Category.CONSTANT,
+    "Mag": Category.CONSTANT,
+    "MillingI": Category.Z_LAYER,
+    "MillingLineTime": Category.Z_LAYER,
+    "MillingLinesPerImage": Category.CONSTANT,
+    "MillingPIDD": Category.IGNORED,
+    "MillingPIDI": Category.IGNORED,
+    "MillingPIDMeasured": Category.IGNORED,
+    "MillingPIDOn": Category.IGNORED,
+    "MillingPIDP": Category.IGNORED,
+    "MillingPIDTarget": Category.IGNORED,
+    "MillingPIDTargetSlope": Category.IGNORED,
+    "MillingULAng": Category.IGNORED,
+    "MillingURAng": Category.IGNORED,
+    "MillingXResolution": Category.CONSTANT,
+    "MillingXSize": Category.CONSTANT,
+    "MillingYResolution": Category.CONSTANT,
+    "MillingYSize": Category.CONSTANT,
+    "MillingYVoltage": Category.Z_LAYER,
+    "Mode": Category.IGNORED,
+    "Notes": Category.CONSTANT,
+    "Oversampling": Category.CONSTANT,
+    "PixelSize": Category.CONSTANT,
+    "Restart": Category.Z_LAYER,
+    "SEMAlnX": Category.IGNORED,
+    "SEMAlnY": Category.IGNORED,
+    "SEMApr": Category.CONSTANT,
+    "SEMCurr": Category.CONSTANT,
+    "SEMRot": Category.CONSTANT,
+    "SEMShiftX": Category.CONSTANT,
+    "SEMShiftY": Category.CONSTANT,
+    "SEMSpecimenI": Category.IGNORED,
+    "SEMSpecimenICurrent": Category.PER_TILE,
+    "SEMStiX": Category.PER_TILE,
+    "SEMStiY": Category.PER_TILE,
+    "SWdate": Category.IGNORED,
+    "SampleID": Category.CONSTANT,
+    "Scaling": Category.IGNORED,
+    "ScanRate": Category.Z_LAYER,
+    "StageM": Category.IGNORED,
+    "StageMove": Category.IGNORED,
+    "StageR": Category.IGNORED,
+    "StageT": Category.IGNORED,
+    "StageX": Category.Z_LAYER,
+    "StageY": Category.Z_LAYER,
+    "StageZ": Category.Z_LAYER,
+    "Temperature": Category.Z_LAYER,
+    "TimeStep": Category.IGNORED,
+    "WD": Category.PER_TILE,
+    "XResolution": Category.Z_LAYER,
+    "Xmax": Category.IGNORED,
+    "Xmin": Category.IGNORED,
+    "YResolution": Category.Z_LAYER,
+    "ZeissScanSpeed": Category.CONSTANT,
+    "dat_file_name": Category.IGNORED,
 }
 
 
@@ -275,7 +275,7 @@ def extract_attributes_of_interest(all_attributes: dict[str, Any]) -> dict[str, 
 
     # Extract all non-ignored attributes and convert to float if possible
     for key, value in all_attributes.items():
-        category, _ = PLOT_INSTRUCTIONS.get(key, (Category.IGNORED, ""))
+        category = PLOT_CATEGORIES.get(key, Category.IGNORED)
         if category == Category.IGNORED:
             continue
 
@@ -296,7 +296,7 @@ def generate_plots(
 
     plotted_attributes: list[tuple[str, Path]] = []
     sorted_data = dataframe.sort_values(by=["tile_x", "tile_y", "z"])
-    for attribute, (category, _) in PLOT_INSTRUCTIONS.items():
+    for attribute, category in PLOT_CATEGORIES.items():
         if category not in (Category.Z_LAYER, Category.PER_TILE):
             continue
 
@@ -459,7 +459,7 @@ def create_landing_page(
     """Write an HTML landing page summarizing constants and linking to plots."""
     constant_properties = [
         column
-        for column, (category, _) in PLOT_INSTRUCTIONS.items()
+        for column, category in PLOT_CATEGORIES.items()
         if category == Category.CONSTANT
     ]
     constant_entries = collect_constant_entries(dataframe, constant_properties)
@@ -538,22 +538,13 @@ def collect_constant_entries(
         if attribute not in dataframe.columns:
             continue
 
-        _, unit = PLOT_INSTRUCTIONS.get(attribute, (Category.IGNORED, ""))
         series = dataframe[attribute].dropna()
         if series.empty:
             value_text = "N/A"
         else:
             value = series.iloc[0]
             normalized = value.item() if hasattr(value, "item") else value
-            if isinstance(normalized, float):
-                if pd.isna(normalized):
-                    rendered = "nan"
-                else:
-                    rendered = f"{normalized:.6g}"
-            else:
-                rendered = str(normalized)
-
-            value_text = f"{rendered} {unit}".rstrip()
+            value_text = str(normalized)
 
         entries.append((attribute, value_text))
 
