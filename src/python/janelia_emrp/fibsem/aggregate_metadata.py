@@ -2,6 +2,7 @@ import argparse
 from enum import Enum
 import html
 import logging
+import warnings
 import json
 from collections import namedtuple
 from pathlib import Path
@@ -10,6 +11,8 @@ import urllib.parse as urlparse
 
 import h5py
 import pandas as pd
+import dask.bag as db
+from dask.distributed import Client, LocalCluster
 from bokeh.io import output_file, save
 from bokeh.layouts import column, Column
 from bokeh.models import ColumnDataSource, Div, LinearAxis, OpenURL, Range1d, TapTool
@@ -179,6 +182,12 @@ def main() -> None:
         default=".",
         help="Directory where HTML files for plots will be written.",
     )
+    parser.add_argument(
+        "--n-workers",
+        default=1,
+        type=int,
+        help="Number of worker threads to use for fetching tiles.",
+    )
     args = parser.parse_args()
 
     # Get tile specs for the stack
@@ -187,12 +196,17 @@ def main() -> None:
         owner=args.owner,
         project=args.project,
     )
-    tiles = fetch_tiles(render_request, args.stack)
-    logger.info("Fetched %d tiles for stack %s", len(tiles), args.stack)
 
-    # Load and aggregate metadata from the HDF5 datasets
-    metadata = aggregate_metadata(tiles)
-    logger.info("Aggregated metadata for %d tiles", len(metadata))
+    cluster_args = {
+        "n_workers": args.n_workers,
+        "processes": args.n_workers > 1,
+        "threads_per_worker": 1,
+    }
+
+    with LocalCluster(**cluster_args) as cluster, Client(cluster):
+        # Load and aggregate metadata from the HDF5 datasets
+        metadata = aggregate_metadata(render_request, args.stack)
+        logger.info("Aggregated metadata for %d tiles", len(metadata))
 
     # Generate plots for selected attributes
     output_dir = Path(args.output_dir)
@@ -213,45 +227,57 @@ def main() -> None:
     logger.info("Wrote landing page to %s", output_dir / "index.html")
 
 
-def fetch_tiles(render_request: RenderRequest, stack: str) -> list[Tile]:
-    """Load tile specs for the stack and build lightweight descriptors."""
+def aggregate_metadata(
+    render_request: RenderRequest, stack: str
+) -> pd.DataFrame:
+    """Aggregate metadata from HDF5 datasets into a DataFrame."""
     # Load all z values for the stack
-    z_values = render_request.get_z_values(stack)
+    z_values = db.from_sequence(render_request.get_z_values(stack))
+    tile_specs = z_values.map(
+        lambda z: _request_tile_specs(render_request, stack, z)
+    ).flatten()
+    metadata = tile_specs.map(_load_metadata_from_tile)
 
-    # Request tile specs for each z value
+    return metadata.to_dataframe().compute()
+
+
+def _request_tile_specs(
+    render_request: RenderRequest, stack: str, z: int
+) -> list[Tile]:
+    """Request tile specs for a given z and return a list of Tiles for that z."""
+    # We use an old version of dask that triggers FutureWarnings about iteritems deprecation
+    warnings.filterwarnings(
+        "ignore", category=FutureWarning, message="iteritems is deprecated"
+    )
+
+    # Fetch resolved tiles for this z
+    resolved_tiles = render_request.get_resolved_tiles_for_z(stack, z)
     tiles = []
-    for z in z_values:
-        resolved_tiles = render_request.get_resolved_tiles_for_z(stack, z)
-        for tile_spec in resolved_tiles.get("tileIdToSpecMap", {}).values():
-            try:
-                tile = Tile(
-                    tile_id=tile_spec["tileId"],
-                    z=z,
-                    image_url=tile_spec["mipmapLevels"]["0"]["imageUrl"],
-                )
-            except KeyError as exc:
-                logger.warning("Missing expected field in tile spec at z=%s: %s", z, exc)
-                continue
+    for tile_spec in resolved_tiles.get("tileIdToSpecMap", {}).values():
+        try:
+            tile = Tile(
+                tile_id=tile_spec["tileId"],
+                z=z,
+                image_url=tile_spec["mipmapLevels"]["0"]["imageUrl"],
+            )
+        except KeyError as exc:
+            logger.warning("Missing expected field in tile spec at z=%s: %s", z, exc)
+            continue
 
-            tiles.append(tile)
+        tiles.append(tile)
 
     return tiles
 
 
-def aggregate_metadata(tiles: list[Tile]) -> None:
-    """Aggregate metadata from HDF5 datasets into a DataFrame."""
-    metadata_rows = []
-    for tile in tiles:
-        try:
-            metadata = load_hdf5_metadata(tile.image_url)
-            metadata["z"] = tile.z
-        except (RuntimeError, FileNotFoundError, KeyError, ValueError, OSError) as exc:
-            logger.warning("skipping tile %s: %s", tile.tile_id, exc)
-            continue
-
-        metadata_rows.append(metadata)
-
-    return pd.DataFrame(metadata_rows)
+def _load_metadata_from_tile(tile: Tile) -> dict:
+    """Load metadata from a single tile's HDF5 dataset."""
+    try:
+        metadata = load_hdf5_metadata(tile.image_url)
+        metadata["z"] = tile.z
+    except (RuntimeError, FileNotFoundError, KeyError, ValueError, OSError) as exc:
+        logger.warning("skipping tile %s: %s", tile.tile_id, exc)
+        return {}
+    return metadata
 
 
 def load_hdf5_metadata(image_url: str) -> dict[str, Union[int, float]]:
