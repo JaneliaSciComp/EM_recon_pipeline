@@ -464,7 +464,7 @@ def create_landing_page(
     ]
     constant_entries = collect_constant_entries(dataframe, constant_properties)
     output_path = output_path / "index.html"
-    title = "Metadata overview"
+    title = render_request.project + " metadata overview"
     owner = html.escape(render_request.owner)
     project = html.escape(render_request.project)
     stack_name = html.escape(stack)
