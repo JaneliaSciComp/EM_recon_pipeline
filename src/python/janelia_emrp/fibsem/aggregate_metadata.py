@@ -10,10 +10,9 @@ import urllib.parse as urlparse
 
 import h5py
 import pandas as pd
-from scipy import stats
 from bokeh.io import output_file, save
 from bokeh.layouts import column, Column
-from bokeh.models import ColumnDataSource, Div, OpenURL, Range1d, TapTool
+from bokeh.models import ColumnDataSource, Div, LinearAxis, OpenURL, Range1d, TapTool
 from bokeh.plotting import figure
 
 from janelia_emrp.render.web_service_request import RenderRequest
@@ -140,6 +139,16 @@ PLOT_CATEGORIES: dict[str, Category] = {
 }
 
 
+PAIRS_TO_PLOT = [
+    # (attribute_x, attribute_y)
+    ("BeamDump1I", "BeamDump2I"),
+    ("FIBAlnX", "FIBAlnY"),
+    ("FIBStiX", "FIBStiY"),
+    ("SEMStiX", "SEMStiY"),
+    ("XResolution", "YResolution"),
+]
+
+
 def main() -> None:
     """Main entry point for CLI."""
     parser = argparse.ArgumentParser(
@@ -187,11 +196,20 @@ def main() -> None:
 
     # Generate plots for selected attributes
     output_dir = Path(args.output_dir)
-    plotted_attributes = generate_plots(render_request, args.stack, metadata, output_dir)
+    plotted_attributes, paired_plots = generate_plots(
+        render_request, args.stack, metadata, output_dir
+    )
     logger.info("Wrote plots to %s", output_dir)
 
     # Create a landing page summarizing constants and linking to plots
-    create_landing_page(render_request, args.stack, metadata, plotted_attributes, output_dir)
+    create_landing_page(
+        render_request,
+        args.stack,
+        metadata,
+        plotted_attributes,
+        paired_plots,
+        output_dir,
+    )
     logger.info("Wrote landing page to %s", output_dir / "index.html")
 
 
@@ -289,12 +307,13 @@ def extract_attributes_of_interest(all_attributes: dict[str, Any]) -> dict[str, 
 
 def generate_plots(
     render_request: RenderRequest, stack: str, dataframe: pd.DataFrame, output_dir: Path
-) -> None:
+) -> tuple[list[tuple[str, Path]], list[tuple[str, Path]]]:
     """Generate Bokeh plots for selected attributes over z."""
     output_dir.mkdir(parents=True, exist_ok=True)
     tap_url = create_tap_link(render_request, stack)
 
     plotted_attributes: list[tuple[str, Path]] = []
+    paired_plots: list[tuple[str, Path]] = []
     sorted_data = dataframe.sort_values(by=["tile_x", "tile_y", "z"])
     for attribute, category in PLOT_CATEGORIES.items():
         if category not in (Category.Z_LAYER, Category.PER_TILE):
@@ -314,7 +333,26 @@ def generate_plots(
         logger.info("Wrote %s", output_path)
         plotted_attributes.append((attribute, output_path))
 
-    return plotted_attributes
+    for attribute_x, attribute_y in PAIRS_TO_PLOT:
+        if attribute_x not in dataframe.columns or attribute_y not in dataframe.columns:
+            continue
+
+        category_x = PLOT_CATEGORIES.get(attribute_x, Category.IGNORED)
+        category_y = PLOT_CATEGORIES.get(attribute_y, Category.IGNORED)
+        if category_x == Category.IGNORED or category_y == Category.IGNORED:
+            continue
+
+        per_tile = Category.PER_TILE in (category_x, category_y)
+        layout = plot_attribute_pair_over_z(
+            sorted_data, attribute_x, attribute_y, tap_url, per_tile
+        )
+        output_path = output_dir / f"{attribute_x}_and_{attribute_y}_over_z.html"
+        output_file(str(output_path), title=f"{attribute_x} vs {attribute_y}")
+        save(layout)
+        logger.info("Wrote %s", output_path)
+        paired_plots.append((f"{attribute_x} & {attribute_y}", output_path))
+
+    return plotted_attributes, paired_plots
 
 
 def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_tile: bool) -> Column:
@@ -353,6 +391,7 @@ def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_til
             x_range=Range1d(x_min, x_max),
             y_range=Range1d(y_min, y_max),
         )
+
         # Scatter plot of data
         source = ColumnDataSource({"z": z_values, "value": attr_values})
         circle_renderer = fig.circle(
@@ -364,7 +403,7 @@ def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_til
             fill_alpha=0.6
         )
 
-        # Add clickable links to neuroglancer (only for the circles)
+        # Add clickable links to neuroglancer
         tap_tool = fig.select_one(TapTool)
         if tap_tool is not None:
             tap_tool.callback = OpenURL(url=tap_url)
@@ -374,6 +413,103 @@ def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_til
 
     return column(
         Div(text=f"<h1>{html.escape(attribute)}</h1>"),
+        *figures,
+        sizing_mode="stretch_width",
+    )
+
+
+def plot_attribute_pair_over_z(
+    data: pd.DataFrame,
+    attribute_x: str,
+    attribute_y: str,
+    tap_url: str,
+    per_tile: bool,
+) -> Column:
+    """Create paired attribute plots with synchronized dual y-axes."""
+    required_columns = ["tile_x", "tile_y", "z", attribute_x, attribute_y]
+    title = f"<h1>{html.escape(attribute_x)} &amp; {html.escape(attribute_y)}</h1>"
+    if not all(column in data.columns for column in required_columns):
+        return column(Div(text=title))
+
+    pair_data = data[required_columns].dropna(subset=[attribute_x, attribute_y])
+    grouped_by_tile = list(pair_data.groupby(["tile_x", "tile_y"]))
+
+    if not grouped_by_tile:
+        return column(Div(text=title + "<p>No data available.</p>"))
+
+    if per_tile:
+        plot_specs = [
+            (f"Tile x={tile_x}, y={tile_y}", group)
+            for (tile_x, tile_y), group in grouped_by_tile
+        ]
+    else:
+        first_group = grouped_by_tile[0][1]
+        plot_specs = [("", first_group)]
+
+    figures = []
+    for title, attribute_frame in plot_specs:
+        # Determine axes ranges
+        z_values = attribute_frame["z"].tolist()
+        values_x = attribute_frame[attribute_x].tolist()
+        values_y = attribute_frame[attribute_y].tolist()
+        combined_values = values_x + values_y
+        x_min, x_max = range_with_padding(z_values, padding_fraction=0.05)
+        y_min, y_max = range_with_padding(combined_values, padding_fraction=0.05)
+
+        # Create plot with neuroglancer links on click
+        fig = figure(
+            title=title,
+            x_axis_label="z",
+            y_axis_label=attribute_x,
+            tooltips=[("z", "@z"), ("value", "@value")],
+            tools="tap,pan,box_zoom,wheel_zoom,save,reset",
+            plot_width=2400,
+            plot_height=400,
+            x_range=Range1d(x_min, x_max),
+            y_range=Range1d(y_min, y_max),
+        )
+
+        # Scatter plot of data (left axis)
+        left_source = ColumnDataSource({"z": z_values, "value": values_x})
+        left_renderer = fig.circle(
+            source=left_source,
+            x="z",
+            y="value",
+            size=6,
+            line_color="navy",
+            fill_color="navy",
+            fill_alpha=0.6,
+            legend_label=attribute_x,
+        )
+
+        # Scatter plot of data (right axis)
+        right_range_name = "right_axis"
+        fig.extra_y_ranges = {right_range_name: Range1d(y_min, y_max)}
+        fig.add_layout(LinearAxis(y_range_name=right_range_name, axis_label=attribute_y), "right")
+        right_source = ColumnDataSource({"z": z_values, "value": values_y})
+        right_renderer = fig.square(
+            source=right_source,
+            x="z",
+            y="value",
+            size=6,
+            line_color="firebrick",
+            fill_color="firebrick",
+            fill_alpha=0.6,
+            y_range_name=right_range_name,
+            legend_label=attribute_y,
+        )
+
+        # Add clickable links to neuroglancer
+        tap_tool = fig.select_one(TapTool)
+        if tap_tool is not None:
+            tap_tool.callback = OpenURL(url=tap_url)
+            tap_tool.renderers = [left_renderer, right_renderer]
+
+        fig.legend.location = "top_left"
+        figures.append(fig)
+
+    return column(
+        Div(text=f"<h1>{title}</h1>"),
         *figures,
         sizing_mode="stretch_width",
     )
@@ -454,6 +590,7 @@ def create_landing_page(
     stack: str,
     dataframe: pd.DataFrame,
     plotted_attributes: list[tuple[str, Path]],
+    paired_plots: list[tuple[str, Path]],
     output_path: Path,
 ) -> None:
     """Write an HTML landing page summarizing constants and linking to plots."""
@@ -521,6 +658,15 @@ def create_landing_page(
         label = html.escape(attribute)
         lines.append(f'<li><a href="{href}">{label}</a></li>')
     lines.append("</ul>")
+
+    if paired_plots:
+        lines.append("<h2>Paired plots</h2>")
+        lines.append("<ul>")
+        for attribute, path in sorted(paired_plots, key=lambda item: item[0]):
+            href = html.escape(path.name)
+            label = html.escape(attribute)
+            lines.append(f'<li><a href="{href}">{label}</a></li>')
+        lines.append("</ul>")
     lines.append("</section>")
 
     lines.append("</div>")
