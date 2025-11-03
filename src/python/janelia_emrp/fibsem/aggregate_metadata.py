@@ -28,9 +28,9 @@ Tile = namedtuple("Tile", ["tile_id", "z", "image_url"])
 class Category(str, Enum):
     """Category of property for plotting purposes."""
     IGNORED = "ignored"          # Do not plot
-    CONSTANT = "constant"        # Plot as constant, no regression
-    Z_LAYER = "z_layer"          # Plot over z, with regression
-    PER_TILE = "per_tile"        # Plot per tile (tile_x, tile_y), with regression
+    CONSTANT = "constant"        # Print as constant
+    Z_LAYER = "z_layer"          # Plot over z
+    PER_TILE = "per_tile"        # Plot per tile (tile_x, tile_y)
 
 
 PLOT_INSTRUCTIONS: dict[str, tuple[Category, str]] = {
@@ -369,26 +369,6 @@ def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_til
         if tap_tool is not None:
             tap_tool.callback = OpenURL(url=tap_url)
             tap_tool.renderers = [circle_renderer]
-
-        # Add robust linear regression line
-        if len(z_values) >= 2:
-            slope, intercept, _, _ = stats.theilslopes(attr_values, z_values)
-            regression_x = [x_min, x_max]
-            regression_y = [slope * x + intercept for x in regression_x]
-            regression_source = ColumnDataSource({"z": regression_x, "value": regression_y})
-
-            fig.line(
-                source=regression_source,
-                x="z",
-                y="value",
-                line_width=2,
-                line_color="tomato",
-                legend_label=f"Linear regression: y={slope:.3g}z+{intercept:.3g}",
-            )
-
-        if fig.legend:
-            fig.legend.location = "top_left"
-            fig.legend.click_policy = "hide"
 
         figures.append(fig)
 
