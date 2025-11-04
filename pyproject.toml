@@ -17,7 +17,7 @@ packages = ["src/python/janelia_emrp"]
 [tool.hatch.metadata]
 allow-direct-references = true
 
-[tool.pixi.project]
+[tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
 
