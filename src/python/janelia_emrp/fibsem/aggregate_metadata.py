@@ -155,7 +155,7 @@ PAIRS_TO_PLOT = [
 def main() -> None:
     """Main entry point for CLI."""
     parser = argparse.ArgumentParser(
-        description="Fetch all tile specs for a render stack and print each 0th mipmap image URL."
+        description="Fetch all tile specs for a render stack and visualize the metadata."
     )
     parser.add_argument(
         "--base-data-url",
@@ -186,7 +186,7 @@ def main() -> None:
         "--n-workers",
         default=1,
         type=int,
-        help="Number of worker threads to use for fetching tiles.",
+        help="Number of worker processes to use for fetching tiles.",
     )
     args = parser.parse_args()
 
