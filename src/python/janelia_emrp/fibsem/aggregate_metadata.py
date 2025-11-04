@@ -671,7 +671,8 @@ def create_landing_page(
     )
     for attribute, value_text in constant_entries:
         lines.append(
-            f"<tr><th>{html.escape(attribute)}</th><td>{html.escape(value_text)}</td></tr>"
+            # Don't escape value_text as it may contain HTML for warnings
+            f"<tr><th>{html.escape(attribute)}</th><td>{value_text}</td></tr>"
         )
     lines.extend(["</tbody>", "</table>"])
     lines.append("</section>")
@@ -717,10 +718,14 @@ def collect_constant_entries(
             value = series.iloc[0]
             normalized = value.item() if hasattr(value, "item") else value
             value_text = str(normalized)
+        value_text = html.escape(value_text)
 
         series_unique = series.unique()
         if len(series_unique) > 1:
-            value_text += f' 🔴 WARNING: {len(series_unique)} unique values found'
+            # Warn about multiple unique values and display them in a tooltip
+            warning_text = html.escape(f"🔴 WARNING: {len(series_unique)} unique values found")
+            multiple_values = html.escape("\n".join(str(v) for v in series_unique))
+            value_text += f' <span title="{multiple_values}">{warning_text}</span>'
 
         entries.append((attribute, value_text))
 
