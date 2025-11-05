@@ -8,7 +8,7 @@
         "rows_per_z_layer": 2,
         "columns_per_z_layer": 2,
         "first_dat_name": "Merlin-6285_25-10-18_000037_0-0-0.dat",
-        "last_dat_name": null,
+        "last_dat_name": "Merlin-6285_25-11-04_175045_0-1-1.dat",
         "dat_x_and_y_nm_per_pixel": 8,
         "dat_z_nm_per_pixel": 8,
         "dat_tile_overlap_microns": 2
