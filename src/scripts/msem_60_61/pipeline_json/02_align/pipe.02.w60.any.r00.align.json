@@ -36,7 +36,7 @@
       "iterations": [ 1000, 1000, 500, 250, 250 ],
       "maxPlateauWidth": [ 250, 250, 150, 100, 100 ],
       "maxAllowedError": 5.0,
-      "weightModificationDeciles": "50x500"
+      "weightModificationDeciles": "200"
     },
     "maxNumMatches": 0,
     "alternatingRuns": {
