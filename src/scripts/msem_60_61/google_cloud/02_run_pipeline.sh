@@ -21,7 +21,7 @@ Examples:
     $0 10.150.0.3 02_align/pipe.02.w61.any.r00.align.json 5 16 premium 5 align-w61-s070-074-r00
 
   Correct Intensity:
-    $0 10.150.0.4 03_correct_intensity/pipe.03.w61.any.r00.ic.json 200 4 standard 200 ic2d-w61-s100-109-r00 disableDynamic
+    $0 10.150.0.4 03_correct_intensity/pipe.03.w61.any.r00.ic2d.json 200 4 standard 200 ic2d-w61-s100-109-r00 disableDynamic
   "
   exit 1
 fi
