@@ -1,10 +1,10 @@
 #!/bin/bash
 
-if (( $# != 7 )); then
+if (( $# < 7 )); then
   echo "
 Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
                             <number-spark-exec-instances> <number-spark-exec-cores>
-                            <premium | standard> <max-executors> <batch-id-suffix>
+                            <premium | standard> <max-executors> <batch-id-suffix> [disableDynamic]
 
           number-spark-exec-instances must be at least 2
           number-spark-exec-cores must be 4, 8, or 16
@@ -21,7 +21,7 @@ Examples:
     $0 10.150.0.3 02_align/pipe.02.w61.any.r00.align.json 5 16 premium 5 align-w61-s070-074-r00
 
   Correct Intensity:
-    $0 10.150.0.4 03_correct_intensity/pipe.03.w61.any.r00.ic.json 150 4 standard 150 ic2d-w61-s075-079-r00
+    $0 10.150.0.4 03_correct_intensity/pipe.03.w61.any.r00.ic.json 200 4 standard 200 ic2d-w61-s100-109-r00 disableDynamic
   "
   exit 1
 fi
@@ -77,12 +77,25 @@ if (( MAX_EXECUTORS > 500 )); then
   exit 1
 fi
 
+if (( $# == 8 )); then
+  if [ "$8" == "disableDynamic" ]; then
+    DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=false"
+  else
+    echo "ERROR: when specified, eighth parameter should be 'disableDynamic' (not $8)"
+    exit 1
+  fi
+else
+  DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=true,spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
+  DYNAMIC_ALLOCATION="${DYNAMIC_ALLOCATION},spark.dynamicAllocation.executorIdleTimeout=120"       # default is 60
+  DYNAMIC_ALLOCATION="${DYNAMIC_ALLOCATION},spark.dynamicAllocation.cachedExecutorIdleTimeout=240" # default is ?
+fi
+
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
 SPARK_PROPS="spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.executor.compute.tier=${COMPUTE_TIER}"
 SPARK_PROPS="${SPARK_PROPS},spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
-SPARK_PROPS="${SPARK_PROPS},spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
+SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 #SPARK_PROPS="${SPARK_PROPS},spark.log.level.org.janelia.alignment.match=WARN"
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
