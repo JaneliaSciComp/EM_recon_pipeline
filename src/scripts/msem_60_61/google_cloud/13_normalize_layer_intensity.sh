@@ -38,7 +38,7 @@ NORMALIZED_DATASET_PATH="${N5_PATH}${NORMALIZED_DATASET}"
 gcloud storage cp "${SOURCE_PATH}/attributes.json" "${NORMALIZED_DATASET_PATH}/attributes.json"
 
 ARGV="\
---n5Path=${BASE_N5_DIR} \
+--n5Path=${N5_PATH} \
 --n5DatasetInput=${SOURCE_DATASET} \
 --n5DatasetOutput=${NORMALIZED_DATASET} \
 --factors 2,2,1"
@@ -73,10 +73,16 @@ BATCH_NAME=$(echo "norm-layer-${RUN_TIMESTAMP}-${RAW_STACK}" | sed "s/_/-/g")
 
 echo "
 Running gcloud dataproc batches submit spark with:
+  --region=us-east4
   --jars=${GS_JAR_URL}
   --class=${CLASS}
   --batch=${BATCH_NAME}
+  --version=${SPARK_VERSION}
   --properties=${SPARK_PROPS}
+  --async
+  --
+  ${ARGV}
+
 "
 
 # use --async to return immediately

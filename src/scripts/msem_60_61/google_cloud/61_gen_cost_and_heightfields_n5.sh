@@ -125,10 +125,16 @@ BATCH_NAME=$(echo "cost-${RUN_TIMESTAMP}-${RAW_STACK}" | sed "s/_/-/g")
 
 echo "
 Running gcloud dataproc batches submit spark with:
+  --region=us-east4
   --jars=${GS_JAR_URL}
   --class=${CLASS}
   --batch=${BATCH_NAME}
+  --version=${SPARK_VERSION}
   --properties=${SPARK_PROPS}
+  --async
+  --
+  ${ARGV}
+
 "
 
 # use --async to return immediately
