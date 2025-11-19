@@ -35,8 +35,6 @@ fi
 NORMALIZED_DATASET="${IC2D_DATASET_PREFIX}___norm-layer"
 NORMALIZED_DATASET_PATH="${N5_PATH}${NORMALIZED_DATASET}"
 
-gcloud storage cp "${SOURCE_PATH}/attributes.json" "${NORMALIZED_DATASET_PATH}/attributes.json"
-
 ARGV="\
 --n5Path=${N5_PATH} \
 --n5DatasetInput=${SOURCE_DATASET} \
@@ -86,6 +84,7 @@ Running gcloud dataproc batches submit spark with:
 "
 
 # use --async to return immediately
+# shellcheck disable=SC2086
 gcloud dataproc batches submit spark \
   --region=us-east4 \
   --jars=${GS_JAR_URL} \
