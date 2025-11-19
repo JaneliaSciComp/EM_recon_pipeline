@@ -2,11 +2,6 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=$(readlink -m "${0}")
-SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
-
-umask 0002
-
 if (( $# < 3 )); then
   echo """
 USAGE: $0 <number of nodes> <render project> <raw stack>
@@ -29,10 +24,10 @@ SURFACE_INIT_MAX_DELTA="0.01"      # other options: 0.2
 SURFACE_MAX_DELTA_Z="0.02"         # other options: 0.2
 
 #-----------------------------------------------------------
-N5_SAMPLE_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"
-IC2D_PATH="${N5_SAMPLE_PATH}/render/${RENDER_PROJECT}/${RAW_STACK}_gc_par_align_ic2d"
+N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"
+IC2D_PATH="${N5_PATH}/render/${RENDER_PROJECT}/${RAW_STACK}_gc_par_align_ic2d"
 
-SOURCE_PATH="${IC2D_PATH}___pixel"
+SOURCE_PATH="${IC2D_PATH}___norm-layer"
 if ! gcloud storage ls "${SOURCE_PATH}" 2>/dev/null | grep -q .; then
   echo "ERROR: source path ${SOURCE_PATH} not found"
   exit 1
@@ -63,8 +58,8 @@ SOURCE_DATASET=${SOURCE_PATH/*\/render/\/render}
 # /cost_v1/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
 COST_DATASET=${SOURCE_DATASET/\/render\//\/cost_${CH_RUN_VERSION}\/}
 
-if gcloud storage ls "${N5_SAMPLE_PATH}${COST_DATASET}" 2>/dev/null | grep -q .; then
-  echo "ERROR: ${N5_SAMPLE_PATH}${COST_DATASET} already exists"
+if gcloud storage ls "${N5_PATH}${COST_DATASET}" 2>/dev/null | grep -q .; then
+  echo "ERROR: ${N5_PATH}${COST_DATASET} already exists"
   exit 1
 fi
 
@@ -72,9 +67,9 @@ fi
 HEIGHT_FIELDS_DATASET=${SOURCE_DATASET/\/render\//\/heightfields_${CH_RUN_VERSION}\/}
 
 ARGV="\
---inputN5Path=${N5_SAMPLE_PATH} \
+--inputN5Path=${N5_PATH} \
 --inputN5Group=${SOURCE_DATASET}/s0 \
---outputN5Path=${N5_SAMPLE_PATH} \
+--outputN5Path=${N5_PATH} \
 --costN5Group=${COST_DATASET} \
 --maskN5Group=${MASK_N5_GROUP} \
 --firstStepScaleNumber=1 \
@@ -99,7 +94,7 @@ ARGV="\
 --median \
 --smoothCost"
 
-echo "${ARGV}" | gcloud storage cp - "${N5_SAMPLE_PATH}${COST_DATASET}"/args.txt
+echo "${ARGV}" | gcloud storage cp - "${N5_PATH}${COST_DATASET}"/args.txt
 
 SPARK_EXEC_CORES=4
 
