@@ -1,5 +1,5 @@
 {
-    "transfer_id": "cellmap::jrc_mus_cortex-5::jeiss9.hhmi.org",
+    "transfer_id": "cellmap::jrc_mus-cortex-5::jeiss9.hhmi.org",
     "scope_data_set": {
         "host": "jeiss9.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Mouse",
@@ -14,13 +14,13 @@
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus_cortex-5/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus_cortex-5/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus_cortex-5/align",
-        "export_n5": "/nrs/cellmap/data/jrc_mus_cortex-5/jrc_mus_cortex-5.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-cortex-5/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-cortex-5/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_mus-cortex-5/align",
+        "export_n5": "/nrs/cellmap/data/jrc_mus-cortex-5/jrc_mus-cortex-5.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_mus_cortex-5/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_mus-cortex-5/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
