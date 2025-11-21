@@ -84,7 +84,7 @@ ARGV="\
 --costSteps=2,2,1 \
 --surfaceN5Output=${HEIGHT_FIELDS_DATASET} \
 --surfaceMinDistance=15 \
---surfaceMaxDistance=48 \
+--surfaceMaxDistance=78 \
 --surfaceBlockSize=1024,1024 \
 --surfaceFirstScale=8 \
 --surfaceLastScale=1 \
@@ -96,6 +96,7 @@ ARGV="\
 
 echo "${ARGV}" | gcloud storage cp - "${N5_PATH}${COST_DATASET}"/args.txt
 
+SPARK_DRIVER_CORES=16
 SPARK_EXEC_CORES=4
 
 # For standard compute tier and spark runtime, total of spark.memory.offHeap.size,
@@ -105,11 +106,13 @@ SINGLE_CORE_MB=6700 # leave room for spark.executor.memoryOverhead, 6700 + 670 =
 COMPUTE_TIER="standard"
 DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=false"
 
+SPARK_DRIVER_MEMORY_MB=$(( SPARK_DRIVER_CORES * SINGLE_CORE_MB ))
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
 SPARK_PROPS="spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.executor.compute.tier=${COMPUTE_TIER}"
 SPARK_PROPS="${SPARK_PROPS},spark.default.parallelism=240,spark.executor.instances=${N_NODES}"
-SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
+SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}m"
+SPARK_PROPS="${SPARK_PROPS},spark.driver.cores=${SPARK_DRIVER_CORES},spark.driver.memory=${SPARK_DRIVER_MEMORY_MB}m"
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 #SPARK_PROPS="${SPARK_PROPS},spark.log.level.org.janelia.alignment.match=WARN"
 
