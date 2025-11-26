@@ -2,13 +2,17 @@
 
 if (( $# < 5 )); then
   echo "
-Usage:    ./11_run_n5_export.sh <render-ws-internal-ip> <render-project> <render-stack> <max-z> <max-executors> [mask]
+Usage:    ./11_run_n5_export.sh <render-ws-internal-ip> <render-project> <render-stack> <max-z> <max-executors> [pixel | mask] [skip-timestamp]
 
           max-executors must be at least 2
 
 Examples:
 
   $0 10.150.0.4 w61_serial_100_to_109 w61_s109_r00_gc_par_align_ic2d 82 100
+
+  $0 10.150.0.4 w61_serial_080_to_089 w61_s080_r00_gc_par_align_ic2d 89 10 mask
+
+  $0 10.150.0.4 w61_serial_070_to_079 w61_s074_r00_gc_par_align_ic2d 96 50 pixel skip-timestamp
   "
   exit 1
 fi
@@ -30,11 +34,11 @@ fi
 DATASET_SUFFIX="${6:-pixel}"
 if [[ "${6}" == "mask" ]]; then
   MASK_ARG="--exportMask"
-elif (( $# >= 6 )); then
-  echo "ERROR: sixth argument, if provided, must be 'mask'"
-  exit 1
-else
+elif [[ "${DATASET_SUFFIX}" == "pixel" || -z "${6}" ]]; then
   MASK_ARG=""
+elif (( $# >= 6 )); then
+  echo "ERROR: sixth argument, if provided, must be 'pixel' or 'mask'"
+  exit 1
 fi
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
@@ -45,10 +49,21 @@ RENDER_OWNER="hess_wafers_60_61"
 N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"           # /nrs/hess/data/hess_wafers_60_61/export/hess_wafers_60_61.n5
 N5_DATASET="/render/${RENDER_PROJECT}/${STACK}___${DATASET_SUFFIX}"  # /render/w60_serial_360_to_369/w60_s360_r00_d20_gc_align___20250320_131555
 
-if gcloud storage ls "${N5_PATH}${N5_DATASET}" 2>/dev/null | grep -q .; then
-  echo "
-Note: appending run time to dataset name since ${N5_PATH}${N5_DATASET} exists"
-  N5_DATASET="${N5_DATASET}_${RUN_TIMESTAMP}"
+if (( $# >=7 )); then
+
+  if [[ "${7}" != "skip-timestamp" ]]; then
+    echo "ERROR: seventh argument, if provided, must be 'skip-timestamp'"
+    exit 1
+  fi
+
+else
+
+  if gcloud storage ls "${N5_PATH}${N5_DATASET}" 2>/dev/null | grep -q .; then
+    echo "
+  Note: appending run time to dataset name since ${N5_PATH}${N5_DATASET} exists"
+    N5_DATASET="${N5_DATASET}_${RUN_TIMESTAMP}"
+  fi
+
 fi
 
 # For standard compute tier and spark runtime, total of spark.memory.offHeap.size,
