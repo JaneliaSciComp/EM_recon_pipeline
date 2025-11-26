@@ -42,7 +42,7 @@ elif (( $# >= 6 )); then
 fi
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-BATCH_ID_SUFFIX=$(echo "${STACK}" | tr '_' '-')
+BATCH_ID_SUFFIX=$(echo "${STACK}-${DATASET_SUFFIX}" | tr '_' '-')
 SPARK_EXEC_CORES=4 # must be 4, 8, or 16
 
 RENDER_OWNER="hess_wafers_60_61"
