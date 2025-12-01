@@ -17,7 +17,7 @@ RENDER_PROJECT="${2}"
 RAW_STACK="${3}"
 
 # appended to the cost and heightfields dataset names (e.g. cost_v3)
-CH_RUN_VERSION="v1"
+CH_RUN_VERSION="v2"
 
 # values we ultimately used for wafer_53d in cost_v3:
 SURFACE_INIT_MAX_DELTA="0.01"      # other options: 0.2
