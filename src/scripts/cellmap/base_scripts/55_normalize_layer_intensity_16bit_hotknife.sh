@@ -8,12 +8,38 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh"
 
-STACK="v2_acquire_align_16bit_destreak_v3_sc"
+N_NODES="${1:-20}" # 20 11-slot nodes took 32 minutes for 6705 z layers with 2 tiles
+
+# ----------------------------------------------
+# N5 paths
+unset RENDERED_N5_PATH
+shopt -s nullglob
+DIRS=("${N5_PATH}"/*/"${RENDER_PROJECT}"/*_review/)
+shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
+DIR_COUNT=${#DIRS[@]}
+if (( DIR_COUNT == 0 )); then
+  echo "
+ERROR: no ${RENDER_PROJECT} project '_review' n5 directories (with 2,2,1 downsampling) found in ${N5_PATH}
+
+To downsample a 2,2,2 n5, copy and run /groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/scripts/cellmap/base_scripts/old/47_spark_downsample_for_review.sh
+"
+  exit 1
+elif (( DIR_COUNT == 1 )); then
+  RENDERED_N5_PATH=${DIRS[0]}
+else
+  PS3="Choose review N5 to normalize: "
+  select RENDERED_N5_PATH in "${DIRS[@]}"; do
+    break
+  done
+fi
+
+# trim trailing slash
+RENDERED_N5_PATH="${RENDERED_N5_PATH%/}" # /nrs/cellmap/data/jrc_mus-heart-6/jrc_mus-heart-6.n5/render/jrc_mus_heart_6/v4_acquire_...
+
+# identify source dataset
+SOURCE_DATASET="${RENDERED_N5_PATH#"${N5_PATH}"}"  # /render/jrc_mus_heart_6/v4_acquire_align_16bit_destreak_straight_sc___20251202_103022
 
 #-----------------------------------------------------------
-N_NODES="20" # 20 11-slot nodes took 32 minutes for 6705 z layers with 2 tiles
-SOURCE_DATASET="/render/jrc_mus_heart_4/v2_acquire_align_16bit_destreak_v3_sc___20251121_093512_review" # source needs to be 2,2,1
-
 SOURCE_PATH="${N5_PATH}${SOURCE_DATASET}"
 if [[ ! -d "${SOURCE_PATH}" ]]; then
   echo "ERROR: ${SOURCE_PATH} not found"
