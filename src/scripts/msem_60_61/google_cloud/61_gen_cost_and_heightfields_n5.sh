@@ -66,6 +66,7 @@ fi
 # /heightfields_v1/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
 HEIGHT_FIELDS_DATASET=${SOURCE_DATASET/\/render\//\/heightfields_${CH_RUN_VERSION}\/}
 
+# zero surfaceMaxDistance means use last z layer of slab - this is needed for the wafer 60 and 61 data
 ARGV="\
 --inputN5Path=${N5_PATH} \
 --inputN5Group=${SOURCE_DATASET}/s0 \
