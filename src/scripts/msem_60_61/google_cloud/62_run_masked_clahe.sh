@@ -2,23 +2,22 @@
 
 set -e
 
-if (( $# < 3 )); then
+if (( $# != 2 )); then
   echo "
-Usage:    $0 <render-ws-internal-ip> <raw-stack> <max-executors>
+Usage:    $0 <raw-stack> <max-executors>
 
           max-executors must be at least 2
 
 Examples:
 
-  $0 10.150.0.4 w61_s079_r00 100
+  $0 w61_s079_r00 100
 "
   exit 1
 fi
 
-RENDER_WS_IP="${1}"
-RAW_STACK="${2}"
+RAW_STACK="${1}"
 
-MAX_EXECUTORS="${3}"
+MAX_EXECUTORS="${2}"
 if (( MAX_EXECUTORS < 2 )); then
   echo "ERROR: max-executors must be at least 2"
   exit 1
