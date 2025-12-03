@@ -53,7 +53,7 @@ if gcloud storage ls "${N5_PATH}${CLAHE_DATASET}" 2>/dev/null | grep -q .; then
 fi
 
 # using blockFactorXY 1 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
-ARGS="\
+ARGV="\
 --n5PathInput=${N5_PATH} \
 --n5DatasetInput=${N5_DATASET} \
 --n5DatasetOutput=${CLAHE_DATASET} \
