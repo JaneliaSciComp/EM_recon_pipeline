@@ -84,6 +84,7 @@ RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 # see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/dataproc-serverless-versions
 SPARK_VERSION="1.1"
 
+CLASS="org.janelia.saalfeldlab.hotknife.SparkMaskedCLAHEMultiSEM"
 GS_JAR_URL="gs://janelia-spark-test/library/hot-knife-0.0.7-SNAPSHOT.jar"
 # HOT_KNIFE_JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.jar"
 BATCH_NAME=$(echo "clahe-${RUN_TIMESTAMP}-${RAW_STACK}" | sed "s/_/-/g")
