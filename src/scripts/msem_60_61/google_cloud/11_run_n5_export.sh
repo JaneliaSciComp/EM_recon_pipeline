@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if (( $# < 5 )); then
   echo "
 Usage:    ./11_run_n5_export.sh <render-ws-internal-ip> <render-project> <render-stack> <max-z> <max-executors> [pixel | mask] [skip-timestamp]
@@ -13,7 +15,7 @@ Examples:
   $0 10.150.0.4 w61_serial_080_to_089 w61_s080_r00_gc_par_align_ic2d 89 10 mask
 
   $0 10.150.0.4 w61_serial_070_to_079 w61_s074_r00_gc_par_align_ic2d 96 50 pixel skip-timestamp
-  "
+"
   exit 1
 fi
 
