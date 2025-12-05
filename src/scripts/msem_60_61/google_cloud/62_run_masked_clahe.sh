@@ -45,7 +45,7 @@ for DATASET in "${N5_DATASET}" "${N5_FIELD_MAX}"; do
   fi
 done
 
-CLAHE_DATASET="${N5_DATASET}_clahe"
+CLAHE_DATASET="/render/${PROJECT_AND_NORM_LAYER_STACK}_clahe/s0"
 
 if gcloud storage ls "${N5_PATH}${CLAHE_DATASET}" 2>/dev/null | grep -q .; then
   echo "ERROR: ${N5_PATH}${CLAHE_DATASET} already exists"
