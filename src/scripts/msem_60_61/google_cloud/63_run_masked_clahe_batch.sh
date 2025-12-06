@@ -2,7 +2,7 @@
 
 set -e
 
-if (( $# != 2 )); then
+if (( $# < 4 )); then
   echo "
 Usage:    $0 <max-executors> <wafer> <region> <serial-num> [serial-num] ...
 
