@@ -49,7 +49,7 @@ unset BATCH_NAME
 for SERIAL_NUM in "$@"; do
   SERIAL_NUM_PADDED=$(printf "%03d" "${SERIAL_NUM}")
   RAW_STACK="${WAFER}_s${SERIAL_NUM_PADDED}_${REGION}"
-  ARGV="${ARGV} --rawStack ${RAW_STACK}"
+  ARGV="${ARGV} --raw ${RAW_STACK}"
   if [[ -z "${BATCH_NAME}" ]]; then
     NUMBER_OF_STACK_MINUS_ONE=$(( $# - 1 ))
     BATCH_NAME=$(echo "clahe-${RUN_TIMESTAMP}-${RAW_STACK}-with-${NUMBER_OF_STACK_MINUS_ONE}" | sed "s/_/-/g")
