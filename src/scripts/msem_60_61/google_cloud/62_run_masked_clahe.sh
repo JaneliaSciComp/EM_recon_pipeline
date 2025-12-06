@@ -4,20 +4,18 @@ set -e
 
 if (( $# != 2 )); then
   echo "
-Usage:    $0 <raw-stack> <max-executors>
+Usage:    $0 <max-executors> <raw-stack>
 
           max-executors must be at least 2
 
 Examples:
 
-  $0 w61_s079_r00 100
+  $0  100  w61_s079_r00     (took 2 hours 17 minutes with 100 executors)
 "
   exit 1
 fi
 
-RAW_STACK="${1}"
-
-MAX_EXECUTORS="${2}"
+MAX_EXECUTORS="${1}"
 if (( MAX_EXECUTORS < 2 )); then
   echo "ERROR: max-executors must be at least 2"
   exit 1
@@ -25,6 +23,8 @@ elif (( MAX_EXECUTORS > 500 )); then
   echo "ERROR: max-executors must be at most 500"
   exit 1
 fi
+
+RAW_STACK="${2}"
 
 RENDER_OWNER="hess_wafers_60_61"
 
@@ -52,13 +52,13 @@ if gcloud storage ls "${N5_PATH}${CLAHE_DATASET}" 2>/dev/null | grep -q .; then
   exit 1
 fi
 
-# using blockFactorXY 1 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
+# using blockFactorXY 2 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
 ARGV="\
 --n5PathInput=${N5_PATH} \
 --n5DatasetInput=${N5_DATASET} \
 --n5DatasetOutput=${CLAHE_DATASET} \
 --n5FieldMax=${N5_FIELD_MAX} \
---blockFactorXY 1 \
+--blockFactorXY 2 \
 --blockFactorZ 1"
 
 SPARK_EXEC_CORES=4
@@ -68,7 +68,7 @@ SPARK_EXEC_CORES=4
 # Note that if not set, spark.executor.memoryOverhead defaults to 0.10 of spark.executor.memory.
 SINGLE_CORE_MB=6700 # leave room for spark.executor.memoryOverhead, 6700 + 670 = 7370 < 7424
 COMPUTE_TIER="standard"
-DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=false"
+DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=false"  # TODO: test with dynamic allocation enabled
 
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
