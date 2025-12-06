@@ -68,7 +68,9 @@ SPARK_EXEC_CORES=4
 # Note that if not set, spark.executor.memoryOverhead defaults to 0.10 of spark.executor.memory.
 SINGLE_CORE_MB=6700 # leave room for spark.executor.memoryOverhead, 6700 + 670 = 7370 < 7424
 COMPUTE_TIER="standard"
-DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=false"  # TODO: test with dynamic allocation enabled
+DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=true,spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
+DYNAMIC_ALLOCATION="${DYNAMIC_ALLOCATION},spark.dynamicAllocation.executorIdleTimeout=120"       # default is 60
+DYNAMIC_ALLOCATION="${DYNAMIC_ALLOCATION},spark.dynamicAllocation.cachedExecutorIdleTimeout=240" # default is ?
 
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
