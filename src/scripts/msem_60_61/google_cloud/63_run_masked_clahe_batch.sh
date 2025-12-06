@@ -56,6 +56,8 @@ for SERIAL_NUM in "$@"; do
   fi
 done
 
+# Note: no need to check dataset existence here since SparkMaskedCLAHEMultiSEMBatch does that up front
+
 SPARK_EXEC_CORES=4
 
 # For standard compute tier and spark runtime, total of spark.memory.offHeap.size,
@@ -77,7 +79,7 @@ SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 # see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/dataproc-serverless-versions
 SPARK_VERSION="1.1"
 
-CLASS="org.janelia.saalfeldlab.hotknife.SparkMaskedCLAHEMultiSEM"
+CLASS="org.janelia.saalfeldlab.hotknife.SparkMaskedCLAHEMultiSEMBatch"
 GS_JAR_URL="gs://janelia-spark-test/library/hot-knife-0.0.7-SNAPSHOT.jar"
 # HOT_KNIFE_JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.jar"
 
