@@ -10,7 +10,7 @@ Usage:    $0 <max-executors> <wafer> <region> <serial-num> [serial-num] ...
 
 Examples:
 
-  $0  100  w61  r00  79 80 81
+  $0  100  w61  r00  79 80 81          (took 1 hour 9 minutes for one slab with 100 executors and blockFactorXY 4)
 "
   exit 1
 fi
@@ -36,12 +36,12 @@ MAX_DATASET_ROOT="heightfields_v3"
 
 N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"
 
-# using blockFactorXY 2 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
+# using blockFactorXY 4 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
 ARGV="\
 --n5PathInput=${N5_PATH} \
 --rawDatasetSuffix=${RAW_DATASET_SUFFIX} \
 --maxDatasetRoot=${MAX_DATASET_ROOT} \
---blockFactorXY 2 \
+--blockFactorXY 4 \
 --blockFactorZ 1"
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")

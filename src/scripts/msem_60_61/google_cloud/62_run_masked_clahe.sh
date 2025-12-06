@@ -10,7 +10,7 @@ Usage:    $0 <max-executors> <raw-stack>
 
 Examples:
 
-  $0  100  w61_s079_r00     (took 2 hours 17 minutes with 100 executors)
+  $0  100  w61_s079_r00     (took 1 hour 9 minutes with 100 executors and blockFactorXY 4)
 "
   exit 1
 fi
@@ -52,13 +52,13 @@ if gcloud storage ls "${N5_PATH}${CLAHE_DATASET}" 2>/dev/null | grep -q .; then
   exit 1
 fi
 
-# using blockFactorXY 2 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
+# using blockFactorXY 4 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
 ARGV="\
 --n5PathInput=${N5_PATH} \
 --n5DatasetInput=${N5_DATASET} \
 --n5DatasetOutput=${CLAHE_DATASET} \
 --n5FieldMax=${N5_FIELD_MAX} \
---blockFactorXY 2 \
+--blockFactorXY 4 \
 --blockFactorZ 1"
 
 SPARK_EXEC_CORES=4
