@@ -48,7 +48,7 @@ RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 unset BATCH_NAME
 for SERIAL_NUM in "$@"; do
   SERIAL_NUM_PADDED=$(printf "%03d" "${SERIAL_NUM}")
-  RAW_STACK="${WAFER}_s${SERIAL_NUM_PADDED}_r${REGION}"
+  RAW_STACK="${WAFER}_s${SERIAL_NUM_PADDED}_${REGION}"
   ARGV="${ARGV} --rawStack ${RAW_STACK}"
   if [[ -z "${BATCH_NAME}" ]]; then
     NUMBER_OF_STACK_MINUS_ONE=$(( $# - 1 ))
