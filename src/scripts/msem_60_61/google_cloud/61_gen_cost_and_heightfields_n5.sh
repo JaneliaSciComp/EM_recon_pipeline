@@ -2,12 +2,12 @@
 
 set -e
 
-if (( $# < 3 )); then
+if (( $# < 4 )); then
   echo """
-USAGE: $0 <number of nodes> <render project> <raw stack>
+USAGE: $0 <number of nodes> <render project> <raw stack> <bottomLayerCost>
 
 Examples:
-  $0 60 w61_serial_070_to_079 w61_s079_r00
+  $0 60 w61_serial_070_to_079 w61_s079_r00 210
 """
   exit 1
 fi
@@ -15,9 +15,10 @@ fi
 N_NODES="${1}"
 RENDER_PROJECT="${2}"
 RAW_STACK="${3}"
+BOTTOM_LAYER_COST="${4}"
 
 # appended to the cost and heightfields dataset names (e.g. cost_v3)
-CH_RUN_VERSION="v3"
+CH_RUN_VERSION="b${BOTTOM_LAYER_COST}"
 
 # values we ultimately used for wafer_53d in cost_v3:
 SURFACE_INIT_MAX_DELTA="0.01"      # other options: 0.2
@@ -83,6 +84,8 @@ ARGV="\
 --costSteps=2,2,1 \
 --costSteps=2,2,1 \
 --costSteps=2,2,1 \
+--topLayerCost=105 \
+--bottomLayerCost=${BOTTOM_LAYER_COST} \
 --surfaceN5Output=${HEIGHT_FIELDS_DATASET} \
 --surfaceMinDistance=15 \
 --surfaceMaxDistance=0 \
