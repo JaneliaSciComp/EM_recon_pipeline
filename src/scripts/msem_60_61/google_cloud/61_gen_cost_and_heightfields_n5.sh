@@ -8,6 +8,8 @@ USAGE: $0 <number of nodes> <render project> <raw stack> <bottomLayerCost>
 
 Examples:
   $0 60 w61_serial_070_to_079 w61_s079_r00 210
+
+  note: with 60 nodes, w61_s079_r00 took 80 minutes to complete
 """
   exit 1
 fi
