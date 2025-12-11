@@ -2,7 +2,7 @@
 
 set -e
 
-if (( $# < 3 )); then
+if (( $# < 2 )); then
   echo """
 USAGE: $0 <number of nodes> <raw stack> [BOTTOM_LAYER_COST] [SURFACE_INIT_MAX_DELTA] [SURFACE_MAX_DELTA_Z]
 
