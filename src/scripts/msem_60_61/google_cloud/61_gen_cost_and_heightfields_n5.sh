@@ -8,9 +8,9 @@ USAGE: $0 <number of nodes> <raw stack> [BOTTOM_LAYER_COST] [SURFACE_INIT_MAX_DE
 
 Examples:
   $0  60  w61_s079_r00
-  $0  60  w61_s079_r00  250  0.01  0.02
+  $0  60  w61_s079_r00  250  0.1  0.1
 
-  note: with 60 nodes, w61_s079_r00 took 80 minutes to complete
+  note: with 60 nodes, w61_s079_r00 took 90 minutes to complete
 """
   exit 1
 fi
@@ -18,20 +18,20 @@ fi
 N_NODES="${1}"
 RAW_STACK="${2}"
 BOTTOM_LAYER_COST="${3:-250}"
-SURFACE_INIT_MAX_DELTA="${4:-0.01}"
-SURFACE_MAX_DELTA_Z="${5:-0.02}"
-
-# convert 0.01 and 0.02 values to sd_p01_p02 name, convert 3 and 5 values to sd_3_5 name
-SURFACE_DELTA_NAME=$(
-  printf 'sd_%s_%s\n' "$SURFACE_INIT_MAX_DELTA" "$SURFACE_MAX_DELTA_Z" |
-  sed -E 's/_0\.([0-9]+)/_p\1/g'
-)
-
-# appended to the cost and heightfields dataset names (e.g. cost_b250_sd_p01_p02)
-CH_RUN_VERSION="b${BOTTOM_LAYER_COST}_${SURFACE_DELTA_NAME}"
+SURFACE_INIT_MAX_DELTA="${4:-0.1}"
+SURFACE_MAX_DELTA_Z="${5:-0.1}"
 
 # convert w61_s079_r00 to w61_serial_070_to_079
 RENDER_PROJECT=$(awk -F'[_s]' '{w=$1; s=$3+0; lo=int(s/10)*10; hi=lo+9; printf "%s_serial_%03d_to_%03d", w, lo, hi}' <<<"${RAW_STACK}")
+
+# included in the cost and heightfield dataset names (e.g. b250)
+COST_VERSION="b${BOTTOM_LAYER_COST}"
+
+# included in the heightfield dataset name (e.g. smd_p01_p01 or smd_3_5)
+HF_VERSION=$(
+  printf 'smd_%s_%s\n' "$SURFACE_INIT_MAX_DELTA" "$SURFACE_MAX_DELTA_Z" |
+  sed -E 's/_0\.([0-9]+)/_p\1/g'
+)
 
 #-----------------------------------------------------------
 N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"
@@ -65,16 +65,16 @@ CLASS="org.janelia.saalfeldlab.hotknife.SparkComputeCostMultiSem"
 # /render/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
 SOURCE_DATASET=${SOURCE_PATH/*\/render/\/render}
 
-# /cost_v1/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
-COST_DATASET=${SOURCE_DATASET/\/render\//\/cost_${CH_RUN_VERSION}\/}
+# /cost_b250/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
+COST_DATASET=${SOURCE_DATASET/\/render\//\/cost_${COST_VERSION}\/}
 
 if gcloud storage ls "${N5_PATH}${COST_DATASET}" 2>/dev/null | grep -q .; then
   echo "ERROR: ${N5_PATH}${COST_DATASET} already exists"
   exit 1
 fi
 
-# /heightfields_v1/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
-HEIGHT_FIELDS_DATASET=${SOURCE_DATASET/\/render\//\/heightfields_${CH_RUN_VERSION}\/}
+# /heightfields_b250_sd_p01_p01/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
+HEIGHTFIELDS_DATASET=${SOURCE_DATASET/\/render\//\/heightfields_${COST_VERSION}_${HF_VERSION}\/}
 
 # zero surfaceMaxDistance means use last z layer of slab - this is needed for the wafer 60 and 61 data
 ARGV="\
@@ -95,7 +95,7 @@ ARGV="\
 --costSteps=2,2,1 \
 --topLayerCost=105 \
 --bottomLayerCost=${BOTTOM_LAYER_COST} \
---surfaceN5Output=${HEIGHT_FIELDS_DATASET} \
+--surfaceN5Output=${HEIGHTFIELDS_DATASET} \
 --surfaceMinDistance=15 \
 --surfaceMaxDistance=0 \
 --surfaceBlockSize=1024,1024 \
