@@ -2,12 +2,13 @@
 
 set -e
 
-if (( $# < 4 )); then
+if (( $# < 3 )); then
   echo """
-USAGE: $0 <number of nodes> <render project> <raw stack> <bottomLayerCost>
+USAGE: $0 <number of nodes> <raw stack> [BOTTOM_LAYER_COST] [SURFACE_INIT_MAX_DELTA] [SURFACE_MAX_DELTA_Z]
 
 Examples:
-  $0 60 w61_serial_070_to_079 w61_s079_r00 210
+  $0  60  w61_s079_r00
+  $0  60  w61_s079_r00  250  0.01  0.02
 
   note: with 60 nodes, w61_s079_r00 took 80 minutes to complete
 """
@@ -15,16 +16,22 @@ Examples:
 fi
 
 N_NODES="${1}"
-RENDER_PROJECT="${2}"
-RAW_STACK="${3}"
-BOTTOM_LAYER_COST="${4}"
+RAW_STACK="${2}"
+BOTTOM_LAYER_COST="${3:-250}"
+SURFACE_INIT_MAX_DELTA="${4:-0.01}"
+SURFACE_MAX_DELTA_Z="${5:-0.02}"
 
-# appended to the cost and heightfields dataset names (e.g. cost_v3)
-CH_RUN_VERSION="b${BOTTOM_LAYER_COST}"
+# convert 0.01 and 0.02 values to sd_p01_p02 name, convert 3 and 5 values to sd_3_5 name
+SURFACE_DELTA_NAME=$(
+  printf 'sd_%s_%s\n' "$SURFACE_INIT_MAX_DELTA" "$SURFACE_MAX_DELTA_Z" |
+  sed -E 's/_0\.([0-9]+)/_p\1/g'
+)
 
-# values we ultimately used for wafer_53d in cost_v3:
-SURFACE_INIT_MAX_DELTA="0.01"      # other options: 0.2
-SURFACE_MAX_DELTA_Z="0.02"         # other options: 0.2
+# appended to the cost and heightfields dataset names (e.g. cost_b250_sd_p01_p02)
+CH_RUN_VERSION="b${BOTTOM_LAYER_COST}_${SURFACE_DELTA_NAME}"
+
+# convert w61_s079_r00 to w61_serial_070_to_079
+RENDER_PROJECT=$(awk -F'[_s]' '{w=$1; s=$3+0; lo=int(s/10)*10; hi=lo+9; printf "%s_serial_%03d_to_%03d", w, lo, hi}' <<<"${RAW_STACK}")
 
 #-----------------------------------------------------------
 N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"
