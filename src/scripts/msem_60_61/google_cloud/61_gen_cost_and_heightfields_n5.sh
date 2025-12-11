@@ -68,11 +68,6 @@ SOURCE_DATASET=${SOURCE_PATH/*\/render/\/render}
 # /cost_b250/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
 COST_DATASET=${SOURCE_DATASET/\/render\//\/cost_${COST_VERSION}\/}
 
-if gcloud storage ls "${N5_PATH}${COST_DATASET}" 2>/dev/null | grep -q .; then
-  echo "ERROR: ${N5_PATH}${COST_DATASET} already exists"
-  exit 1
-fi
-
 # /heightfields_b250_sd_p01_p01/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___pixel
 HEIGHTFIELDS_DATASET=${SOURCE_DATASET/\/render\//\/heightfields_${COST_VERSION}_${HF_VERSION}\/}
 
