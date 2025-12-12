@@ -335,7 +335,7 @@ def build_volume_transfer_list(volume_transfer_dir_path: Path,
     if volume_transfer_dir_path.is_dir():
         for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
 
-            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
+            transfer_info: VolumeTransferInfo = VolumeTransferInfo.model_validate_json(path.read_text())
             transfer_info.parsed_from_path = Path(path).absolute()
 
             if for_tasks is None or transfer_info.includes_at_least_one_of_these_tasks(for_tasks):
