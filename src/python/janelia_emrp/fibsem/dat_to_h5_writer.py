@@ -9,7 +9,7 @@ from typing import Any, Optional, Tuple, Union, Final
 import h5py
 import numpy as np
 import sys
-from fibsem_tools.io.fibsem import OFFSET, MAGIC_NUMBER
+from fibsem_tools.io.dat import OFFSET, MAGIC_NUMBER
 from h5py import Dataset, Group
 from xarray_multiscale import multiscale
 from xarray_multiscale.reducers import windowed_mean
