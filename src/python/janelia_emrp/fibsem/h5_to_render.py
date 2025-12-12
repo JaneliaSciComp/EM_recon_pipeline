@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any, Tuple, Final
 import dask.bag as db
 import h5py
 import renderapi
-from dask_janelia import get_cluster
+from janelia_emrp.cluster import get_cluster
 
 from janelia_emrp.fibsem.dat_path import DatPath, new_dat_path
 from janelia_emrp.fibsem.dat_to_h5_writer import DAT_FILE_NAME_KEY

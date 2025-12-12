@@ -12,7 +12,7 @@ import math
 import numpy as np
 import sys
 import time
-from dask_janelia import get_cluster
+from janelia_emrp.cluster import get_cluster
 from distributed import Client
 
 from janelia_emrp.fibsem.cyx_dat import CYXDat
