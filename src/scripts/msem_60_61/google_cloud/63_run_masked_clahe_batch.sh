@@ -28,19 +28,11 @@ WAFER="${2}"
 REGION="${3}"
 shift 3 # all remaining args should be serial numbers
 
-# used to produce path like /render/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___norm-layer/s0
-RAW_DATASET_SUFFIX="_gc_par_align_ic2d___norm-layer"
-
-# used to produce path like /heightfields_v3/w61_serial_070_to_079/w61_s079_r00_gc_par_align_ic2d___norm-layer/s1/max
-MAX_DATASET_ROOT="heightfields_v3"
-
 N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"
 
 # using blockFactorXY 4 instead of default 8 to avoid OOM with larger 1024,1024,maxZ blocks
 ARGV="\
 --n5PathInput=${N5_PATH} \
---rawDatasetSuffix=${RAW_DATASET_SUFFIX} \
---maxDatasetRoot=${MAX_DATASET_ROOT} \
 --blockFactorXY 4 \
 --blockFactorZ 1"
 
