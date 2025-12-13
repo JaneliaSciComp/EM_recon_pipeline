@@ -110,11 +110,11 @@ H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/fibsem/home/fibsemxfer/lib/jhdf5/nati
 
 export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
 
-# Janelia code requires a newer GSON library than the ancient one included in Spark distribution.
-# Add userClassPathFirst parameters to ensure the newer GSON is used.
-# Note that this problem used to be fixed with:
-#   --conf spark.executor.extraClassPath=/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar
-# but the userClassPathFirst parameter allows us to avoid downloading specific jars.
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.userClassPathFirst=true --conf spark.executor.userClassPathFirst=true"
+# code needs newer GSON library (for preview to parse HDF5 attributes, and for n5 reading/writing)
+# (note: tried using spark.[driver|executor].userClassPathFirst=true option but that messes up log4j configuration,
+#        so decided to just use spark.[driver|executor].extraClassPath instead)
+GSON_JAR="/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR}"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 export LSF_PROJECT="${BILL_TO}"
