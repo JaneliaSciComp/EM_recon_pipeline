@@ -114,7 +114,6 @@ export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf 
 # (note: tried using spark.[driver|executor].userClassPathFirst=true option but that messes up log4j configuration,
 #        so decided to just use spark.[driver|executor].extraClassPath instead)
 GSON_JAR="/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar"
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR}"
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 export LSF_PROJECT="${BILL_TO}"
