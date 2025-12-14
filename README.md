@@ -2,22 +2,27 @@
 Pipeline scripts and tools for reconstructing Electron Microscopy volumes.
 
 ### Setup
-1. If necessary, [install miniconda](https://docs.conda.io/en/latest/miniconda.html).
+1. If necessary, [install pixi](https://pixi.sh/latest/#installation).
 
-### Create Environment and Install 
+### Create Environment and Install
 ```bash
 git clone https://github.com/JaneliaSciComp/EM_recon_pipeline.git
 
 cd EM_recon_pipeline
 
-conda env create -f janelia_emrp.environment.yml
-conda activate janelia_emrp
+pixi install
+```
 
-poetry install
+### Running Scripts
+```bash
+# Run a script using the pixi environment
+pixi run python src/python/janelia_emrp/fibsem/dat_converter.py --help
+
+# Or activate a shell with the environment
+pixi shell
+python src/python/janelia_emrp/fibsem/dat_converter.py --help
 ```
 
 ### Development Library Management
-- Using conda with poetry as described 
-[here](https://ealizadeh.com/blog/guide-to-python-env-pkg-dependency-using-conda-poetry).
-- To change/update dependencies, edit [pyproject.toml](pyproject.toml) 
-or use [poetry add](https://python-poetry.org/docs/cli/#add) and then run `poetry install`.
+- Environment is managed using [pixi](https://pixi.sh/) with dependencies defined in [pyproject.toml](pyproject.toml).
+- To add/update dependencies, edit the `[project]` or `[tool.pixi.dependencies]` sections in `pyproject.toml` and run `pixi install`.
