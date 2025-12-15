@@ -61,8 +61,6 @@ def get_LSFCLuster(
         Number of cores to request from LSF. Directly translated to the `cores` kwarg to LSFCluster.
     walltime: str
         The expected lifetime of a worker. Defaults to one hour, i.e. "1:00"
-    cores: int
-        The number of cores to request per worker. Defaults to 1.
     death_timeout: str
         The duration for the scheduler to wait for workers before flagging them as dead, e.g. "600s". For jobs with a large number of workers,
         LSF may take a long time (minutes) to request workers. This timeout value must exceed that duration, otherwise the scheduler will
@@ -73,7 +71,7 @@ def get_LSFCLuster(
     Examples
     --------
 
-    >>> cluster = get_LSFCLuster(cores=2, project="scicompsoft", queue="normal")
+    >>> cluster = get_LSFCLuster(threads_per_worker=2, project="scicompsoft", queue="normal")
 
     """
 
@@ -93,6 +91,11 @@ def get_LSFCLuster(
         log_dir = f"{HOME}/.dask_distributed/"
         Path(log_dir).mkdir(parents=False, exist_ok=True)
         kwargs["log_directory"] = log_dir
+
+    # Memory is required by dask_jobqueue but not meaningful for slot-based LSF clusters
+    # Set a default that satisfies the library without affecting job submission
+    if "memory" not in kwargs:
+        kwargs["memory"] = "16GB"
 
     cluster = LSFCluster(
         cores=threads_per_worker,
@@ -130,7 +133,7 @@ def get_cluster(
     threads_per_worker: int = 1,
     deployment: Optional[str] = None,
     local_kwargs: Dict[str, Any] = {},
-    lsf_kwargs: Dict[str, Any] = {"memory": "16GB"},
+    lsf_kwargs: Dict[str, Any] = {},
 ) -> Union[LSFCluster, LocalCluster]:
 
     """Convenience function to generate a dask cluster on either a local machine or the compute cluster.
