@@ -1,0 +1,55 @@
+
+{
+    "transfer_id": "fibsem::jrc-mpi-sepia-2510-8a::jeiss5.hhmi.org",
+    "scope_data_set": {
+        "host": "jeiss5.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/Sepia",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "jrc_mpi-sepia-2510-8",
+        "rows_per_z_layer": 4,
+        "columns_per_z_layer": 5,
+        "first_dat_name": "Merlin-6049_25-12-14_080656_0-0-0.dat",
+        "last_dat_name": null,
+        "dat_x_and_y_nm_per_pixel": 8,
+        "dat_z_nm_per_pixel": 8,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/groups/fibsem/fibsem/data/jrc-mpi-sepia-2510-8a/dat",
+        "raw_h5": "/groups/fibsem/fibsem/data/jrc-mpi-sepia-2510-8a/raw",
+        "align_h5": "/nrs/fibsem/data/jrc-mpi-sepia-2510-8a/align",
+        "export_n5": "/nrs/fibsem/data/jrc-mpi-sepia-2510-8a/jrc-mpi-sepia-2510-8a.n5"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/fibsem/data/jrc-mpi-sepia-2510-8a/raw"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "fibsem",
+        "project": "jrc_mpi_sepia_2510_8a",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "mask_height": 30,
+        "connect": {
+            "host": "10.40.3.113",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM", "EXPORT_PREVIEW_VOLUME"
+    ],
+    "cluster_job_project_for_billing": "fibsem",
+    "number_of_dats_converted_per_hour": 80,
+    "number_of_preview_workers": 10
+}
