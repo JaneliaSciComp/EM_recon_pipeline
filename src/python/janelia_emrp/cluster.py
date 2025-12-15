@@ -77,10 +77,10 @@ def get_LSFCLuster(
 
     """
 
-    if "env_extra" not in kwargs:
-        kwargs["env_extra"] = []
+    if "job_script_prologue" not in kwargs:
+        kwargs["job_script_prologue"] = []
 
-    kwargs["env_extra"].extend(make_single_threaded_env_vars(threads_per_worker))
+    kwargs["job_script_prologue"].extend(make_single_threaded_env_vars(threads_per_worker))
 
     USER = os.environ["USER"]
     HOME = os.environ["HOME"]
