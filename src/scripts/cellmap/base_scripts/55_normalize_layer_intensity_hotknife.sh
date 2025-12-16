@@ -14,7 +14,7 @@ N_NODES="${1:-20}" # 20 11-slot nodes took 32 minutes for 6705 z layers with 2 t
 # N5 paths
 unset RENDERED_N5_PATH
 shopt -s nullglob
-DIRS=("${N5_PATH}"/*/"${RENDER_PROJECT}"/*_review/)
+DIRS=("${N5_PATH}"/render/"${RENDER_PROJECT}"/*_review/)
 shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
 DIR_COUNT=${#DIRS[@]}
 if (( DIR_COUNT == 0 )); then
@@ -24,10 +24,18 @@ ERROR: no ${RENDER_PROJECT} project '_review' n5 directories (with 2,2,1 downsam
 To downsample a 2,2,2 n5, copy and run /groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/scripts/cellmap/base_scripts/old/47_spark_downsample_for_review.sh
 "
   exit 1
-elif (( DIR_COUNT == 1 )); then
-  RENDERED_N5_PATH=${DIRS[0]}
 else
-  PS3="Choose review N5 to normalize: "
+  echo "
+The following n5s exist:
+"
+  find "${N5_PATH}/render/${RENDER_PROJECT}" -mindepth 1 -maxdepth 1 -type d ! -name attributes.json -print
+  echo "
+To downsample a 2,2,2 n5, copy and run /groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline/src/scripts/cellmap/base_scripts/old/47_spark_downsample_for_review.sh
+
+This subset of review n5s have already been downsampled with 2,2,1 factors:
+"
+  PS3="
+Choose the number of a review N5 to normalize (or hit ctrl-C to quit if you need to downsample an n5 first): "
   select RENDERED_N5_PATH in "${DIRS[@]}"; do
     break
   done
@@ -69,14 +77,17 @@ export N_CORES_DRIVER=8
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 
-JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.jar"
-CLASS="org.janelia.saalfeldlab.hotknife.SparkNormalizeLayerIntensityN5"
+# JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.jar"
+JAR="/groups/shroff/shrofflab/render/align/jrc_steinernema-20251017/hot-knife-0.0.7-SNAPSHOT.jar"  # built from feature/multi-sem-normalization branch
+CLASS="org.janelia.saalfeldlab.hotknife.FibSemNormalizeLayerIntensity"
 
 ARGS="\
 --n5Path=${N5_PATH} \
 --n5DatasetInput=${SOURCE_DATASET} \
 --n5DatasetOutput=${NORMALIZED_DATASET} \
---downsampleLevel=6 \
+--downsampleLevel=4 \
+--shift=MEAN \
+--scale=GAUSS \
 --factors=2,2,2"
 
 #--spreadIntensities \
