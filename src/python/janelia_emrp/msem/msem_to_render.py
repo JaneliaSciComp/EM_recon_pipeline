@@ -522,7 +522,7 @@ if __name__ == '__main__':
         #     "--render_host", "em-services-1.int.janelia.org",
         #     "--render_owner", "hess_wafer_66",
         #     "--wafer_id", "66",
-        #     "--path_single_slab_json", "/nrs/hess/Hayworth/DATA_Wafer66_ForRenderTest/full_image_coordinates.txt.json",
+        #     "--path_single_slab_json", "/Users/trautmane/projects/git/EM_recon_pipeline/src/scripts/msem_66/full_image_coordinates.txt.scan_000303.json",
         # ])
         # main([
         #     "--render_host", "10.40.3.113",
