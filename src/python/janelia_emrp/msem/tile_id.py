@@ -23,7 +23,7 @@ class TileID:
     """0-based indexing"""
     wafer_prefix : ClassVar[str] = "w"
     slab_prefix: ClassVar[str] = "magc"
-    scan_prefix: ClassVar[str] = "scan"
+    scan_prefix: ClassVar[str] = "sc"
     mfov_prefix: ClassVar[str] = "m"
     render_prefix: ClassVar[str] = "r"
     sfov_prefix: ClassVar[str] = "s"
@@ -39,7 +39,7 @@ class TileID:
             (
                 f"{self.wafer_prefix}{self.wafer_id}",
                 f"{self.slab_prefix}{self.slab:04}",
-                f"{self.scan_prefix}{self.scan:03}",
+                f"{self.scan_prefix}{self.scan:05}",
                 f"{self.mfov_prefix}{self.mfov:04}",
                 f"{self.render_prefix}{RENDER_SFOV_ORDER[self.sfov]:02}",
                 f"{self.sfov_prefix}{self.scope_sfov_number:02}",
