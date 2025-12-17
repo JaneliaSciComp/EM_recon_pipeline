@@ -53,7 +53,7 @@ export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf 
 
 # preview code needs newer GSON library to parse HDF5 attributes
 GSON_JAR="${FIBSEMXFER_DIR}/lib/gson/gson-2.10.1.jar"
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 # setup for 11 cores per worker (allows 4 workers to fit on one 48 core node with 4 cores to spare for other jobs)
 export N_EXECUTORS_PER_NODE=5
