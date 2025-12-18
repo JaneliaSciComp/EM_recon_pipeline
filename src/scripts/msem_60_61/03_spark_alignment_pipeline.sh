@@ -17,7 +17,9 @@ fi
 N_NODES="${1}"
 PIPELINE_JSON="${2}"
 
-if [ ! -f "${PIPELINE_JSON}" ]; then
+if [ -f "${PIPELINE_JSON}" ]; then
+  PIPELINE_JSON=$(readlink -m "${PIPELINE_JSON}")
+else
   echo "ERROR: ${PIPELINE_JSON} not found!"
   exit 1
 fi
