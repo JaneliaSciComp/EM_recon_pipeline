@@ -1,0 +1,21 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
+    "owner" : "hess_wafer_66", "project" : "w66_serial_000_to_009",
+    "stackIdWithZ" : { "projectPattern": "^w66_serial_000_to_009$", "stackPattern": "^w66_s..._r00$", "zValuesPerBatch": 1 }
+  },
+  "pipelineSteps": [
+    "MFOV_AS_TILE"
+  ],
+  "mfovAsTile": {
+    "mfovRenderScale": 0.2,
+    "mfovRootDirectory": "/nrs/hess/data/hess_wafer_66/tiles_mfov",
+    "prealignedSfovStackSuffix": "_pa",
+    "dynamicMfovStackSuffix": "_mat",
+    "renderedMfovStackSuffix": "_render",
+    "renderedMfovRunTimestamp": "20251218_000000",
+    "alignedMfovStackSuffix" : "_align",
+    "roughSfovStackSuffix": "_par",
+    "minCrossMatchPixelDistance": 1.0
+  }
+}

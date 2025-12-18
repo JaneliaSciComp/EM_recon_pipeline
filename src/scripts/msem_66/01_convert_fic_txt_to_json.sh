@@ -53,7 +53,7 @@ BEGIN {
   print "{"
   print "  \"root_directory\": \"/nrs/hess/Hayworth/DATA_Wafer66_ForRenderTest\","
   print "  \"owner\": \"hess_wafer_66\","
-  print "  \"project\": \"test_b\","
+  print "  \"project\": \"w66_serial_000_to_009\","
   print "  \"stack\": \"w66_s000_r00\","
   print "  \"render_host\": \"em-services-1.int.janelia.org\","
   print "  \"resolution_x\": 8.0,"

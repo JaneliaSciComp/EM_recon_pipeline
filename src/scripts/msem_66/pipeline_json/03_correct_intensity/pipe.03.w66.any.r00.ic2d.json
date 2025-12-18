@@ -1,0 +1,52 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
+    "owner" : "hess_wafer_66", "project" : "w66_serial_000_to_009",
+    "stackIdWithZ" : { "projectPattern": "^w66_serial_000_to_009$", "stackPattern": "^w66_s..._r00$", "zValuesPerBatch": 1 }
+  },
+  "pipelineStackGroups": {
+    "raw":                { "stackPattern": "^w66_s..._r00_gc_par$" },
+    "aligned":            { "stackPattern": "^w66_s..._r00_gc_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w66_s..._r00_gc_par_align_ic$" }
+  },
+  "pipelineSteps": [
+    "CORRECT_INTENSITY"
+  ],
+  "intensityCorrectionSetup": {
+    "distributedSolve" : {
+      "maxAllowedErrorGlobal" : 10.0,
+      "maxIterationsGlobal" : 10000,
+      "maxPlateauWidthGlobal" : 100,
+      "threadsWorker" : 0,
+      "threadsGlobal" : 0,
+      "deriveThreadsUsingSparkConfig" : true
+    },
+    "intensityAdjust" : {
+      "maxAllowedError" : 0.01,
+      "maxIterations" : 10000,
+      "maxPlateauWidth" : 2000,
+      "lambda1" : 1,
+      "lambda2" : 0,
+      "maxPixelCacheGb" : 1,
+      "renderScale" : 0.5,
+      "zDistance" : {
+        "simpleZDistance" : [
+          0
+        ]
+      },
+      "numCoefficients" : 4,
+      "equilibrationWeight" : 0.0
+    },
+    "targetStack": {
+      "stackSuffix": "_ic2d",
+      "completeStack": true
+    },
+    "blockPartition": {
+      "sizeZ": 1
+    },
+    "alternatingRuns": {
+      "nRuns": 1,
+      "keepIntermediateStacks": false
+    }
+  }
+}
