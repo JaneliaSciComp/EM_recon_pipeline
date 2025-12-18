@@ -1,0 +1,47 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
+    "owner" : "hess_sample_68", "project" : "w68_serial_000_to_009",
+    "stackIdWithZ" : { "projectPattern": "^w68_serial_000_to_009$", "stackPattern": "^w68_s..._r00_par$", "zValuesPerBatch": 1 }
+  },
+  "pipelineStackGroups": {
+    "raw":                { "stackPattern": "^w68_s..._r00_par$" },
+    "aligned":            { "stackPattern": "^w68_s..._r00_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w68_s..._r00_par_align_ic$" }
+  },
+  "pipelineSteps": [
+    "ALIGN_TILES"
+  ],
+  "affineBlockSolverSetup": {
+    "preAlign": "MULTI_SEM",
+    "distributedSolve": {
+      "maxAllowedErrorGlobal": 10.0,
+      "maxIterationsGlobal": 1000,
+      "maxPlateauWidthGlobal": 200,
+      "threadsWorker": 10,
+      "threadsGlobal": 1,
+      "deriveThreadsUsingSparkConfig": true
+    },
+    "targetStack": {
+      "stackSuffix": "_align",
+      "completeStack": true
+    },
+    "blockPartition": {
+      "sizeZ": 100
+    },
+    "blockOptimizer": {
+      "lambdasRigid": [ 1.0, 1.0, 0.9, 0.3, 0.01 ],
+      "lambdasTranslation": [ 1.0, 0.0, 0.0, 0.0, 0.0 ],
+      "lambdasRegularization": [ 0.0, 0.0, 0.0, 0.0, 0.0 ],
+      "iterations": [ 1000, 1000, 500, 250, 250 ],
+      "maxPlateauWidth": [ 250, 250, 150, 100, 100 ],
+      "maxAllowedError": 5.0,
+      "weightModificationDeciles": "200"
+    },
+    "maxNumMatches": 0,
+    "alternatingRuns": {
+      "nRuns": 1,
+      "keepIntermediateStacks": false
+    }
+  }
+}
