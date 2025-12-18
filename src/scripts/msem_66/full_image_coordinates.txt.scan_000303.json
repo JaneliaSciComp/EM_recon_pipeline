@@ -1,7 +1,7 @@
 {
   "root_directory": "/nrs/hess/Hayworth/DATA_Wafer66_ForRenderTest",
   "owner": "hess_wafer_66",
-  "project": "test_b",
+  "project": "w66_serial_000_to_009",
   "stack": "w66_s000_r00",
   "render_host": "em-services-1.int.janelia.org",
   "resolution_x": 8.0,
