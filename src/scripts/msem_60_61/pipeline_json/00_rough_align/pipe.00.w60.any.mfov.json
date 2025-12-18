@@ -2,12 +2,7 @@
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "w60_s360_r00_gc$", "zValuesPerBatch": 1 }
-  },
-  "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._gc$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._gc_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._gc_align_ic$" }
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_..._to_...$", "stackPattern": "^w60_s..._r00_gc$", "zValuesPerBatch": 1 }
   },
   "pipelineSteps": [
     "MFOV_AS_TILE"
@@ -15,9 +10,12 @@
   "mfovAsTile": {
     "mfovRenderScale": 0.2,
     "mfovRootDirectory": "gs://janelia-spark-test/tiles_mfov",
+    "prealignedSfovStackSuffix": "_pa",
     "dynamicMfovStackSuffix": "_mat",
     "renderedMfovStackSuffix": "_render",
+    "renderedMfovRunTimestamp": "20250926_000000",
     "alignedMfovStackSuffix" : "_align",
-    "roughSfovStackSuffix": "_rough"
+    "roughSfovStackSuffix": "_par",
+    "minCrossMatchPixelDistance": 1.0
   }
 }

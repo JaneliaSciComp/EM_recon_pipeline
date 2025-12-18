@@ -28,7 +28,7 @@ class RenderDetails(AbstractRenderDetails):
         """Get the project name from the wafer / serial ID combination."""
         lower_bound = serial_id // 10 * 10
         upper_bound = lower_bound + 9
-        return f"w{wafer}_serial_{lower_bound}_to_{upper_bound}"
+        return f"w{wafer}_serial_{lower_bound:03}_to_{upper_bound:03}"
 
     def is_source_stack(self, stack_name: str) -> bool:
         """Check if the stack is to be used as a source for background correction."""
@@ -110,19 +110,19 @@ if __name__ == '__main__':
     )
 
     # Test setup
-    CLI_ARGS = (
-        "--host http://em-services-1.int.janelia.org:8080/render-ws/v1 "
-        "--owner hess_wafers_60_61 "
-        "-w 60 "
-        "-s 360 "
-        "--num-threads  16 "
-        "--base-path hess_wafer_60_data "
-        "--invert "
-    )
+    # CLI_ARGS = (
+    #     "--host http://em-services-1.int.janelia.org:8080/render-ws/v1 "
+    #     "--owner hess_wafers_60_61 "
+    #     "-w 60 "
+    #     "-s 360 "
+    #     "--num-threads  16 "
+    #     "--base-path hess_wafer_60_data "
+    #     "--invert "
+    # )
 
-    args = parser.parse_args(CLI_ARGS.split())
+    # args = parser.parse_args(CLI_ARGS.split())
     # Production setup
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
     param = Parameters(
         host=args.host,

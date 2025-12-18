@@ -2,17 +2,16 @@
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w60_serial_360_to_369",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_360_to_369", "stackPattern": "^w.._s.._r.._d20_gc$", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_..._to_...", "stackPattern": "^w60_s.._r00_gc_par$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d20_gc$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d20_gc_align$" },
-    "intensityCorrected": { "stackPattern": "^w.._s..._r.._d20_gc_align_ic$" }
+    "raw":                { "stackPattern": "^w60_s..._r00_gc_par$" },
+    "aligned":            { "stackPattern": "^w60_s..._r00_gc_par_align$" },
+    "intensityCorrected": { "stackPattern": "^w60_s..._r00_gc_par_align_ic$" }
   },
   "pipelineSteps": [
     "DERIVE_TILE_MATCHES",
-    "PATCH_MFOV_MONTAGE_MATCHES",
-    "FIND_UNCONNECTED_MFOVS"
+    "PATCH_MFOV_MONTAGE_MATCHES"
   ],
   "matchRunList": [
     {
@@ -34,7 +33,7 @@
           "stageName": "montageMfovPass1",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
-            "matchFilter": "SINGLE_SET", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
             "matchMinCoveragePercentage": 50.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
           },
           "featureRender": { "renderScale": 0.2, "renderWithFilter": true, "renderWithoutMask": false },
@@ -44,7 +43,7 @@
           "stageName": "montageMfovPass2",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
-            "matchFilter": "SINGLE_SET", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
             "matchMinCoveragePercentage": 20.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
           },
           "featureRender": { "renderScale": 0.3, "renderWithFilter": true, "renderWithoutMask": false },
@@ -54,7 +53,7 @@
           "stageName": "montageMfovPass3",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
-            "matchFilter": "SINGLE_SET", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
             "matchMinCoveragePercentage": 20.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
           },
           "featureRender": { "renderScale": 0.4, "renderWithFilter": true, "renderWithoutMask": false },
@@ -81,7 +80,7 @@
           "stageName": "montagePass1",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
-            "matchFilter": "SINGLE_SET", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0, 
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0, 
             "matchMinCoveragePercentage": 20.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
           },
           "featureRender": { "renderScale": 0.8, "renderWithFilter": true, "renderWithoutMask": false },
@@ -92,7 +91,7 @@
           "stageName": "montagePass2",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
-            "matchFilter": "SINGLE_SET", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
             "matchMinCoveragePercentage": 0.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 10, "matchModelType": "TRANSLATION", "matchRod": 0.92
           },
           "featureRender": { "renderScale": 1.0, "renderWithFilter": true, "renderWithoutMask": false },
@@ -153,14 +152,17 @@
     }
   ],
   "mfovMontagePatch": {
-    "sameLayerDerivedMatchWeight" : 0.15,
-    "crossLayerDerivedMatchWeight" : 0.1,
-    "secondPassDerivedMatchWeight" : 0.05,
-    "xyNeighborFactor" : 0.6,
-    "numberOfMFOVsPerBatch": 10
+    "addIsolatedEdgeLabel": true,
+    "resinMfovStartPositionMatchWeight": 0.0001,
+    "startPositionMatchWeight": 0.001,
+    "xyNeighborFactor": 0.6,
+    "numberOfMFOVsPerBatch": 10,
+    "patchUnconnectedPairsWithinAnMfovUsingStageCoordinates": true,
+    "checkLayerConnectedClusters": true
   },
-  "unconnectedCrossMfov": {
-    "minPairsForConnection": 6,
-    "numberOfStacksPerBatch": 20
+  "tileCluster": {
+    "maxLayersPerBatch": 200,
+    "maxOverlapLayers": 10,
+    "includeMatchesOutsideGroup": false
   }
 }

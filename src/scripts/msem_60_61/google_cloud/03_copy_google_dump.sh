@@ -6,7 +6,7 @@
 set -e
 
 if (( $# != 1 )); then
-  echo "USAGE $0 <google VM>   (e.g. render-ws-mongodb-8c-32gb-abc)"
+  echo "USAGE $0 <google VM>   (e.g. render-ws-mongodb-8c-32gb-abg)"
   exit 1
 fi
 

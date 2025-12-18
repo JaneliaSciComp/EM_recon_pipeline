@@ -4,14 +4,24 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
 if (( $# < 1 )); then
-  echo "USAGE $0 <vm suffix>   (e.g. abe)"
+  echo "USAGE $0 <vm suffix> [private-network-ip]
+
+Examples:
+  $0 aaa
+  $0 abm 10.150.0.7
+"
   exit 1
 fi
 
-VM_NAME="render-ws-mongodb-8c-32gb-${1}"
+VM_NAME="render-ws-mongodb-16c-64gb-${1}"
+
+NETWORK_INTERFACE="address=,stack-type=IPV4_ONLY"
+if (( $# > 1 )); then
+  NETWORK_INTERFACE="${NETWORK_INTERFACE},subnet=default,private-network-ip=${2}"
+fi
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
-CONTAINER_IMAGE_VERSION="0.0.7"
+CONTAINER_IMAGE_VERSION="0.0.13"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
 # The boot disk needs to be big enough to hold the container image and any MongoDB data.
@@ -45,9 +55,9 @@ gcloud compute instances create-with-container "${VM_NAME}" \
   --container-privileged --container-restart-policy=never --container-stdin --container-tty \
   --description='' \
   --labels=container-vm="${VM_NAME}" \
-  --machine-type=n2-standard-8 \
+  --machine-type=n2-standard-16 \
   --metadata-from-file=user-data="${VM_METADATA_FILE}" \
-  --network-interface=address=,stack-type=IPV4_ONLY \
+  --network-interface="${NETWORK_INTERFACE}" \
   --tags=http-server,https-server,lb-health-check,https-egress \
   --zone=us-east4-c
 
@@ -61,9 +71,7 @@ Click on the SSH link for the VM and then run:
   docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 Finally, to load mongodb data from the shared storage within the container, run
-  ./db-restore-janelia.sh
-or:
-  ./db-restore-google.sh
+  ./db-restore-collection.sh
 
 To verify that the data was loaded correctly, from within the container or the VM run:
   curl \"http://localhost:8080/render-ws/v1/versionInfo\" | jq '.'

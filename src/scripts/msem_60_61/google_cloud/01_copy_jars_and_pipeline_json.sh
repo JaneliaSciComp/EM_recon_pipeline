@@ -1,29 +1,30 @@
 #!/bin/bash
 
 # ----------------------------------------------------------------------------
-# Copy the render-ws-spark-client jar file and pipeline JSON files to Google Cloud Storage.
+# Copy the render-ws-spark-client jar and pipeline JSON files to Google Cloud Storage.
 #
 # The render-ws-spark-client jar file is expected to be in the target directory of the render-ws-spark-client project.
 # The pipeline JSON files are expected to be in the pipeline_json directory of the EM_recon_pipeline project.
 #
-# The jar file is copied to gs://janelia-spark-test/library and
+# The jar files are copied to gs://janelia-spark-test/library and
 # the pipeline JSON files are copied to gs://janelia-spark-test/library/pipeline_json.
 
 set -e
 
-BASE_GIT_DIR="/Users/trautmane/projects/git"
-JAR_FILE_NAME="render-ws-spark-client-4.3.0-SNAPSHOT-standalone.jar"
+BASE_GIT_DIR="${1:-/Users/trautmane/projects/git}"
+
+RENDER_JAR_FILE_NAME="render-ws-spark-client-4.3.0-SNAPSHOT-standalone.jar"
 BASE_GOOGLE_BUCKET_DIR="gs://janelia-spark-test/library"
 
 # --------------------------
-FULL_JAR_PATH="${BASE_GIT_DIR}/render/render-ws-spark-client/target/${JAR_FILE_NAME}"
-GS_JAR_URL="${BASE_GOOGLE_BUCKET_DIR}/${JAR_FILE_NAME}"
+FULL_RENDER_JAR_PATH="${BASE_GIT_DIR}/render/render-ws-spark-client/target/${RENDER_JAR_FILE_NAME}"
+GS_RENDER_JAR_URL="${BASE_GOOGLE_BUCKET_DIR}/${RENDER_JAR_FILE_NAME}"
 
-if gsutil ls "${GS_JAR_URL}"; then
-  read -p "${GS_JAR_URL} already exists. Do you want to overwrite it? (y/n) " -n 1 -r
+if gsutil ls "${GS_RENDER_JAR_URL}"; then
+  read -p "${GS_RENDER_JAR_URL} already exists. Do you want to overwrite it? (y/n) " -n 1 -r
   echo
   if [[ "$REPLY" == [yY] ]]; then
-    gsutil cp "${FULL_JAR_PATH}" "${GS_JAR_URL}"
+    gsutil cp "${FULL_RENDER_JAR_PATH}" "${GS_RENDER_JAR_URL}"
   fi
 fi
 
