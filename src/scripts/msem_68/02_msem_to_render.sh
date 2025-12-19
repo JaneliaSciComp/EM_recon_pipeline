@@ -13,10 +13,11 @@ LOG_FILE="${LOG_DIR}/import_${RUN_TIME}.log"
 
 SINGLE_SLAB_JSON="$1"
 
-if (( $# < 1 )); then
+if (( $# != 1 )); then
   echo "
 USAGE $0 <single slab json file>     (e.g. sample_68_image_coord.json)
-"  exit 1
+"
+  exit 1
 fi
 
 if [ ! -f "${SINGLE_SLAB_JSON}" ]; then
