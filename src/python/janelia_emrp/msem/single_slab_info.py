@@ -16,8 +16,8 @@ from pydantic import BaseModel, PrivateAttr, model_validator
 from janelia_emrp.msem.field_of_view_layout import MFovPosition
 from janelia_emrp.msem.slab_info import STACK_PATTERN
 
-# scan_000303/mfov_0019/corrected_sfov_083.png
-PATH_PATTERN = re.compile(r"scan_(\d{6})/mfov_(\d{4})/corrected_sfov_(\d{3}).png")
+# scan_000009/mFOVs/mFOV_0032/sfov_082.png
+PATH_PATTERN = re.compile(r"scan_(\d{6})/mFOVs/mfov_(\d{4})/sfov_(\d{3}).png")
 
 class SfovInfo(BaseModel):
     path: str
