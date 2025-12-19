@@ -17,7 +17,7 @@ from janelia_emrp.msem.field_of_view_layout import MFovPosition
 from janelia_emrp.msem.slab_info import STACK_PATTERN
 
 # scan_000009/mFOVs/mFOV_0032/sfov_082.png
-PATH_PATTERN = re.compile(r"scan_(\d{6})/mFOVs/mfov_(\d{4})/sfov_(\d{3}).png")
+PATH_PATTERN = re.compile(r"scan_(\d{6})/mFOVs/mFOV_(\d{4})/sfov_(\d{3}).png")
 
 class SfovInfo(BaseModel):
     path: str
