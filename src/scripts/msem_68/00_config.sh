@@ -48,3 +48,6 @@ export N_CORES_PER_EXECUTOR=5
 export N_OVERHEAD_CORES_PER_WORKER=1
 #N_CORES_PER_WORKER=$(( (N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR) + N_OVERHEAD_CORES_PER_WORKER ))
 export N_CORES_DRIVER=1
+
+GSON_JAR="/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR} --conf spark.executor.extraClassPath=${GSON_JAR}"
