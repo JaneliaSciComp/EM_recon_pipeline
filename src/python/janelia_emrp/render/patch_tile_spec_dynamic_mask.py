@@ -6,8 +6,8 @@ from janelia_emrp.render.web_service_request import RenderRequest
 def main():
     render_request = RenderRequest(host='em-services-1.int.janelia.org:8080',
                                    owner='fibsem',
-                                   project='jrc_maph_mefs_1')
-    stack = "v3_acquire_mask"
+                                   project='jrc_maph_mefs_1_mask_test')
+    stack = "v2_acquire"
 
     z_layers_to_patch = render_request.get_z_values(stack)
 
