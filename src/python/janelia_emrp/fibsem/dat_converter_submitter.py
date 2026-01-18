@@ -58,18 +58,20 @@ def build_dat_batch_list(layers: list[DatPathsForLayer],
 def bsub_convert_dat_batch(dat_batch: DatBatch,
                            cluster_job_project_for_billing: str,
                            log_file: Path,
+                           num_bsub_slots: int,
                            convert_script_path: Path,
                            transfer_info_path: Path,
-                           num_workers: int):
+                           num_dask_workers: int):
     args = [
         "bsub",
         "-P", cluster_job_project_for_billing,
+        "-n", str(num_bsub_slots),
         "-W", dat_batch.runtime_limit,
         "-J", dat_batch.get_job_name(),
         "-o", str(log_file),
         str(convert_script_path),
         str(transfer_info_path),
-        str(num_workers),
+        str(num_dask_workers),
         str(log_file.parent),
         dat_batch.runtime_limit,
         str(dat_batch.first_dat.file_path),
@@ -86,7 +88,6 @@ def bsub_convert_dat_batch(dat_batch: DatBatch,
 
 def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
                            convert_script_path: Path,
-                           num_workers: int,
                            max_batch_count: Optional[int],
                            dats_per_hour: int,
                            processed_batch_count: int,
@@ -135,11 +136,16 @@ def submit_jobs_for_volume(transfer_info: VolumeTransferInfo,
             log_dir = base_log_dir / f"batch_{processed_batch_count:06}"
             log_dir.mkdir(parents=True, exist_ok=False)
 
+            # request 1 slot for 1x1, 2x2, 2x3, request 2 slots for 2x4, 3x3, 2x5, ...
+            sds = transfer_info.scope_data_set
+            num_bsub_slots = int(sds.rows_per_z_layer * sds.columns_per_z_layer / 7) + 1
+
             bsub_convert_dat_batch(dat_batch=dat_batch,
                                    cluster_job_project_for_billing=transfer_info.cluster_job_project_for_billing,
+                                   num_bsub_slots=num_bsub_slots,
                                    log_file=(log_dir / "convert_dat.log"),
                                    convert_script_path=convert_script_path,
-                                   num_workers=num_workers,
+                                   num_dask_workers=1, # used to be a parameter, but values > 1 do not seem to work so hardcoding it to 1 for now
                                    transfer_info_path=transfer_info.parsed_from_path)
 
             with open(last_conversion_path, "w") as last_conversion_file:
@@ -166,13 +172,7 @@ def main(arg_list: list[str]):
     parser.add_argument(
         "--convert_script",
         help="Path of convert script to be called by bsub job",
-        default="/groups/flyem/home/flyem/bin/dat_transfer/2022/02_convert_dats.sh"
-    )
-    parser.add_argument(
-        "--num_workers",
-        help="The number of workers to use for distributed processing",
-        type=int,
-        default=1
+        default="/groups/fibsem/home/fibsemxfer/bin/02_convert_dats.sh"
     )
     parser.add_argument(
         "--lsf_runtime_limit",
@@ -217,7 +217,6 @@ def main(arg_list: list[str]):
         try:
             processed_batch_count = submit_jobs_for_volume(transfer_info=transfer_info,
                                                            convert_script_path=convert_script_path,
-                                                           num_workers=args.num_workers,
                                                            max_batch_count=args.max_batch_count,
                                                            dats_per_hour=dats_per_hour,
                                                            processed_batch_count=processed_batch_count,

@@ -4,7 +4,7 @@
         "host": "jeiss6.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/human",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mpi_psc120_1a2",
+        "data_set_id": "jrc_mpi_psc120_1a1",
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6281_24-10-04_090007_0-0-0.dat",

@@ -20,6 +20,18 @@ export BILL_TO="${LAB_OR_PROJECT_GROUP}"
 # number of Dask workers for dat_to_render process
 DASK_DAT_TO_RENDER_WORKERS="32"
 
+# /groups/cellmap/cellmap
+BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}"
+if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
+  # /groups/reiser/reiserlab
+  PREV_BASE_GROUPS_DIR="${BASE_GROUPS_DIR}"
+  BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab"
+  if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
+    echo "ERROR: can't find ${PREV_BASE_GROUPS_DIR} or ${BASE_GROUPS_DIR}"
+    exit 1
+  fi
+fi
+
 #SCAPES_ROOT_DIR="${RENDER_NRS_ROOT}/scapes"
 N5_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.n5"
 
@@ -27,6 +39,11 @@ N5_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.n5"
 # The following parameters are either derived from ones above or have static
 # standard values.  There is no need to modify these unless you want to
 # specify non-standard values.
+
+FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
+EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
+JQ="${FIBSEMXFER_DIR}/bin/jq"
+SOURCE_MINIFORGE3_SCRIPT="${FIBSEMXFER_DIR}/bin/source_miniforge3.sh"
 
 # IP address and port for the render web services
 RENDER_HOST="10.40.3.113"
@@ -85,16 +102,18 @@ fi
 
 # Write spark logs to backed-up filesystem rather than user home so that they are readable by others for analysis.
 # NOTE: must consolidate logs when changing run parent dir
-export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render/spark_output/${USER}"
+export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir ${BASE_GROUPS_DIR}/render/spark_output/${USER}"
 
 # Avoid "Could not initialize class ch.systemsx.cisd.hdf5.CharacterEncoding" exceptions
 # (see https://github.com/PreibischLab/BigStitcher-Spark/issues/8 ).
-H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/flyem/data/render/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
+H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/fibsem/home/fibsemxfer/lib/jhdf5/native/jhdf5/amd64-Linux/libjhdf5.so"
 
 export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
 
-# preview code needs newer GSON library to parse HDF5 attributes
-GSON_JAR="/groups/flyem/data/render/lib/gson/gson-2.10.1.jar"
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
+# code needs newer GSON library (for preview to parse HDF5 attributes, and for n5 reading/writing)
+# (note: tried using spark.[driver|executor].userClassPathFirst=true option but that messes up log4j configuration,
+#        so decided to just use spark.[driver|executor].extraClassPath instead)
+GSON_JAR="/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 export LSF_PROJECT="${BILL_TO}"

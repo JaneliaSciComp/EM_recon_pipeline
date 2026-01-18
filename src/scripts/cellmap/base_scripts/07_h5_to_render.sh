@@ -2,30 +2,29 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=`readlink -m $0`
-SCRIPT_DIR=`dirname ${ABSOLUTE_SCRIPT}`
-source ${SCRIPT_DIR}/00_config.sh
+ABSOLUTE_SCRIPT=$(readlink -m "${0}")
+SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+source "${SCRIPT_DIR}"/00_config.sh
 
-RUN_TIME=`date +"%Y%m%d_%H%M%S"`
+RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 LOG_DIR="${SCRIPT_DIR}/logs"
-mkdir -p ${LOG_DIR}
+mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/run_${RUN_TIME}.log"
 
 echo "
 Running $0 on ${HOSTNAME} at ${RUN_TIME} ...
-" | tee -a ${LOG_FILE}
+" | tee -a "${LOG_FILE}"
 
 DASK_WORKER_SPACE="${LOG_DIR}/dask_work_${RUN_TIME}"
-mkdir -p ${DASK_WORKER_SPACE}
+mkdir -p "${DASK_WORKER_SPACE}"
 
-source /groups/flyem/data/render/bin/miniconda3/source_me.sh 
+# shellcheck source=???
+source "${SOURCE_MINIFORGE3_SCRIPT}"
 
 conda activate janelia_emrp
 
-# need this to avoid errors from render-python?
+# need this to avoid errors from render-python
 export OPENBLAS_NUM_THREADS=1
-
-EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
@@ -42,6 +41,7 @@ On ${HOSTNAME} at ${RUN_TIME}
 
 Running:
   python ${ARGS}
-" | tee -a ${LOG_FILE}
+" | tee -a "${LOG_FILE}"
 
-python ${ARGS} 2>&1 | tee -a ${LOG_FILE}
+# shellcheck disable=SC2086
+python ${ARGS} 2>&1 | tee -a "${LOG_FILE}"

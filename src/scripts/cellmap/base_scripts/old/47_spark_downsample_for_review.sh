@@ -71,7 +71,7 @@ LOG_FILE="${LOG_DIR}/downsample-review-$(date +"%Y%m%d_%H%M%S").log"
 
 mkdir -p "${LOG_DIR}"
 
-HOT_KNIFE_JAR="/groups/flyem/data/render/lib/hot-knife-0.0.5-SNAPSHOT.jar"
+HOT_KNIFE_JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.jar"
 FLINTSTONE="/groups/flyTEM/flyTEM/render/spark/spark-janelia/flintstone.sh"
 
 # use shell group to tee all output to log file

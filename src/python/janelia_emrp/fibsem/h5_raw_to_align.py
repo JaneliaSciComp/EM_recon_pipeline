@@ -45,9 +45,11 @@ class H5RawToAlign:
     def __init__(self,
                  volume_transfer_info: VolumeTransferInfo,
                  align_writer: DatToH5Writer,
+                 channel_index: int,
                  skip_existing: bool = True):
         self.volume_transfer_info = volume_transfer_info
         self.align_writer = align_writer
+        self.channel_index = channel_index
         self.skip_existing = skip_existing
 
     def __str__(self):
@@ -76,11 +78,11 @@ class H5RawToAlign:
                 raw_data_group = h5_raw_file.get(group_name)
                 dat_path = new_dat_path(Path(raw_data_group.attrs[DAT_FILE_NAME_KEY]))
                 channel_data_set_names = raw_data_group.attrs[CHANNEL_DATA_SET_NAMES_KEY]
-                first_channel_pixels = np.array(raw_data_group.get(channel_data_set_names[0]))
-                cyx_first_channel_pixels = np.expand_dims(first_channel_pixels, axis=0)
+                channel_pixels = np.array(raw_data_group.get(channel_data_set_names[self.channel_index]))
+                cyx_channel_pixels = np.expand_dims(channel_pixels, axis=0)
                 cyx_dat_list.append(CYXDat(dat_path=dat_path,
                                            header=dict(raw_data_group.attrs.items()),
-                                           pixels=cyx_first_channel_pixels))
+                                           pixels=cyx_channel_pixels))
 
         logger.info(f"convert_layer: writing {len(cyx_dat_list)} groups to {h5_paths_for_layer.align_path}")
 
@@ -172,6 +174,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
                    parent_work_dir: Optional[str],
                    first_h5: Optional[str],
                    last_h5: Optional[str],
+                   channel_index: int,
                    skip_existing: bool,
                    min_layers_per_worker: int,
                    lsf_runtime_limit: Optional[str]):
@@ -197,6 +200,7 @@ def convert_volume(volume_transfer_info: VolumeTransferInfo,
     if len(h5_layer_list) > 0:
         converter = H5RawToAlign(volume_transfer_info=volume_transfer_info,
                                  align_writer=DatToH5Writer(chunk_shape=(1, 512, 512)),
+                                 channel_index=channel_index,
                                  skip_existing=skip_existing)
 
         if num_workers > 1:
@@ -285,6 +289,12 @@ def main(arg_list: list[str]):
         default=False,
         action="store_true"
     )
+    parser.add_argument(
+        "--channel_index",
+        help="Index of channel to convert",
+        type=int,
+        default=0
+    )
 
     args = parser.parse_args(arg_list)
 
@@ -293,6 +303,7 @@ def main(arg_list: list[str]):
                    parent_work_dir=args.parent_work_dir,
                    first_h5=args.first_h5,
                    last_h5=args.last_h5,
+                   channel_index=args.channel_index,
                    skip_existing=(not args.force),
                    min_layers_per_worker=args.min_layers_per_worker,
                    lsf_runtime_limit=args.lsf_runtime_limit)

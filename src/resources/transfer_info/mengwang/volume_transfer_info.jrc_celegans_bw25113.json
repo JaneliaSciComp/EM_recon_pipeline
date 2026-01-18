@@ -1,0 +1,54 @@
+{
+    "transfer_id": "mengwang::jrc_celegans_bw25113::jeiss4.hhmi.org",
+    "scope_data_set": {
+        "host": "jeiss4.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/C_elegans",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "jrc_clegans_bw25113",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
+        "first_dat_name": "Merlin-4238_25-05-08_190001_0-0-0.dat",
+        "last_dat_name": "Merlin-4238_25-06-03_152347_0-0-0.dat",
+        "dat_x_and_y_nm_per_pixel": 8,
+        "dat_z_nm_per_pixel": 8,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/groups/mengwang/mengwanglab/data/jrc_celegans_bw25113/dat",
+        "raw_h5": "/groups/mengwang/mengwanglab/data/jrc_celegans_bw25113/raw",
+        "align_h5": "/nrs/mengwang/data/jrc_celegans_bw25113/align",
+        "export_n5": "/nrs/mengwang/data/jrc_celegans_bw25113/jrc_celegans_bw25113.n5"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/mengwang/data/jrc_celegans_bw25113/raw"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "mengwang",
+        "project": "jrc_celegans_bw25113",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "mask_height": 0,
+        "connect": {
+            "host": "10.40.3.113",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM", "EXPORT_PREVIEW_VOLUME"
+    ],
+    "cluster_job_project_for_billing": "mengwang",
+    "number_of_dats_converted_per_hour": 80,
+    "number_of_preview_workers": 10
+}

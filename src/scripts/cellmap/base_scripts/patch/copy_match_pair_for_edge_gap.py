@@ -66,19 +66,45 @@ def get_tile_data(host, owner, project, stack, tile_id):
     return tile_spec_to_data(tile_spec)
 
 
-def main(host, owner, project, stack, p_tile_id, q_tile_id, from_collection, to_collection, min_z, max_z, z_step):
+def copy_pair(host,
+              owner,
+              project,
+              stack,
+              p_tile_id,
+              q_tile_id,
+              from_collection,
+              to_collection,
+              min_z,
+              max_z_inclusive,
+              z_step,
+              override_row_col = None):
+
     p_tile_spec, p_section_id, p_image_row, p_image_col = get_tile_data(host, owner, project, stack, p_tile_id)
     q_tile_spec, q_section_id, q_image_row, q_image_col = get_tile_data(host, owner, project, stack, q_tile_id)
 
     if p_section_id != q_section_id:
         raise Exception(f'p sectionId {p_section_id} differs from q sectionId {q_section_id}')
 
+    if override_row_col is not None:
+        if len(override_row_col) != 4:
+            raise Exception(f'override_row_col must be a list of 4 integers')
+        p_image_row = override_row_col[0]
+        p_image_col = override_row_col[1]
+        q_image_row = override_row_col[2]
+        q_image_col = override_row_col[3]
+
     from_id = CanvasIdPair(p_section_id, p_tile_id, q_section_id, q_tile_id)
 
     from_match_pair = get_pair_matches(host, owner, from_collection, from_id)[0]
+
+    # set all weights to 0.1 to make it easier to find copied matches later
+    from_match_pair_weights = from_match_pair["matches"]["w"]
+    for i in range(len(from_match_pair_weights)):
+        from_match_pair_weights[i] = 0.1
+
     patched_match_list = []
 
-    for z in range(min_z, max_z + 1, z_step):
+    for z in range(min_z, max_z_inclusive + 1, z_step):
         patch_p_section_id = None
         patch_p_tile_id = None
         patch_q_section_id = None
@@ -106,7 +132,7 @@ def main(host, owner, project, stack, p_tile_id, q_tile_id, from_collection, to_
                 }
             )
         else:
-            raise Exception(f'could not find patch pair for z {z}')
+            raise Exception(f'could not find patch pair for z {z}, p {p_image_row}_{p_image_col}, q {q_image_row}_{q_image_col}')
 
     save_matches(host, owner, to_collection, patched_match_list)
 
@@ -114,8 +140,9 @@ def main(host, owner, project, stack, p_tile_id, q_tile_id, from_collection, to_
 
 
 if __name__ == '__main__':
-    main('em-services-1.int.janelia.org:8080',
-         'RENDER_OWNER', 'RENDER_PROJECT', 'ACQUIRE_TRIMMED_STACK',
-         'p tile id', 'q tile id',
-         'MATCH_COLLECTION', 'MATCH_COLLECTION', minZ, maxZInclusive, z_step)
-
+    copy_pair(host='em-services-1.int.janelia.org:8080',
+              owner='RENDER_OWNER', project='RENDER_PROJECT', stack='ACQUIRE_TRIMMED_STACK',
+              p_tile_id='PID', q_tile_id='QID',
+              from_collection='MATCH_COLLECTION', to_collection='MATCH_COLLECTION',
+              min_z=0, max_z_inclusive=0, z_step=10)
+              # add override_row_col=[]

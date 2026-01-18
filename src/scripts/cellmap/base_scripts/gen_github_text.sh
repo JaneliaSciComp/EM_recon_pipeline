@@ -6,8 +6,6 @@ ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh" "${TAB}"
 
-JQ="/groups/flyem/data/render/bin/jq"
-
 # ----------------------------------------------
 # Source Images
 
@@ -18,7 +16,7 @@ ALIGN_H5=$(${JQ} '.cluster_root_paths.align_h5' "${VOLUME_TRANSFER_INFO}" | sed 
 # ----------------------------------------------
 # Thickness Correction paths
 
-# /nrs/flyem/render/z_corr/Z0720_07m_BR/Sec14/v4_acquire_trimmed_align/run_20210827_101623_480_z_corr/solve_20210827_104130/Zcoords.txt
+# .../z_corr/Z0720_07m_BR/Sec14/v4_acquire_trimmed_align/run_20210827_101623_480_z_corr/solve_20210827_104130/Zcoords.txt
 STACK_Z_CORR_DIR="${RENDER_NRS_ROOT}/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
 
 unset Z_COORDS_FILE ALIGN_STACK_DATA
@@ -106,7 +104,7 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
 
   RENDERED_DATA_SET="${RENDERED_N5_PATH##${N5_PATH}}"
 
-  # /groups/flyem/data/render/bin/jq '.translate[0]' /nrs/flyem/render/n5/Z0720_07m_BR/z_corr/Sec14/v4_acquire_trimmed_align_ic___20210827_131509/attributes.json
+  # jq '.translate[0]' attributes.json
   OFFSET_X=$(${JQ} '.translate[0]' "${N5_JSON}")
   OFFSET_Y=$(${JQ} '.translate[1]' "${N5_JSON}")
   OFFSET_Z=$(${JQ} '.translate[2]' "${N5_JSON}")
@@ -158,8 +156,15 @@ VIEW_PME_URL="${VIEW_URL}/point-match-explorer.html"
 
 STACK_DATA_URL="http://em-services-1.int.janelia.org:8080/render-ws/v1/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ACQUIRE_TRIMMED_STACK}"
 
+FOUND_ATS=$(curl -s "${STACK_DATA_URL}" | ${JQ} -r '.[].stack' 2>/dev/null | grep -c "${ACQUIRE_TRIMMED_STACK}" || true)
+if (( FOUND_ATS == 0 )); then
+  STACK_AND_MATCH_PARAMS=""
+else
+  STACK_AND_MATCH_PARAMS="&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}"
+fi
+
 VIEW_STACK_PARAMS="renderStackOwner=${RENDER_OWNER}&renderStackProject=${RENDER_PROJECT}&dynamicRenderHost=renderer.int.janelia.org%3A8080&catmaidHost=renderer-catmaid.int.janelia.org%3A8000"
-VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}&renderStack=${ACQUIRE_TRIMMED_STACK}&matchOwner=${RENDER_OWNER}&matchCollection=${MATCH_COLLECTION}&renderDataHost=em-services-1.int.janelia.org%3A8080"
+VIEW_PME_PARAMS="${VIEW_STACK_PARAMS}${STACK_AND_MATCH_PARAMS}&renderDataHost=em-services-1.int.janelia.org%3A8080"
 
 echo "
 ## Filesystem Paths
@@ -172,9 +177,6 @@ Source Images:
 Alignment Prep:
   ${SCRIPT_DIR}
 
-Thickness Correction Data:
-  ${Z_COORDS_FILE}
-  
 N5 Volumes:
 ${RENDERED_N5_DATASETS}
 \`\`\`

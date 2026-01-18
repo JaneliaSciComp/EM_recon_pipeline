@@ -4,7 +4,7 @@ set -e
 
 ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
-source "${SCRIPT_DIR}/00_config.sh" "${TAB}"
+source "${SCRIPT_DIR}"/00_config.sh "${TAB}"
 
 # /nrs/${LAB_OR_GROUP_PROJECT}/data/${VOLUME}/${VOLUME}.n5/em/fibsem-uint8
 FINAL_DATA_SET="/em/fibsem-uint8"
@@ -14,8 +14,6 @@ if [ -d "${FINAL_N5_PATH}" ]; then
   echo "ERROR: ${FINAL_N5_PATH} already exists!"
   exit 1
 fi
-
-JQ="/groups/flyem/data/render/bin/jq"
 
 # ----------------------------------------------
 # N5 paths
@@ -51,7 +49,7 @@ if [[ ! -f ${N5_JSON} ]]; then
   exit 1
 fi
 
-# /groups/flyem/data/render/bin/jq '.translate[0]' /nrs/flyem/render/n5/Z0720_07m_BR/z_corr/Sec14/v4_acquire_trimmed_align_ic___20210827_131509/attributes.json
+# jq '.translate[0]' attributes.json
 OFFSET_X=$(${JQ} '.translate[0]' "${N5_JSON}")
 OFFSET_Y=$(${JQ} '.translate[1]' "${N5_JSON}")
 OFFSET_Z=$(${JQ} '.translate[2]' "${N5_JSON}")

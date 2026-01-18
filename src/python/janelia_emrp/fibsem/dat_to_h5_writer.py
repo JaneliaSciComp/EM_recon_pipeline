@@ -194,8 +194,7 @@ class DatToH5Writer:
                                                         channel_num=0,
                                                         fill_info=fill_info)
 
-        for index in range(len(cyx_dat_list)):
-            cyx_dat = cyx_dat_list[index]
+        for index, cyx_dat in enumerate(cyx_dat_list):
             compressed_record = compressed_record_list[index]
 
             tile_key = cyx_dat.dat_path.tile_key()
@@ -275,9 +274,9 @@ def build_safe_chunk_shape(hdf5_writer_chunks: Union[Tuple[int, ...], bool, None
     if hdf5_writer_chunks and not isinstance(hdf5_writer_chunks, bool):
         safe_shape_list = []
 
-        for dimension in range(0, len(data_shape)):
+        for dimension, shape in enumerate(data_shape):
             if dimension < len(hdf5_writer_chunks):
-                if hdf5_writer_chunks[dimension] <= data_shape[dimension]:
+                if hdf5_writer_chunks[dimension] <= shape:
                     safe_shape_list.append(hdf5_writer_chunks[dimension])
                 else:
                     logger.info(f"build_safe_chunk_shape: overriding dimension {dimension} "

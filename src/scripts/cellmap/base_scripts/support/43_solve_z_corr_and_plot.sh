@@ -73,11 +73,11 @@ echo
 # ---------------------------
 # generate plots
 
-source /groups/flyem/data/render/bin/miniconda3/source_me.sh
+# shellcheck source=???
+source "${SOURCE_MINIFORGE3_SCRIPT}"
 
 conda activate janelia_emrp
 
-EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 Z_CORR_SCRIPTS_DIR="${EMRP_ROOT}/src/python/janelia_emrp/zcorr"

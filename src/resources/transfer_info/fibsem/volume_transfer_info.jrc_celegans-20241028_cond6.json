@@ -1,0 +1,54 @@
+{
+    "transfer_id": "fibsem::jrc_celegans-20241028_cond6::jeiss7.hhmi.org",
+    "scope_data_set": {
+        "host": "jeiss7.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/C_elegans",
+        "root_keep_path": "/cygdrive/d/UploadFlags",
+        "data_set_id": "jrc_celegans-20241028",
+        "rows_per_z_layer": 1,
+        "columns_per_z_layer": 1,
+        "first_dat_name": "Merlin-6282_25-02-15_120535_0-0-0.dat",
+        "last_dat_name": "Merlin-6282_25-02-15_220713_0-0-0.dat",
+        "dat_x_and_y_nm_per_pixel": 8,
+        "dat_z_nm_per_pixel": 8,
+        "dat_tile_overlap_microns": 2
+    },
+    "cluster_root_paths": {
+        "raw_dat": "/groups/fibsem/fibsem/data/jrc_celegans-20241028_cond6/dat",
+        "raw_h5": "/groups/fibsem/fibsem/data/jrc_celegans-20241028_cond6/raw",
+        "align_h5": "/nrs/fibsem/data/jrc_celegans-20241028_cond6/align",
+        "export_n5": "not_applicable"
+    },
+    "archive_root_paths": {
+        "raw_h5": "/nearline/fibsem/data/jrc_celegans-20241028_cond6/raw"
+    },
+    "max_mipmap_level": 7,
+    "render_data_set": {
+        "owner": "fibsem",
+        "project": "jrc_celegans_20241028_cond6",
+        "stack": "v1_acquire",
+        "restart_context_layer_count": 1,
+        "mask_width": 100,
+        "mask_height": 0,
+        "connect": {
+            "host": "10.40.3.113",
+            "port": 8080,
+            "web_only": true,
+            "validate_client": false,
+            "client_scripts": "/groups/flyTEM/flyTEM/render/bin",
+            "memGB": "1G"
+        }
+    },
+    "transfer_tasks": [
+        "COPY_SCOPE_DAT_TO_CLUSTER",
+        "GENERATE_CLUSTER_H5_RAW",
+        "GENERATE_CLUSTER_H5_ALIGN",
+        "REMOVE_DAT_AFTER_H5_CONVERSION",
+        "ARCHIVE_H5_RAW",
+        "IMPORT_H5_ALIGN_INTO_RENDER",
+        "APPLY_FIBSEM_CORRECTION_TRANSFORM"
+    ],
+    "cluster_job_project_for_billing": "shroff",
+    "number_of_dats_converted_per_hour": 80,
+    "number_of_preview_workers": 10
+}

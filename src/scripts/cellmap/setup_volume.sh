@@ -4,21 +4,29 @@ set -e
 
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+
+# only list recently modified transfer files (default is 30 days)
+MODIFICATION_DAYS="${1:-30}"
+
 BASE_SCRIPTS_DIR="${SCRIPT_DIR}/base_scripts"
 
-EMRP_ROOT="/groups/flyem/data/render/git/EM_recon_pipeline"
+FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
+EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
 TRANSFER_INFO_DIR="${EMRP_ROOT}/src/resources/transfer_info"
 
 RUN_DIR=$(readlink -m ".")
 cd "${TRANSFER_INFO_DIR}"
 
 unset TRANSFER_INFO_JSON_FILE
-shopt -s nullglob
-TI_FILES=(*/volume_transfer_info.*.json)
-shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
+mapfile -t TI_FILES < <(find . -type f -name "volume_transfer_info.*.json" -mtime "-${MODIFICATION_DAYS}" | cut -c3-)
+
+if [ ${#TI_FILES[@]} -eq 0 ]; then
+    echo "No volume_transfer_info files have been modified in the past ${MODIFICATION_DAYS} days"
+    exit 1
+fi
 
 echo "
-Version controlled volume_transfer_info files are:
+The following volume_transfer_info files have been modified in the past ${MODIFICATION_DAYS} days:
 "
 PS3="
 Choose number of volume_transfer_info file for new data set: "
@@ -39,7 +47,7 @@ fi
 VOLUME_NAME="${TI_BASENAME#volume_transfer_info.}"
 VOLUME_NAME="${VOLUME_NAME%.json}"
 
-JQ="/groups/flyem/data/render/bin/jq"
+JQ="${FIBSEMXFER_DIR}/bin/jq"
 
 LAB_OR_PROJECT_GROUP=$(${JQ} '.render_data_set.owner' "${TRANSFER_INFO_JSON_FILE}" | sed 's/"//g')
 
@@ -58,18 +66,18 @@ if [[ "${ROW_COUNT}" -eq "${NULL_VALUE}" || "${ROW_COUNT}" -eq "0" || "${ROW_COU
 fi
 
 # /groups/cellmap/cellmap
-RENDER_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}/render"
-if [[ ! -d "${RENDER_DIR}" ]]; then
+BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}"
+if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
   # /groups/reiser/reiserlab
-  PREV_RENDER_DIR="${RENDER_DIR}"
-  RENDER_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab/render"
-  if [[ ! -d "${RENDER_DIR}" ]]; then
-    echo "ERROR: can't find ${PREV_RENDER_DIR} or ${RENDER_DIR}"
+  PREV_BASE_GROUPS_DIR="${BASE_GROUPS_DIR}"
+  BASE_GROUPS_DIR="/groups/${LAB_OR_PROJECT_GROUP}/${LAB_OR_PROJECT_GROUP}lab"
+  if [[ ! -d "${BASE_GROUPS_DIR}" ]]; then
+    echo "ERROR: can't find ${PREV_BASE_GROUPS_DIR} or ${BASE_GROUPS_DIR}"
     exit 1
   fi
 fi
 
-ALIGN_DIR="${RENDER_DIR}/align/${VOLUME_NAME}"
+ALIGN_DIR="${BASE_GROUPS_DIR}/render/align/${VOLUME_NAME}"
 if [[ -d "${ALIGN_DIR}" ]]; then
   echo "ERROR: ${ALIGN_DIR} already exists!"
   exit 1

@@ -19,7 +19,7 @@
       "matchRod": 0.92
     },
     "featureRender": {
-      "renderScale": 0.05,
+      "renderScale": 0.1,
       "renderWithFilter": false,
       "renderWithoutMask": false
     },
@@ -49,7 +49,7 @@
       "matchRod": 0.92
     },
     "featureRender": {
-      "renderScale": 0.1,
+      "renderScale": 0.2,
       "renderWithFilter": false,
       "renderWithoutMask": false
     },
