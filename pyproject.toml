@@ -30,19 +30,44 @@ allow-direct-references = true
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
 
+# ---- Base editable install (pip-only) ----
 [tool.pixi.pypi-dependencies]
 janelia-emrp = { path = ".", editable = true }
 
+# ---- Base conda deps (shared by all envs) ----
 [tool.pixi.dependencies]
 python = ">=3.12"
 urllib3 = ">=1.26,<2.0"
 bokeh = ">=2.3.3,<4.0.0"
 h5py = ">=3.6.0"
 pandas = ">=1.5.0,<3.0.0"
-pytest = ">=7.1.1"
 pydantic = ">=2.7.0"
 numpy = ">=1.26.0,<2.0.0"
 scikit-image = ">=0.22.0"
+
+# ---- Everything except pytest ----
+[tool.pixi.feature.dev.dependencies]
+matplotlib = "*"
+opencv = "*"                 # prefer conda-forge over opencv-python
+google-cloud-storage = "*"
+dask-jobqueue = "*"
+xarray-multiscale = "*"
+basicpy = "*"
+
+# ---- Pip-only / git-only deps ----
+[tool.pixi.feature.dev.pypi-dependencies]
+fibsem-tools = "==7.0.5"
+render-python = { git = "https://github.com/AllenInstitute/render-python.git", tag = "v2.4.2" }
+
+# ---- Test-only ----
+[tool.pixi.feature.test.dependencies]
+pytest = ">=7.1.1"
+
+# ---- Environments ----
+[tool.pixi.environments]
+default = []
+fibsem = ["dev"]       # everything but pytest
+dev = ["dev", "test"]  # everything + pytest
 
 # see https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 [tool.pytest.ini_options]
@@ -53,6 +78,6 @@ filterwarnings = [
     "ignore:::pandas[.*]",
     "ignore:::renderapi[.*]",
     "ignore:::requests[.*]",
-    "ignore:::tensorstore",        # TODO: why does tensorstore filter not work?
-    "ignore:DeprecationWarning::"  # TODO: remove when tensorstore filter is fixed
+    "ignore:::tensorstore",
+    "ignore:DeprecationWarning::"
 ]
