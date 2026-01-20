@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# print H5 file headers
+
 if (( $# < 1 )); then
   echo "
 USAGE: $0 <h5 path> [h5 path] ...
