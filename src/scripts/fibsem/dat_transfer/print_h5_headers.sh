@@ -11,7 +11,7 @@ fi
 
 FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
-PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --environment janelia_emrp"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --environment janelia-emrp"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
