@@ -51,13 +51,13 @@ matplotlib = "*"
 opencv = "*"                 # prefer conda-forge over opencv-python
 google-cloud-storage = "*"
 dask-jobqueue = "*"
-basicpy = "*"
 
 # ---- Pip-only / git-only deps ----
 [tool.pixi.feature.dev.pypi-dependencies]
 fibsem-tools = "==7.0.5"
 render-python = { git = "https://github.com/AllenInstitute/render-python.git", tag = "v2.4.2" }
 xarray-multiscale = ">=0.3.3"
+basicpy = "*"
 
 # ---- Test-only ----
 [tool.pixi.feature.test.dependencies]
