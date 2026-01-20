@@ -44,6 +44,7 @@ FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
 JQ="${FIBSEMXFER_DIR}/bin/jq"
 SOURCE_MINIFORGE3_SCRIPT="${FIBSEMXFER_DIR}/bin/source_miniforge3.sh"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --enviornment janelia_emrp"
 
 # IP address and port for the render web services
 RENDER_HOST="10.40.3.113"

@@ -18,11 +18,8 @@ mkdir -p "${LOG_DIR}"
 
 LOG_FILE="${LOG_DIR}/convert_submit.${RUN_DATE_AND_TIME}.log"
 
-source ${FIBSEMXFER_DIR}/bin/source_miniforge3.sh
-
-conda activate janelia_emrp
-
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --enviornment janelia_emrp"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
@@ -35,7 +32,7 @@ echo """
 On ${HOSTNAME} at ${RUN_DATE_AND_TIME}
 
 Running:
-  python ${ARGS}
+  ${PIXI_RUN} ${ARGS}
 """ | tee -a "${LOG_FILE}"
 
 # The exit status of a pipeline is the exit status of the last command in the pipeline,
@@ -45,7 +42,7 @@ Running:
 set -o pipefail
 
 # shellcheck disable=SC2086
-python ${ARGS} 2>&1 | tee -a "${LOG_FILE}"
+${PIXI_RUN} ${ARGS} 2>&1 | tee -a "${LOG_FILE}"
 RETURN_CODE="$?"
 
 echo "python return code is ${RETURN_CODE}"

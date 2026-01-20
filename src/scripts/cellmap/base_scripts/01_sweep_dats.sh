@@ -20,14 +20,6 @@ SWEEP_LOG_DIR="${SCRIPT_DIR}/logs/sweep"
 mkdir -p "${SWEEP_LOG_DIR}"
 LOG_FILE="${SWEEP_LOG_DIR}/sweep_dat.log"
 
-# shellcheck source=???
-source "${SOURCE_MINIFORGE3_SCRIPT}"
-
-conda activate janelia_emrp
-
-# save environment python executable path so that it can be used when running as fibsemxfer user in last line below
-PYTHON_EXE=$(type python | awk '{print $3}')
-
 # export path to scripts
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
@@ -41,7 +33,7 @@ echo """
 On ${HOSTNAME} at ${RUN_TIME}
 
 Running (as fibsemxfer user for connection to scope):
-  ${PYTHON_EXE} ${ARGS}
+  ${PIXI_RUN} ${ARGS}
 """ | tee -a "${LOG_FILE}"
 
-su -c "umask 0002; ${PYTHON_EXE} ${ARGS} 2>&1 | tee -a ${LOG_FILE}" fibsemxfer
+su -c "umask 0002; ${PIXI_RUN} ${ARGS} 2>&1 | tee -a ${LOG_FILE}" fibsemxfer

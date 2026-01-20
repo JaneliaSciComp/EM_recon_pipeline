@@ -2,7 +2,7 @@
 Pipeline scripts and tools for reconstructing Electron Microscopy volumes.
 
 ### Setup
-1. If necessary, [install pixi](https://pixi.sh/latest/#installation).
+1. If necessary, [install pixi](https://pixi.sh/latest/#installation).  This downloads pixi, puts it in `~/.pixi/bin`, and adds it to the PATH definition.  You then need to restart your shell to get access to the `pixi` command.
 
 ### Create Environment and Install
 ```bash
