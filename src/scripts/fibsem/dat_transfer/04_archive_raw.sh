@@ -22,7 +22,7 @@ mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/archive_raw.${RUN_DATE_AND_TIME}.log"
 
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
-PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --enviornment janelia_emrp"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --environment fibsem --frozen python"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 

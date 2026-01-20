@@ -10,16 +10,23 @@ git clone https://github.com/JaneliaSciComp/EM_recon_pipeline.git
 
 cd EM_recon_pipeline
 
-pixi install
+pixi install --environment fibsem     # to install or update the FIBSEM tools environment
+
+# NOTE: During install, you can ignore warnings like:
+#
+#         WARN Skipped running the post-link scripts because `run-post-link-scripts` = `false`
+#         - bin/.librsvg-pre-unlink.sh
+#
+#         WARN The package `fsspec==2026.1.0` does not have an extra named `s3`
 ```
 
 ### Running Scripts
 ```bash
 # Run a script using the pixi environment
-pixi run python src/python/janelia_emrp/fibsem/dat_converter.py --help
+pixi run --manifest-path .../EM_recon_pipeline/pyproject.toml --environment fibsem --frozen python src/python/janelia_emrp/fibsem/dat_converter.py --help
 
 # Or activate a shell with the environment
-pixi shell
+pixi shell --manifest-path .../EM_recon_pipeline/pyproject.toml --environment fibsem --frozen
 python src/python/janelia_emrp/fibsem/dat_converter.py --help
 ```
 

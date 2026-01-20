@@ -22,7 +22,7 @@ RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
 
 FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
-PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --enviornment janelia_emrp"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --environment fibsem --frozen python"
 
 # need this to avoid errors from dask
 export OPENBLAS_NUM_THREADS=1
