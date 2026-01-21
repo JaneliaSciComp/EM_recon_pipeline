@@ -2,22 +2,20 @@
 Pipeline scripts and tools for reconstructing Electron Microscopy volumes.
 
 ### Setup
-1. If necessary, [install miniforge](https://github.com/conda-forge/miniforge).
+1. [Install pixi](https://pixi.sh/latest/installation/) if it is not already available.
 
-### Create Environment and Install 
+### Create Environment and Install
 ```bash
 git clone https://github.com/JaneliaSciComp/EM_recon_pipeline.git
 
 cd EM_recon_pipeline
 
-conda env create -f janelia_emrp.environment.yml
-conda activate janelia_emrp
-
-poetry install --no-root
+pixi install
 ```
 
-### Development Library Management
-- Using conda with poetry as described 
-[here](https://ealizadeh.com/blog/guide-to-python-env-pkg-dependency-using-conda-poetry).
-- To change/update dependencies, edit [pyproject.toml](pyproject.toml) 
-or use [poetry add](https://python-poetry.org/docs/cli/#add) and then run `poetry install`.
+Use `pixi shell` to enter the project environment for running commands, or prefix one-off commands with `pixi run <cmd>`.
+
+### Development Dependency Management
+- Project dependencies live in [pyproject.toml](pyproject.toml) and are resolved by pixi.
+- To add a PyPI dependency use `pixi add --pypi <package>`; for conda dependencies use `pixi add <package>`; see this [reference](https://pixi.sh/dev/reference/cli/pixi/add/) for more details.
+- When editing dependencies directly in `pyproject.toml`, run `pixi install` to refresh the lockfile.
