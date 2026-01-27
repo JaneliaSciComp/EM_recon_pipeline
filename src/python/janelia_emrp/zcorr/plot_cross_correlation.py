@@ -90,8 +90,7 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
 
     data_source = ColumnDataSource(data=dict(x=z_values, y=cc_with_next, zp=zp_values))
 
-    p.circle("x", "y", source=data_source, size=6)
-    # p.scatter("x", "y", source=data_source, marker="circle", size=6)  # possibly preferred approach to calling circle
+    p.scatter("x", "y", source=data_source, marker="circle", size=6)
 
     tap_tool = p.select(type=TapTool)
     tap_tool.callback = OpenURL(url=tap_url)
