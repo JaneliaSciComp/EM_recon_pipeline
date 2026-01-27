@@ -84,7 +84,7 @@ def plot_delta_z(title, data_paths, ignore_margin=35, plot_width=2400, plot_heig
     tooltips = [("z", "@x"), ("delta", "@y")]
     # , y_range=Range1d(0, 3.9)
     p = figure(title=title, x_axis_label='z', y_axis_label='delta z',
-               tooltips=tooltips, plot_width=plot_width, plot_height=plot_height)
+               tooltips=tooltips, width=plot_width, height=plot_height)
 
     if ticker_interval:
         p.xaxis.ticker = SingleIntervalTicker(interval=ticker_interval)
@@ -115,9 +115,14 @@ def plot_delta_z(title, data_paths, ignore_margin=35, plot_width=2400, plot_heig
         trimmed_z_values = z_values[start:stop]
         trimmed_delta_values = delta_values[start:stop]
         line_color = get_line_color(plotted_batch_count)
-        p.circle(trimmed_z_values, trimmed_delta_values,
-                 line_color=line_color, fill_color=line_color,
-                 legend_label=f'batch {plotted_batch_count}')
+        p.scatter(
+            trimmed_z_values, trimmed_delta_values,
+            marker="circle",
+            size=6,
+            line_color=line_color,
+            fill_color=line_color,
+            legend_label=f"batch {plotted_batch_count}",
+        )
         plotted_batch_count = plotted_batch_count + 1
 
     show(p)
