@@ -9,7 +9,7 @@
 
 FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
-PIXI_FIBSEM_CONDA_META_DIR="${FIBSEMXFER_DIR}/.pixi/envs/fibsem/conda-meta"
+PIXI_FIBSEM_CONDA_META_DIR="${EMRP_ROOT}/.pixi/envs/fibsem/conda-meta"
 
 # make library json files group readable (the rattler/libconda stack used by pixi makes these 600 by default)
 chmod g+r ${PIXI_FIBSEM_CONDA_META_DIR}/*.json
