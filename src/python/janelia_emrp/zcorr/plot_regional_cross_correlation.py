@@ -103,7 +103,7 @@ def build_poor_regional_correlations_for_z(owner: str,
                x_range=[layer_x, layer_x + layer_width],
                y_range=[layer_y + layer_height, layer_y],
                tooltips=tooltips, tools='tap,save,reset',
-               plot_width=plot_width, plot_height=plot_height, margin=[0, 50, 0, 0])
+               width=plot_width, height=plot_height, margin=[0, 50, 0, 0])
     p.title.align = 'center'
 
     data_source = ColumnDataSource(data=dict(x=region_center_x, y=region_center_y, cc=cc_with_next))
