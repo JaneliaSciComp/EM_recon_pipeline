@@ -4,14 +4,16 @@ import glob
 import re
 import sys
 import traceback
-from typing import Final, Any, Optional
+from typing import Final, Any, Optional, TYPE_CHECKING
 
 from bokeh.io import output_file
 from bokeh.layouts import column as bokeh_column
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, TapTool, OpenURL, BasicTicker, PrintfTickFormatter, LinearColorMapper, \
     ColorBar, Div, Panel, Tabs
-from bokeh.plotting import figure, show, Figure
+from bokeh.plotting import figure, show
+if TYPE_CHECKING:
+    from bokeh.plotting.figure import Figure
 from bokeh.transform import linear_cmap
 
 from janelia_emrp.zcorr.plot_cross_correlation import build_neuroglancer_tap_url
