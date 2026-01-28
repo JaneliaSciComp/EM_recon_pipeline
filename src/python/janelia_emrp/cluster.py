@@ -7,6 +7,8 @@ Vendored here to avoid dependency version conflicts.
 """
 
 from shutil import which
+
+from dask_jobqueue.lsf import LSFJob
 from distributed import LocalCluster
 from dask_jobqueue import LSFCluster
 import os
@@ -37,6 +39,12 @@ def bsub_available() -> bool:
     """
     result = which("bsub") is not None
     return result
+
+
+# A class to help exit gracefully on Janelia's LSF cluster.
+# Copied from https://github.com/GFleishman/ClusterWrap/blob/44b3d9dccfde495809dc3e4776f0d402a701e7d8/ClusterWrap/clusters.py#L230
+class JaneliaLSFJob(LSFJob):
+    cancel_command = "bkill -d"  # default cancel command is just 'bkill'
 
 
 def get_LSFCLuster(
@@ -97,10 +105,13 @@ def get_LSFCLuster(
     if "memory" not in kwargs:
         kwargs["memory"] = "16GB"
 
+    job_cls = kwargs.pop("job_cls", JaneliaLSFJob)
+
     cluster = LSFCluster(
         cores=threads_per_worker,
         walltime=walltime,
         death_timeout=death_timeout,
+        job_cls=job_cls,
         **kwargs,
     )
     return cluster
