@@ -12,7 +12,6 @@ from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource, TapTool, OpenURL, BasicTicker, PrintfTickFormatter, LinearColorMapper, \
     ColorBar, Div, Panel, Tabs
 from bokeh.plotting import figure, show
-from bokeh.plotting.figure import Figure
 from bokeh.transform import linear_cmap
 
 from janelia_emrp.zcorr.plot_cross_correlation import build_neuroglancer_tap_url
@@ -130,7 +129,7 @@ def build_poor_regional_correlations_for_z(owner: str,
 
 def append_tab_for_prior_layers(min_z: Optional[float],
                                 max_z: Optional[float],
-                                contiguous_z_plot_list: list[Figure],
+                                contiguous_z_plot_list,
                                 tab_panel_list: list[Panel]):
     if min_z is not None and len(contiguous_z_plot_list) > 0:
         tab_title = f"z {int(min_z)} to {int(max_z)}" if min_z < max_z else f"z {min_z}"
