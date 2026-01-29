@@ -412,15 +412,15 @@ def plot_values_over_z(data: pd.DataFrame, attribute: str, tap_url: str, per_til
             y_axis_label=attribute,
             tooltips=tooltips,
             tools="tap,pan,box_zoom,wheel_zoom,save,reset",
-            plot_width=2400,
-            plot_height=400,
+            width=2400,
+            height=400,
             x_range=Range1d(x_min, x_max),
             y_range=Range1d(y_min, y_max),
         )
 
         # Scatter plot of data
         source = ColumnDataSource({"z": z_values, "value": attr_values})
-        circle_renderer = fig.circle(
+        circle_renderer = fig.scatter(
             source=source,
             x="z",
             y="value",
@@ -489,15 +489,15 @@ def plot_attribute_pair_over_z(
             y_axis_label=attribute_x,
             tooltips=[("z", "@z"), ("value", "@value")],
             tools="tap,pan,box_zoom,wheel_zoom,save,reset",
-            plot_width=2400,
-            plot_height=400,
+            width=2400,
+            height=400,
             x_range=Range1d(x_min, x_max),
             y_range=Range1d(y_min, y_max),
         )
 
         # Scatter plot of data (left axis)
         left_source = ColumnDataSource({"z": z_values, "value": values_x})
-        left_renderer = fig.circle(
+        left_renderer = fig.scatter(
             source=left_source,
             x="z",
             y="value",
@@ -513,10 +513,11 @@ def plot_attribute_pair_over_z(
         fig.extra_y_ranges = {right_range_name: Range1d(y_min, y_max)}
         fig.add_layout(LinearAxis(y_range_name=right_range_name, axis_label=attribute_y), "right")
         right_source = ColumnDataSource({"z": z_values, "value": values_y})
-        right_renderer = fig.square(
+        right_renderer = fig.scatter(
             source=right_source,
             x="z",
             y="value",
+            marker="square",
             size=6,
             line_color="firebrick",
             fill_color="firebrick",
