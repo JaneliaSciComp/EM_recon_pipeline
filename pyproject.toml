@@ -44,6 +44,7 @@ pandas = ">=1.5.0,<3.0.0"
 pydantic = ">=2.7.0"
 numpy = ">=1.26.0,<2.0.0"
 scikit-image = ">=0.22.0"
+pyarrow = ">=23.0.0,<24"
 
 # ---- Everything except pytest ----
 [tool.pixi.feature.dev.dependencies]
