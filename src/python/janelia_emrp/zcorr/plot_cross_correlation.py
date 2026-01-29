@@ -79,13 +79,18 @@ def plot_correlations_with_next(title, cc_data_path, owner, project, stack,
         tap_url = f'{catmaid_base_url}/?pid={owner}__{project}&sid0={stack}&tool=navigator&s0=5&xp={xp}&yp={yp}&zp=@zp'
 
     tooltips = [("z", "@x"), ("correlation with next", "@y"), (tap_help, "click point")]
-    p = figure(title=title, x_axis_label='z', y_axis_label='correlation with next layer',
-               tooltips=tooltips, tools='tap,pan,box_zoom,wheel_zoom,save,reset',
-               plot_width=plot_width, plot_height=plot_height,
+    p = figure(title=title,
+               x_axis_label='z',
+               y_axis_label='correlation with next layer',
+               tooltips=tooltips,
+               tools='tap,pan,box_zoom,wheel_zoom,save,reset',
+               width=plot_width,
+               height=plot_height,
                y_range=Range1d(min_cc, max_cc))
 
     data_source = ColumnDataSource(data=dict(x=z_values, y=cc_with_next, zp=zp_values))
-    p.circle(source=data_source)
+
+    p.scatter("x", "y", source=data_source, marker="circle", size=6)
 
     tap_tool = p.select(type=TapTool)
     tap_tool.callback = OpenURL(url=tap_url)

@@ -73,11 +73,6 @@ echo
 # ---------------------------
 # generate plots
 
-# shellcheck source=???
-source "${SOURCE_MINIFORGE3_SCRIPT}"
-
-conda activate janelia_emrp
-
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 Z_CORR_SCRIPTS_DIR="${EMRP_ROOT}/src/python/janelia_emrp/zcorr"
@@ -86,8 +81,8 @@ ARGS="--base_dir ${RENDER_NRS_ROOT}/z_corr --owner ${RENDER_OWNER} --project ${R
 for SCRIPT in plot_cross_correlation.py plot_z_coords.py plot_regional_cross_correlation.py; do
   echo "
 Running:
-  ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
+  ${PIXI_RUN} ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
   "
   # shellcheck disable=SC2086
-  ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
+  ${PIXI_RUN} ${Z_CORR_SCRIPTS_DIR}/${SCRIPT} ${ARGS}
 done

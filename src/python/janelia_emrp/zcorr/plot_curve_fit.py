@@ -90,7 +90,7 @@ def plot_fit_results(title, base_data_path, owner_run_sub_path, owner, project, 
 
         p = figure(title=f'{title} {result_key}', x_axis_label='z', y_axis_label=result_key,
                    tooltips=tooltips, tools='tap,pan,box_zoom,wheel_zoom,save,reset',
-                   plot_width=plot_width, plot_height=plot_height,
+                   width=plot_width, height=plot_height,
                    y_range=Range1d(min_value[result_key], max_value[result_key]))
 
         data_source = ColumnDataSource(data=dict(x=z_values, y=result_values,
@@ -98,7 +98,7 @@ def plot_fit_results(title, base_data_path, owner_run_sub_path, owner, project, 
                                                  inliers=num_inliers_values,
                                                  goodness=goodness_values,
                                                  at_zero=at_zero_values))
-        p.circle(source=data_source)
+        p.scatter("x", "y", source=data_source, marker="circle", size=6)
 
         tap_tool = p.select(type=TapTool)
         tap_tool.callback = OpenURL(url=catmaid_url)

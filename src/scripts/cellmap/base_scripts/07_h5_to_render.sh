@@ -18,11 +18,6 @@ Running $0 on ${HOSTNAME} at ${RUN_TIME} ...
 DASK_WORKER_SPACE="${LOG_DIR}/dask_work_${RUN_TIME}"
 mkdir -p "${DASK_WORKER_SPACE}"
 
-# shellcheck source=???
-source "${SOURCE_MINIFORGE3_SCRIPT}"
-
-conda activate janelia_emrp
-
 # need this to avoid errors from render-python
 export OPENBLAS_NUM_THREADS=1
 
@@ -40,8 +35,8 @@ echo "
 On ${HOSTNAME} at ${RUN_TIME}
 
 Running:
-  python ${ARGS}
+  ${PIXI_RUN} ${ARGS}
 " | tee -a "${LOG_FILE}"
 
 # shellcheck disable=SC2086
-python ${ARGS} 2>&1 | tee -a "${LOG_FILE}"
+${PIXI_RUN} ${ARGS} 2>&1 | tee -a "${LOG_FILE}"

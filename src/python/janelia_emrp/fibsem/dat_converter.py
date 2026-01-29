@@ -13,7 +13,7 @@ import errno
 import math
 import sys
 import time
-from dask_janelia import get_cluster
+from janelia_emrp.cluster import get_cluster
 from distributed import Client
 
 from janelia_emrp.fibsem.cyx_dat import CYXDat, new_cyx_dat
@@ -409,7 +409,7 @@ def main(arg_list: list[str]):
 
     args = parser.parse_args(arg_list)
 
-    convert_volume(volume_transfer_info=VolumeTransferInfo.parse_file(args.volume_transfer_info),
+    convert_volume(volume_transfer_info=VolumeTransferInfo.model_validate_json(Path(args.volume_transfer_info).read_text()),
                    num_workers=args.num_workers,
                    parent_work_dir=args.parent_work_dir,
                    first_dat=args.first_dat,

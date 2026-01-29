@@ -23,14 +23,11 @@ fi
 
 RUN_DATE_AND_TIME=$(date +"%Y%m%d_%H%M%S")
 
-source ${FIBSEMXFER_DIR}/bin/source_miniforge3.sh
-
-conda activate janelia_emrp
-
 # need this to avoid errors from dask
 export OPENBLAS_NUM_THREADS=1
 
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --environment fibsem --frozen python"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
@@ -53,7 +50,7 @@ echo """
 On ${HOSTNAME} at ${RUN_DATE_AND_TIME}
 
 Running:
-  python ${ARGS}
+  ${PIXI_RUN} ${ARGS}
 """
 
 # The exit status of a pipeline is the exit status of the last command in the pipeline,
@@ -63,7 +60,7 @@ Running:
 set -o pipefail
 
 # shellcheck disable=SC2086
-python ${ARGS} 2>&1
+${PIXI_RUN} ${ARGS} 2>&1
 RETURN_CODE="$?"
 
 echo "python return code is ${RETURN_CODE}"

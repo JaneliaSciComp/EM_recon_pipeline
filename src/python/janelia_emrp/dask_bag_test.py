@@ -3,7 +3,7 @@ import logging
 import dask.bag as dask_bag
 import sys
 import time
-from dask_janelia import get_cluster
+from janelia_emrp.cluster import get_cluster
 from distributed import Client
 
 logger = logging.getLogger()

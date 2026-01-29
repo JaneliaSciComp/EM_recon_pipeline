@@ -11,7 +11,7 @@ set -e
 
 BASE_PLOT_DIR="/opt/local/jetty_base/webapps/z_corr_plots"
 
-for GROUP in cellmap fibsem reiser; do
+for GROUP in cellmap fibsem mengwang reiser shroff; do
   cd "${BASE_PLOT_DIR}/${GROUP}"
   for Z_CORR_BASE_DIR in /nrs/"${GROUP}"/data/*/z_corr/"${GROUP}"/*; do
     NAME=$(basename "${Z_CORR_BASE_DIR}")

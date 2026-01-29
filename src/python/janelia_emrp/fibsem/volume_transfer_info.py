@@ -65,8 +65,8 @@ class ScopeDataSet(BaseModel):
     data_set_id: str
     rows_per_z_layer: int = 1
     columns_per_z_layer: int = 1
-    first_dat_name: Optional[str]
-    last_dat_name: Optional[str]
+    first_dat_name: Optional[str] = None
+    last_dat_name: Optional[str] = None
     dat_x_and_y_nm_per_pixel: int
     dat_z_nm_per_pixel: int
     dat_tile_overlap_microns: int = 2
@@ -96,16 +96,16 @@ class ScopeDataSet(BaseModel):
 
 class ClusterRootDirectoryPaths(BaseModel):
     """Cluster accessible (e.g. /groups or /nrs) paths for data."""
-    raw_dat: Optional[Path]
-    raw_h5: Optional[Path]
-    align_h5: Optional[Path]
-    export_n5: Optional[Path]
+    raw_dat: Optional[Path] = None
+    raw_h5: Optional[Path] = None
+    align_h5: Optional[Path] = None
+    export_n5: Optional[Path] = None
 
 
 class ArchiveRootDirectoryPaths(BaseModel):
     """Archive (e.g. /nearline) paths for data."""
-    raw_dat: Optional[Path]
-    raw_h5: Optional[Path]
+    raw_dat: Optional[Path] = None
+    raw_h5: Optional[Path] = None
 
 
 class RenderConnect(BaseModel):
@@ -143,9 +143,9 @@ class RenderDataSet(BaseModel):
     project: str
     stack: str
     restart_context_layer_count: int
-    mask_width: Optional[int]
-    mask_height: Optional[int]
-    connect: Optional[RenderConnect]
+    mask_width: Optional[int] = None
+    mask_height: Optional[int] = None
+    connect: Optional[RenderConnect] = None
 
     def __str__(self):
         return f"{self.owner}::{self.project}"
@@ -241,17 +241,17 @@ class VolumeTransferInfo(BaseModel):
     #         path of file from which the transfer information was loaded or None if not loaded from a file
     """
     transfer_id: str
-    scope_data_set: Optional[ScopeDataSet]
-    cluster_root_paths: Optional[ClusterRootDirectoryPaths]
-    archive_root_paths: Optional[ArchiveRootDirectoryPaths]
-    max_mipmap_level: Optional[int]
-    render_data_set: Optional[RenderDataSet]
-    transfer_tasks: list[VolumeTransferTask]
-    fill_info: Optional[FillInfo]
-    cluster_job_project_for_billing: str
-    number_of_dats_converted_per_hour: Optional[int]
-    number_of_preview_workers: Optional[int]
-    parsed_from_path: Optional[Path]
+    scope_data_set: Optional[ScopeDataSet] = None
+    cluster_root_paths: Optional[ClusterRootDirectoryPaths] = None
+    archive_root_paths: Optional[ArchiveRootDirectoryPaths] = None
+    max_mipmap_level: Optional[int] = None
+    render_data_set: Optional[RenderDataSet] = None
+    transfer_tasks: list[VolumeTransferTask] = []
+    fill_info: Optional[FillInfo] = None
+    cluster_job_project_for_billing: str = ""
+    number_of_dats_converted_per_hour: Optional[int] = None
+    number_of_preview_workers: Optional[int] = None
+    parsed_from_path: Optional[Path] = None
 
     def __str__(self):
         return self.transfer_id
@@ -335,7 +335,7 @@ def build_volume_transfer_list(volume_transfer_dir_path: Path,
     if volume_transfer_dir_path.is_dir():
         for path in volume_transfer_dir_path.glob("volume_transfer*.json"):
 
-            transfer_info: VolumeTransferInfo = VolumeTransferInfo.parse_file(path)
+            transfer_info: VolumeTransferInfo = VolumeTransferInfo.model_validate_json(path.read_text())
             transfer_info.parsed_from_path = Path(path).absolute()
 
             if for_tasks is None or transfer_info.includes_at_least_one_of_these_tasks(for_tasks):

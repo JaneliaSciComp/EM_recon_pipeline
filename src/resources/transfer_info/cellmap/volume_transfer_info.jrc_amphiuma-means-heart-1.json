@@ -1,31 +1,31 @@
 {
-    "transfer_id": "cellmap::jrc_mus-heart-4::jeiss2.hhmi.org",
+    "transfer_id": "cellmap::jrc_amphiuma-means-heart-1::jeiss7.hhmi.org",
     "scope_data_set": {
-        "host": "jeiss2.hhmi.org",
-        "root_dat_path": "/cygdrive/e/Images/Mouse",
+        "host": "jeiss7.hhmi.org",
+        "root_dat_path": "/cygdrive/e/Images/Cellmap",
         "root_keep_path": "/cygdrive/d/UploadFlags",
-        "data_set_id": "jrc_mus-heart-4",
+        "data_set_id": "jrc_amphiuma_heart-1",
         "rows_per_z_layer": 1,
-        "columns_per_z_layer": 2,
-        "first_dat_name": "Merlin-6262_25-08-13_000146_0-0-0.dat",
-        "last_dat_name": "Merlin-6262_25-09-30_235738_0-0-1.dat",
+        "columns_per_z_layer": 1,
+        "first_dat_name": "Merlin-6282_25-11-11_000005_0-0-0.dat",
+        "last_dat_name": "Merlin-6282_25-11-20_150802_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 8,
         "dat_z_nm_per_pixel": 8,
         "dat_tile_overlap_microns": 2
     },
     "cluster_root_paths": {
-        "raw_dat": "/groups/cellmap/cellmap/data/jrc_mus-heart-4/dat",
-        "raw_h5": "/groups/cellmap/cellmap/data/jrc_mus-heart-4/raw",
-        "align_h5": "/nrs/cellmap/data/jrc_mus-heart-4/align",
-        "export_n5": "/nrs/cellmap/data/jrc_mus-heart-4/jrc_mus-heart-4.n5"
+        "raw_dat": "/groups/cellmap/cellmap/data/jrc_amphiuma-means-heart-1/dat",
+        "raw_h5": "/groups/cellmap/cellmap/data/jrc_amphiuma-means-heart-1/raw",
+        "align_h5": "/nrs/cellmap/data/jrc_amphiuma-means-heart-1/align",
+        "export_n5": "/nrs/cellmap/data/jrc_amphiuma-means-heart-1/jrc_amphiuma-means-heart-1.n5"
     },
     "archive_root_paths": {
-        "raw_h5": "/nearline/cellmap/data/jrc_mus-heart-4/raw"
+        "raw_h5": "/nearline/cellmap/data/jrc_amphiuma-means-heart-1/raw"
     },
     "max_mipmap_level": 7,
     "render_data_set": {
         "owner": "cellmap",
-        "project": "jrc_mus_heart_4",
+        "project": "jrc_amphiuma_means_heart_1",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
         "mask_width": 100,

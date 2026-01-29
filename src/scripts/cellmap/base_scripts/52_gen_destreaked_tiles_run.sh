@@ -4,14 +4,46 @@ set -e
 
 #-----------------------------------------------------------------------------
 # This script generates a batched LSF job array to de-streak a stack of tiles
-# using a named filter list from the render-ws.
+# using a filter list specified in a json file.
 #
-# The script prompts the user to select the align stack to de-streak,
-# the filter list to apply, and the render type to use.
+# The script prompts the user to select the align stack to de-streak and the render type to use.
 
 ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}"/00_config.sh
+
+if (( $# < 1 )); then
+  echo "USAGE $0 <filter list path>     e.g. destreak_filter.json"
+  exit 1
+fi
+
+FILTER_LIST_PATH=$(readlink -m "${1}")
+
+IS_VALID_FILTER_LIST=$(${JQ} '
+  has("namedFilterSpecLists")                       # ensure the top-level key exists
+  and (.namedFilterSpecLists | keys | length == 1)  # ensure exactly one subkey
+' "${FILTER_LIST_PATH}")
+
+if [ "${IS_VALID_FILTER_LIST}" != "true" ]; then
+  echo "
+ERROR: ${FILTER_LIST_PATH} does not contain exactly one namedFilterSpecLists element
+
+It should look like this:
+  {
+    \"namedFilterSpecLists\" : {
+      \"any-name\" : [
+        {
+          \"className\" : \"org.janelia.alignment.destreak.LocalSmoothMaskStreakCorrector\",
+          \"parameters\" : {
+            \"dataString\" : \"4621,8190,35,8,0.0,10,10.0,0.05\"
+          }
+        }
+      ]
+    }
+  }
+"
+  exit 1
+fi
 
 BASE_DATA_URL="http://${SERVICE_HOST}/render-ws/v1"
 PROJECT_URL="${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}"
@@ -63,34 +95,6 @@ select RENDER_TYPE in "${RENDER_TYPES[@]}"; do
 done
 
 #--------------------------------------------------
-# select the filter name
-
-LOWER_CASE_PROJECT_FIRST10=$(echo "${RENDER_PROJECT}" | cut -c1-10 | tr '[:upper:]' '[:lower:]')
-
-mapfile -t FILTER_LIST_NAMES < <(curl -s "${BASE_DATA_URL}/namedFilterSpecLists" | ${JQ} -r ".namedFilterSpecLists | keys[] | select(startswith(\"${LOWER_CASE_PROJECT_FIRST10}\"))")
-
-if [ ${#FILTER_LIST_NAMES[@]} -eq 0 ]; then
-  echo "
-No filter names starting with ${LOWER_CASE_PROJECT_FIRST10} were found.
-
-Here are the available filter names:
-
-"
-  curl -s "${BASE_DATA_URL}/namedFilterSpecLists" | ${JQ} -r '.namedFilterSpecLists | keys[]'
-  echo
-  exit 1
-fi
-
-echo "Which filter should be applied?"
-select FILTER_LIST_NAME in "${FILTER_LIST_NAMES[@]}"; do
-  if [ -n "${FILTER_LIST_NAME}" ]; then
-    break
-  else
-    echo "Invalid selection, try again."
-  fi
-done
-
-#--------------------------------------------------
 # set up the output directory
 
 OUTPUT_DIR="${RENDER_NRS_ROOT}/tiles_destreak"
@@ -106,7 +110,7 @@ ARGV="${ARGV} --rootDirectory ${OUTPUT_DIR}"
 ARGV="${ARGV} --runTimestamp ${RUN_TIME}"
 ARGV="${ARGV} --scale 1.0 --format png"
 ARGV="${ARGV} --excludeMask --excludeAllTransforms"
-ARGV="${ARGV} --filterListName ${FILTER_LIST_NAME}"
+ARGV="${ARGV} --filterListPath ${FILTER_LIST_PATH}"
 #ARGV="${ARGV} --tileIdPattern .*0-0-.*"
 ARGV="${ARGV} --hackStack ${DESTREAK_STACK}"
 ARGV="${ARGV} --renderType ${RENDER_TYPE}"
@@ -115,7 +119,7 @@ ARGV="${ARGV} --z"
 #Z_URL="${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ALIGN_STACK}/zValues?minZ=${MIN_Z}&maxZ=${MAX_Z}"
 Z_URL="${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}/stack/${ALIGN_STACK}/zValues"
 
-JAVA_CLASS="org.janelia.render.client.RenderTilesClient"
+JAVA_CLASS="org.janelia.render.client.tile.RenderTilesClient"
 #export MEMORY="13G" # 15G allocated per slot
 #export MAX_RUNNING_TASKS="150"
 

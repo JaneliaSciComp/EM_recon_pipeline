@@ -44,6 +44,7 @@ FIBSEMXFER_DIR="/groups/fibsem/home/fibsemxfer"
 EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
 JQ="${FIBSEMXFER_DIR}/bin/jq"
 SOURCE_MINIFORGE3_SCRIPT="${FIBSEMXFER_DIR}/bin/source_miniforge3.sh"
+PIXI_RUN="${FIBSEMXFER_DIR}/.pixi/bin/pixi run --manifest-path ${EMRP_ROOT}/pyproject.toml --environment fibsem --frozen python"
 
 # IP address and port for the render web services
 RENDER_HOST="10.40.3.113"
@@ -110,8 +111,10 @@ H5_LIBPATH="-Dnative.libpath.jhdf5=/groups/fibsem/home/fibsemxfer/lib/jhdf5/nati
 
 export SUBMIT_ARGS="--conf spark.executor.extraJavaOptions=${H5_LIBPATH} --conf spark.driver.extraJavaOptions=${H5_LIBPATH}"
 
-# preview code needs newer GSON library to parse HDF5 attributes
+# code needs newer GSON library (for preview to parse HDF5 attributes, and for n5 reading/writing)
+# (note: tried using spark.[driver|executor].userClassPathFirst=true option but that messes up log4j configuration,
+#        so decided to just use spark.[driver|executor].extraClassPath instead)
 GSON_JAR="/groups/fibsem/home/fibsemxfer/lib/gson/gson-2.10.1.jar"
-export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.executor.extraClassPath=${GSON_JAR}"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR} --conf spark.executor.extraClassPath=${GSON_JAR}"
 
 export LSF_PROJECT="${BILL_TO}"

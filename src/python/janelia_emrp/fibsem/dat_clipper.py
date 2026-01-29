@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from fibsem_tools.io.fibsem import OFFSET
+from fibsem_tools.io.dat import OFFSET
 
 from janelia_emrp.fibsem.dat_to_scheffer_8_bit import compress_and_save
 from janelia_emrp.root_logger import init_logger
