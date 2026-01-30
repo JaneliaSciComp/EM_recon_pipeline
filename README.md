@@ -32,4 +32,4 @@ python src/python/janelia_emrp/fibsem/dat_converter.py --help
 
 ### Development Library Management
 - Environment is managed using [pixi](https://pixi.sh/) with dependencies defined in [pyproject.toml](pyproject.toml).
-- To add/update dependencies, edit the `[project]` or `[tool.pixi.dependencies]` sections in `pyproject.toml` and run `pixi install`.
+- To add/update dependencies, edit the `[project]` or `[tool.pixi.dependencies]` sections in `pyproject.toml` and run `pixi install`, or use [`pixi add [--pypi] <package>`](https://pixi.sh/dev/reference/cli/pixi/add/).
