@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Prints volume compute costs based upon logs in the specified render align directory.
+
 set -euo pipefail
 
 # /groups/fibsem/fibsem/render/align/jrc_hela-L63-1
