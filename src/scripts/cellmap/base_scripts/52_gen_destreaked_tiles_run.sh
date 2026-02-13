@@ -52,14 +52,21 @@ RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 #--------------------------------------------------
 # validate that the 16-bit raw data exists
 
-RAW_ROOT_DIR="${RENDER_NRS_ROOT}/raw"
-unset RAW_DATA_FOUND_ON_NRS
-if [ ! -d "${RAW_ROOT_DIR}" ]; then
-  echo "ERROR: ${RAW_ROOT_DIR} does not exist"
-  exit 1
-elif ! compgen -G "${RAW_ROOT_DIR}/Merlin*/" > /dev/null; then
-  echo "ERROR: no Merlin directories found under ${RAW_ROOT_DIR}"
-  exit 1
+read -p "Perform check for 16-bit raw data? (yes/no): " PERFORM_CHECK
+
+if [[ "${PERFORM_CHECK}" == "yes" ]]; then
+  RAW_ROOT_DIR="${RENDER_NRS_ROOT}/raw"
+  unset RAW_DATA_FOUND_ON_NRS
+
+  if [ ! -d "${RAW_ROOT_DIR}" ]; then
+    echo "ERROR: ${RAW_ROOT_DIR} does not exist"
+    exit 1
+  elif ! compgen -G "${RAW_ROOT_DIR}/Merlin*/" > /dev/null; then
+    echo "ERROR: no Merlin directories found under ${RAW_ROOT_DIR}"
+    exit 1
+  fi
+else
+  echo "Skipping 16-bit raw data check."
 fi
 
 #--------------------------------------------------
