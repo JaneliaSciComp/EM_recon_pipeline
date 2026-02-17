@@ -50,37 +50,6 @@ PROJECT_URL="${BASE_DATA_URL}/owner/${RENDER_OWNER}/project/${RENDER_PROJECT}"
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 
 #--------------------------------------------------
-# validate that the 16-bit raw data exists
-
-RAW_ROOT_DIR="${RENDER_NRS_ROOT}/raw"
-unset RAW_DATA_FOUND_ON_NRS
-if [ ! -d "${RAW_ROOT_DIR}" ]; then
-  echo "ERROR: ${RAW_ROOT_DIR} does not exist"
-  exit 1
-elif ! compgen -G "${RAW_ROOT_DIR}/Merlin*/" > /dev/null; then
-  echo "ERROR: no Merlin directories found under ${RAW_ROOT_DIR}"
-  exit 1
-fi
-
-#--------------------------------------------------
-# select the align stack to de-streak
-
-mapfile -t STACK_NAMES < <(curl -s "${PROJECT_URL}/stackIds" | ${JQ} -r '.[].stack | select(contains("align"))' | sort)
-
-echo "Which align stack should be the basis for the 16-bit stack?"
-select STACK_NAME in "${STACK_NAMES[@]}"; do
-  if [ -n "${STACK_NAME}" ]; then
-    break
-  else
-    echo "Invalid selection, try again."
-  fi
-done
-
-# override ALIGN_STACK loaded from the config file
-ALIGN_STACK="${STACK_NAME}"
-DESTREAK_STACK="${ALIGN_STACK}_destreak"
-
-#--------------------------------------------------
 # select the render type
 
 RENDER_TYPES=("EIGHT_BIT" "SIXTEEN_BIT" "ARGB")
@@ -93,6 +62,39 @@ select RENDER_TYPE in "${RENDER_TYPES[@]}"; do
     echo "Invalid selection, try again."
   fi
 done
+
+if [[ "${RENDER_TYPE}" == "SIXTEEN_BIT" ]]; then
+
+  # validate that the 16-bit raw data exists
+  RAW_ROOT_DIR="${RENDER_NRS_ROOT}/raw"
+  unset RAW_DATA_FOUND_ON_NRS
+  if [ ! -d "${RAW_ROOT_DIR}" ]; then
+    echo "ERROR: ${RAW_ROOT_DIR} does not exist"
+    exit 1
+  elif ! compgen -G "${RAW_ROOT_DIR}/Merlin*/" > /dev/null; then
+    echo "ERROR: no Merlin directories found under ${RAW_ROOT_DIR}"
+    exit 1
+  fi
+
+fi
+
+#--------------------------------------------------
+# select the align stack to de-streak
+
+mapfile -t STACK_NAMES < <(curl -s "${PROJECT_URL}/stackIds" | ${JQ} -r '.[].stack | select(contains("align"))' | sort)
+
+echo "Which align stack should be the basis for the de-streaked stack?"
+select STACK_NAME in "${STACK_NAMES[@]}"; do
+  if [ -n "${STACK_NAME}" ]; then
+    break
+  else
+    echo "Invalid selection, try again."
+  fi
+done
+
+# override ALIGN_STACK loaded from the config file
+ALIGN_STACK="${STACK_NAME}"
+DESTREAK_STACK="${ALIGN_STACK}_destreak"
 
 #--------------------------------------------------
 # set up the output directory
