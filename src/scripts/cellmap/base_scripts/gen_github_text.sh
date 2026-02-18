@@ -83,6 +83,14 @@ fi
 unset RENDERED_N5_PATH
 shopt -s nullglob
 DIRS=("${N5_PATH}"/*/"${RENDER_PROJECT}"/*/ "${N5_PATH}"/em/*/)
+
+# remove */cc/* directories
+FILTERED_DIRS=()
+for DIR in "${DIRS[@]}"; do
+  [[ ${DIR} != */cc/* ]] && FILTERED_DIRS+=("${DIR}")
+done
+DIRS=("${FILTERED_DIRS[@]}")
+
 shopt -u nullglob # Turn off nullglob to make sure it doesn't interfere with anything later
 DIR_COUNT=${#DIRS[@]}
 if (( DIR_COUNT == 0 )); then
@@ -139,12 +147,12 @@ for RENDERED_N5_PATH in "${DIRS[@]}"; do
 
   NG_LINK="[${EXPORT_NAME}](${NG_BASE_URL}${NG_QUERY_STRING})"
 
-  N5_PATH_DATASET_AND_OFFSET="-i ${N5_PATH} -d ${RENDERED_DATA_SET} -o ${OFFSET_X},${OFFSET_Y},${OFFSET_Z}"
+  DATASET_AND_OFFSET="-d ${RENDERED_DATA_SET} -o ${OFFSET_X},${OFFSET_Y},${OFFSET_Z}"
   if [ -z "${RENDERED_N5_DATASETS}" ]; then
-    RENDERED_N5_DATASETS="  ${N5_PATH_DATASET_AND_OFFSET}"
+    RENDERED_N5_DATASETS=$(printf "  -i %s\n\n    %s" "${N5_PATH}" "${DATASET_AND_OFFSET}")
     RENDERED_N5_NG_LINKS="${NG_LINK}"
-  else
-    RENDERED_N5_DATASETS=$(printf "%s\n  %s" "${RENDERED_N5_DATASETS}" "${N5_PATH_DATASET_AND_OFFSET}")
+  elif [[ "${RENDERED_DATA_SET}" != /cc/* ]]; then
+    RENDERED_N5_DATASETS=$(printf "%s\n    %s" "${RENDERED_N5_DATASETS}" "${DATASET_AND_OFFSET}")
     RENDERED_N5_NG_LINKS=$(printf "%s\n  * %s" "${RENDERED_N5_NG_LINKS}" "${NG_LINK}")
   fi
 
