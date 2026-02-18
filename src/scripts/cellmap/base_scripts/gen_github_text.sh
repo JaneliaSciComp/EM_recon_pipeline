@@ -208,4 +208,8 @@ ${RENDERED_N5_DATASETS}
 ## Notes
 
 * [volume_transfer_info](https://github.com/JaneliaSciComp/EM_recon_pipeline/blob/main/src/resources/transfer_info/${RENDER_OWNER}/volume_transfer_info.${VOLUME_NAME}.json)
+
+## XZ View of imaging_preview
+
+* TODO: after imaging is done, replace this with screenshot of neuroglancer XZ view that includes volume name and coordinates
 "
