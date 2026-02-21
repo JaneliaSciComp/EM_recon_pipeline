@@ -186,7 +186,7 @@ def main() -> None:
         "--n-workers",
         default=1,
         type=int,
-        help="Number of worker processes to use for fetching tiles.",
+        help="Number of worker processes (within the same job) to use for fetching tiles.",
     )
     args = parser.parse_args()
 
