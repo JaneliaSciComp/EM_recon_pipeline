@@ -1,4 +1,5 @@
-"transfer_id": "cellmap::jrc_axolotl-liver-2::jeiss7.hhmi.org",
+{
+    "transfer_id": "cellmap::jrc_axolotl-liver-2::jeiss7.hhmi.org",
     "scope_data_set": {
         "host": "jeiss7.hhmi.org",
         "root_dat_path": "/cygdrive/e/Images/Cellmap",
@@ -50,3 +51,4 @@
     "cluster_job_project_for_billing": "cellmap",
     "number_of_dats_converted_per_hour": 80,
     "number_of_preview_workers": 10
+}
