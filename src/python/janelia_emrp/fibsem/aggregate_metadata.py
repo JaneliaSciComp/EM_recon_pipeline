@@ -12,6 +12,7 @@ import urllib.parse as urlparse
 import h5py
 import pandas as pd
 import dask.bag as db
+from dask.bag import Bag
 from dask.distributed import Client, LocalCluster
 from bokeh.io import output_file, save
 from bokeh.layouts import column, Column
@@ -188,6 +189,12 @@ def main() -> None:
         type=int,
         help="Number of worker processes (within the same job) to use for fetching tiles.",
     )
+    parser.add_argument(
+        "--z_batch_size",
+        default=1000,
+        type=int,
+        help="Number of z layers to include in each request batch.  For FIBSEM data sets with less than 50 images per z layer, a batch size of 1000 or more will work nicely.",
+    )
     args = parser.parse_args()
 
     # Get tile specs for the stack
@@ -214,7 +221,7 @@ def main() -> None:
 
     with LocalCluster(**cluster_args) as cluster, Client(cluster):
         # Load and aggregate metadata from the HDF5 datasets
-        metadata = aggregate_metadata(render_request, args.stack)
+        metadata = aggregate_metadata(render_request, args.stack, args.z_batch_size)
         logger.info("Aggregated metadata for %d tiles", len(metadata))
 
     # Generate plots for selected attributes
@@ -237,21 +244,31 @@ def main() -> None:
 
 
 def aggregate_metadata(
-    render_request: RenderRequest, stack: str
+    render_request: RenderRequest, stack: str, z_batch_size: int
 ) -> pd.DataFrame:
     """Aggregate metadata from HDF5 datasets into a DataFrame."""
     # Load all z values for the stack
-    z_values = db.from_sequence(render_request.get_z_values(stack))
-    tile_specs = z_values.map(
-        lambda z: _request_tile_specs(render_request, stack, z)
+    z_values = render_request.get_z_values(stack)
+    z_batches = [
+        z_values[i : i + z_batch_size]
+        for i in range(0, len(z_values), z_batch_size)
+    ]
+    batches: Bag = db.from_sequence(z_batches)
+    tile_specs = batches.map(
+        lambda batch: _request_tile_specs_for_z_range(
+            render_request,
+            stack,
+            min_z=min(batch),
+            max_z=max(batch),
+        )
     ).flatten()
     metadata = tile_specs.map(_load_metadata_from_tile)
 
     return metadata.to_dataframe().compute()
 
 
-def _request_tile_specs(
-    render_request: RenderRequest, stack: str, z: int
+def _request_tile_specs_for_z_range(
+    render_request: RenderRequest, stack: str, min_z: int, max_z: int
 ) -> list[Tile]:
     """Request tile specs for a given z and return a list of Tiles for that z."""
     # We use an old version of dask that triggers FutureWarnings about iteritems deprecation
@@ -259,10 +276,11 @@ def _request_tile_specs(
         "ignore", category=FutureWarning, message="iteritems is deprecated"
     )
 
-    # Fetch resolved tiles for this z
-    resolved_tiles = render_request.get_resolved_tiles_for_z(stack, z)
+    # Fetch resolved tiles for this z range
+    resolved_tiles = render_request.get_resolved_tiles_for_z_range(stack, min_z, max_z)
     tiles = []
     for tile_spec in resolved_tiles.get("tileIdToSpecMap", {}).values():
+        z = tile_spec["z"]
         try:
             tile = Tile(
                 tile_id=tile_spec["tileId"],
