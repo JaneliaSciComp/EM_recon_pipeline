@@ -40,6 +40,10 @@ export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 JQ="${FIBSEMXFER_DIR}/bin/jq"
 
+echo "
+Generating FIBSEM metadata plots at https://fibsem-data.int.janelia.org/metadata_plots
+"
+
 #-----------------------------------------------------------
 # Loop over all transfer JSON files and aggregate metadata for each one ...
 
