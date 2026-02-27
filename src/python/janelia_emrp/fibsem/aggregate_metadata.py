@@ -481,7 +481,7 @@ def plot_attribute_pair_over_z(
     """Create paired attribute plots with synchronized dual y-axes."""
     required_columns = ["tile_x", "tile_y", "z", attribute_x, attribute_y]
     title = f"<h1>{html.escape(attribute_x)} &amp; {html.escape(attribute_y)}</h1>"
-    if not all(column in data.columns for column in required_columns):
+    if not all(d_column in data.columns for d_column in required_columns):
         return column(Div(text=title))
 
     pair_data = data[required_columns].dropna(subset=[attribute_x, attribute_y])
