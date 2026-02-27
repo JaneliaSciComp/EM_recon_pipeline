@@ -203,6 +203,15 @@ def main() -> None:
         "threads_per_worker": 1,
     }
 
+    project_stack_ids = render_request.get_stack_ids()
+    stack_names = {item["stack"] for item in project_stack_ids if "stack" in item}
+
+    # Check for existence
+    if args.stack not in stack_names:
+        raise ValueError(
+            f'The stack "{args.stack}" was not found in {args.owner}::{args.project}. Available stacks are: {sorted(stack_names)}'
+        )
+
     with LocalCluster(**cluster_args) as cluster, Client(cluster):
         # Load and aggregate metadata from the HDF5 datasets
         metadata = aggregate_metadata(render_request, args.stack)
