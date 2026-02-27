@@ -57,7 +57,6 @@ checking ${TRANSFER_JSON_FILE} for EXPORT_PREVIEW_VOLUME task ..."
     RENDER_PORT=$(${JQ} -r '.render_data_set.connect.port' "${TRANSFER_JSON_FILE}")
     RENDER_OWNER=$(${JQ} -r '.render_data_set.owner' "${TRANSFER_JSON_FILE}")
     RENDER_PROJECT=$(${JQ} -r '.render_data_set.project' "${TRANSFER_JSON_FILE}")
-    RENDER_STACK=$(${JQ} -r '.render_data_set.stack' "${TRANSFER_JSON_FILE}")
     ALIGN_H5_PATH=$(${JQ} -r '.cluster_root_paths.align_h5 // "undefined"' "${TRANSFER_JSON_FILE}")
     N_WORKERS=$(${JQ} -r '.number_of_preview_workers // "4"' "${TRANSFER_JSON_FILE}")
 
@@ -81,7 +80,7 @@ checking ${TRANSFER_JSON_FILE} for EXPORT_PREVIEW_VOLUME task ..."
       ARGS="${ARGS} --base-data-url ${RENDER_HOST}:${RENDER_PORT}"
       ARGS="${ARGS} --owner ${RENDER_OWNER}"
       ARGS="${ARGS} --project ${RENDER_PROJECT}"
-      ARGS="${ARGS} --stack ${RENDER_STACK}"
+      ARGS="${ARGS} --stack imaging_preview"
       ARGS="${ARGS} --output-dir ${OUTPUT_DIR}"
       ARGS="${ARGS} --n-workers ${N_WORKERS}"
 
