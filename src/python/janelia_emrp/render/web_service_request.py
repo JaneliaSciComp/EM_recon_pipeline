@@ -90,6 +90,12 @@ class RenderRequest:
                                  z: float | int | str) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/z/{z}/resolvedTiles')
 
+    def get_resolved_tiles_for_z_range(self,
+                                       stack: str,
+                                       min_z: float | int | str,
+                                       max_z: float | int | str) -> dict[str, Any]:
+        return submit_get(f'{self.stack_url(stack)}/resolvedTiles?minZ={min_z}&maxZ={max_z}')
+
     def get_resolved_restart_tiles(self,
                                    stack: str) -> dict[str, Any]:
         return submit_get(f'{self.stack_url(stack)}/resolvedTiles?groupId=restart')
