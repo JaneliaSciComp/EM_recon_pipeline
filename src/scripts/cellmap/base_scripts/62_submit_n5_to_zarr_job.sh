@@ -9,12 +9,16 @@ SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}"/00_config.sh
 
 if (( $# < 2 )); then
-  echo "USAGE $0 <number of dask client slots> <number of dask workers>     (e.g. 4 400)"
+  echo "
+USAGE $0 <number of dask client slots> <number of dask workers>     (e.g. 4 400)
+
+Notes:
+   4 client slots with  400 workers took 13 minutes for jrc_celegans_20241007 with 6K single tile layers
+  10 client slots with 1300 workers took 40 minutes for jrc_mus-pancreas-5 with 30K layers and 240K tiles
+"
   exit 1
 fi
 
-#  4 client slots with  400 workers took 13 minutes for jrc_celegans_20241007 with 6K single tile layers
-# 10 client slots with 1300 workers took 40 minutes for jrc_mus-pancreas-5 with 30K layers and 240K tiles
 NUM_DASK_CLIENT_SLOTS="${1}"
 NUM_DASK_WORKERS="${2}"
 
