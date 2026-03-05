@@ -18,7 +18,7 @@ if [ ! -f "${VOL_XFER_INFO}" ]; then
   creating ${VOL_XFER_INFO}
 "
 
-  # note: GENERATE_ARCHIVE_H5_RAW is needed to avoid 
+  # note: GENERATE_ARCHIVE_H5_RAW is needed to avoid "ValueError: h5 raw root path ..." problems
   jq --indent 4 '
     .cluster_root_paths.align_h5 |= . + "_c1"
     | .transfer_tasks = [
