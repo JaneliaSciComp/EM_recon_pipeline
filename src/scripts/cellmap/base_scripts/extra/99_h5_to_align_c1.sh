@@ -6,10 +6,27 @@ ABSOLUTE_SCRIPT=$(readlink -m "${0}")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}"/00_config.sh
 
+ORIGINAL_VOL_XFER_INFO="${SCRIPT_DIR}/volume_transfer_info.${VOLUME_NAME}.json"
+if [ ! -f "${ORIGINAL_VOL_XFER_INFO}" ]; then
+  echo "ERROR: ${ORIGINAL_VOL_XFER_INFO} does not exist"
+  exit 1
+fi
+
 VOL_XFER_INFO="${SCRIPT_DIR}/volume_transfer_info.${VOLUME_NAME}.channel-1.json"
 if [ ! -f "${VOL_XFER_INFO}" ]; then
-  echo "ERROR: ${VOL_XFER_INFO} does not exist"
-  exit 1
+  echo "
+  creating ${VOL_XFER_INFO}
+"
+
+  # note: GENERATE_ARCHIVE_H5_RAW is needed to avoid 
+  jq --indent 4 '
+    .cluster_root_paths.align_h5 |= . + "_c1"
+    | .transfer_tasks = [
+         "GENERATE_ARCHIVE_H5_RAW",
+         "GENERATE_CLUSTER_H5_ALIGN"
+      ]
+  ' "${ORIGINAL_VOL_XFER_INFO}" > "${VOL_XFER_INFO}"
+  chmod 664 "${VOL_XFER_INFO}"
 fi
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
@@ -22,16 +39,10 @@ Running $0 on ${HOSTNAME} at ${RUN_TIME} ...
 " | tee -a ${LOG_FILE}
 
 DASK_WORKER_SPACE="${LOG_DIR}/dask_work_${RUN_TIME}"
-mkdir -p ${DASK_WORKER_SPACE}
+mkdir -p "${DASK_WORKER_SPACE}"
 
-source /groups/fibsem/home/fibsemxfer/bin/source_miniforge3.sh
-
-conda activate janelia_emrp
-
-# need this to avoid errors from render-python?
+# need this to avoid errors from render-python
 export OPENBLAS_NUM_THREADS=1
-
-EMRP_ROOT="/groups/fibsem/home/fibsemxfer/git/EM_recon_pipeline"
 
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
@@ -48,7 +59,8 @@ echo "
 On ${HOSTNAME} at ${RUN_TIME}
 
 Running:
-  python ${ARGS}
-" | tee -a ${LOG_FILE}
+  ${PIXI_RUN} ${ARGS}
+" | tee -a "${LOG_FILE}"
 
-python ${ARGS} 2>&1 | tee -a ${LOG_FILE}
+# shellcheck disable=SC2086
+${PIXI_RUN} ${ARGS} 2>&1 | tee -a "${LOG_FILE}"
