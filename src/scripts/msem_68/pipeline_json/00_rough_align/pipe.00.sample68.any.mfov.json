@@ -1,7 +1,7 @@
 {
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
-    "owner" : "hess_sample_68", "project" : "w68_serial_000_to_009",
+    "owner" : "hess_sample_68_full", "project" : "w68_serial_000_to_009",
     "stackIdWithZ" : { "projectPattern": "^w68_serial_000_to_009$", "stackPattern": "^w68_s..._r00$", "zValuesPerBatch": 1 }
   },
   "pipelineSteps": [
@@ -9,7 +9,7 @@
   ],
   "mfovAsTile": {
     "mfovRenderScale": 0.2,
-    "mfovRootDirectory": "/nrs/hess/data/hess_sample_68/tiles_mfov",
+    "mfovRootDirectory": "/nrs/hess/data/hess_sample_68_full/tiles_mfov",
     "prealignedSfovStackSuffix": "_pa",
     "dynamicMfovStackSuffix": "_mat",
     "renderedMfovStackSuffix": "_render",
