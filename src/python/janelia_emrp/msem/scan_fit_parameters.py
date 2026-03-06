@@ -34,6 +34,23 @@ WAFER_60_61_SCAN_FIT_PARAMETERS = \
                       b=1.022359250655221867e-02,  # inverted sign
                       c=0.000000000000000000e+00)
 
+WAFER_53_SCAN_FIT_PARAMETERS = \
+    ScanFitParameters(path=Path("/nearline/hess/data/hess_wafer_53/raw/sfov_correction/average_fit_parameters_for_all_scans.txt"),
+                      scan_name="scan_010",
+                      scan_index=10,
+                      a=3.599264469009992862e+00,
+                      b=7.216643448363109677e-03,
+                      c=-5.301774232529989604e-03)
+
+# TODO: verify sign convention for b and c
+SAMPLE_68_SCAN_FIT_PARAMETERS = \
+    ScanFitParameters(path=Path("/2026-02-20-email-from-ken.txt"),
+                      scan_name="scan_010",
+                      scan_index=10,
+                      a=3.695e+00,
+                      b=-5.55e-03,
+                      c=0.180e+00)
+
 def build_fit_parameters_path(slab_scan_path: Path):
     # /nrs/hess/ibeammsem/system_02/wafers/wafer_60/acquisition/scans/scan_010/sfov_correction/results/fit_parameters.txt
     return Path(slab_scan_path, "sfov_correction/results/fit_parameters.txt")
