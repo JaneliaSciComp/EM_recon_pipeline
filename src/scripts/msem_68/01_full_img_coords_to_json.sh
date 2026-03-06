@@ -104,6 +104,7 @@ log "Writing JSON to: $OUT_JSON"
   # Emit sfov_info_list elements quickly in a single awk pass.
   # - Prints commas after each element except the last.
   # - Logs per-file processing to stderr (only if VERBOSE=1).
+  # - excludes FastRepeat sfov lines
   awk -v ROOT="$ROOT" -v VERBOSE="$VERBOSE" '
     function vlog(msg) { if (VERBOSE == 1) print msg > "/dev/stderr" }
 
@@ -121,6 +122,8 @@ log "Writing JSON to: $OUT_JSON"
         vlog("[" ARGIND "/" nfiles "] Processing: " FILENAME)
       }
     }
+
+    /FastRepeat/ { next }
 
     NF >= 3 {
       rel = $1; x = $2; y = $3
