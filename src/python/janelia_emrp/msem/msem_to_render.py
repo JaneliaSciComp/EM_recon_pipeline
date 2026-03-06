@@ -22,7 +22,8 @@ from janelia_emrp.msem.ingestion_ibeammsem.assembly import (
 )
 from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.ingestion_ibeammsem.path import get_slab_path
-from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_53_SCAN_FIT_PARAMETERS
+from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_53_SCAN_FIT_PARAMETERS, \
+    WAFER_60_61_SCAN_FIT_PARAMETERS
 from janelia_emrp.msem.single_slab_info import load_single_slab_info, ScanMfov
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 from janelia_emrp.msem.tile_id import TileID
@@ -268,7 +269,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                     continue
 
                 # decided to hardcode the parameters in scan_fit_parameters.py rather than read them in for each scan
-                scan_fit_parameters = WAFER_53_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
+                scan_fit_parameters = WAFER_60_61_SCAN_FIT_PARAMETERS  # load_scan_fit_parameters(slab_scan_path)
 
                 tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
                                                             scan=scan,
@@ -375,7 +376,7 @@ def import_single_slab(single_slab_json_path: Path):
 
         tile_specs = build_tile_specs_for_slab_scan(slab_scan_path=slab_scan_path,
                                                     scan=scan,
-                                                    scan_fit_parameters=None,
+                                                    scan_fit_parameters=WAFER_53_SCAN_FIT_PARAMETERS,
                                                     magc_id=0,
                                                     mfovs=mfov_number_list,
                                                     sfov_path_list=slab_scan_sfov_path_list,
