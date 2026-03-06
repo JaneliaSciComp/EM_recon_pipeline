@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OWNER="hess_sample_68"
+OWNER="hess_sample_68_full"
 
 DIRS="
 /nrs/hess/data/${OWNER}

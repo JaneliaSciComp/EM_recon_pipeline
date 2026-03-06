@@ -29,7 +29,7 @@ fi
 
 RENDER_HOST="em-services-1.int.janelia.org"
 WAFER_ID="68"
-RENDER_OWNER="hess_sample_${WAFER_ID}"
+RENDER_OWNER="hess_sample_${WAFER_ID}_full"
 
 source /groups/hess/hesslab/render/bin/source_miniforge3.sh
 
