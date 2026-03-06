@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Defaults
 SAMPLE_NUMBER="68"
-ROOT="/nrs/hess/Hayworth/DATA"
+ROOT="/nrs/hess/Hayworth/DATA_Sample68_FULL_FINAL"
 OUT_JSON=""
 RES_X="8.0"
 RES_Y="8.0"
