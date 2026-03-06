@@ -60,7 +60,7 @@ if [[ -z "$OUT_JSON" ]]; then
   OUT_JSON="sample_${SAMPLE_NUMBER}_image_coord.json"
 fi
 
-OWNER="hess_sample_${SAMPLE_NUMBER}"
+OWNER="hess_sample_${SAMPLE_NUMBER}_full"
 PROJECT="w${SAMPLE_NUMBER}_serial_000_to_009"
 STACK="w${SAMPLE_NUMBER}_s000_r00"
 
