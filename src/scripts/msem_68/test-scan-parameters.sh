@@ -16,7 +16,7 @@ for TEST_LINE in "${TEST_DATA[@]}"; do
   jq -n --arg dataString "${DATA_STRING}" \
     '{
       meshCellSize: 64, minMeshCellSize: 0, x: 3179, y: 401, width: 2004, height: 1748, scale: 1,
-      areaOffset: false, convertToGray: false, quality: 0.85, numberOfThreads: 1,
+      areaOffset: false, convertToGray: true, quality: 0.85, numberOfThreads: 1,
       skipInterpolation: false, binaryMask: false, excludeMask: false, doFilter: false,
       addWarpFieldDebugOverlay: false, fillWithNoise: false,
       tileSpecs: [
