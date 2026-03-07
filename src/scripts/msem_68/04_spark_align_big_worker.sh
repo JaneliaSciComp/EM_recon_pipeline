@@ -31,10 +31,11 @@ ARGS="--pipelineJson ${PIPELINE_JSON}"
 export RUNTIME="243:59"
 
 #-----------------------------------------------------------
-# Spark "big" worker setup ...
+# Spark "big" worker setup
+# In March 2026, Janelia racks e10 and e11 have 128 cores and 2TB memory per node.
 
 N_NODES="1"
-export N_CORES_PER_EXECUTOR="120"
+export N_CORES_PER_EXECUTOR="120"  # don't try for all 128 cores to increase chances of getting a node (also likely gets co-hosted with 8 core driver)
 export N_EXECUTORS_PER_NODE=1
 export N_OVERHEAD_CORES_PER_WORKER=8
 #N_CORES_PER_WORKER=$(( (N_EXECUTORS_PER_NODE * N_CORES_PER_EXECUTOR) + N_OVERHEAD_CORES_PER_WORKER ))
