@@ -79,7 +79,7 @@ COORD_FILES=()
 for C_FILE in "${ROOT}"/scan*/mFOVs/full_image_coordinates.txt; do
     SCAN=$(basename "$(dirname "$(dirname "$C_FILE")")")
     SCAN_NUM=${SCAN#scan_}
-    (( SCAN_NUM >= MIN_SCAN_NUM )) && COORD_FILES+=("$C_FILE")
+    (( 10#${SCAN_NUM} >= MIN_SCAN_NUM )) && COORD_FILES+=("$C_FILE")
 done
 shopt -u nullglob
 
