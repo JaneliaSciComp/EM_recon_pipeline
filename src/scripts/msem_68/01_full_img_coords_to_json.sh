@@ -10,6 +10,7 @@ RES_X="8.0"
 RES_Y="8.0"
 RES_Z="24.0"
 VERBOSE=1
+MIN_SCAN_NUM=126
 
 usage() {
   cat >&2 <<EOF
@@ -17,7 +18,7 @@ Usage: $0 [options]
 
 Options:
   -s, --sample <n>     Sample number (default: 68)
-  -r, --root <dir>     Root directory (default: /nrs/hess/Hayworth/DATA)
+  -r, --root <dir>     Root directory (default: /nrs/hess/Hayworth/DATA_Sample68_FULL_FINAL)
   -o, --out <file>     Output JSON file (default: sample_<sample>_image_coord.json)
       --res-x <val>    Resolution X (default: 8.0)
       --res-y <val>    Resolution Y (default: 8.0)
@@ -73,7 +74,13 @@ log() {
 log "Searching (fast glob) for $ROOT/scan*/mFOVs/full_image_coordinates.txt ..."
 
 shopt -s nullglob
-COORD_FILES=( "$ROOT"/scan*/mFOVs/full_image_coordinates.txt )
+COORD_FILES=()
+
+for C_FILE in "${ROOT}"/scan*/mFOVs/full_image_coordinates.txt; do
+    SCAN=$(basename "$(dirname "$(dirname "$C_FILE")")")
+    SCAN_NUM=${SCAN#scan_}
+    (( SCAN_NUM >= MIN_SCAN_NUM )) && COORD_FILES+=("$C_FILE")
+done
 shopt -u nullglob
 
 # Optional: sort them (lexicographic)
