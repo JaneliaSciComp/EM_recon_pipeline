@@ -1,17 +1,17 @@
 """
-Script to upload a first wafer 60 test stack to Google Cloud Storage.
+Script to background correct and store MSEM images to local storage.
 """
 import argparse
 import re
 
 from janelia_emrp.root_logger import init_logger
 from janelia_emrp.msem.wafer_60_gc_upload.client import Parameters, background_correct_and_store
-from janelia_emrp.msem.wafer_60_gc_upload.details.writer import CloudWriterFactory
 from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDetails
+from janelia_emrp.msem.wafer_60_gc_upload.details.writer import LocalWriterFactory
 
 
 class RenderDetails(AbstractRenderDetails):
-    """Details for the render database for a first test stack of wafer 60."""
+    """Details for the render database for local background correction."""
     def __init__(self, trim_padding: int):
         super().__init__()
 
@@ -40,14 +40,14 @@ class RenderDetails(AbstractRenderDetails):
         return self.destination_pattern.search(stack_name) is not None
 
     def output_stack_from(self, stack_name: str) -> str:
-        """Get the name of the output stack with GCS paths."""
-        return stack_name + "_gc"
+        """Get the name of the output stack with corrected local paths."""
+        return stack_name + "_bgc"
 
 
 if __name__ == '__main__':
     init_logger(__file__)
 
-    parser = argparse.ArgumentParser(description="Background correct and upload PNGs.")
+    parser = argparse.ArgumentParser(description="Background correct and store PNGs locally.")
 
     parser.add_argument(
         "--host",
@@ -71,15 +71,15 @@ if __name__ == '__main__':
         nargs='+',
     )
     parser.add_argument(
-        "--base-path",
-        help="Base path in the GC bucket to upload to.",
+        "--output-path",
+        help="Base path on local filesystem to store corrected images.",
         type=str,
     )
     parser.add_argument(
         "--trim-padding",
-        help="Padding when trimming the full stacks " \
-            "(refers to an existing trimmed render stack with that padding). " \
-            "If not given, the full source stack is uploaded.",
+        help="Padding when trimming the full stacks "
+            "(refers to an existing trimmed render stack with that padding). "
+            "If not given, the full source stack is used.",
         type=int,
         default=None
     )
@@ -101,26 +101,7 @@ if __name__ == '__main__':
         type=int,
         default=8,
     )
-    parser.add_argument(
-        "--bucket-name",
-        help="Google Cloud Storage bucket to upload to.",
-        type=str,
-        default="janelia-spark-test",
-    )
 
-    # Test setup
-    # CLI_ARGS = (
-    #     "--host http://em-services-1.int.janelia.org:8080/render-ws/v1 "
-    #     "--owner hess_wafers_60_61 "
-    #     "-w 60 "
-    #     "-s 360 "
-    #     "--num-threads  16 "
-    #     "--base-path hess_wafer_60_data "
-    #     "--invert "
-    # )
-
-    # args = parser.parse_args(CLI_ARGS.split())
-    # Production setup
     args = parser.parse_args()
 
     param = Parameters(
@@ -128,10 +109,7 @@ if __name__ == '__main__':
         owner=args.owner,
         wafer=args.wafer,
         num_threads=args.num_threads,
-        writer_factory=CloudWriterFactory(
-            bucket_name=args.bucket_name,
-            base_path=args.base_path,
-        ),
+        writer_factory=LocalWriterFactory(base_path=args.output_path),
         shading_storage_path=args.shading_storage_path,
         invert=args.invert,
     )

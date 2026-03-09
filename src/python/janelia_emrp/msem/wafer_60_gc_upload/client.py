@@ -1,5 +1,5 @@
 """
-Functions to background correct and upload PNGs to Google Cloud Storage.
+Functions to background correct and store corrected MSEM images.
 """
 from dataclasses import dataclass
 import logging
@@ -11,7 +11,6 @@ from distributed import Future, LocalCluster, as_completed, get_client
 from details import (
     load_images_as_stack,
     store_beam_shading,
-    MsemCloudWriter,
     AcquisitionConfig,
     BeamConfig,
     Slab,
@@ -25,28 +24,27 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Parameters:
-    """Class to hold parameters for the background correction and upload."""
+    """Class to hold parameters for the background correction and storage."""
     host: str
     owner: str
     wafer: int
     num_threads: int
-    bucket_name: str
-    base_path: str
+    writer_factory: object
     shading_storage_path: str | None
     invert: bool = False
 
 
-def background_correct_and_upload(
+def background_correct_and_store(
         slabs: list[int],
         render_details: AbstractRenderDetails,
         param: Parameters
     ) -> None:
     """Loads all images from the given slabs, computes background correction
-    using BaSiC, and uploads the corrected images of the trimmed versions of the
-    slabs to GCP."""
+    using BaSiC, and stores the corrected images of the trimmed versions of the
+    slabs."""
 
-    logger.info("background_correct_and_upload: Called with %s", param)
-    logger.info("background_correct_and_upload: Slabs to process: %s", slabs)
+    logger.info("background_correct_and_store: Called with %s", param)
+    logger.info("background_correct_and_store: Slabs to process: %s", slabs)
 
     slabs = [Slab(param.wafer, slab) for slab in slabs]
 
@@ -64,12 +62,12 @@ def background_correct_and_upload(
         project = render_details.project_from_slab(slab.wafer, slab.serial_id)
         msem_client = MsemClient(host=param.host, owner=param.owner, project=project)
 
-        futures, gc_stacks = process_slab(slab, render_details, msem_client, param)
+        futures, output_stacks = process_slab(slab, render_details, msem_client, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
-        for gc_stack in gc_stacks:
-            logger.info("completing stack %s", gc_stack)
-            msem_client.complete_stack(gc_stack)
+        for output_stack in output_stacks:
+            logger.info("completing stack %s", output_stack)
+            msem_client.complete_stack(output_stack)
 
         for future in as_completed(futures):
             future.result()
@@ -120,27 +118,27 @@ def process_slab(
     z_range = z_ranges[0]
     logger.info("%s has %d layers.", slab, len(z_range))
 
-    # Create render stacks with the google cloud paths
-    gc_stacks = []
+    # Create render stacks with corrected image paths
+    output_stacks = []
     for upload_stack in upload_stacks:
-        stack_with_gc_paths = render_details.gc_stack_from(upload_stack.stack)
-        client.setup_new_stack(upload_stack.stack, stack_with_gc_paths)
-        gc_stacks.append(stack_with_gc_paths)
+        output_stack_name = render_details.output_stack_from(upload_stack.stack)
+        client.setup_new_stack(upload_stack.stack, output_stack_name)
+        output_stacks.append(output_stack_name)
 
     return process_all_layers(
         download_stacks,
         upload_stacks,
-        gc_stacks,
+        output_stacks,
         z_range,
         client,
         param
-    ), gc_stacks
+    ), output_stacks
 
 
 def process_all_layers(
         download_stacks: list[str],
         upload_stacks: list[str],
-        gc_stacks: list[str],
+        output_stacks: list[str],
         z_range: list[int],
         render_client: MsemClient,
         param: Parameters
@@ -148,14 +146,14 @@ def process_all_layers(
     """Process all layers of a slab."""
     futures = []
     for z in z_range:
-        futures += process_layer(download_stacks, upload_stacks, gc_stacks, render_client, z, param)
+        futures += process_layer(download_stacks, upload_stacks, output_stacks, render_client, z, param)
     return futures
 
 
 def process_layer(
         download_stacks: list[str],
         upload_stacks: list[str],
-        gc_stacks: list[str],
+        output_stacks: list[str],
         render_client: MsemClient,
         z: int,
         param: Parameters
@@ -168,11 +166,11 @@ def process_layer(
         all_locations += locations
 
     upload_locations = []
-    gc_writer = MsemCloudWriter.get_cached(param.bucket_name, param.base_path)
-    for stack, gc_stack in zip(upload_stacks, gc_stacks):
+    writer = param.writer_factory.create()
+    for stack, output_stack in zip(upload_stacks, output_stacks):
         locations, tile_specs = render_client.get_storage_locations(stack_id=stack, z=z)
         upload_locations += locations
-        render_client.save_tilespecs_with_gc_paths(gc_stack, tile_specs, gc_writer)
+        render_client.save_tilespecs_with_corrected_paths(output_stack, tile_specs, writer)
 
     # Group locations by BeamConfig
     beam_to_all = group_by_beam_config(all_locations)
@@ -190,8 +188,7 @@ def process_layer(
             beam_config,
             locs,
             acquisitions_to_upload,
-            param.bucket_name,
-            param.base_path,
+            param.writer_factory,
             param.shading_storage_path,
             param.invert
         )
@@ -204,8 +201,7 @@ def process_sfov(
         beam_config: BeamConfig,
         all_locs: list[str],
         locs_to_upload: list[str],
-        bucket_name: str,
-        base_path: str,
+        writer_factory,
         shading_storage_path: str,
         invert: bool
 ) -> None:
@@ -227,9 +223,9 @@ def process_sfov(
     if invert:
         corrected_images = 255 - corrected_images
 
-    # Upload images
+    # Write corrected images
     upload = time.time()
-    writer = MsemCloudWriter.get_cached(bucket_name, base_path)
+    writer = writer_factory.create()
     all_locs = [AcquisitionConfig.from_storage_location(loc) for loc, k in zip(all_locs, keep) if k]
     succeeded = writer.write_all_images(corrected_images, all_locs)
     if not all(succeeded):
@@ -237,7 +233,7 @@ def process_sfov(
     end = time.time()
 
     logger.info(
-        "%s: loading: %.2fs, correcting: %.2fs, uploading: %.2fs",
+        "%s: loading: %.2fs, correcting: %.2fs, writing: %.2fs",
         beam_config, correct - start, upload - correct, end - upload
     )
 

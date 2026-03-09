@@ -2,7 +2,6 @@ import logging
 import re
 from dataclasses import dataclass
 
-from janelia_emrp.msem.wafer_60_gc_upload.details.gc_writer import MsemCloudWriter
 from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig, Slab, Region
 from janelia_emrp.render.web_service_request import RenderRequest
 
@@ -110,7 +109,7 @@ class MsemClient():
         """
         stack_version = self._render_request.get_stack_metadata(src_stack)["currentVersion"]
         stack_version["versionNotes"] = \
-            f"Copied from {src_stack} with Google Cloud paths for tiles."
+            f"Copied from {src_stack} with corrected image paths for tiles."
         self._render_request.create_stack(stack=dst_stack, stack_version=stack_version)
 
 
@@ -121,23 +120,23 @@ class MsemClient():
         self._render_request.set_stack_state_to_complete(stack=stack)
 
 
-    def save_tilespecs_with_gc_paths(
+    def save_tilespecs_with_corrected_paths(
         self,
         stack: str,
         tile_specs: dict[str, any],
-        gc_writer: MsemCloudWriter
+        writer
     ):
-        """Save tile specs with Google Cloud paths to a stack.
+        """Save tile specs with corrected image paths to a stack.
         :param stack: Target stack to save the tile specs to.
         :param tile_specs: Tile specs to modify and save.
-        :param gc_writer: MsemCloudWriter instance for inferring Google Cloud paths.
+        :param writer: Writer instance with a full_url() method for inferring corrected paths.
         """
-        # Add the Google Cloud paths and an appropriate image loader type to the tile specs
         for tile_spec in tile_specs['tileIdToSpecMap'].values():
             loc = tile_spec['mipmapLevels']['0']['imageUrl']
-            gc_loc = gc_writer.full_url(AcquisitionConfig.from_storage_location(loc))
-            tile_spec['mipmapLevels']['0']['imageUrl'] = gc_loc
-            tile_spec['mipmapLevels']['0']['imageLoaderType'] = "IMAGEJ_DEFAULT_W_TIMEOUT"
+            new_loc = writer.full_url(AcquisitionConfig.from_storage_location(loc))
+            tile_spec['mipmapLevels']['0']['imageUrl'] = new_loc
+            if not new_loc.startswith('file:'):
+                tile_spec['mipmapLevels']['0']['imageLoaderType'] = "IMAGEJ_DEFAULT_W_TIMEOUT"
 
         # Save the tile specs to the stack
         self._render_request.save_resolved_tiles(stack=stack, resolved_tiles=tile_specs)
