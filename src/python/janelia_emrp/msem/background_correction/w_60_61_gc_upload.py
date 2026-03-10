@@ -123,6 +123,9 @@ if __name__ == '__main__':
     # Production setup
     args = parser.parse_args()
 
+    if args.wafer not in (60, 61):
+        parser.error(f"Wafer must be 60 or 61, got {args.wafer}")
+
     param = Parameters(
         host=args.host,
         owner=args.owner,

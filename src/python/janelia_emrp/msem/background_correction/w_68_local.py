@@ -60,11 +60,6 @@ if __name__ == '__main__':
         type=str
     )
     parser.add_argument(
-        "-w", "--wafer",
-        help="Wafer to process images from (60 or 61).",
-        type=int,
-    )
-    parser.add_argument(
         "-s", "--slabs",
         help="(List of) slabs to process images from.",
         type=int,
@@ -107,7 +102,7 @@ if __name__ == '__main__':
     param = Parameters(
         host=args.host,
         owner=args.owner,
-        wafer=args.wafer,
+        wafer=68,
         num_threads=args.num_threads,
         writer_factory=LocalWriterFactory(base_path=args.output_path),
         shading_storage_path=args.shading_storage_path,
