@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 
 from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig, Slab, Region
+from janelia_emrp.msem.wafer_60_gc_upload.details.writer import MsemWriter
 from janelia_emrp.render.web_service_request import RenderRequest
 
 
@@ -124,17 +125,18 @@ class MsemClient():
         self,
         stack: str,
         tile_specs: dict[str, any],
-        writer
+        writer: MsemWriter
     ):
         """Save tile specs with corrected image paths to a stack.
         :param stack: Target stack to save the tile specs to.
         :param tile_specs: Tile specs to modify and save.
-        :param writer: Writer instance with a full_url() method for inferring corrected paths.
+        :param writer: Writer instance for inferring corrected paths.
         """
         for tile_spec in tile_specs['tileIdToSpecMap'].values():
             loc = tile_spec['mipmapLevels']['0']['imageUrl']
             new_loc = writer.full_url(AcquisitionConfig.from_storage_location(loc))
             tile_spec['mipmapLevels']['0']['imageUrl'] = new_loc
+            # Remote URLs (e.g. GCS) need a longer timeout than the default image loader provides
             if not new_loc.startswith('file:'):
                 tile_spec['mipmapLevels']['0']['imageLoaderType'] = "IMAGEJ_DEFAULT_W_TIMEOUT"
 

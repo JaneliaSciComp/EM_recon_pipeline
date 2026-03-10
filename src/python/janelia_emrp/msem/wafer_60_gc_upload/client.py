@@ -16,6 +16,7 @@ from details import (
     Slab,
     MsemClient
 )
+from janelia_emrp.msem.wafer_60_gc_upload.details.writer import MsemWriterFactory
 from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDetails
 
 
@@ -29,7 +30,7 @@ class Parameters:
     owner: str
     wafer: int
     num_threads: int
-    writer_factory: object
+    writer_factory: MsemWriterFactory
     shading_storage_path: str | None
     invert: bool = False
 
@@ -201,7 +202,7 @@ def process_sfov(
         beam_config: BeamConfig,
         all_locs: list[str],
         locs_to_upload: list[str],
-        writer_factory,
+        writer_factory: MsemWriterFactory,
         shading_storage_path: str,
         invert: bool
 ) -> None:
