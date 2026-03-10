@@ -3,9 +3,11 @@ from janelia_emrp.render.web_service_request import MatchRequest
 
 def main():
     host = "em-services-1.int.janelia.org:8080"
-    owner = "hess_wafer_53"
+    # owner = "hess_wafer_53"
+    owner = "hess_sample_68_full"
     collection_names = [
-        "c000_s095_v01_match_agg",
+        "w68_s000_r00_par_match",
+        # "c000_s095_v01_match_agg",
         # "c001_s145_v01_match", "c002_s019_v01_match", "c003_s364_v01_match",
         # "c004_s009_v01_match", "c005_s255_v01_match", "c006_s293_v01_match", "c007_s338_v01_match",
         # "c008_s341_v01_match", "c009_s310_v01_match"
@@ -30,6 +32,8 @@ def main():
                                      collection=collection_name)
 
         group_ids = sorted(match_request.get_p_group_ids(), key=float)
+
+        group_ids = group_ids[:10]
 
         for group_id in group_ids:
             match_pairs = match_request.get_pairs_with_match_counts_for_group(group_id)
