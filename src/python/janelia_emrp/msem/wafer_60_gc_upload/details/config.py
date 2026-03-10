@@ -20,7 +20,7 @@ class Slab:
     serial_id: int
 
     def __post_init__(self):
-        if self.wafer not in (60, 61) or self.serial_id < 0 or self.serial_id > 800:
+        if self.wafer < 0 or self.serial_id < 0:
             raise ValueError(f"Invalid slab ID: {self}")
     
 
