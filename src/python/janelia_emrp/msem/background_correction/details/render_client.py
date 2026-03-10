@@ -63,7 +63,7 @@ class MsemClient():
                              stack_id['stack'], regexp)
                 continue
 
-            logger.info("Stack %s is considered for upload.", stack_id['stack'])
+            logger.info("Stack %s is considered for processing.", stack_id['stack'])
             region_id = int(match.group(1))
             region = Region(slab=slab, region_id=region_id)
             if region not in region_stacks:

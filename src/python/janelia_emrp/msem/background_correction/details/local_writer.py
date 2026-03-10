@@ -49,14 +49,14 @@ class MsemLocalWriter:
     def _sfov_path_for(self, acquisition_config: AcquisitionConfig) -> str:
         """
         Get the local file path for the given acquisition configuration.
+        Omits the slab directory when slab is 0 (e.g. wafer 68 paths have no slab).
         """
-        return os.path.join(
-            self._base_path,
-            f"scan_{acquisition_config.scan:03}",
-            f"slab_{acquisition_config.slab:04}",
-            f"mfov_{acquisition_config.mfov:04}",
-            f"sfov_{acquisition_config.sfov:03}.png"
-        )
+        parts = [self._base_path, f"scan_{acquisition_config.scan:03}"]
+        if acquisition_config.slab != 0:
+            parts.append(f"slab_{acquisition_config.slab:04}")
+        parts.append(f"mfov_{acquisition_config.mfov:04}")
+        parts.append(f"sfov_{acquisition_config.sfov:03}.png")
+        return os.path.join(*parts)
 
     def full_url(self, acquisition_config: AcquisitionConfig) -> str:
         """
