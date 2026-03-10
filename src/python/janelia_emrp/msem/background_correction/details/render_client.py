@@ -2,8 +2,8 @@ import logging
 import re
 from dataclasses import dataclass
 
-from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig, Slab, Region
-from janelia_emrp.msem.wafer_60_gc_upload.details.writer import MsemWriter
+from janelia_emrp.msem.background_correction.details.config import AcquisitionConfig, Slab, Region
+from janelia_emrp.msem.background_correction.details.writer import MsemWriter
 from janelia_emrp.render.web_service_request import RenderRequest
 
 

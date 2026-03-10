@@ -16,8 +16,8 @@ from details import (
     Slab,
     MsemClient
 )
-from janelia_emrp.msem.wafer_60_gc_upload.details.writer import MsemWriterFactory
-from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDetails
+from janelia_emrp.msem.background_correction.details.writer import MsemWriterFactory
+from janelia_emrp.msem.background_correction.render_details import AbstractRenderDetails
 
 
 logger = logging.getLogger(__name__)
