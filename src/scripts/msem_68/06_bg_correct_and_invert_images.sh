@@ -8,7 +8,7 @@ ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 source "${SCRIPT_DIR}/00_config.sh"
 
-RENDER_HOST="em-services-1.int.janelia.org"
+BASE_DATA_URL="http://10.40.3.113:8080/render-ws/v1"
 WAFER_ID="68"
 RENDER_OWNER="hess_sample_${WAFER_ID}_full"
 #SOURCE_SUFFIX="_par_align_c"
@@ -30,7 +30,7 @@ EMRP_ROOT="/groups/hess/hesslab/render/git_hayworth/EM_recon_pipeline"
 export PYTHONPATH="${EMRP_ROOT}/src/python"
 
 ARGS="${EMRP_ROOT}/src/python/janelia_emrp/msem/background_correction/w_68_local.py"
-ARGS="${ARGS} --host ${RENDER_HOST} --owner ${RENDER_OWNER}"
+ARGS="${ARGS} --base-data-url ${BASE_DATA_URL} --owner ${RENDER_OWNER}"
 ARGS="${ARGS} --output-path ${OUTPUT_PATH}"
 #ARGS="${ARGS} --suffix ${SOURCE_SUFFIX}"  # Stack name suffix to match (e.g. '_pa_mat_render_align'). If not given, matches bare region stacks like w68_s000_r00.
 ARGS="${ARGS} --invert"                   # Invert the images after background correction.

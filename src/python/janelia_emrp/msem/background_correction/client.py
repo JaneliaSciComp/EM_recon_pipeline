@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Parameters:
     """Class to hold parameters for the background correction and storage."""
-    host: str
+    base_data_url: str
     owner: str
     wafer: int
     num_threads: int
@@ -61,7 +61,7 @@ def background_correct_and_store(
         start = time.time()
 
         project = render_details.project_from_slab(slab.wafer, slab.serial_id)
-        msem_client = MsemClient(host=param.host, owner=param.owner, project=project)
+        msem_client = MsemClient(host=param.base_data_url, owner=param.owner, project=project)
 
         futures, output_stacks = process_slab(slab, render_details, msem_client, param)
         logger.info("%s has %d tasks", slab, len(futures))

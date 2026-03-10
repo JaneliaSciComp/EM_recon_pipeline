@@ -50,8 +50,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Background correct and upload PNGs.")
 
     parser.add_argument(
-        "--host",
-        help="Host of the render web service.",
+        "--base-data-url",
+        help="Base data URL for the render web service (e.g. http://10.40.3.113:8080/render-ws/v1 ).",
         type=str
     )
     parser.add_argument(
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         parser.error(f"Wafer must be 60 or 61, got {args.wafer}")
 
     param = Parameters(
-        host=args.host,
+        base_data_url=args.base_data_url,
         owner=args.owner,
         wafer=args.wafer,
         num_threads=args.num_threads,
