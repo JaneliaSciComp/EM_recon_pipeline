@@ -18,10 +18,10 @@ class AbstractRenderDetails(ABC):
     def is_target_stack(self, stack_name: str) -> bool:
         """Check if the stack is to be used as a target for background correction.
         In this case, the shading is applied to the images of this stack and the
-        corrected images are uploaded to Google Cloud Storage."""
+        corrected images are stored."""
 
     @abstractmethod
-    def gc_stack_from(self, stack_name: str) -> str:
-        """Get the name of the stack with Google Cloud Storage paths from the original
-        stack name.
+    def output_stack_from(self, stack_name: str) -> str:
+        """Get the name of the output stack with corrected image paths from the
+        original stack name.
         """

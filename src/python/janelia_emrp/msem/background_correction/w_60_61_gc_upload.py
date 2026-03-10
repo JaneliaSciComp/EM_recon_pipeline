@@ -5,8 +5,9 @@ import argparse
 import re
 
 from janelia_emrp.root_logger import init_logger
-from janelia_emrp.msem.wafer_60_gc_upload.client import Parameters, background_correct_and_upload
-from janelia_emrp.msem.wafer_60_gc_upload.render_details import AbstractRenderDetails
+from janelia_emrp.msem.background_correction.client import Parameters, background_correct_and_store
+from janelia_emrp.msem.background_correction.details.writer import CloudWriterFactory
+from janelia_emrp.msem.background_correction.render_details import AbstractRenderDetails
 
 
 class RenderDetails(AbstractRenderDetails):
@@ -38,10 +39,8 @@ class RenderDetails(AbstractRenderDetails):
         """Check if the stack is to be used as a target for background correction."""
         return self.destination_pattern.search(stack_name) is not None
 
-    def gc_stack_from(self, stack_name: str) -> str:
-        """Get the name of the stack with Google Cloud Storage paths from the original
-        stack name.
-        """
+    def output_stack_from(self, stack_name: str) -> str:
+        """Get the name of the output stack with GCS paths."""
         return stack_name + "_gc"
 
 
@@ -124,15 +123,20 @@ if __name__ == '__main__':
     # Production setup
     args = parser.parse_args()
 
+    if args.wafer not in (60, 61):
+        parser.error(f"Wafer must be 60 or 61, got {args.wafer}")
+
     param = Parameters(
         host=args.host,
         owner=args.owner,
         wafer=args.wafer,
         num_threads=args.num_threads,
-        bucket_name=args.bucket_name,
-        base_path=args.base_path,
+        writer_factory=CloudWriterFactory(
+            bucket_name=args.bucket_name,
+            base_path=args.base_path,
+        ),
         shading_storage_path=args.shading_storage_path,
         invert=args.invert,
     )
     render_details = RenderDetails(args.trim_padding)
-    background_correct_and_upload(args.slabs, render_details, param)
+    background_correct_and_store(args.slabs, render_details, param)

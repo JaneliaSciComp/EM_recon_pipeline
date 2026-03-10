@@ -6,7 +6,7 @@ from google.api_core.retry import Retry
 from google.api_core.exceptions import ServiceUnavailable
 import numpy as np
 
-from janelia_emrp.msem.wafer_60_gc_upload.details.config import AcquisitionConfig
+from janelia_emrp.msem.background_correction.details.config import AcquisitionConfig
 
 class MsemCloudWriter:
     """

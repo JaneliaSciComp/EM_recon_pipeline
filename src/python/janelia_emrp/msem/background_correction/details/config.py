@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 
 SLAB_PATTERN = re.compile(r"slab_(\d{4})")
-SCAN_PATTERN = re.compile(r"scan_(\d{3})")
-MFOV_PATTERN = re.compile(r"mfov_(\d{4})")
+SCAN_PATTERN = re.compile(r"scan_(\d+)")
+MFOV_PATTERN = re.compile(r"mfov_(\d{4})", re.IGNORECASE)
 SFOV_PATTERN = re.compile(r"sfov_(\d{3})")
 
 
@@ -20,9 +20,9 @@ class Slab:
     serial_id: int
 
     def __post_init__(self):
-        if self.wafer not in (60, 61) or self.serial_id < 0 or self.serial_id > 800:
-            raise ValueError(f"Invalid slab ID: {self}")
-    
+        if self.wafer < 0 or self.serial_id < 0:
+            raise ValueError(f"Invalid slab: {self}")
+
 
 @dataclass(frozen=True)
 class Region:
@@ -53,7 +53,7 @@ class BeamConfig:
         list of mfovs.
         """
         return [AcquisitionConfig(mfov=mfov, beam_config=self) for mfov in mfovs]
-    
+
     @classmethod
     def from_storage_location(
         cls,
@@ -63,15 +63,16 @@ class BeamConfig:
         Create a BeamConfig object from a storage location string.
         :param storage_location: The storage location string.
         :return: The BeamConfig object.
-        :raises ValueError: If the storage location string is invalid (i.e.,
-            either scan, slab, or sfov could not be inferred from the location).
+        :raises ValueError: If scan or sfov could not be inferred from the location.
         """
         try:
             scan = int(SCAN_PATTERN.search(storage_location).group(1))
-            slab = int(SLAB_PATTERN.search(storage_location).group(1))
             sfov = int(SFOV_PATTERN.search(storage_location).group(1))
         except AttributeError:
             raise ValueError(f"Invalid storage location: {storage_location}") from None
+
+        slab_match = SLAB_PATTERN.search(storage_location)
+        slab = int(slab_match.group(1)) if slab_match else 0
 
         return cls(scan=scan, slab=slab, sfov=sfov)
 
@@ -117,20 +118,20 @@ class AcquisitionConfig:
         Create an AcquisitionConfig object from a storage location string.
         :param storage_location: The storage location string.
         :return: The AcquisitionConfig object.
-        :raises ValueError: If the storage location string is invalid (i.e.,
-            either scan, slab, sfov, or mfov could not be inferred from the
-            location).
+        :raises ValueError: If scan, mfov, or sfov could not be inferred from
+            the location. Slab defaults to 0 if not present in the path.
         """
         try:
             scan = int(SCAN_PATTERN.search(storage_location).group(1))
-            slab = int(SLAB_PATTERN.search(storage_location).group(1))
             mfov = int(MFOV_PATTERN.search(storage_location).group(1))
             sfov = int(SFOV_PATTERN.search(storage_location).group(1))
         except AttributeError:
             raise ValueError(f"Invalid storage location: {storage_location}") from None
 
-        return cls(scan=scan, slab=slab, sfov=sfov, mfov=mfov
-    )
+        slab_match = SLAB_PATTERN.search(storage_location)
+        slab = int(slab_match.group(1)) if slab_match else 0
+
+        return cls(scan=scan, slab=slab, sfov=sfov, mfov=mfov)
 
     @property
     def scan(self) -> int:
