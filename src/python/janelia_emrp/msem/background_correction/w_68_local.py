@@ -11,18 +11,16 @@ from janelia_emrp.msem.background_correction.details.writer import LocalWriterFa
 
 
 class RenderDetails(AbstractRenderDetails):
-    """Details for the render database for local background correction."""
-    def __init__(self, trim_padding: int):
+    """Details for the render database for wafer 68 local background correction."""
+    def __init__(self, suffix: str | None):
         super().__init__()
 
-        # No trimming for the source stack (e.g., w60_s296_r00)
-        self.source_pattern = re.compile('_r(\\d+)$')
-
-        # Trimming for the target stack (e.g., w60_s296_r00_d30)
-        if trim_padding is None or trim_padding < 0:
-            self.destination_pattern = self.source_pattern
+        if suffix is None:
+            # Match bare region stacks (e.g., w68_s000_r00)
+            self.source_pattern = re.compile('_r(\\d+)$')
         else:
-            self.destination_pattern = re.compile(f'_d{trim_padding:02}$')
+            # Match stacks with the given suffix (e.g., w68_s000_r00_pa_mat_render_align)
+            self.source_pattern = re.compile(f'{re.escape(suffix)}$')
 
 
     def project_from_slab(self, wafer: int, serial_id: int) -> str:
@@ -37,7 +35,7 @@ class RenderDetails(AbstractRenderDetails):
 
     def is_target_stack(self, stack_name: str) -> bool:
         """Check if the stack is to be used as a target for background correction."""
-        return self.destination_pattern.search(stack_name) is not None
+        return self.source_pattern.search(stack_name) is not None
 
     def output_stack_from(self, stack_name: str) -> str:
         """Get the name of the output stack with corrected local paths."""
@@ -60,23 +58,16 @@ if __name__ == '__main__':
         type=str
     )
     parser.add_argument(
-        "-s", "--slabs",
-        help="(List of) slabs to process images from.",
-        type=int,
-        nargs='+',
-    )
-    parser.add_argument(
         "--output-path",
         help="Base path on local filesystem to store corrected images.",
         type=str,
     )
     parser.add_argument(
-        "--trim-padding",
-        help="Padding when trimming the full stacks "
-            "(refers to an existing trimmed render stack with that padding). "
-            "If not given, the full source stack is used.",
-        type=int,
-        default=None
+        "--suffix",
+        help="Stack name suffix to match (e.g. '_pa_mat_render_align'). "
+            "If not given, matches bare region stacks like w68_s000_r00.",
+        type=str,
+        default=None,
     )
     parser.add_argument(
         "--invert",
@@ -108,5 +99,5 @@ if __name__ == '__main__':
         shading_storage_path=args.shading_storage_path,
         invert=args.invert,
     )
-    render_details = RenderDetails(args.trim_padding)
-    background_correct_and_store(args.slabs, render_details, param)
+    render_details = RenderDetails(args.suffix)
+    background_correct_and_store([0], render_details, param)
