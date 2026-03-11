@@ -36,7 +36,9 @@ ARGS="${ARGS} --output-path ${OUTPUT_PATH}"
 ARGS="${ARGS} --invert"                   # Invert the images after background correction.
 #ARGS="${ARGS} --shading-storage-path ..." # Storage path for shading (shading is not stored if path is not given).
 ARGS="${ARGS} --num-threads ${NUM_THREADS}"
-#ARGS="${ARGS} --min-z 546 --max-z 726  ..."
+#ARGS="${ARGS} --min-z 546 --max-z 726"    # 180 z layers
+#ARGS="${ARGS} --min-z 727 --max-z 896"    # 169 z layers
+#ARGS="${ARGS} --min-z 897"                # 169 z layers (last z is 1066)
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 LOG_DIR="${SCRIPT_DIR}/logs"
