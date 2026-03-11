@@ -87,8 +87,23 @@ if __name__ == '__main__':
         type=int,
         default=8,
     )
+    parser.add_argument(
+        "--min-z",
+        help="Minimum z value to process (inclusive).",
+        type=int,
+        default=None,
+    )
+    parser.add_argument(
+        "--max-z",
+        help="Maximum z value to process (inclusive).",
+        type=int,
+        default=None,
+    )
 
     args = parser.parse_args()
+
+    if args.min_z is not None and args.max_z is not None and args.min_z > args.max_z:
+        parser.error("--min-z cannot be greater than --max-z")
 
     param = Parameters(
         base_data_url=args.base_data_url,
@@ -97,6 +112,8 @@ if __name__ == '__main__':
         num_threads=args.num_threads,
         writer_factory=LocalWriterFactory(base_path=args.output_path),
         shading_storage_path=args.shading_storage_path,
+        min_z=args.min_z,
+        max_z=args.max_z,
         invert=args.invert,
     )
     render_details = RenderDetails(args.suffix)

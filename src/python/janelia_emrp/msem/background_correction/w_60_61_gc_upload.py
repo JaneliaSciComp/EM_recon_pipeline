@@ -107,6 +107,18 @@ if __name__ == '__main__':
         type=str,
         default="janelia-spark-test",
     )
+    parser.add_argument(
+        "--min-z",
+        help="Minimum z value to process (inclusive).",
+        type=int,
+        default=None,
+    )
+    parser.add_argument(
+        "--max-z",
+        help="Maximum z value to process (inclusive).",
+        type=int,
+        default=None,
+    )
 
     # Test setup
     # CLI_ARGS = (
@@ -136,6 +148,8 @@ if __name__ == '__main__':
             base_path=args.base_path,
         ),
         shading_storage_path=args.shading_storage_path,
+        min_z=args.min_z,
+        max_z=args.max_z,
         invert=args.invert,
     )
     render_details = RenderDetails(args.trim_padding)

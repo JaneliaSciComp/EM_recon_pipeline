@@ -32,6 +32,8 @@ class Parameters:
     num_threads: int
     writer_factory: MsemWriterFactory
     shading_storage_path: str | None
+    min_z: int | None = None
+    max_z: int | None = None
     invert: bool = False
 
 
@@ -115,8 +117,23 @@ def process_slab(
     if len(set(z_ranges)) != 1:
         raise ValueError(f"{slab} has inconsistent z ranges: {z_ranges}")
 
-    z_range = z_ranges[0]
-    logger.info("%s has %d layers.", slab, len(z_range))
+    z_range = list(z_ranges[0])
+    full_z_range = z_range.copy()
+
+    if param.min_z is not None:
+            z_range = [z for z in z_range if z >= param.min_z]
+    if param.max_z is not None:
+            z_range = [z for z in z_range if z <= param.max_z]
+
+    if not z_range:
+            raise ValueError(
+                f"{slab} has no layers in requested z range "
+                f"[{param.min_z}, {param.max_z}] from available layers "
+                f"{full_z_range[0]}..{full_z_range[-1]}"
+            )
+
+    logger.info("%s has %d layers after z filtering.", slab, len(z_range))
+    logger.info("%s processing z values %d..%d", slab, z_range[0], z_range[-1])
 
     # Create render stacks with corrected image paths
     output_stacks = []
