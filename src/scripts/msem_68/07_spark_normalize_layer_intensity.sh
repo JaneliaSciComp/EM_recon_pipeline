@@ -61,7 +61,7 @@ ARGS="\
 #    echo "copied ${SOURCE_PATH}/attributes.json to ${NORMALIZED_DATASET_DIR}"
 #  fi
 #fi
-printf "\n\nneed to:\n  cp ${SOURCE_PATH}/attributes.json to ${NORMALIZED_DATASET_DIR}\n\n\n"
+printf "\n\nneed to:\n  cp ${SOURCE_PATH}/attributes.json ${NORMALIZED_DATASET_DIR}\n\n\n"
 
 LOG_DIR="logs"
 LOG_FILE="${LOG_DIR}/norm.${RUN_TIME}.out"
