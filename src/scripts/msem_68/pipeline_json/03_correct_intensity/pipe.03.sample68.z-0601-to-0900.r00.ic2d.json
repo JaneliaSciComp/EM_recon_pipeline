@@ -2,12 +2,12 @@
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
     "owner" : "hess_sample_68_full", "project" : "w68_serial_000_to_009",
-    "stackIdWithZ" : { "projectPattern": "^w68_serial_000_to_009$", "stackPattern": "^w68_s..._r00_par$", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w68_serial_000_to_009$", "stackPattern": "^w68_s000_r00_par$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w68_s..._r00_par$" },
-    "aligned":            { "stackPattern": "^w68_s..._r00_par_align$" },
-    "intensityCorrected": { "stackPattern": "^w68_s..._r00_par_align_ic$" }
+    "raw":                { "stackPattern": "^w68_s000_r00_par$" },
+    "aligned":            { "stackPattern": "^w68_s000_r00_bgc_par_align_c$" },
+    "intensityCorrected": { "stackPattern": "^w68_s000_r00_bgc_par_align_ic$" }
   },
   "pipelineSteps": [
     "CORRECT_INTENSITY"
@@ -36,6 +36,10 @@
       },
       "numCoefficients" : 4,
       "equilibrationWeight" : 0.0
+    },
+    "layerRange": {
+      "minZ": 601,
+      "maxZ": 900
     },
     "targetStack": {
       "stackSuffix": "_ic2d",
