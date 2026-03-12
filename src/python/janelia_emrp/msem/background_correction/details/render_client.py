@@ -85,15 +85,15 @@ class MsemClient:
 
     def get_storage_locations(
             self,
-            stack_id: StackId,
+            stack_name: str,
             z: int,
     ) -> tuple[list[str], dict[str, Any]]:
         """Get storage locations from the Render server.
-        :param stack_id: stack identifier information.
+        :param stack_name: stack name.
         :param z: z value for which to get storage locations.
         :return: List of storage locations and full tile specs.
         """
-        full_tile_specs = self._render_request.get_resolved_tiles_for_z(stack_id.stack, z)
+        full_tile_specs = self._render_request.get_resolved_tiles_for_z(stack_name, z)
 
         locations = []
         tile_id_to_spec_map = full_tile_specs['tileIdToSpecMap']

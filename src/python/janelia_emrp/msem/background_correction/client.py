@@ -88,15 +88,15 @@ def process_slab(
         render_details: AbstractRenderDetails,
         client: MsemClient,
         param: Parameters
-    ) -> list[Future]:
+    ) -> tuple[list[Future], list[str]]:
     """Divide a slab into layers and sfovs to process them."""
     # Check if all regions of the slab have consistent z ranges
     z_ranges = []
-    region_stacks = client.get_stack_ids(slab)
-    source_stacks = []
-    target_stacks = []
+    region_to_stack_ids = client.get_stack_ids(slab)
+    source_stacks: list[str] = []
+    target_stacks: list[str] = []
 
-    for _, stack_ids in region_stacks.items():
+    for _, stack_ids in region_to_stack_ids.items():
         for stack_id in stack_ids:
 
             stack_name = stack_id.stack
@@ -107,9 +107,9 @@ def process_slab(
                 continue
 
             if is_source:
-                source_stacks.append(stack_id)
+                source_stacks.append(stack_id.stack)
             if is_target:
-                target_stacks.append(stack_id)
+                target_stacks.append(stack_id.stack)
 
             # Compare the z range of the stack with the others
             current_z_range = client.get_z_range(stack_id)
@@ -140,8 +140,8 @@ def process_slab(
     # Create render stacks with corrected image paths
     output_stacks = []
     for target_stack in target_stacks:
-        output_stack_name = render_details.output_stack_from(target_stack.stack)
-        client.setup_new_stack(target_stack.stack, output_stack_name)
+        output_stack_name = render_details.output_stack_from(target_stack)
+        client.setup_new_stack(target_stack, output_stack_name)
         output_stacks.append(output_stack_name)
 
     return process_all_layers(
@@ -181,13 +181,13 @@ def process_layer(
     # Collect storage locations across all regions
     all_locations = []
     for stack in source_stacks:
-        locations, _ = render_client.get_storage_locations(stack_id=stack, z=z)
-        all_locations += locations
+        locations, _ = render_client.get_storage_locations(stack_name=stack, z=z)
+        all_locations.extend(locations)
 
     write_locations = []
     writer = param.writer_factory.create()
     for stack, output_stack in zip(target_stacks, output_stacks):
-        locations, tile_specs = render_client.get_storage_locations(stack_id=stack, z=z)
+        locations, tile_specs = render_client.get_storage_locations(stack_name=stack, z=z)
         write_locations += locations
         render_client.save_tilespecs_with_corrected_paths(output_stack, tile_specs, writer)
 
@@ -195,7 +195,7 @@ def process_layer(
     beam_to_all = group_by_beam_config(all_locations)
     beam_to_write = group_by_beam_config(write_locations)
     if len(beam_to_all) != 91:
-        first_beam = next(beam_to_all.keys())
+        first_beam = next(iter(beam_to_all.keys()))
         raise ValueError(f"Slab {first_beam.slab} has only {len(beam_to_all)} sfovs.")
 
     futures = []
@@ -288,7 +288,7 @@ def correct_beam_shading(all_images, indices_to_correct):
     return corrected_images, basic.flatfield
 
 
-def group_by_beam_config(locations: str) -> dict[BeamConfig, list[str]]:
+def group_by_beam_config(locations: list[str]) -> dict[BeamConfig, list[str]]:
     """Group storage locations by BeamConfig."""
     beam_configs = {}
     for location in locations:
