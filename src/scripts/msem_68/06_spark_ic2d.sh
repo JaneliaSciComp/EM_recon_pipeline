@@ -40,7 +40,7 @@ PIPELINE_BASENAME=$(basename "${PIPELINE_JSON}")
 PIPELINE_BASENAME="${PIPELINE_BASENAME%.json}"
 
 # Note: Spark executor setup with 11 cores per worker defined in 00_config.sh
-N_NODES="160"              # with 160 workers, ic2d for 300 sample 68 z layers took 30 minutes
+N_NODES="160"              # with 160 workers, ic2d for 300 z layers in sample 68 took 30 minutes
 export N_CORES_DRIVER=128  # need lots of memory for the driver since everything gets pulled back from workers to save in one batch
 
 ARGS="--pipelineJson ${PIPELINE_JSON}"
