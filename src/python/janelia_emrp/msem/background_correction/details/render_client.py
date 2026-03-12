@@ -1,6 +1,7 @@
 import logging
 import re
 from dataclasses import dataclass
+from typing import Any
 
 from janelia_emrp.msem.background_correction.details.config import AcquisitionConfig, Slab, Region
 from janelia_emrp.msem.background_correction.details.writer import MsemWriter
@@ -28,7 +29,7 @@ class StackId:
         )
 
 
-class MsemClient():
+class MsemClient:
     """Wrapper class for interacting with the Render server."""
 
     def __init__(
@@ -84,12 +85,11 @@ class MsemClient():
 
     def get_storage_locations(
             self,
-            *,
             stack_id: StackId,
             z: int,
-    ) -> tuple[list[str], dict[str, any]]:
+    ) -> tuple[list[str], dict[str, Any]]:
         """Get storage locations from the Render server.
-        :param serial_ids: Serial ID of the stack.
+        :param stack_id: stack identifier information.
         :param z: z value for which to get storage locations.
         :return: List of storage locations and full tile specs.
         """
@@ -124,7 +124,7 @@ class MsemClient():
     def save_tilespecs_with_corrected_paths(
         self,
         stack: str,
-        tile_specs: dict[str, any],
+        tile_specs: dict[str, Any],
         writer: MsemWriter
     ):
         """Save tile specs with corrected image paths to a stack.
