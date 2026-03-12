@@ -40,8 +40,8 @@ export RUNTIME="233:59"
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 
-#JAR="/groups/flyem/data/render/lib/hot-knife-0.0.6-SNAPSHOT.jar"
-JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.cloud-cost-debug.jar"
+JAR="/groups/flyem/data/render/lib/hot-knife-0.0.6-SNAPSHOT.jar"
+#JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.cloud-cost-debug.jar"
 CLASS="org.janelia.saalfeldlab.hotknife.SparkNormalizeLayerIntensityN5"
 
 NORMALIZED_DATASET="${SOURCE_DATASET}_norm-layer"
