@@ -35,6 +35,7 @@ class Parameters:
     min_z: int | None = None
     max_z: int | None = None
     invert: bool = False
+    complete_stacks: bool = True
 
 
 def background_correct_and_store(
@@ -68,9 +69,10 @@ def background_correct_and_store(
         futures, output_stacks = process_slab(slab, render_details, msem_client, param)
         logger.info("%s has %d tasks", slab, len(futures))
 
-        for output_stack in output_stacks:
-            logger.info("completing stack %s", output_stack)
-            msem_client.complete_stack(output_stack)
+        if param.complete_stacks:
+            for output_stack in output_stacks:
+                logger.info("completing stack %s", output_stack)
+                msem_client.complete_stack(output_stack)
 
         for future in as_completed(futures):
             future.result()

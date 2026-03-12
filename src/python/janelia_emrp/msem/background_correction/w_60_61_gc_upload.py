@@ -119,6 +119,12 @@ if __name__ == '__main__':
         type=int,
         default=None,
     )
+    parser.add_argument(
+        "--skip-stack-completion",
+        help="Skip corrected stack completion because you are running concurrent jobs on the same stack(s).",
+        action="store_true",
+        default=False,
+    )
 
     # Test setup
     # CLI_ARGS = (
@@ -151,6 +157,7 @@ if __name__ == '__main__':
         min_z=args.min_z,
         max_z=args.max_z,
         invert=args.invert,
+        complete_stacks=(not args.skip_stack_completion),
     )
     render_details = RenderDetails(args.trim_padding)
     background_correct_and_store(args.slabs, render_details, param)
