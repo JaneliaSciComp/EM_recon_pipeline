@@ -22,11 +22,13 @@ RENDER_PROJECT="w68_serial_000_to_009"
 STACK="${1}"
 
 #-----------------------------------------------------------
-# The normalization transformation derivation (most of the work) is not parallelized and is currently done in the driver
+# The normalization transformation derivation is not parallelized and is currently done in the driver
 # ( see https://github.com/saalfeldlab/hot-knife/blob/d19bf4fe9acad572a72080205a20e35b1be256db/src/main/java/org/janelia/saalfeldlab/hotknife/SparkNormalizeLayerIntensityN5.java#L158 ).
-# Adding more worker nodes only helps with saving the transformed blocks.
-# Guessing that a sample 68 run with 2 worker nodes would take about 2 hours 30 minutes to complete.
-N_NODES="2"
+# Application of the normalization transformation and export are parallelized.
+#
+# A sample 68 run with a 128-core driver and 10 workers took over 6 hours to complete.
+# Guessing that a 60-worker run would complete in 2 hours or less.
+N_NODES="60"
 SOURCE_DATASET="/render/${RENDER_PROJECT}/${STACK}"
 
 # /nrs/hess/data/hess_sample_68_full/export/hess_sample_68_full.n5/render/w68_serial_000_to_009/w68_s000_r00_bgc_par_align_c_ic2d
