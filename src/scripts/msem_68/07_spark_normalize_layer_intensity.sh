@@ -22,7 +22,7 @@ RENDER_PROJECT="w68_serial_000_to_009"
 STACK="${1}"
 
 #-----------------------------------------------------------
-N_NODES="20" # 20 11-slot nodes took ? minutes for w68_s000_r00_bgc_par_align_c_ic2d
+N_NODES="60" # 60 11-slot nodes took ? minutes for w68_s000_r00_bgc_par_align_c_ic2d
 SOURCE_DATASET="/render/${RENDER_PROJECT}/${STACK}"
 
 # /nrs/hess/data/hess_sample_68_full/export/hess_sample_68_full.n5/render/w68_serial_000_to_009/w68_s000_r00_bgc_par_align_c_ic2d
@@ -40,17 +40,20 @@ export RUNTIME="233:59"
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 
-JAR="/groups/flyem/data/render/lib/hot-knife-0.0.6-SNAPSHOT.jar"
-#JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.cloud-cost-debug.jar"
-CLASS="org.janelia.saalfeldlab.hotknife.SparkNormalizeLayerIntensityN5"
+JAR="/groups/hess/hesslab/render/lib/hot-knife-0.0.7-SNAPSHOT.cloud-cost-debug.jar"
+CLASS="org.janelia.saalfeldlab.hotknife.MultiSemNormalizeLayerIntensity"
 
-NORMALIZED_DATASET="${SOURCE_DATASET}_norm-layer"
+NORMALIZED_DATASET="${SOURCE_DATASET}_norm-layer-v2"
 NORMALIZED_DATASET_DIR="${BASE_N5_DIR}${NORMALIZED_DATASET}"
 
 ARGS="\
 --n5Path=${BASE_N5_DIR} \
 --n5DatasetInput=${SOURCE_DATASET} \
 --n5DatasetOutput=${NORMALIZED_DATASET} \
+--downsampleLevel 4
+--aggregation MEDIAN
+--lowerThreshold 90
+--upperThreshold 200
 --factors 2,2,1"
 # --invert"
 
