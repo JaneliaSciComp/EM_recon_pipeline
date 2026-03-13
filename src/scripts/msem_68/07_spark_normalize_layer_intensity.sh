@@ -36,6 +36,8 @@ if [[ ! -d "${SOURCE_PATH}" ]]; then
   exit 1
 fi
 
+export N_CORES_DRIVER=128  # need lots of memory (maybe not this much) on the driver for transformation derivation process
+
 # must export this for flintstone
 export RUNTIME="233:59"
 
