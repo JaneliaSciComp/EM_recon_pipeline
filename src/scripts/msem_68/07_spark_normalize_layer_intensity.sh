@@ -59,10 +59,10 @@ ARGS="\
 --n5DatasetInput=${SOURCE_DATASET} \
 --n5DatasetOutput=${NORMALIZED_DATASET} \
 --downsampleLevel 4
---aggregation MEDIAN
---lowerThreshold 90
---upperThreshold 200
---factors 2,2,1"
+--aggregation MEAN
+--lowerThreshold 5
+--upperThreshold 250
+--factors 2,2,2"
 # --invert"
 
 #if [[ ! -d ${NORMALIZED_DATASET_DIR} ]]; then
