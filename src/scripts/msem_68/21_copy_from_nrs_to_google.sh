@@ -3,7 +3,10 @@
 # ----------------------------------------------------------------------------
 # Copy the surface zarr volumes from /nrs to Google cloud storage.
 #
-# The w61 run_20260303_130000/pass00-scale1 data with > 6 million blocks took 4.5 hours to rsync
+# Launch with nohup like this:
+#     nohup ./21_copy_from_nrs_to_google.sh 2>&1 1>logs/2026-03-16-copy-nrs-to-google.log &
+#
+# The w68_s000_r00_bgc_par_align_c_ic2d_norm-layer-v2b/s0 data with 85,000 blocks took 73 minutes to rsync
 # when run on trautmane-dev with 64 cores.
 
 set -e
