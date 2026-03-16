@@ -6,8 +6,8 @@
   },
   "pipelineStackGroups": {
     "raw":                { "stackPattern": "^w61_s..._r00_gc_par$" },
-    "aligned":            { "stackPattern": "^w61_s..._r00_gc_par_align$" },
-    "intensityCorrected": { "stackPattern": "^w61_s..._r00_gc_par_align_ic$" }
+    "aligned":            { "stackPattern": "^w61_s..._r00_gc_par_align_stitch_only$" },
+    "intensityCorrected": { "stackPattern": "^w61_s..._r00_gc_par_align_stitch_only_ic$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
