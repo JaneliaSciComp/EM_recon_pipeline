@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ----------------------------------------------------------------------------
-# Copy the surface zarr volumes from /nrs to Google cloud storage.
+# Copy the norm-layer export from /nrs to Google cloud storage.
 #
 # Launch with nohup like this:
 #     nohup ./21_copy_from_nrs_to_google.sh 2>&1 1>logs/2026-03-16-copy-nrs-to-google.log &
