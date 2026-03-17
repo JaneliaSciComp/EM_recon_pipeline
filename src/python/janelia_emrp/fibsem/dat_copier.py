@@ -128,7 +128,7 @@ def copy_dat_file(scope_host: str,
         "-T",                              # needed to avoid protocol error: filename does not match request
         "-o", "ConnectTimeout=10",
         "-o", "StrictHostKeyChecking=no",  # Disable checking to avoid problems when scopes get new IPs
-        f'{host_prefix}"{scope_dat_path}"',
+        f'{host_prefix}{scope_dat_path}',
         str(target_dir)
     ]
 
