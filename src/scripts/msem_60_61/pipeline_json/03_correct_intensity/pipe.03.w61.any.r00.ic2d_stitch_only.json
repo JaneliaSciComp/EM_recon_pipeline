@@ -33,7 +33,7 @@
       "equilibrationWeight" : 0.0
     },
     "targetStack": {
-      "stackSuffix": "_ic2d_stitch_only",
+      "stackSuffix": "_ic2d",
       "completeStack": true
     },
     "blockPartition": {
