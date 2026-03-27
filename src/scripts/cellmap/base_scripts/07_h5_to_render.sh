@@ -11,6 +11,19 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/run_${RUN_TIME}.log"
 
+TRANSFER_INFO_JSON=$(ls "${SCRIPT_DIR}"/volume_transfer_info.*.json)
+if [[ -f "${TRANSFER_INFO_JSON}" ]]; then
+    LAST_DAT=$(${JQ} -r '.scope_data_set.last_dat_name' "${TRANSFER_INFO_JSON}")
+    # "last_dat_name": "Merlin-6262_25-04-08_153541_0-1-2.dat"
+    if [[ "${LAST_DAT}" != Merlin* ]]; then
+        echo "ERROR: invalid ${TRANSFER_INFO_JSON}, last_dat_name '${LAST_DAT}' does not start with 'Merlin'"
+        exit 1
+    fi
+else
+  echo "ERROR: ${TRANSFER_INFO_JSON} not found!"
+  exit 1
+fi
+
 echo "
 Running $0 on ${HOSTNAME} at ${RUN_TIME} ...
 " | tee -a "${LOG_FILE}"
