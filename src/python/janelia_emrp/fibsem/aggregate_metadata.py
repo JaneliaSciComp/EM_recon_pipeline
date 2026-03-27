@@ -231,6 +231,11 @@ def main() -> None:
     )
     logger.info("Wrote plots to %s", output_dir)
 
+    # Export raw metadata as compressed CSV
+    csv_zip_path = output_dir / "metadata.zip"
+    metadata.to_csv(csv_zip_path, index=False, compression={"method": "zip", "archive_name": "metadata.csv"})
+    logger.info("Wrote raw metadata to %s", csv_zip_path)
+
     # Create a landing page summarizing constants and linking to plots
     create_landing_page(
         render_request,
@@ -683,7 +688,8 @@ def create_landing_page(
         "<body>",
         f"<h1>{html.escape(title)}</h1>",
         f"<p><strong>Owner:</strong> {owner} &nbsp; <strong>Project:</strong> "
-        f"{project} &nbsp; <strong>Stack:</strong> {stack_name}</p>",
+        f"{project} &nbsp; <strong>Stack:</strong> {stack_name} "
+        '&nbsp; <a href="metadata.zip" download>Download raw metadata (ZIP)</a></p>'
     ]
 
     lines.append('<div class="summary-sections">')
