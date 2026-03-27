@@ -128,6 +128,7 @@ def build_all_layers(align_storage_root: Path,
                      threads_per_worker: int,
                      dask_worker_space: Optional[str],
                      bill_project: Optional[str],
+                     last_dat_name: Optional[str],
                      min_index: Optional[int],
                      max_index: Optional[int]) -> List[LayerInfo]:
 
@@ -141,6 +142,23 @@ def build_all_layers(align_storage_root: Path,
     logger.info(f"build_all_layers: found {len(layer_h5_paths)} .h5 files in {align_storage_root}")
 
     slice_max = max_index + 1 if max_index is not None else None
+
+    # exclude any h5 files built from dat files with timestamps after the last dat
+    if slice_max is not None and last_dat_name is not None:
+        last_dat_path = new_dat_path(Path(last_dat_name))                        # Merlin-6262_25-02-26_042444_0-1-2.dat
+        last_dat_prefix = f"{last_dat_path.scope}_{last_dat_path.acquire_time}"  # Merlin-6262_25-02-26_042444
+
+        original_slice_max = slice_max
+        for layer_h5_path in reversed(layer_h5_paths):
+            h5_basename = layer_h5_path.stem.split('.')[0]  # Merlin-6262_25-02-26_042444.uint8.h5 -> Merlin-6262_25-02-26_042444
+            if h5_basename > last_dat_prefix:
+                slice_max -= 1
+            else:
+                break
+
+        if slice_max < original_slice_max:
+            logger.info(f"build_all_layers: removed {original_slice_max - slice_max} .h5 files for dat files imaged after {last_dat_prefix}")
+
     if min_index is not None:
         if slice_max is not None:
             layer_h5_paths = layer_h5_paths[min_index:slice_max]
@@ -593,6 +611,7 @@ def main(arg_list):
                                   threads_per_worker=args.num_threads_per_worker,
                                   dask_worker_space=args.dask_worker_space,
                                   bill_project=volume_transfer_info.cluster_job_project_for_billing,
+                                  last_dat_name=volume_transfer_info.scope_data_set.last_dat_name,
                                   min_index=args.min_layer_index,
                                   max_index=args.max_layer_index)
 
