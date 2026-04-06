@@ -47,12 +47,9 @@ $(cat ${VM_METADATA_FILE})
 "
 
 # see https://cloud.google.com/sdk/gcloud/reference/compute/instances/create-with-container
-gcloud compute instances create-with-container "${VM_NAME}" \
+gcloud compute instances create "${VM_NAME}" \
   --boot-disk-auto-delete --boot-disk-device-name=render-ws-mongodb-boot-disk --boot-disk-interface=SCSI \
   --boot-disk-size="${BOOT_DISK_SIZE}" --boot-disk-type=pd-balanced \
-  --container-image="${CONTAINER_IMAGE}" \
-  --container-mount-host-path=host-path=/mnt/disks/mongodb_dump_fs,mount-path=/mnt/disks/mongodb_dump_fs,mode=rw \
-  --container-privileged --container-restart-policy=never --container-stdin --container-tty \
   --description='' \
   --labels=container-vm="${VM_NAME}" \
   --machine-type=n2-standard-16 \
