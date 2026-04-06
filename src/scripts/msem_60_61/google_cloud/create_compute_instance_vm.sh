@@ -46,13 +46,21 @@ $(cat ${VM_METADATA_FILE})
 
 "
 
-# see https://cloud.google.com/sdk/gcloud/reference/compute/instances/create-with-container
+# See https://cloud.google.com/sdk/gcloud/reference/compute/instances/create
+#
+# Notes:
+# > the --image-project=cos-cloud parameter references Google's dedicated GCP project that publishes all Container-Optimized OS images
+# > to see image family options, use gcloud compute images list --project=cos-cloud --no-standard-images
+#   > and select something like 'cos-117-lts' or 'cos-125-lts'
+#   > the 'cos-stable' family is the latest family, but recommendation is to choose a specific version to ensure consistency
 gcloud compute instances create "${VM_NAME}" \
   --boot-disk-auto-delete --boot-disk-device-name=render-ws-mongodb-boot-disk --boot-disk-interface=SCSI \
   --boot-disk-size="${BOOT_DISK_SIZE}" --boot-disk-type=pd-balanced \
   --description='' \
   --labels=container-vm="${VM_NAME}" \
   --machine-type=n2-standard-16 \
+  --image-project=cos-cloud \
+  --image-family=cos-125-lts \
   --metadata-from-file=user-data="${VM_METADATA_FILE}" \
   --network-interface="${NETWORK_INTERFACE}" \
   --tags=http-server,https-server,lb-health-check,https-egress \
