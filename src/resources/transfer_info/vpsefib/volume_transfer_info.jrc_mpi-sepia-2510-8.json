@@ -24,7 +24,7 @@
     },
     "max_mipmap_level": 7,
     "render_data_set": {
-        "owner": "vps-efib",
+        "owner": "vps_efib",
         "project": "jrc_mpi_sepia_2510_8",
         "stack": "v1_acquire",
         "restart_context_layer_count": 1,
