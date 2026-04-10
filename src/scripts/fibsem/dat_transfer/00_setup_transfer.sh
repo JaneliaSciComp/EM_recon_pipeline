@@ -8,8 +8,8 @@ EMRP_ROOT="${FIBSEMXFER_DIR}/git/EM_recon_pipeline"
 VERSIONED_TRANSFER_INFO_DIR="${EMRP_ROOT}/src/resources/transfer_info"
 TRANSFER_CONFIG_DIR="${FIBSEMXFER_DIR}/config"
 
-if (( $# != 2 )); then
-  echo "USAGE $0 <alignment-id> <first-comment-text-file>  (e.g. jrc_velella-b8-1 issue.txt)"
+if (( $# < 2 )); then
+  echo "USAGE $0 <alignment-id> <first-comment-text-file>  [first-dat-to-check] (e.g. jrc_velella-b8-1 issue.txt)"
   exit 1
 fi
 
@@ -68,7 +68,7 @@ IFS='|' read -r -a PARSED_VALUES_ARRAY <<< "${PARSED_VALUES}"
 SCOPE_DATA_SET_ID="${PARSED_VALUES_ARRAY[0]}"
 SCOPE_HOST="${PARSED_VALUES_ARRAY[1]}"
 ROOT_DAT_PATH="${PARSED_VALUES_ARRAY[2]}"    # /cygdrive/e/Images/Cellmap
-FIRST_DAT="${PARSED_VALUES_ARRAY[3]}"
+FIRST_DAT="${3:-PARSED_VALUES_ARRAY[3]}"
 
 LAST_DAT="${PARSED_VALUES_ARRAY[4]}"
 if [[ "${LAST_DAT}" == Merlin* ]]; then
