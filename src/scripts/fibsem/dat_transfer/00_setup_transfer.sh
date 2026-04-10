@@ -82,6 +82,7 @@ NUMBER_ROWS="${PARSED_VALUES_ARRAY[6]}"
 XY_NM_PER_PIXEL="${PARSED_VALUES_ARRAY[7]}"
 Z_NM_PER_PIXEL="${PARSED_VALUES_ARRAY[8]}"
 STORAGE_GROUP="${PARSED_VALUES_ARRAY[9]}"
+OWNER_GROUP="${STORAGE_GROUP//-/_}"
 COMPUTE_GROUP="${PARSED_VALUES_ARRAY[10]}"
 DAT_FILE_COUNT="${PARSED_VALUES_ARRAY[11]//,/}" # remove all commas
 
@@ -358,7 +359,7 @@ echo "{
     },
     @max_mipmap_level@: 7,
     @render_data_set@: {
-        @owner@: @${STORAGE_GROUP}@,
+        @owner@: @${OWNER_GROUP}@,
         @project@: @${RENDER_PROJECT}@,
         @stack@: @v1_acquire@,
         @restart_context_layer_count@: 1,
