@@ -14,7 +14,6 @@ if (( $# < 2 )); then
 fi
 
 ALIGNMENT_ID="$1"
-RENDER_PROJECT=${ALIGNMENT_ID//-/_}  # replace all '-' with '_'
 VOLUME_TRANSFER_JSON_FILE="volume_transfer_info.${ALIGNMENT_ID}.json"
 
 FIRST_COMMENT_TEXT_FILE="${2}"
@@ -333,6 +332,9 @@ fi
 
 setupTransferPath "${NEARLINE_RAW_H5_DIR}"
 
+RENDER_OWNER=${OWNER_GROUP//-/_}  # replace all '-' with '_'
+RENDER_PROJECT=${ALIGNMENT_ID//-/_}  # replace all '-' with '_'
+
 echo "{
     @transfer_id@: @${STORAGE_GROUP}::${ALIGNMENT_ID}::${SCOPE_HOST}@,
     @scope_data_set@: {
@@ -359,7 +361,7 @@ echo "{
     },
     @max_mipmap_level@: 7,
     @render_data_set@: {
-        @owner@: @${OWNER_GROUP}@,
+        @owner@: @${RENDER_OWNER}@,
         @project@: @${RENDER_PROJECT}@,
         @stack@: @v1_acquire@,
         @restart_context_layer_count@: 1,
