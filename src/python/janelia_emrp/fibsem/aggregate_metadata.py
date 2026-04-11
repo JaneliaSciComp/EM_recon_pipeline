@@ -12,6 +12,7 @@ import urllib.parse as urlparse
 import h5py
 import pandas as pd
 import dask.bag as db
+import psutil
 from dask.bag import Bag
 from dask.distributed import Client, LocalCluster
 from bokeh.io import output_file, save
@@ -204,10 +205,18 @@ def main() -> None:
         project=args.project,
     )
 
+    available_gb = psutil.virtual_memory().available / 1e9
+    # Leave ~20% headroom for the OS and the scheduler process
+    usable_gb = available_gb * 0.8
+    per_worker_gb = usable_gb / args.n_workers
+    logger.info("setting dask memory limit to %.1f GiB for each of the %d workers (total available memory is %.1f GiB)",
+                per_worker_gb, args.n_workers, available_gb)
+
     cluster_args = {
         "n_workers": args.n_workers,
         "processes": args.n_workers > 1,
         "threads_per_worker": 1,
+        "memory_limit": f"{per_worker_gb:.1f}GiB",
     }
 
     project_stack_ids = render_request.get_stack_ids()
