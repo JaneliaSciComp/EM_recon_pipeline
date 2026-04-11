@@ -228,7 +228,7 @@ def main() -> None:
             print(f"dask memory limit is {per_worker_gb:.1f} GB for each of the {args.n_workers} workers")
             if per_worker_gb < 1:
                 available_gb = per_worker_gb * args.n_workers
-                raise ValueError(f"need at least 1 GB of memory for each of the {args.n_workers} dask workers, total available memory is {available_gb:d} GB")
+                raise ValueError(f"need at least 1 GB of memory for each of the {args.n_workers} dask workers, total available memory is {available_gb} GB")
 
         # Load and aggregate metadata from the HDF5 datasets
         metadata = aggregate_metadata(render_request, args.stack, args.z_batch_size)
