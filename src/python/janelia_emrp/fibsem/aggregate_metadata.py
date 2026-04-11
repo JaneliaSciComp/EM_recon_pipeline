@@ -12,7 +12,6 @@ import urllib.parse as urlparse
 import h5py
 import pandas as pd
 import dask.bag as db
-import psutil
 from dask.bag import Bag
 from dask.distributed import Client, LocalCluster
 from bokeh.io import output_file, save
@@ -205,18 +204,10 @@ def main() -> None:
         project=args.project,
     )
 
-    available_gb = psutil.virtual_memory().available / 1e9
-    # Leave ~20% headroom for the OS and the scheduler process
-    usable_gb = available_gb * 0.8
-    per_worker_gb = usable_gb / args.n_workers
-    logger.info("setting dask memory limit to %.1f GiB for each of the %d workers (total available memory is %.1f GiB)",
-                per_worker_gb, args.n_workers, available_gb)
-
     cluster_args = {
         "n_workers": args.n_workers,
         "processes": args.n_workers > 1,
         "threads_per_worker": 1,
-        "memory_limit": f"{per_worker_gb:.1f}GiB",
     }
 
     project_stack_ids = render_request.get_stack_ids()
@@ -229,6 +220,16 @@ def main() -> None:
         )
 
     with LocalCluster(**cluster_args) as cluster, Client(cluster):
+
+        workers = cluster.scheduler_info["workers"]
+        if workers:
+            first_worker = next(iter(workers.values()))
+            per_worker_gb = first_worker.get("memory_limit", 0) / 1024**3
+            print(f"dask memory limit is {per_worker_gb:.1f} GB for each of the {args.n_workers} workers")
+            if per_worker_gb < 1:
+                available_gb = per_worker_gb * args.n_workers
+                raise ValueError(f"need at least 1 GB of memory for each of the {args.n_workers} dask workers, total available memory is {available_gb:d} GB")
+
         # Load and aggregate metadata from the HDF5 datasets
         metadata = aggregate_metadata(render_request, args.stack, args.z_batch_size)
         logger.info("Aggregated metadata for %d tiles", len(metadata))
