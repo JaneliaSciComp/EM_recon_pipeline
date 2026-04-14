@@ -45,6 +45,8 @@ fi
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 BATCH_ID_SUFFIX=$(echo "${STACK}-${DATASET_SUFFIX}" | tr '_' '-')
+BATCH_ID="rex-${RUN_TIMESTAMP}-${BATCH_ID_SUFFIX}"
+BATCH_ID="${BATCH_ID:0:63}" # batch IDs must be no more than 63 characters
 SPARK_EXEC_CORES=4 # must be 4, 8, or 16
 
 RENDER_OWNER="hess_wafers_60_61"
