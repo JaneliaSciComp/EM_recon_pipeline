@@ -111,7 +111,7 @@ gcloud dataproc batches submit spark \
   --region=us-east4 \
   --jars=${GS_JAR_URL} \
   --class=${CLASS} \
-  --batch=rex-"${RUN_TIMESTAMP}-${BATCH_ID_SUFFIX}" \
+  --batch=${BATCH_ID} \
   --version=${SPARK_VERSION} \
   --properties="${SPARK_PROPS}" \
   --async \
