@@ -18,6 +18,7 @@ ALIGN_H5=$(${JQ} '.cluster_root_paths.align_h5' "${VOLUME_TRANSFER_INFO}" | sed 
 
 # .../z_corr/Z0720_07m_BR/Sec14/v4_acquire_trimmed_align/run_20210827_101623_480_z_corr/solve_20210827_104130/Zcoords.txt
 STACK_Z_CORR_DIR="${RENDER_NRS_ROOT}/z_corr/${RENDER_OWNER}/${RENDER_PROJECT}/${ALIGN_STACK}"
+RENDER_OWNER="${RENDER_OWNER//-/_}"
 
 unset Z_COORDS_FILE ALIGN_STACK_DATA
 
