@@ -11,8 +11,9 @@ CONFIG_DIR=$(dirname ${ABSOLUTE_CONFIG})
 VOLUME_NAME=$(basename "${CONFIG_DIR}")
 RENDER_NRS_ROOT="/nrs/${LAB_OR_PROJECT_GROUP}/data/${VOLUME_NAME}"
 
-RENDER_OWNER="${LAB_OR_PROJECT_GROUP}"
-RENDER_PROJECT=$(echo "${VOLUME_NAME}" | sed 's/-/_/g')
+# replace '-' with '_' for render names so that they can be used in the database
+RENDER_OWNER="${LAB_OR_PROJECT_GROUP//-/_}"
+RENDER_PROJECT="${VOLUME_NAME//-/_}"
 
 # group name to which all cluster jobs should be billed
 export BILL_TO="${LAB_OR_PROJECT_GROUP}"
