@@ -16,7 +16,8 @@ RENDER_OWNER="${LAB_OR_PROJECT_GROUP//-/_}"
 RENDER_PROJECT="${VOLUME_NAME//-/_}"
 
 # group name to which all cluster jobs should be billed
-export BILL_TO="${LAB_OR_PROJECT_GROUP}"
+# remove any '-' in LAB_OR_PROJECT_GROUP, e.g. change vps-efib to vpsefib
+export BILL_TO="${LAB_OR_PROJECT_GROUP//-/}"
 
 # number of Dask workers for dat_to_render process
 DASK_DAT_TO_RENDER_WORKERS="32"
