@@ -9,7 +9,9 @@
 set -e
 
 MAX_EXECUTORS=10       # 10 executors for w61_s099 pixel with 82 z layers took 4 hours, 15 minutes
+                       # 40 executors for w61_s081 pixel with 82 z layers took 2 hours,  1 minute
                        # 10 executors for w61_s122 mask  with 89 z layers took 1 hour,  30 minutes
+                       # 40 executors for w61_s076 mask  with 89 z layers took 0 hours, 42 minutes
 
 IP="10.150.0.4"        # c=10.150.0.4  d=10.150.0.2  e=10.150.0.3
 PIXEL_OR_MASK="pixel"  # mask
