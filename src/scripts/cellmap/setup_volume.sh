@@ -105,8 +105,11 @@ cp -r "${BASE_SCRIPTS_DIR}"/support "${ALIGN_DIR}"
 cp "${TRANSFER_INFO_JSON_FILE}" "${ALIGN_DIR}"
 
 chmod 775 "${ALIGN_DIR}"/*.sh
-chmod 775 "${ALIGN_DIR}"/support "${ALIGN_DIR}"/support/*.sh "${ALIGN_DIR}"/support/*.py
-chmod 664 "${ALIGN_DIR}"/*/*.json
+chmod 775 "${ALIGN_DIR}"/match_*_row "${ALIGN_DIR}"/support "${ALIGN_DIR}"/support/*.sh "${ALIGN_DIR}"/support/*.py
+chmod 664 "${ALIGN_DIR}"/*.json "${ALIGN_DIR}"/*/*.json
+
+mkdir -p "${ALIGN_DIR}/logs"
+chmod 2775 "${ALIGN_DIR}/logs"
 
 sed -i "
   s/export LAB_OR_PROJECT_GROUP.*/export LAB_OR_PROJECT_GROUP=\"${LAB_OR_PROJECT_GROUP}\"/
