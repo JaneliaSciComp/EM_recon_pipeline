@@ -63,6 +63,7 @@ ARGS="${ARGS} --baseDataUrl ${BASE_DATA_URL}"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --alignStack ${ALIGN_STACK} --rawStack ${SIXTEEN_BIT_STACK}"
 ARGS="${ARGS} --rawRootDirectory ${RAW_ROOT_DIR}"
+# ARGS="${ARGS} --rawH5Channel 1"
 # ARGS="${ARGS} --z 5000 9740"
 ARGS="${ARGS} --completeRawStack"
 
