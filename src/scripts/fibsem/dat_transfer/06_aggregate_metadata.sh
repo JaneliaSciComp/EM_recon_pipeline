@@ -62,7 +62,7 @@ checking ${TRANSFER_JSON_FILE} for EXPORT_PREVIEW_VOLUME task ..."
     RENDER_OWNER=$(${JQ} -r '.render_data_set.owner' "${TRANSFER_JSON_FILE}")
     RENDER_PROJECT=$(${JQ} -r '.render_data_set.project' "${TRANSFER_JSON_FILE}")
     ALIGN_H5_PATH=$(${JQ} -r '.cluster_root_paths.align_h5 // "undefined"' "${TRANSFER_JSON_FILE}")
-    N_WORKERS=3 # only 4G of memory available on box where the metadata job runs, so limit dask workers to 3
+    N_WORKERS=8 # 16G of memory available on box where the metadata job runs, so limit dask workers to 8
 
     if [ "${ALIGN_H5_PATH}" == "undefined" ]; then
 
