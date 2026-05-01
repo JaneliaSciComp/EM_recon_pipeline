@@ -48,6 +48,14 @@ done
 ALIGN_STACK="${STACK_NAME}"
 SIXTEEN_BIT_STACK="${ALIGN_STACK}_16bit"
 
+read -r -p "Which channel should be used for the 16-bit stack (0 or 1)? " CHANNEL
+if [[ "${CHANNEL}" == "1" ]]; then
+  SIXTEEN_BIT_STACK="${SIXTEEN_BIT_STACK}_channel_1"
+elif [[ "${CHANNEL}" != 0 ]]; then
+  echo "Error: must select either channel 0 or 1"
+  exit 1
+fi
+
 #--------------------------------------------------
 # setup and launch the LSF job to convert to 16-bit
 
@@ -63,7 +71,7 @@ ARGS="${ARGS} --baseDataUrl ${BASE_DATA_URL}"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT}"
 ARGS="${ARGS} --alignStack ${ALIGN_STACK} --rawStack ${SIXTEEN_BIT_STACK}"
 ARGS="${ARGS} --rawRootDirectory ${RAW_ROOT_DIR}"
-# ARGS="${ARGS} --rawH5Channel 1"
+ARGS="${ARGS} --rawH5Channel ${CHANNEL}"
 # ARGS="${ARGS} --z 5000 9740"
 ARGS="${ARGS} --completeRawStack"
 
