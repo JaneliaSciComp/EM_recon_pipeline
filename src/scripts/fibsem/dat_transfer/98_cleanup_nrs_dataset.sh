@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# remove all nrs data except the final reconstructed zarr volume
+
 set -e
 
 if (( $# != 1 )); then
@@ -21,6 +23,12 @@ fi
 
 printf "\n%s contains:\n\n" "${NRS_DATASET_DIR}"
 ls -Al "${NRS_DATASET_DIR}"
+
+read -p "Is there a final zarr volume in ${NRS_DATASET_DIR}  (y | n)? " -n 1 -r ANSWER
+printf "\n"
+if [[ ${ANSWER} =~ ^[Nn]$ ]]; then
+  exit 1
+fi
 
 cd "${NRS_DATASET_DIR}"
 
