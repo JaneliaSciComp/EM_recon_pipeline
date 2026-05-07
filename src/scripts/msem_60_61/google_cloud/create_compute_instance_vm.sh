@@ -7,8 +7,12 @@ if (( $# < 1 )); then
   echo "USAGE $0 <vm suffix> [private-network-ip]
 
 Examples:
-  $0 aaa
-  $0 abm 10.150.0.7
+  $0 aaa 10.150.0.2
+  $0 aab 10.150.0.3
+  $0 aac 10.150.0.4
+  $0 aad 10.150.0.5
+  $0 aae 10.150.0.6
+  $0 abm
 "
   exit 1
 fi
@@ -21,7 +25,7 @@ if (( $# > 1 )); then
 fi
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
-CONTAINER_IMAGE_VERSION="0.0.16"
+CONTAINER_IMAGE_VERSION="0.0.17"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
 # The boot disk needs to be big enough to hold the container image and any MongoDB data.
