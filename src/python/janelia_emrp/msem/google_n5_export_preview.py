@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-google_n5_export_preview.py  –  Generate a zoomed-out XY preview image from a multiscale n5 volume on GCS.
+google_n5_export_preview.py – Generate a zoomed-out XY preview image from a multiscale n5 volume on GCS.
 
 Usage:
-    python n5_preview.py
-    python n5_preview.py --wafer 60 --min-project-number 80 --max-project-number 100 --slab-suffix _gc_par_crc_align_ic2d___mask
-    python n5_preview.py --slab-suffix _gc_par_crc_align_ic2d___norm-layer
-    python n5_preview.py --slab-suffix _gc_par_crc_align_ic2d___norm-layer-hist
+    python google_n5_export_preview.py
+    python google_n5_export_preview.py --wafer 60 --min-project-number 80 --max-project-number 100 --slab-suffix _gc_par_crc_align_ic2d___mask
+    python google_n5_export_preview.py --slab-suffix _gc_par_crc_align_ic2d___norm-layer
+    python google_n5_export_preview.py --slab-suffix _gc_par_crc_align_ic2d___norm-layer-hist
 
 Generated with assistance from Claude (claude.ai), Anthropic's AI assistant.
 """
@@ -104,6 +104,34 @@ def open_scale(gs_path: str, s_level: str, anonymous: bool = True) -> ts.TensorS
     return ts.open(spec, read=True, write=False).result()
 
 
+def equalize_histogram(arr: np.ndarray, percentile: float) -> np.ndarray:
+    """
+    Normalize and histogram-equalize a float32 array to uint8.
+
+    Steps:
+      1. Clip to [percentile_low, percentile_high] to remove outliers.
+      2. Build a cumulative distribution function (CDF) over the clipped values.
+      3. Map pixel values through the CDF to stretch contrast across 0–255.
+    """
+    lo = float(np.percentile(arr, 100 - percentile))
+    hi = float(np.percentile(arr, percentile))
+    if hi <= lo:
+        return np.zeros(arr.shape, dtype=np.uint8)
+
+    arr_clipped = np.clip(arr, lo, hi)
+
+    # Compute CDF from a 256-bin histogram over the clipped range
+    hist, bin_edges = np.histogram(arr_clipped, bins=256, range=(lo, hi))
+    cdf = hist.cumsum()
+    cdf = cdf / cdf[-1]  # normalize to [0, 1]
+
+    # Map each pixel through the CDF using the bin edges as lookup points
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    equalized = np.interp(arr_clipped, bin_centers, cdf)
+
+    return (equalized * 255).astype(np.uint8)
+
+
 def read_slab_image(
         gs_path: str,
         s_level: str,
@@ -133,15 +161,7 @@ def read_slab_image(
         raise ValueError(f"Unexpected ndim={ndim}, shape={shape}")
 
     arr = np.array(arr, dtype=np.float32)
-
-    lo = float(np.percentile(arr, 100 - percentile))
-    hi = float(np.percentile(arr, percentile))
-    if hi > lo:
-        arr = np.clip((arr - lo) / (hi - lo), 0, 1)
-    else:
-        arr = np.zeros_like(arr)
-
-    img_data = (arr * 255).astype(np.uint8).T  # transpose: n5 x,y → image row,col
+    img_data = equalize_histogram(arr, percentile).T  # transpose: n5 x,y → image row,col
     return Image.fromarray(img_data, mode="L"), zi
 
 
@@ -241,8 +261,10 @@ def make_preview(
     """
     try:
         font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 16)
+        header_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 28)
     except OSError:
         font = ImageFont.load_default()
+        header_font = font
 
     label_height = 20
 
@@ -282,14 +304,15 @@ def make_preview(
     # Build header image with run parameters
     header_lines = [
         f"base-path: {base_path}",
-        f"wafer: {wafer}    region: {region}    slab-suffix: {slab_suffix}    s-level: {s_level}",
+        f"wafer: {wafer}    region: {region}    slab-suffix: {slab_suffix}    level: {s_level}",
     ]
     row_width = max(row.size[0] for row in row_images)
-    header_height = label_height * len(header_lines) + 4
+    header_row_height = 40
+    header_height = header_row_height * len(header_lines) + 4
     header = Image.new("L", (row_width, header_height))
     header_draw = ImageDraw.Draw(header)
     for i, line in enumerate(header_lines):
-        header_draw.text((4, 2 + i * label_height), line, fill=255, font=font)
+        header_draw.text((4, 2 + i * header_row_height), line, fill=255, font=header_font)
 
     total_width = row_width
     total_height = header_height + sum(row.size[1] for row in row_images)
@@ -328,7 +351,7 @@ def main():
                         help="slab suffix (default: _gc_par_crc_align_ic2d___pixel)")
     parser.add_argument("--output-dir", default="~/Desktop",
                         help="output directory for preview PNG (default: ~/Desktop)")
-    parser.add_argument("--s-level", default="s10",
+    parser.add_argument("--level", default="s10",
                         help="scale level to use (default: s10)")
     parser.add_argument("--z", type=int, default=None,
                         help="Z slice index (default: middle)")
@@ -359,7 +382,7 @@ def main():
         region=args.region,
         slab_suffix=args.slab_suffix,
         out_path=out_path,
-        s_level=args.s_level,
+        s_level=args.level,
         z_index=args.z,
         anonymous=anonymous,
     )
