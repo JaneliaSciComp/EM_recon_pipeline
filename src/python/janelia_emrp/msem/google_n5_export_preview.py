@@ -332,9 +332,15 @@ def make_preview(
         f"base-path: {base_path}",
         f"wafer: {wafer}    region: {region}    slab-suffix: {slab_suffix}    level: {s_level}",
     ]
-    row_width = max(row.size[0] for row in row_images)
+    # Measure header line widths so the canvas is wide enough for the header text
     header_row_height = 40
     header_height = header_row_height * len(header_lines) + 4
+    dummy_header = Image.new("RGB", (1, 1))
+    dummy_draw = ImageDraw.Draw(dummy_header)
+    header_text_width = max(
+        int(dummy_draw.textlength(line, font=header_font)) for line in header_lines
+    ) + 8  # 4px left margin + 4px right margin
+    row_width = max(max(row.size[0] for row in row_images), header_text_width)
     header = Image.new("RGB", (row_width, header_height))
     header_draw = ImageDraw.Draw(header)
     for i, line in enumerate(header_lines):
