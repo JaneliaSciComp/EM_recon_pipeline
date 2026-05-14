@@ -138,9 +138,9 @@ def read_slab_image(
         z_index: int | None,
         percentile: float,
         anonymous: bool,
-) -> tuple[Image.Image, int]:
+) -> tuple[Image.Image, int, int]:
     """
-    Read one slab at the given scale level and return a (normalized grayscale PIL Image, actual_z) tuple.
+    Read one slab at the given scale level and return a (normalized grayscale PIL Image, actual_z, max_z) tuple.
     """
     store = open_scale(gs_path, s_level=s_level, anonymous=anonymous)
     shape = store.domain.shape
@@ -162,7 +162,7 @@ def read_slab_image(
 
     arr = np.array(arr, dtype=np.float32)
     img_data = equalize_histogram(arr, percentile).T  # transpose: n5 x,y → image row,col
-    return Image.fromarray(img_data, mode="L"), zi
+    return Image.fromarray(img_data, mode="L"), zi, nz
 
 
 def load_project_row(
@@ -175,35 +175,38 @@ def load_project_row(
         z_index: int | None,
         percentile: float,
         anonymous: bool,
-) -> tuple[list[Image.Image], list[int], list[int]]:
+) -> tuple[list[Image.Image], list[int], list[int], list[int]]:
     """
     Load all slab images for one project decade.
-    Returns (slab_images, successful_slab_numbers, actual_z_indices).
+    Returns (slab_images, successful_slab_numbers, actual_z_indices, max_z_values).
     """
     decade_start = (project_number // 10) * 10
     slab_images: list[Image.Image] = []
     successful_slabs: list[int] = []
     actual_z_indices: list[int] = []
+    max_z_values: list[int] = []
 
     for slab_number in range(decade_start, decade_start + 10):
         gs_path, _ = build_gs_path(base_path, wafer, slab_number, region, slab_suffix)
         print(f"\nProcessing slab {slab_number}: {gs_path}")
         try:
-            img, zi = read_slab_image(gs_path, s_level, z_index, percentile, anonymous)
+            img, zi, nz = read_slab_image(gs_path, s_level, z_index, percentile, anonymous)
             slab_images.append(img)
             successful_slabs.append(slab_number)
             actual_z_indices.append(zi)
+            max_z_values.append(nz)
             print(f"  → Slab {slab_number} image size: {img.size[0]}×{img.size[1]} px")
         except Exception as e:
             print(f"  WARNING: skipping slab {slab_number}: {e}")
 
-    return slab_images, successful_slabs, actual_z_indices
+    return slab_images, successful_slabs, actual_z_indices, max_z_values
 
 
 def build_row_image(
         slab_images: list[Image.Image],
         successful_slabs: list[int],
         actual_z_indices: list[int],
+        max_z_values: list[int],
         target_cell_width: int,
         target_cell_height: int,
         label_height: int,
@@ -212,18 +215,18 @@ def build_row_image(
     """
     Stitch one project's slab images into a single horizontal strip with labels.
     Each slab is centered in a cell of (target_cell_width x target_cell_height)
-    with black padding. Labels (e.g. 's070 z44') are drawn above each cell.
+    with black padding. Labels (e.g. 's070 z44/89') are drawn above each cell.
     """
     n = len(slab_images)
     row = Image.new("L", (target_cell_width * n, target_cell_height + label_height))
     draw = ImageDraw.Draw(row)
 
-    for i, (img, slab_number, zi) in enumerate(zip(slab_images, successful_slabs, actual_z_indices)):
+    for i, (img, slab_number, zi, nz) in enumerate(zip(slab_images, successful_slabs, actual_z_indices, max_z_values)):
         w, h = img.size
         x_offset = i * target_cell_width + (target_cell_width - w) // 2
         y_offset = label_height + (target_cell_height - h) // 2
         row.paste(img, (x_offset, y_offset))
-        label = f"s{slab_number:03d} z{zi}"
+        label = f"s{slab_number:03d} z{zi}/{nz}"
         draw.text((i * target_cell_width + 4, 2), label, fill=255, font=font)
 
     return row
@@ -244,7 +247,7 @@ def make_preview(
     """
     Generate a preview image with one row per project decade, each row being a
     horizontal strip of 10 slab images. Slabs are kept at native s_level resolution
-    and centered with black padding. Labels (e.g. 's070 z44') are drawn above each
+    and centered with black padding. Labels (e.g. 's070 z44/89') are drawn above each
     slab. A header at the top shows the run parameters.
 
     Args:
@@ -267,21 +270,22 @@ def make_preview(
         header_font = font
 
     label_height = 20
+    row_gap = 30  # empty pixels above each slab row
 
     # Load all rows first so we can compute a globally consistent cell size
-    all_rows: list[tuple[list[Image.Image], list[int], list[int]]] = []
+    all_rows: list[tuple[list[Image.Image], list[int], list[int], list[int]]] = []
     for project_number in project_numbers:
         print(f"\n{'='*60}")
         decade_start = (project_number // 10) * 10
         decade_end = decade_start + 9
         print(f"Loading project: w{wafer}_serial_{decade_start:03d}_to_{decade_end:03d}")
         print(f"{'='*60}")
-        slab_images, successful_slabs, actual_z_indices = load_project_row(
+        slab_images, successful_slabs, actual_z_indices, max_z_values = load_project_row(
             base_path, wafer, project_number, region, slab_suffix,
             s_level, z_index, percentile, anonymous,
         )
         if slab_images:
-            all_rows.append((slab_images, successful_slabs, actual_z_indices))
+            all_rows.append((slab_images, successful_slabs, actual_z_indices, max_z_values))
         else:
             print(f"  WARNING: no slabs loaded for project {project_number}, skipping row.")
 
@@ -289,16 +293,16 @@ def make_preview(
         raise RuntimeError("No slab images could be loaded for any project.")
 
     # Global cell size: max slab width and height across all projects
-    all_images = [img for slab_images, _, _ in all_rows for img in slab_images]
+    all_images = [img for slab_images, _, _, _ in all_rows for img in slab_images]
     cell_width = max(img.size[0] for img in all_images)
     cell_height = max(img.size[1] for img in all_images)
     print(f"\nGlobal cell size: {cell_width}×{cell_height} px")
 
     # Build each row and stack vertically
     row_images = [
-        build_row_image(slab_images, successful_slabs, actual_z_indices,
+        build_row_image(slab_images, successful_slabs, actual_z_indices, max_z_values,
                         cell_width, cell_height, label_height, font)
-        for slab_images, successful_slabs, actual_z_indices in all_rows
+        for slab_images, successful_slabs, actual_z_indices, max_z_values in all_rows
     ]
 
     # Build header image with run parameters
@@ -315,11 +319,12 @@ def make_preview(
         header_draw.text((4, 2 + i * header_row_height), line, fill=255, font=header_font)
 
     total_width = row_width
-    total_height = header_height + sum(row.size[1] for row in row_images)
+    total_height = header_height + sum(row.size[1] for row in row_images) + row_gap * len(row_images)
     final = Image.new("L", (total_width, total_height))
     final.paste(header, (0, 0))
     y_offset = header_height
     for row in row_images:
+        y_offset += row_gap
         final.paste(row, (0, y_offset))
         y_offset += row.size[1]
 
@@ -341,9 +346,9 @@ def main():
                         help="base gs:// path (default: gs://janelia-spark-test/hess_wafers_60_61_export/render)")
     parser.add_argument("--wafer", type=int, default=61,
                         help="wafer number (default: 61)")
-    parser.add_argument("--min-project-number", type=int, default=70,
+    parser.add_argument("--min-project-number", type=int, default=60,
                         help="first project decade start, inclusive (default: 70)")
-    parser.add_argument("--max-project-number", type=int, default=150,
+    parser.add_argument("--max-project-number", type=int, default=70,
                         help="last project decade start, inclusive (default: 150)")
     parser.add_argument("--region", default="r00",
                         help="region string (default: r00)")
