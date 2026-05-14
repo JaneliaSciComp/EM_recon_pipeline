@@ -206,6 +206,12 @@ def load_project_row(
     return slab_images, slab_numbers, actual_z_indices, max_z_values
 
 
+def label_height_for_level(s_level: str) -> int:
+    """Return label area height in pixels: two lines for level > s10, one line otherwise."""
+    level_num = int(s_level.lstrip("s"))
+    return 40 if level_num > 10 else 20
+
+
 def build_row_image(
         slab_images: list[Image.Image | None],
         slab_numbers: list[int],
@@ -214,14 +220,19 @@ def build_row_image(
         target_cell_width: int,
         target_cell_height: int,
         label_height: int,
+        s_level: str,
         font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
 ) -> Image.Image:
     """
     Stitch one project's slab images into a single horizontal strip with labels.
     Each slab is centered in a cell of (target_cell_width x target_cell_height)
-    with black padding. Labels (e.g. 's070 z44/89') are drawn above each cell
-    in white for present slabs and red for missing slabs.
+    with black padding. For level <= s10, the label is a single line (e.g. 's070 z44/89').
+    For level > s10, the slab name and z info are on separate lines. Missing slabs
+    show a red label.
     """
+    split_label = int(s_level.lstrip("s")) > 10
+    line_height = label_height // (2 if split_label else 1)
+
     n = len(slab_numbers)
     row = Image.new("RGB", (target_cell_width * n, target_cell_height + label_height))
     draw = ImageDraw.Draw(row)
@@ -229,17 +240,18 @@ def build_row_image(
     for i, (img, slab_number, zi, nz) in enumerate(zip(slab_images, slab_numbers, actual_z_indices, max_z_values)):
         x_cell = i * target_cell_width
         if img is not None:
-            # Convert grayscale slab to RGB and paste centered in cell
             img_rgb = img.convert("RGB")
             w, h = img_rgb.size
             x_offset = x_cell + (target_cell_width - w) // 2
             y_offset = label_height + (target_cell_height - h) // 2
             row.paste(img_rgb, (x_offset, y_offset))
-            label = f"s{slab_number:03d} z{zi}/{nz}"
-            draw.text((x_cell + 4, 2), label, fill=(255, 255, 255), font=font)
+            if split_label:
+                draw.text((x_cell + 4, 2), f"s{slab_number:03d}", fill=(255, 255, 255), font=font)
+                draw.text((x_cell + 4, 2 + line_height), f"z{zi}/{nz}", fill=(255, 255, 255), font=font)
+            else:
+                draw.text((x_cell + 4, 2), f"s{slab_number:03d} z{zi}/{nz}", fill=(255, 255, 255), font=font)
         else:
-            label = f"s{slab_number:03d}"
-            draw.text((x_cell + 4, 2), label, fill=(255, 0, 0), font=font)
+            draw.text((x_cell + 4, 2), f"s{slab_number:03d}", fill=(255, 0, 0), font=font)
 
     return row
 
@@ -251,7 +263,7 @@ def make_preview(
         region: str,
         slab_suffix: str,
         out_path: str,
-        s_level: str = "s10",
+        s_level: str = "s11",
         z_index: int | None = None,
         percentile: float = 99.5,
         anonymous: bool = True,
@@ -259,9 +271,9 @@ def make_preview(
     """
     Generate a preview image with one row per project decade, each row being a
     horizontal strip of 10 slab images. Slabs are kept at native s_level resolution
-    and centered with black padding. Labels (e.g. 's070 z44/89') are drawn above each
-    slab in white; missing slabs show a red label. A header at the top shows the run
-    parameters.
+    and centered with black padding. Labels are drawn above each slab in white;
+    missing slabs show a red label. For level > s10 the slab name and z info are
+    on separate lines. A header at the top shows the run parameters.
 
     Args:
         base_path:       Base gs:// path
@@ -270,7 +282,7 @@ def make_preview(
         region:          Region string (e.g. 'r00')
         slab_suffix:     Slab name suffix
         out_path:        Where to write the PNG
-        s_level:         Scale level to use (e.g. 's10')
+        s_level:         Scale level to use (e.g. 's11')
         z_index:         Which Z slice to use (default: middle slice)
         percentile:      Upper percentile for contrast normalization
         anonymous:       Use anonymous GCS access
@@ -282,7 +294,7 @@ def make_preview(
         font = ImageFont.load_default()
         header_font = font
 
-    label_height = 20
+    label_height = label_height_for_level(s_level)
     row_gap = 30  # empty pixels above each slab row
 
     # Load all rows first so we can compute a globally consistent cell size
@@ -311,7 +323,7 @@ def make_preview(
     # Build each row and stack vertically
     row_images = [
         build_row_image(slab_images, slab_numbers, actual_z_indices, max_z_values,
-                        cell_width, cell_height, label_height, font)
+                        cell_width, cell_height, label_height, s_level, font)
         for slab_images, slab_numbers, actual_z_indices, max_z_values in all_rows
     ]
 
@@ -367,8 +379,8 @@ def main():
                         help="slab suffix (default: _gc_par_crc_align_ic2d___pixel)")
     parser.add_argument("--output-dir", default="~/Desktop",
                         help="output directory for preview PNG (default: ~/Desktop)")
-    parser.add_argument("--level", default="s10",
-                        help="scale level to use (default: s10)")
+    parser.add_argument("--level", default="s11",
+                        help="scale level to use (default: s11)")
     parser.add_argument("--z", type=int, default=None,
                         help="Z slice index (default: middle)")
     parser.add_argument("--no-anon", action="store_true",
