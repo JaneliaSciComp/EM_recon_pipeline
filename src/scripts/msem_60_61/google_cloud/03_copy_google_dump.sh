@@ -22,7 +22,7 @@ BASE_DUMP_DIR="/mnt/disks/mongodb_dump_fs/dump"
 VM_NAME="render-ws-mongodb-16c-64gb-aaa"
 DUMP_PATTERN=""
 PATTERN_IS_ARG=false
-LOCAL_DEST_DIR="$(pwd)/mongodb_dumps"
+LOCAL_DEST_DIR="$(pwd)/mongodb_google"
 
 # ----------------------------------------------------------------------------
 # Argument parsing
