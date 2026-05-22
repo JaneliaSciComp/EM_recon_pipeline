@@ -385,8 +385,8 @@ def main():
                         help="slab suffix (default: _gc_par_crc_align_ic2d___pixel)")
     parser.add_argument("--output-dir", default="~/Desktop",
                         help="output directory for preview PNG (default: ~/Desktop)")
-    parser.add_argument("--level", default="s11",
-                        help="scale level to use (default: s11)")
+    parser.add_argument("--level", default="s9",
+                        help="scale level to use (default: s9)")
     parser.add_argument("--z", type=int, default=None,
                         help="Z slice index (default: middle)")
     parser.add_argument("--no-anon", action="store_true",
