@@ -12,16 +12,17 @@ mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/import_${RUN_TIME}.log"
 
 if (( $# < 2 )); then
-  echo "USAGE $0 <wafer id> <magc slab id> [magc slab id] ...     (e.g. 60 399)
+  echo "USAGE $0 <wafer id> <serial slab id> [serial slab id] ...     (e.g. 60 10 11 12)
 "
   exit 1
 fi
 
 WAFER_ID="${1}"
 shift
-MAGC_SLABS="$*"
+SERIAL_SLABS="$*"
 
 WAFER_XLOG_DIR="/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_${WAFER_ID}/xlog/xlog_wafer_${WAFER_ID}.zarr"
+SLAB_INFO="${SCRIPT_DIR}/slab_info.${WAFER_ID}.txt"
 
 if [ "${WAFER_ID}" == "60" ]; then
   WAFER_EXCLUDED_SCAN_ARG="--exclude_scan 0 1 2 3 7 19"
@@ -36,6 +37,27 @@ if [ ! -d "${WAFER_XLOG_DIR}" ]; then
   echo "ERROR: ${WAFER_XLOG_DIR} not found"
   exit 1
 fi
+
+if [ ! -f "${SLAB_INFO}" ]; then
+  echo "ERROR: ${SLAB_INFO} not found"
+  exit 1
+fi
+
+# Convert serial slab IDs to magc IDs using the slab info log
+MAGC_SLABS=""
+for SERIAL_ID in ${SERIAL_SLABS}; do
+  MAGC_ID=$(grep "serial_id=${SERIAL_ID}," "${SLAB_INFO}" \
+    | grep -oP "magc_id=\K[0-9]+" \
+    | sort -un \
+    | head -1)
+  if [ -z "${MAGC_ID}" ]; then
+    echo "ERROR: no magc_id found for serial_id=${SERIAL_ID} in ${SLAB_INFO}"
+    exit 1
+  fi
+  echo "wafer ${WAFER_ID} serial slab ${SERIAL_ID} has MAGC_ID ${MAGC_ID}"
+  MAGC_SLABS="${MAGC_SLABS} ${MAGC_ID}"
+done
+MAGC_SLABS="${MAGC_SLABS# }"  # trim leading space
 
 source /groups/hess/hesslab/render/bin/source_miniforge3.sh
 
