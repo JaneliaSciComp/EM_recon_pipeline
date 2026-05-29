@@ -6,7 +6,8 @@ ABSOLUTE_SCRIPT=$(realpath --no-symlinks "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
-LOG_DIR="${SCRIPT_DIR}/logs"
+#LOG_DIR="${SCRIPT_DIR}/logs"
+LOG_DIR="/groups/hess/hesslab/render/msem/align/hess_wafers_60_61/google_cloud/logs/gc_upload"
 mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/gc_upload_${RUN_TIME}.log"
 
