@@ -11,7 +11,11 @@ mkdir -p "${LOG_DIR}"
 LOG_FILE="${LOG_DIR}/gc_upload_${RUN_TIME}.log"
 
 if (( $# < 3 )); then
-  echo "USAGE $0 <number of threads> <wafer> <serial slab> [serial slab] ...     (e.g. 32 60 360 361)
+  echo "USAGE $0 <number of threads> <wafer> <serial slab> [serial slab] ...
+
+Examples:
+  $0  32  61  0 1 2 3 4 5 6 7 8 9                          # took 13 hours to process 11 regions with 32 threads
+  $0  32  61  150 151 152 153 154 155 156 157 158 159      # took  9 hours to process 20 regions with 32 threads
 "
   exit 1
 fi
