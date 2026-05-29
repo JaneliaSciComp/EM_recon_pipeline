@@ -17,6 +17,15 @@ if (( $# < 3 )); then
 Examples:
   $0  32  61  0 1 2 3 4 5 6 7 8 9                          # took 13 hours to process 11 regions with 32 threads
   $0  32  61  150 151 152 153 154 155 156 157 158 159      # took  9 hours to process 20 regions with 32 threads
+
+Notes:
+  - each region is uploaded serially though images are processed concurrently in separate threads
+  - each region _gc stack is created when the upload starts,
+    so you can peek at the stacks in render to get an idea of how much processing is done
+    (just remember that the most recent stack may still be uploading)
+  - must be run on a box with access to nearline since that is where the wafer 60 and 61 source images are stored
+  - data transfer can be slowed down if too many nearline reads or
+    too many Google bucket writes occur at the same time
 "
   exit 1
 fi
