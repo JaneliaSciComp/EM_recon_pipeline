@@ -51,12 +51,17 @@ for SERIAL_ID in ${SERIAL_SLABS}; do
     | sort -un \
     | head -1)
   if [ -z "${MAGC_ID}" ]; then
-    echo "ERROR: no magc_id found for serial_id=${SERIAL_ID} in ${SLAB_INFO}"
-    exit 1
+    echo "excluding serial_id ${SERIAL_ID} since it was not found in ${SLAB_INFO}"
+  else
+    echo "wafer ${WAFER_ID} serial slab ${SERIAL_ID} has MAGC_ID ${MAGC_ID}"
+    MAGC_SLABS="${MAGC_SLABS} ${MAGC_ID}"
   fi
-  echo "wafer ${WAFER_ID} serial slab ${SERIAL_ID} has MAGC_ID ${MAGC_ID}"
-  MAGC_SLABS="${MAGC_SLABS} ${MAGC_ID}"
 done
+
+if [ -z "${MAGC_SLABS}" ]; then
+  echo "ERROR: no slabs were found to import"
+  exit 1
+fi
 MAGC_SLABS="${MAGC_SLABS# }"  # trim leading space
 
 source /groups/hess/hesslab/render/bin/source_miniforge3.sh
