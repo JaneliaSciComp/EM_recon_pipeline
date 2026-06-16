@@ -85,12 +85,10 @@ def correct_sfov(
 
 
 def create_surface(coefficients: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
-    """Full-resolution correction surface for coefficients, resized to shape.
+    """Full-resolution correction surface from coefficients, resized to shape.
 
     The coefficients are evaluated on the coarse 84x96 grid,
-    then resized to shape with bilinear interpolation.
-    shape is the SFOV image shape, height then width.
-    The coefficients may encode a degree 5, 1, or 0 interpolation.
+    then resized to shape.
     """
     coarse = (_design_matrix() @ coefficients).reshape(_GRID_X.shape)
     return cv2.resize(

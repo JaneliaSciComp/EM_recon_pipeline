@@ -28,7 +28,7 @@ class HomogenizeParameters:
     degree_5_or_less: np.ndarray
     """Coefficients of the polynomial correction.
 
-    The polynome may be of degree 5, 1, or 0.
+    The polynomial may be of degree 5, 1, or 0.
     Nominal corrections are of degree 5.
     The detection of artefacts sometimes downgrades the correction to degrees 1 or 0.
     """
