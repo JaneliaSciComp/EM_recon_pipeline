@@ -10,7 +10,7 @@ We apply beam homogenization with the formula
 reference_level + gain * (image - correction_surface)
 where surface is the polynomial intensity correction.
 
-For large-scale compute, build each surface once per (scan,slab) and reuse it across slabs:
+For large-scale compute, build each surface once per (scan,slab) and reuse it across mfovs:
 
     reference_level = get_reference_level(xlog)
     for scan in scans:
