@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import itertools
-from functools import partial
+from functools import cache, partial
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
@@ -15,6 +15,7 @@ from janelia_emrp.msem.ingestion_ibeammsem.path import get_image_paths, get_slab
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
+from janelia_emrp.msem.render_sfov_order import render_sfov_order
 from matplotlib.transforms import Affine2D
 from skimage.io import imread
 from skimage.transform import EuclideanTransform
@@ -23,6 +24,23 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import xarray as xr
+
+
+@cache
+def sfov_draw_order(wafer: str) -> np.ndarray:
+    """0-indexed SFOV IDs from first to last drawn."""
+    return np.argsort(render_sfov_order(wafer))
+
+
+def draw_order_indices(n_mfovs: int, wafer: str) -> np.ndarray:
+    """Flat indices (mfov, sfov) of the draw order.
+
+    Each MFOV draws its SFOVs in the wafer render order from sfov_draw_order,
+    and the MFOVs keep their natural order so later MFOVs draw over earlier ones.
+    """
+    return (
+        np.arange(n_mfovs)[:, np.newaxis] * N_BEAMS + sfov_draw_order(wafer)
+    ).ravel()
 
 
 def get_max_scans(xlog: xr.Dataset) -> int:
@@ -58,8 +76,8 @@ def get_xys_sfov_and_paths(
 ) -> tuple[list[Path], np.ndarray]:
     """Paths and top-left corner coordinates of SFOVs of an MFOV in straight orientation.
 
-    slab_path can be provided if we do not use the original root stored in xlog 
-    
+    slab_path can be provided if we do not use the original root stored in xlog
+
     Returns:
         Paths:
             type UNC
@@ -147,6 +165,7 @@ def assemble_mfovs_straight(
     slab: int,
     mfovs: list[int] | None = None,
     *,
+    wafer: str,
     thumbnail: bool = True,
 ) -> np.ndarray:
     """Assembles SFOVs of MFOVs in the original acquisition orientation.
@@ -178,8 +197,9 @@ def assemble_mfovs_straight(
     corners_images = (
         np.pad(image_size[np.newaxis], ((1, 0), (0, 0))) + xy_straight[:, np.newaxis]
     )
-    for corners_sfov, sfov in zip(corners_images, sfovs):
-        assembly[slice(*corners_sfov[:, 1]), slice(*corners_sfov[:, 0])] = sfov
+    for i in draw_order_indices(len(mfovs), wafer):
+        corners_sfov = corners_images[i]
+        assembly[slice(*corners_sfov[:, 1]), slice(*corners_sfov[:, 0])] = sfovs[i]
     return assembly
 
 
