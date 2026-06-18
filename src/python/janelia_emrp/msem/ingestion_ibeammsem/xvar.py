@@ -143,3 +143,15 @@ class XVar(StrEnum):
     ROTATION_SIMILARITY = auto()
     X_REFERENCE = auto()
     Y_REFERENCE = auto()
+
+    REVIEW = auto()
+    """Review of acquired data by the IBEAM-MSEM operators.
+    
+    This array documents the review of the data prior to data ingestion.
+    It is an array of bool with MFOV granularity.
+    For every MFOV, it is an array of bool along the dimension REVIEW_FLAG.
+
+    E.g. if review.sel(scan=0, slab=0, mfov=0, review_flag=10) == True
+    then this MFOV has the flag ReviewFlag.TEST
+    (ReviewFlag is an IntEnum and ReviewFlag.TEST == 10).
+    """
