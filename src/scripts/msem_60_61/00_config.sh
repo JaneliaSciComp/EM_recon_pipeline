@@ -39,6 +39,12 @@ export RENDER_CLIENT_HEAP="1G"
 # NOTE: must consolidate logs when changing run parent dir
 export SPARK_JANELIA_ARGS="--consolidate_logs --run_parent_dir /groups/hess/hesslab/render/spark_output/${USER}"
 
+# code needs newer GSON library (for preview to parse HDF5 attributes, and for n5 reading/writing)
+# (note: tried using spark.[driver|executor].userClassPathFirst=true option but that messes up log4j configuration,
+#        so decided to just use spark.[driver|executor].extraClassPath instead)
+GSON_JAR="/groups/hess/hesslab/render/lib/gson-2.10.1.jar"
+export SUBMIT_ARGS="${SUBMIT_ARGS} --conf spark.driver.extraClassPath=${GSON_JAR} --conf spark.executor.extraClassPath=${GSON_JAR}"
+
 #-----------------------------------------------------------
 # "Standard" Spark executor setup with 11 cores per worker ...
 export N_EXECUTORS_PER_NODE=2
