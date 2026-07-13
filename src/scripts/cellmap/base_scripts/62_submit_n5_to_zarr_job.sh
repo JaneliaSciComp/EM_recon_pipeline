@@ -92,6 +92,9 @@ ARGS="${ARGS} --lsf_worker_log_dir=${WORK_DIR}"
 
 NG_LAYER_SOURCE="zarr://http://renderer.int.janelia.org:8080/n5_sources/${FINAL_ZARR_PATH_WITHOUT_NRS_ROOT}"
 NG_LAYER_NAME="${VOLUME_NAME} ${DATA_TYPE}"
+if [[ "$RENDERED_N5_PATH" == *"channel_1"* ]]; then
+    NG_LAYER_NAME="${NG_LAYER_NAME} channel-1"
+fi
 NG_LAYERS='"layers":[{"type":"image","source":"'"${NG_LAYER_SOURCE}"'","tab":"source","name":"'"${NG_LAYER_NAME}"'"}]'
 NG_SELECTED_LAYER='"selectedLayer":{"visible":true,"layer":"'"${NG_LAYER_NAME}"'"}'
 NG_DATA='{'"${NG_LAYERS}"','"${NG_SELECTED_LAYER}"',"layout":"4panel"}'
