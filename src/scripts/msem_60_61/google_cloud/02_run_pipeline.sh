@@ -96,8 +96,6 @@ SPARK_PROPS="spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.e
 SPARK_PROPS="${SPARK_PROPS},spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
-SPARK_PROPS="${SPARK_PROPS},spark.driver.extraJavaOptions=-Dlog4j.configurationFile=log4j2.properties"
-SPARK_PROPS="${SPARK_PROPS},spark.executor.extraJavaOptions=-Dlog4j.configurationFile=log4j2.properties"
 #SPARK_PROPS="${SPARK_PROPS},spark.log.level.org.janelia.alignment.match=WARN"
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
@@ -107,13 +105,11 @@ RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 SPARK_VERSION="1.1"
 
 GS_JAR_URL="gs://janelia-spark-test/library/render-ws-spark-client-4.3.0-SNAPSHOT-standalone.jar"
-GS_LOG4J2_URL="gs://janelia-spark-test/library/log4j2.properties"
 GS_PIPELINE_JSON_DIR_URL="https://storage.googleapis.com/janelia-spark-test/library/pipeline_json"
 
 echo "
 Running gcloud dataproc batches submit spark with:
   --jars=${GS_JAR_URL}
-  --files=${GS_LOG4J2_URL}
   --properties=${SPARK_PROPS}
   --baseDataUrl http://${RENDER_WS_IP}:8080/render-ws/v1
   --pipelineJson ${GS_PIPELINE_JSON_DIR_URL}/${PIPELINE_JSON_REL_PATH}
@@ -124,7 +120,6 @@ gcloud dataproc batches submit spark \
   --region=us-east4 \
   --jars=${GS_JAR_URL} \
   --class=org.janelia.render.client.spark.pipeline.AlignmentPipelineClient \
-  --files=${GS_LOG4J2_URL} \
   --batch=rp-"${RUN_TIMESTAMP}-${BATCH_ID_SUFFIX}" \
   --version=${SPARK_VERSION} \
   --properties="${SPARK_PROPS}" \
