@@ -26,6 +26,8 @@ if gsutil ls "${GS_RENDER_JAR_URL}"; then
   if [[ "$REPLY" == [yY] ]]; then
     gsutil cp "${FULL_RENDER_JAR_PATH}" "${GS_RENDER_JAR_URL}"
   fi
+else
+  gsutil cp "${FULL_RENDER_JAR_PATH}" "${GS_RENDER_JAR_URL}"
 fi
 
 PIPELINE_JSON_DIR="${BASE_GIT_DIR}/EM_recon_pipeline/src/scripts/msem_60_61/pipeline_json"
@@ -49,3 +51,16 @@ for JSON_FILE_PATH in "${PIPELINE_JSON_DIR}"/*/*.json; do
   fi
   
 done
+
+LOG4J2_PROPERTIES="${BASE_GIT_DIR}/EM_recon_pipeline/src/scripts/msem_60_61/google_cloud/log4j2.properties"
+GS_LOG4J2_URL="${BASE_GOOGLE_BUCKET_DIR}/log4j2.properties"
+
+if gsutil ls "${GS_LOG4J2_URL}"; then
+  read -p "${GS_LOG4J2_URL} already exists. Do you want to overwrite it? (y/n) " -n 1 -r
+  echo
+  if [[ "$REPLY" == [yY] ]]; then
+    gsutil cp "${LOG4J2_PROPERTIES}" "${GS_LOG4J2_URL}"
+  fi
+else
+  gsutil cp "${LOG4J2_PROPERTIES}" "${GS_LOG4J2_URL}"
+fi
