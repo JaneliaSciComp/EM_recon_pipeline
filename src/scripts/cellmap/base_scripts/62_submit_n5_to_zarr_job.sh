@@ -58,9 +58,14 @@ fi
 # jq '.dataType' /nrs/.../s0/attributes.json
 DATA_TYPE=$(${JQ} -r '.dataType' "${N5_S_ZERO_JSON}")
 
-ZARR_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.zarr"            # /nrs/cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr
-FINAL_ZARR_PATH="${ZARR_PATH}/recon-1/em/fibsem-${DATA_TYPE}" # /nrs/cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr/recon-1/em/fibsem-uint8
-FINAL_ZARR_PATH_WITHOUT_NRS_ROOT="${FINAL_ZARR_PATH#/nrs/}"   # cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr/recon-1/em/fibsem-uint8
+if [[ "$RENDERED_N5_PATH" == *"channel_1"* ]]; then
+    ZARR_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.channel-1.zarr"
+else
+  ZARR_PATH="${RENDER_NRS_ROOT}/${VOLUME_NAME}.zarr"              # /nrs/cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr
+fi
+
+FINAL_ZARR_PATH="${ZARR_PATH}/recon-1/em/fibsem-${DATA_TYPE}"     # /nrs/cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr/recon-1/em/fibsem-uint8
+FINAL_ZARR_PATH_WITHOUT_NRS_ROOT="${FINAL_ZARR_PATH#/nrs/}"       # cellmap/data/jrc_mus-pancreas-5/jrc_mus-pancreas-5.zarr/recon-1/em/fibsem-uint8
 
 if [ -d "${FINAL_ZARR_PATH}" ]; then
   echo "ERROR: ${FINAL_ZARR_PATH} already exists!"
