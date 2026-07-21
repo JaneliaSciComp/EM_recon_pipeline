@@ -19,3 +19,24 @@ RENDER_SFOV_ORDER = [
     79, 86, 87, 88, 89, 90, 91, 85, 78, 70,  # s81 to s90
     61                                       # s91
 ]
+
+
+RENDER_SFOV_ORDER_JANELIA_IBEAMMSEM_60_61 = [
+    57, 50, 46, 51, 60, 65, 59, 47, 42, 36, 
+    43, 48, 54, 56, 69, 76, 72, 68, 55, 44,
+    37, 31, 24, 32, 38, 18, 25, 33, 39, 64,
+    71, 83, 79, 75, 70, 63, 52, 34, 26, 19,
+    12,  7, 20, 27, 13,  8, 14, 21, 28, 35,
+    45, 67, 78, 86, 88, 85, 82, 77, 66, 58,
+    49, 29, 22, 15,  9,  3,  1,  4, 16, 10,
+     5,  2,  6, 11, 17, 23, 30, 40, 62, 74,
+    81, 90, 91, 89, 87, 84, 80, 73, 61, 53,
+    41                                     
+]
+
+
+def render_sfov_order(wafer: str) -> list[int]:
+    """SFOV render order of a wafer."""
+    if wafer in ("60", "61"):
+        return RENDER_SFOV_ORDER_JANELIA_IBEAMMSEM_60_61
+    return RENDER_SFOV_ORDER

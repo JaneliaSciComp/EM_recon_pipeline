@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 
-from janelia_emrp.msem.render_sfov_order import RENDER_SFOV_ORDER
+from janelia_emrp.msem.render_sfov_order import render_sfov_order
 
 @dataclass(order=True)
 class TileID:
@@ -41,7 +41,7 @@ class TileID:
                 f"{self.slab_prefix}{self.slab:04}",
                 f"{self.scan_prefix}{self.scan:03}",
                 f"{self.mfov_prefix}{self.mfov:04}",
-                f"{self.render_prefix}{RENDER_SFOV_ORDER[self.sfov]:02}",
+                f"{self.render_prefix}{render_sfov_order(self.wafer_id)[self.sfov]:02}",
                 f"{self.sfov_prefix}{self.scope_sfov_number:02}",
             )
         )

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -44,12 +45,12 @@ from janelia_emrp.msem.ingestion_ibeammsem.path import (
 )
 from janelia_emrp.msem.ingestion_ibeammsem.roi import (
     get_distance_to_roi,
+    get_effective_slabs,
     get_mfovs,
     get_n_mfovs,
     get_n_slabs,
     get_percentage_tissue,
     get_roi_sfovs,
-    get_effective_slabs,
     plot_distance_roi,
     plot_tissue_sfovs,
 )
@@ -66,6 +67,7 @@ def main(arguments) -> None:
     """
     matplotlib.use("tkagg")
     xlog = xr.open_zarr(arguments.path_xlog)
+    wafer = Path(arguments.path_xlog).stem.removeprefix("xlog_wafer_")
     plot_tissue_sfovs(
         xlog=xlog, slab=399, dilation=0, marker_size=500, fixed_color="blue", off_by=-1
     )
@@ -129,17 +131,19 @@ def main(arguments) -> None:
 
     println("assemble images | takes 5-20 seconds ...")
     mfov = assemble_mfovs_straight(
-        xlog=xlog, scan=10, slab=7, mfovs=[10], thumbnail=True
+        xlog=xlog, scan=10, slab=7, mfovs=[10], wafer=wafer, thumbnail=True
     )
     imshow(mfov)
 
     mfov = assemble_mfovs_straight(
-        xlog=xlog, scan=10, slab=7, mfovs=[10, 11], thumbnail=True
+        xlog=xlog, scan=10, slab=7, mfovs=[10, 11], wafer=wafer, thumbnail=True
     )
     plt.figure()
     imshow(mfov)
 
-    mfov = assemble_mfovs_straight(xlog=xlog, scan=10, slab=7, thumbnail=True)
+    mfov = assemble_mfovs_straight(
+        xlog=xlog, scan=10, slab=7, wafer=wafer, thumbnail=True
+    )
     plt.figure()
     imshow(mfov)
     plt.show()
