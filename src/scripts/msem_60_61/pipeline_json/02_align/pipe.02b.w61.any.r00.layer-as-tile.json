@@ -1,0 +1,19 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
+    "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
+    "stackIdWithZ" : { "projectPattern": "^w61_serial_..._to_...$", "stackPattern": "^w61_s..._r00_gc_par_crc_aso$", "zValuesPerBatch": 1 }
+  },
+  "pipelineSteps": [
+    "LAYER_AS_TILE"
+  ],
+  "layerAsTile": {
+    "layerRenderScale": 0.03,
+    "layerRootDirectory": "gs://janelia-spark-test/tiles_layer",
+    "dynamicLayerStackSuffix": "_lat",
+    "renderedLayerStackSuffix": "r",
+    "renderedLayerRunTimestamp": "20260721_050000",
+    "alignedLayerStackSuffix" : "_align",
+    "align3DSfovStackSuffix": "_3d"
+  }
+}
