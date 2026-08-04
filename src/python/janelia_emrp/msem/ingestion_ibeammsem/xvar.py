@@ -143,3 +143,9 @@ class XVar(StrEnum):
     ROTATION_SIMILARITY = auto()
     X_REFERENCE = auto()
     Y_REFERENCE = auto()
+    BEAM_HOMOGENIZATION = auto()
+    """Beam intensity homogenization parameters.
+    
+    See the homogenize module.
+    Dimensions: scan, slab, sfov, homogenization_parameter.
+    """
