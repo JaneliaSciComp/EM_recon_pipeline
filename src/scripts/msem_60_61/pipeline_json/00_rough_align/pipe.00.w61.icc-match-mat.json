@@ -9,6 +9,7 @@
     "other": { "stackPattern": "^w6._s..._r.._gc_icc$" }
   },
   "pipelineSteps": [
+    "REMOVE_TILES",
     "HACK_TILE_ID",
     "CORRECT_BEAM_INTENSITY",
     "DERIVE_TILE_MATCHES",
@@ -16,6 +17,16 @@
     "CORRECT_CREEP",
     "MFOV_AS_TILE",
     "RENAME_MATCH_COLLECTIONS"
+  ],
+  "tileRemovalList": [
+    {
+      "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_100_to_109", "stack": "w61_s109_r00_gc" },
+      "tileRemoval": { "scanMfovNames": [ "scan021_m0023", "scan021_m0026", "scan021_m0028" ], "collapseStack": false }
+    },
+    {
+      "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_160_to_169", "stack": "w61_s166_r01_gc" },
+      "tileRemoval": { "scanNames": [ "scan021" ], "collapseStack": true }
+    }
   ],
   "beamCorrection": {
     "zarrPath": "gs://janelia-spark-test/library/xlog_wafer_61.zarr",
