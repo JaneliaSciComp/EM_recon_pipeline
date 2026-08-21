@@ -30,8 +30,21 @@ else
   gsutil cp "${FULL_RENDER_JAR_PATH}" "${GS_RENDER_JAR_URL}"
 fi
 
-PIPELINE_JSON_DIR="${BASE_GIT_DIR}/EM_recon_pipeline/src/scripts/msem_60_61/pipeline_json"
+MSEM_60_61_DIR="${BASE_GIT_DIR}/EM_recon_pipeline/src/scripts/msem_60_61"
 
+PEAK_SCAN_PATH="${MSEM_60_61_DIR}/hess_wafers_60_61.peak_scan.json"
+PEAK_SCAN_JSON_URL="${BASE_GOOGLE_BUCKET_DIR}/hess_wafers_60_61.peak_scan.json"
+if gsutil ls "${PEAK_SCAN_JSON_URL}"; then
+  read -p "${PEAK_SCAN_JSON_URL} already exists. Do you want to overwrite it? (y/n) " -n 1 -r
+  echo
+  if [[ "$REPLY" == [yY] ]]; then
+    gsutil cp "${PEAK_SCAN_PATH}" "${PEAK_SCAN_JSON_URL}"
+  fi
+else
+  gsutil cp "${PEAK_SCAN_PATH}" "${PEAK_SCAN_JSON_URL}"
+fi
+
+PIPELINE_JSON_DIR="${MSEM_60_61_DIR}/pipeline_json"
 for JSON_FILE_PATH in "${PIPELINE_JSON_DIR}"/*/*.json; do
 
   JSON_FILE_NAME=$(basename "${JSON_FILE_PATH}")
