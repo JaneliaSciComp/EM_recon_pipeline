@@ -1,19 +1,18 @@
 {
   "multiProject": {
-    "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
+    "baseDataUrl" : "http://localhost:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
-    "stackIdWithZ" : { "projectPattern": "^w61_serial_..._to_...$", "stackPattern": "^w61_s..._r00_gc_par$", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w61_s..._r00_gc_par$" },
-    "aligned":            { "stackPattern": "^w61_s..._r00_gc_par_align_stitch_only$" },
-    "intensityCorrected": { "stackPattern": "^w61_s..._r00_gc_par_align_stitch_only_ic$" }
+    "raw":                { "stackPattern": "^w6._s..._r.._gc_icc_par$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"
   ],
   "affineBlockSolverSetup": {
     "preAlign": "MULTI_SEM",
+    "processMultipleStacksInParallel": true,
     "distributedSolve": {
       "maxAllowedErrorGlobal": 10.0,
       "maxIterationsGlobal": 1000,
@@ -23,7 +22,7 @@
       "deriveThreadsUsingSparkConfig": true
     },
     "targetStack": {
-      "stackSuffix": "_align_stitch_only",
+      "stackSuffix": "_aso",
       "completeStack": true
     },
     "blockPartition": {
