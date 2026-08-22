@@ -1,21 +1,23 @@
 {
   "multiProject": {
-    "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
+    "baseDataUrl" : "http://localhost:8080/render-ws/v1",
     "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
-    "stackIdWithZ" : { "projectPattern": "^w61_serial_..._to_...$", "stackPattern": "^w61_s.._r00_gc_par$", "zValuesPerBatch": 1 }
+    "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w61_s..._r00_gc_par$" },
-    "aligned":            { "stackPattern": "^w61_s..._r00_gc_par_align$" },
-    "intensityCorrected": { "stackPattern": "^w61_s..._r00_gc_par_align_ic$" }
+    "raw":                { "stackPattern": "^w6._s..._r.._gc_icc_par$" }
   },
   "pipelineSteps": [
+    "REMOVE_TILES",
     "DERIVE_TILE_MATCHES",
     "PATCH_MFOV_MONTAGE_MATCHES"
   ],
+  "tileRemoval": {
+    "peakScanJson": "gs://janelia-spark-test/library/hess_wafers_60_61.peak_scan.json"
+  },
   "matchRunList": [
     {
-      "runName": "montageMfovRun",
+      "runName": "montageDiffMfovRun",
       "matchCommon": {
         "maxPairsPerStackBatch" : 30,
         "featureStorage": { "maxFeatureSourceCacheGb": 6 },
@@ -25,12 +27,12 @@
         "xyNeighborFactor": 0.6, "useRowColPositions": false,
         "zNeighborDistance": 0, "excludeCornerNeighbors": false,
         "excludeCompletelyObscuredTiles": false, "excludeSameLayerNeighbors": false, "excludeSameSectionNeighbors": false,
-        "excludeSameMfovNeighbors": true,
+        "excludeSameMfovNeighbors": true, "excludeDifferentMfovNeighbors": false,
         "excludePairsInMatchCollection": "pairsFromPriorRuns", "minExistingMatchCount": 0
       },
       "matchStageParametersList": [
         {
-          "stageName": "montageMfovPass1",
+          "stageName": "montageDiffMfovPass1",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
             "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
@@ -40,7 +42,7 @@
           "geometricDescriptorAndMatch": { "gdEnabled": false }
         },
         {
-          "stageName": "montageMfovPass2",
+          "stageName": "montageDiffMfovPass2",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
             "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
@@ -50,52 +52,13 @@
           "geometricDescriptorAndMatch": { "gdEnabled": false }
         },
         {
-          "stageName": "montageMfovPass3",
+          "stageName": "montageDiffMfovPass3",
           "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
           "featureMatchDerivation": {
             "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
             "matchMinCoveragePercentage": 20.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
           },
           "featureRender": { "renderScale": 0.4, "renderWithFilter": true, "renderWithoutMask": false },
-          "geometricDescriptorAndMatch": { "gdEnabled": false }
-        }
-      ]
-    },
-    {
-      "runName": "montageRun",
-      "matchCommon": {
-        "maxPairsPerStackBatch" : 30,
-        "featureStorage": { "maxFeatureSourceCacheGb": 6 },
-        "maxPeakCacheGb" : 2
-      },
-      "tilePairDerivationParameters": {
-        "xyNeighborFactor": 0.6, "useRowColPositions": false, 
-        "zNeighborDistance": 0, "excludeCornerNeighbors": false, 
-        "excludeCompletelyObscuredTiles": false, "excludeSameLayerNeighbors": false, "excludeSameSectionNeighbors": false,
-        "excludeSameMfovNeighbors": false,
-        "excludePairsInMatchCollection": "pairsFromPriorRuns", "minExistingMatchCount": 0
-      },
-      "matchStageParametersList": [
-        {
-          "stageName": "montagePass1",
-          "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
-          "featureMatchDerivation": {
-            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
-            "matchMinCoveragePercentage": 20.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
-          },
-          "featureRender": { "renderScale": 0.8, "renderWithFilter": true, "renderWithoutMask": false },
-          "featureRenderClip": { "clipHeight": 150, "clipWidth": 150 },
-          "geometricDescriptorAndMatch": { "gdEnabled": false }
-        },
-        {
-          "stageName": "montagePass2",
-          "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
-          "featureMatchDerivation": {
-            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
-            "matchMinCoveragePercentage": 0.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 10, "matchModelType": "TRANSLATION", "matchRod": 0.92
-          },
-          "featureRender": { "renderScale": 1.0, "renderWithFilter": true, "renderWithoutMask": false },
-          "featureRenderClip": { "clipHeight": 150, "clipWidth": 150 },
           "geometricDescriptorAndMatch": { "gdEnabled": false }
         }
       ]
