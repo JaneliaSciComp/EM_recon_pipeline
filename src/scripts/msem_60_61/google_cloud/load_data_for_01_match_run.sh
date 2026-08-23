@@ -93,7 +93,7 @@ Set up for slab group ${SLAB_GROUP} from project group ${PROJECT_GROUP}:
 
   On launch box, run:
 
-    ./02_run_pipeline.sh  ${VM_IP}  01_match/pipe.01.w6n.diff-mfov-match-patch.json  100  4  premium  100  ${BATCH_NAME}
+    ./02_run_pipeline.sh  ${VM_IP}  01_match/pipe.01.w6n.diff-mfov-match-patch.json  100  4  premium  100  ${BATCH_NAME}  disableDynamic
 
   After the run completes (typically 2 hours), on ${VM_IP}, run:
 
