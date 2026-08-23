@@ -27,7 +27,7 @@
       },
       {
         "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_120_to_129", "stack": "w61_s129_r00_gc" },
-        "tileRemoval": { "scanNames": [ "scan078", "scan079" ], "collapseStack": true }
+        "tileRemoval": { "scanNames": [ "scan079" ], "collapseStack": true }
       },
       {
         "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_160_to_169", "stack": "w61_s166_r01_gc" },
