@@ -120,12 +120,13 @@ ERROR: no keep files found on '${SCOPE_HOST}'
 fi
 
 unset FIRST_KEEP_FILE
-for KEEP_FILE in ${ALL_KEEP_FILES}; do
+# read line-by-line so keep file names containing spaces (e.g. Fly Brain) stay intact
+while IFS= read -r KEEP_FILE; do
   if [[ "${KEEP_FILE}" == "${SCOPE_DATA_SET_ID}"*"${FIRST_DAT}^keep" ]]; then
     FIRST_KEEP_FILE="${KEEP_FILE}"
     break
   fi
-done
+done <<< "${ALL_KEEP_FILES}"
 
 if [ -z "${FIRST_KEEP_FILE}" ]; then
 
@@ -255,7 +256,7 @@ set +e
 
 # -rw-rw----   1 FIBSEM@JEISS6 None@JEISS6  413228239 2025-02-05  08:55 /cygdrive/e/Images/mpi/Y2025/M02/D05/Merlin-6281_25-02-05_085159_0-1-4.dat
 FIRST_DAT_LISTING=$(
-  su -c "ssh ${SCOPE_HOST} \"ls -l ${FIRST_DAT_SCOPE_PATH}\"" fibsemxfer
+  su -c "ssh ${SCOPE_HOST} \"ls -l '${FIRST_DAT_SCOPE_PATH}'\"" fibsemxfer  # quoted so paths with spaces (e.g. Fly Brain) survive the remote shell
 )
 
 set -e
