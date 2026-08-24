@@ -12,16 +12,17 @@ Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
 Examples:
 
   Rough Align:
-    $0 10.150.0.7 00_rough_align/pipe.00.w61.any.mfov.json 150 4 standard 150 rough-w61-s000-009
+    $0  10.150.0.2  00_rough_align/pipe.00.w61.icc-match-mat.json          120  4  premium  120  rough-w61-s070-to-s074
+    $0  10.150.0.2  00_rough_align/pipe.00.w61.rerun-mat.json              120  4  premium  120  rough-w61-s075-to-s079
 
   Match:
-    $0 10.150.0.2 01_match/pipe.01.w61.any.r00.match-patch.json 150 4 standard 150 match-w61-s135-139-r00
+    $0  10.150.0.3  01_match/pipe.01.w6n.diff-mfov-match-patch.json        100  4  premium  100  match-w61-s105-to-s109  disableDynamic
 
   Align:
-    $0 10.150.0.3 02_align/pipe.02.w61.any.r00.align.json 5 16 premium 5 align-w61-s070-074-r00
+    $0  10.150.0.4  02_align/pipe.02.w6n.align-stitch-only.json             48  4  premium   48  aso-w61-s130-to-s135    disableDynamic
 
   Correct Intensity:
-    $0 10.150.0.4 03_correct_intensity/pipe.03.w61.any.r00.ic2d.json 15 4 standard 15 ic2d-w61-s100-109-r00 disableDynamic
+    $0  10.150.0.5  03_correct_intensity/pipe.03.w6n.ic2d-stitch-only.json  15  4  premium   15  ic2d-w61-s145-to-149    disableDynamic
   "
   exit 1
 fi
