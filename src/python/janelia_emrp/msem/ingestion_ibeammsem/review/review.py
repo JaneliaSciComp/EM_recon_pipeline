@@ -64,6 +64,21 @@ def get_review(
     return xlog[XVar.REVIEW].sel(scan=scan, slab=slab, mfov=mfov)
 
 
+def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
+    """Unique flag sets present in a review array."""
+    flag_patterns = np.unique(
+        review.stack(all_mfovs=tuple(set(review.dims) - {XDim.REVIEW_FLAG})).transpose(
+            "all_mfovs", ...
+        ),
+        axis=0,
+    )
+    flag_values = review[XDim.REVIEW_FLAG].values
+    return {
+        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[flag_pattern])
+        for flag_pattern in flag_patterns
+    }
+
+
 def get_review_action(
     review_flag: xr.DataArray, scan: int, slab: int, mfov: int, review_strategy: int
 ) -> ReviewAction:
@@ -95,49 +110,22 @@ def get_review_action(
     return REVIEW_STRATEGY[review_strategy][key_flags]
 
 
-def get_flag_sets_without_action(
-    review: xr.DataArray, review_strategy: int
-) -> list[set[ReviewFlag]]:
-    """Sets of flags that exist in the review array but miss a defined action.
+def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
+    """Checks that the review strategy covers all cases in the review array.
 
-    When starting a new ingestion for a new dataset,
-    or when extending the ingestion to more scans,
-    we may want to check up-front what sets of review flags
-    are missing an action,
-    instead of stopping multiple times at runtime with NoActionFlagErrors.
-
-    E.g., the method could return
-        [
-            {
-                <ReviewFlag.REDEPOSITED_MATERIAL: 7>,
-                <ReviewFlag.DISTORTION_Y_NONLINEAR_MAYBE: 11>,
-            },
-            {
-                <ReviewFlag.DISTORTION_Y_LINEAR_SEVERE_LATER_RETAKEN: 6>,
-                <ReviewFlag.DISTORTION_Y_NONLINEAR_MAYBE: 11>,
-            },
-        ]
-    We should then add two more entries in the review strategy to handle these two cases.
+    Raises:
+        FlagSetWithNoActionError:
+            the review array contains flag sets without an action,
+            add entries to the review strategy.
     """
-    missing_keys = get_unique_flag_sets(review) - set(
+    flag_sets_without_action = get_unique_flag_sets(get_review(xlog=xlog)) - set(
         REVIEW_STRATEGY[review_strategy].keys()
     )
-    return [set(missing_key) for missing_key in missing_keys]
-
-
-def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
-    """Unique flag sets present in a review array."""
-    flag_patterns = np.unique(
-        review.stack(all_mfovs=tuple(set(review.dims) - {XDim.REVIEW_FLAG})).transpose(
-            "all_mfovs", ...
-        ),
-        axis=0,
-    )
-    flag_values = review[XDim.REVIEW_FLAG].values
-    return {
-        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[flag_pattern])
-        for flag_pattern in flag_patterns
-    }
+    if flag_sets_without_action:
+        raise FlagSetWithNoActionError(
+            f"add actions to {review_strategy=}"
+            f" for these flag sets: {flag_sets_without_action}"
+        )
 
 
 def get_excluded_scans(xlog: xr.Dataset, review_strategy: int) -> list[int]:
