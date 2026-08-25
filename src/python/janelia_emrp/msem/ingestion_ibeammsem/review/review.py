@@ -110,6 +110,17 @@ def get_review_action(
     return REVIEW_STRATEGY[review_strategy][key_flags]
 
 
+def has_flag(
+    review: xr.DataArray, scan: int, slab: int, mfov: int, flag: ReviewFlag
+) -> bool:
+    """Whether the MFOV has the review flag."""
+    return bool(
+        review.expand_dims(tuple({XDim.SCAN, XDim.SLAB, XDim.MFOV} - set(review.dims)))
+        .sel(scan=scan, slab=slab, mfov=mfov, review_flag=flag)
+        .item()
+    )
+
+
 def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
     """Checks that the review strategy covers all cases in the review array.
 

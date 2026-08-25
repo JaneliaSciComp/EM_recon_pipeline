@@ -27,7 +27,10 @@ from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_60_61_SCAN_FIT_PARAMETERS
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 from janelia_emrp.root_logger import init_logger
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import REVIEW_STRATEGY
 from janelia_emrp.msem.ingestion_ibeammsem.review.review import check_review_strategy, get_excluded_scans, get_review, get_review_action, has_flag
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
 
 program_name = "msem_to_render.py"
 
@@ -151,7 +154,8 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                  include_scan_list: list[int],
                                  exclude_scan_list: list[int],
                                  wafer_id: str,
-                                 number_of_slabs_per_render_project: int):
+                                 number_of_slabs_per_render_project: int,
+                                 review_strategy: int):
 
     func_name = "import_slab_stacks_for_wafer"
 
@@ -246,6 +250,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
             logger.info(f'{func_name}: found {len(scans)} scans to import for stack {stack}')
 
+            review_slab = get_review(xlog=xlog, slab=slab_info.magc_id).load()
             for scan in scans:
                 slab_scan_sfov_path_list: list[Path] = []
                 slab_scan_sfov_xy_list: list[tuple[int, int]] = []
@@ -255,7 +260,17 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                     str(get_slab_path(xlog=xlog, scan=scan,slab=slab_info.magc_id))
                     .replace("//nearline-msem.int.janelia.org", "/nearline")
                 )
+                at_least_one_mfov_with_z = False
                 for mfov in slab_info.mfovs:
+                    action = get_review_action(review_flag=review_slab, scan=scan,
+                                               slab=slab_info.magc_id, mfov=mfov,
+                                               review_strategy=review_strategy)
+                    if action is ReviewAction.NO_Z_DROP:
+                        continue
+                    at_least_one_mfov_with_z = True
+                    if has_flag(review=review_slab, scan=scan, slab=slab_info.magc_id,
+                                mfov=mfov, flag=ReviewFlag.NO_FILE):
+                        continue
                     mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
                                                                       scan=scan,
                                                                       slab=slab_info.magc_id,
@@ -263,6 +278,15 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                                                                       slab_path=slab_scan_path)
                     slab_scan_sfov_path_list.extend(mfov_path_list)
                     slab_scan_sfov_xy_list.extend(mfov_xys)
+
+                if not slab_scan_sfov_path_list:
+                    if at_least_one_mfov_with_z:
+                        logger.warning(f"{func_name}: reserving z {z} without tiles for scan {scan} "
+                                       f"in stack {stack}, all its MFOVs lack files")
+                        z += 1
+                    else:
+                        logger.warning(f"{func_name}: skipping scan {scan} for stack {stack}, "
+                                       f"the review strategy dropped all MFOVs")
 
                 logger.info(f"{func_name}: loaded {len(slab_scan_sfov_path_list)} paths and xys for "
                             f"{stack} scan {scan}, mfovs {slab_info.first_mfov} to {slab_info.last_mfov}, "
@@ -386,6 +410,13 @@ def main(arg_list: List[str]):
         type=int,
         default=10
     )
+    parser.add_argument(
+        "--review_strategy",
+        help="strategy for edge cases documented in review array.",
+        type=int,
+        default=0,
+        choices=list(REVIEW_STRATEGY),
+    )
     args = parser.parse_args(args=arg_list)
 
     import_slab_stacks_for_wafer(render_ws_host=args.render_host,
@@ -395,7 +426,8 @@ def main(arg_list: List[str]):
                                  include_scan_list=args.include_scan,
                                  exclude_scan_list=args.exclude_scan,
                                  wafer_id=args.wafer_id,
-                                 number_of_slabs_per_render_project=args.number_of_slabs_per_render_project)
+                                 number_of_slabs_per_render_project=args.number_of_slabs_per_render_project,
+                                 review_strategy=args.review_strategy)
 
 
 if __name__ == '__main__':
