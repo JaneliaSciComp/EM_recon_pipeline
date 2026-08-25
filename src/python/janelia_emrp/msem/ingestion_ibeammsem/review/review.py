@@ -81,8 +81,9 @@ def get_review_action(
     review_flag_mfov = review_flag.expand_dims(
         tuple({XDim.SCAN, XDim.SLAB, XDim.MFOV} - set(review_flag.dims))
     ).sel(scan=scan, slab=slab, mfov=mfov)
-    key_flags: frozenset[int] = frozenset(
-        review_flag_mfov.where(review_flag_mfov)
+    key_flags = frozenset(
+        ReviewFlag(flag_value)
+        for flag_value in review_flag_mfov.where(review_flag_mfov)
         .dropna(XDim.REVIEW_FLAG)[XDim.REVIEW_FLAG]
         .values
     )
