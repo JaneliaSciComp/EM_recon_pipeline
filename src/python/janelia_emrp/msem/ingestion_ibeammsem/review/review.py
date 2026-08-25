@@ -116,13 +116,22 @@ def get_flag_sets_without_action(
         ]
     We should then add two more entries in the review strategy to handle these two cases.
     """
+    missing_keys = get_unique_flag_sets(review) - set(
+        REVIEW_STRATEGY[review_strategy].keys()
+    )
+    return [set(missing_key) for missing_key in missing_keys]
+
+
+def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
+    """Unique flag sets present in a review array."""
     flag_patterns = np.unique(
         review.stack(all_mfovs=tuple(set(review.dims) - {XDim.REVIEW_FLAG})).transpose(
             "all_mfovs", ...
         ),
         axis=0,
     )
-    missing_keys = {
-        frozenset(np.nonzero(flag_pattern)[0]) for flag_pattern in flag_patterns
-    } - set(REVIEW_STRATEGY[review_strategy].keys())
-    return [{ReviewFlag(flag_int) for flag_int in key} for key in missing_keys]
+    flag_values = review[XDim.REVIEW_FLAG].values
+    return {
+        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[flag_pattern])
+        for flag_pattern in flag_patterns
+    }
