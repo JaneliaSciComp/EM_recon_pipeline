@@ -5,7 +5,7 @@
     "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w6._s..._r.._gc_icc_par$" }
+    "aligned":            { "stackPattern": "^w6._s..._r.._gc_icc_par_aso$" }
   },
   "pipelineSteps": [
     "CORRECT_INTENSITY"
@@ -37,7 +37,7 @@
       "cacheRenderedTiles": true
     },
     "targetStack": {
-      "stackSuffix": "_ic2d",
+      "stackSuffix": "i",
       "completeStack": true
     },
     "blockPartition": {
