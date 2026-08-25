@@ -270,8 +270,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
                 first_sfov_path = slab_scan_sfov_path_list[0]
                 if not first_sfov_path.exists():
-                    logger.warning(f"{func_name}: skipping import of scan {scan} because {first_sfov_path} is missing")
-                    continue
+                    raise RuntimeError(f"{func_name}: {first_sfov_path} in scan {scan} is missing")
 
                 # for wafers 60 and 61, we decided to hardcode the parameters in scan_fit_parameters.py
                 # WAFER_60_61_SCAN_FIT_PARAMETERS rather than reading them in for each scan
