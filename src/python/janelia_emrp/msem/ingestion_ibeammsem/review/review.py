@@ -46,7 +46,7 @@ if TYPE_CHECKING:
     from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 
 
-def get_review_flag(
+def get_review(
     xlog: xr.Dataset,
     scan: int | list[int] | np.ndarray | slice = slice(0, None),
     slab: int | list[int] | np.ndarray | slice = slice(0, None),
@@ -55,7 +55,7 @@ def get_review_flag(
     """Returns the review flags of MFOVs.
 
     Omit a dimension argument to select all items of the dimension.
-    E.g. get_review_flag(scan=12)
+    E.g. get_review(scan=12)
         returns the review flags of all MFOVs in all slabs in scan 12.
     """
     return xlog[XVar.REVIEW].sel(scan=scan, slab=slab, mfov=mfov)
@@ -69,7 +69,7 @@ def get_review_action(
     The review flag array must contain the MFOV of interest.
 
     Possible use:
-    review_flag_slab = get_review_flag(slab=0).load()
+    review_flag_slab = get_review(slab=0).load()
     for scan in scans:
         for mfov in mfovs:
             action = get_review_action(review_flag_slab, scan=scan, slab=0, mfov=mfov)
