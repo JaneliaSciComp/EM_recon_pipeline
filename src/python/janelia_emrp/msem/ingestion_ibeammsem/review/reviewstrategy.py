@@ -11,10 +11,10 @@ An MFOV might have the flags
 A strategy defines an action for MFOVs with such a set of flags.
 """
 
-from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag as Flag
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import (
     ReviewAction as Action,
 )
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag as Flag
 
 fset = frozenset
 
@@ -54,3 +54,14 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
     },
     # 1: add your custom strategy
 }
+
+
+def get_flag_sets_with_action(
+    review_strategy: int, action: Action
+) -> set[frozenset[Flag]]:
+    """Flag sets of a strategy that map to a given action."""
+    return {
+        flag_set
+        for flag_set, mapped_action in REVIEW_STRATEGY[review_strategy].items()
+        if mapped_action is action
+    }

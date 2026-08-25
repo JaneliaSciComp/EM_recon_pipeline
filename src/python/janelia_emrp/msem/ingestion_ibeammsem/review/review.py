@@ -33,17 +33,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import REVIEW_STRATEGY
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewerror import (
     FlagSetWithNoActionError,
 )
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import (
+    REVIEW_STRATEGY,
+    get_flag_sets_with_action,
+)
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
-from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
 
 if TYPE_CHECKING:
     import xarray as xr
-    from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 
 
 def get_review(
@@ -135,3 +138,21 @@ def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
         frozenset(ReviewFlag(flag_value) for flag_value in flag_values[flag_pattern])
         for flag_pattern in flag_patterns
     }
+
+
+def get_excluded_scans(xlog: xr.Dataset, review_strategy: int) -> list[int]:
+    """Scans that we exclude from ingestion.
+
+    A scan is excluded
+    if all its MFOVs map to ReviewAction.NO_Z_DROP
+    under the review strategy.
+    """
+    no_z_drop_flag_sets = get_flag_sets_with_action(
+        review_strategy=review_strategy, action=ReviewAction.NO_Z_DROP
+    )
+    review = get_review(xlog=xlog).load()
+    return [
+        scan.item()
+        for scan in review[XDim.SCAN]
+        if get_unique_flag_sets(review.sel(scan=scan)) <= no_z_drop_flag_sets
+    ]
