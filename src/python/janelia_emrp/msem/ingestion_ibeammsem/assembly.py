@@ -58,8 +58,8 @@ def get_xys_sfov_and_paths(
 ) -> tuple[list[Path], np.ndarray]:
     """Paths and top-left corner coordinates of SFOVs of an MFOV in straight orientation.
 
-    slab_path can be provided if we do not use the original root stored in xlog 
-    
+    slab_path can be provided if we do not use the original root stored in xlog
+
     Returns:
         Paths:
             type UNC
