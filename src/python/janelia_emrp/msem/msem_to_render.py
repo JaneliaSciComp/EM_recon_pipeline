@@ -27,6 +27,7 @@ from janelia_emrp.msem.ingestion_ibeammsem.constant import N_BEAMS
 from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_60_61_SCAN_FIT_PARAMETERS
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 from janelia_emrp.root_logger import init_logger
+from janelia_emrp.msem.ingestion_ibeammsem.review.review import check_review_strategy, get_excluded_scans, get_review, get_review_action, has_flag
 
 program_name = "msem_to_render.py"
 
@@ -161,6 +162,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
     else:
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
 
+    check_review_strategy(xlog=xlog, review_strategy=review_strategy)
     logger.info(f"{func_name}: loading slab info, {wafer_id=}, number_of_slabs_per_group={number_of_slabs_per_render_project}")
     
     n_scans_max = get_max_scans(xlog=xlog)
