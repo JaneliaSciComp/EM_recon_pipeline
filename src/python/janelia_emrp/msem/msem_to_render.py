@@ -287,6 +287,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                     else:
                         logger.warning(f"{func_name}: skipping scan {scan} for stack {stack}, "
                                        f"the review strategy dropped all MFOVs")
+                    continue
 
                 logger.info(f"{func_name}: loaded {len(slab_scan_sfov_path_list)} paths and xys for "
                             f"{stack} scan {scan}, mfovs {slab_info.first_mfov} to {slab_info.last_mfov}, "
