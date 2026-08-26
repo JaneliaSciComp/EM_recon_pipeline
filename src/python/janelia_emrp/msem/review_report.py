@@ -26,6 +26,7 @@ from janelia_emrp.msem.ingestion_ibeammsem.review.reviewerror import FlagSetWith
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import REVIEW_STRATEGY
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
+from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from janelia_emrp.root_logger import init_logger
 
@@ -48,6 +49,9 @@ WAFER_EXCLUDED_SCANS: dict[str, List[int]] = {
     "60": [0, 1, 2, 3, 7, 19],
     "61": [0, 1, 2, 3, 17],
 }
+
+# number of slabs to process between progress messages
+SLAB_PROGRESS_INTERVAL = 5
 
 
 def build_wafer_xlog_path(wafer_id: str) -> Path:
@@ -84,6 +88,18 @@ def format_mfov_count(mfovs: List[int],
     if not with_mfov_list:
         return count_phrase
     return f"{count_phrase} {format_mfov_list(mfovs)}"
+
+
+def find_undefined_review_flags(xlog: xarray.Dataset) -> List[int]:
+    """Returns the review flag values in the xlog that ReviewFlag does not define.
+
+    The acquisition side can add flags to the xlog before ReviewFlag knows about them,
+    which makes ReviewFlag(value) raise a ValueError for those flags.
+    """
+    defined_flag_values = {flag.value for flag in ReviewFlag}
+    return [int(flag_value)
+            for flag_value in xlog[XVar.REVIEW][XDim.REVIEW_FLAG].values
+            if int(flag_value) not in defined_flag_values]
 
 
 def report_slab(xlog: xarray.Dataset,
@@ -129,9 +145,14 @@ def report_slab(xlog: xarray.Dataset,
                     f"(first {scans[0]}, last {scans[-1]}, {excluded_count} excluded) "
                     f"and {len(mfovs)} mfovs")
 
-        for flag_set in sorted(get_unique_flag_sets(review),
-                               key=lambda s: sorted(flag.value for flag in s)):
-            logger.info(f"{func_name}: magc slab {magc_slab} contains flag set {format_flag_set(flag_set)}")
+        try:
+            for flag_set in sorted(get_unique_flag_sets(review),
+                                   key=lambda s: sorted(flag.value for flag in s)):
+                logger.info(f"{func_name}: magc slab {magc_slab} contains flag set {format_flag_set(flag_set)}")
+        except ValueError as e:
+            # the xlog contains a review flag value that ReviewFlag does not define
+            logger.warning(f"{func_name}: cannot list the flag sets of magc slab {magc_slab} "
+                           f"because the xlog has an undefined review flag ({e})")
 
     problem_scans: List[int] = []
     nominal_scan_count = 0
@@ -149,6 +170,9 @@ def report_slab(xlog: xarray.Dataset,
                 undefined_flags = e.args[0] if e.args and isinstance(e.args[0], (set, frozenset)) else None
                 action_name = "UNDEFINED_ACTION_FOR_" + (format_flag_set(frozenset(undefined_flags))
                                                          if undefined_flags is not None else str(e))
+            except ValueError as e:
+                # ReviewFlag(value) raises for review flags the xlog has but this code does not define
+                action_name = f"UNDEFINED_REVIEW_FLAG ({e})"
             mfovs_for_action.setdefault(action_name, []).append(mfov)
 
         is_nominal_scan = list(mfovs_for_action) == [ReviewAction.USE.name]
@@ -231,6 +255,14 @@ def report_review(wafer_xlog_path: Path,
     logger.info(f"{func_name}: using review strategy {review_strategy} with "
                 f"{len(REVIEW_STRATEGY[review_strategy])} defined flag sets")
 
+    undefined_review_flags = find_undefined_review_flags(xlog=xlog)
+    if len(undefined_review_flags) > 0:
+        logger.warning(f"{func_name}: the xlog has review flag values {undefined_review_flags} that "
+                       f"ReviewFlag does not define (it defines 0 to "
+                       f"{max(flag.value for flag in ReviewFlag)}), so mfovs with those flags get "
+                       f"reported as UNDEFINED_REVIEW_FLAG.  NOTE: msem_to_render.py fails outright "
+                       f"for these, so ReviewFlag needs to be updated before importing.")
+
     logger.info(f"{func_name}: ignoring the {len(exclude_scan_list)} scans already excluded "
                 f"from import: {sorted(exclude_scan_list)}")
 
@@ -238,8 +270,24 @@ def report_review(wafer_xlog_path: Path,
                                          magc_slab_list=magc_slab_list,
                                          serial_slab_list=serial_slab_list)
 
+    serial_slab_for_magc_slab = dict(zip(slabs_to_report,
+                                         get_serial_ids(xlog=xlog, magc_ids=slabs_to_report)))
+
     problem_scans_for_slab: dict[int, List[int]] = {}
-    for magc_slab in slabs_to_report:
+    for slab_index, magc_slab in enumerate(slabs_to_report):
+
+        if slab_index % SLAB_PROGRESS_INTERVAL == 0:
+            batch = slabs_to_report[slab_index:slab_index + SLAB_PROGRESS_INTERVAL]
+            batch_serial_slabs = [serial_slab_for_magc_slab[slab] for slab in batch
+                                  if serial_slab_for_magc_slab[slab] is not None]
+            if len(batch_serial_slabs) > 0:
+                logger.info(f"{func_name}: reading review data for serial slabs "
+                            f"{min(batch_serial_slabs)} to {max(batch_serial_slabs)} "
+                            f"({slab_index + len(batch)} of {len(slabs_to_report)} slabs)")
+            else:
+                logger.info(f"{func_name}: reading review data for magc slabs {batch} "
+                            f"({slab_index + len(batch)} of {len(slabs_to_report)} slabs)")
+
         problem_scans = report_slab(xlog=xlog,
                                     magc_slab=magc_slab,
                                     review_strategy=review_strategy,
@@ -258,7 +306,7 @@ def report_review(wafer_xlog_path: Path,
             logger.info(f"{func_name}: found {problem_scan_count} scans with non-USE actions in "
                         f"{len(problem_scans_for_slab)} of the {len(slabs_to_report)} reported slabs")
             for magc_slab, problem_scans in problem_scans_for_slab.items():
-                serial_slab = get_serial_ids(xlog=xlog, magc_ids=[magc_slab])[0]
+                serial_slab = serial_slab_for_magc_slab[magc_slab]
                 logger.info(f"{func_name}:   magc slab {magc_slab} (serial slab {serial_slab}) "
                             f"scans {problem_scans}")
 
