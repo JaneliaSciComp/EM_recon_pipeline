@@ -21,6 +21,7 @@ from janelia_emrp.msem.ingestion_ibeammsem.id import get_magc_ids, get_serial_id
 from janelia_emrp.msem.ingestion_ibeammsem.review.review import (
     get_excluded_scans, get_review, get_review_action, get_unique_flag_sets
 )
+from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewerror import FlagSetWithNoActionError
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import REVIEW_STRATEGY
@@ -56,6 +57,22 @@ def format_mfov_list(mfovs: List[int], max_shown: int = 8) -> str:
         shown = ", ".join(str(mfov) for mfov in mfovs[:max_shown])
         return f"[{shown}, ... {len(mfovs) - max_shown} more]"
     return "[" + ", ".join(str(mfov) for mfov in mfovs) + "]"
+
+
+def format_mfov_count(mfovs: List[int],
+                      slab_mfov_count: int,
+                      with_mfov_list: bool) -> str:
+    """Returns a readable mfov count, listing the mfovs only when that adds information.
+
+    The mfov ids are omitted for the nominal USE action and whenever an action
+    covers every mfov of the slab, since neither case identifies specific mfovs.
+    """
+    count_phrase = f"{len(mfovs)} mfov{'s' if len(mfovs) > 1 else ''}"
+    if len(mfovs) == slab_mfov_count:
+        return f"all {count_phrase}"
+    if not with_mfov_list:
+        return count_phrase
+    return f"{count_phrase} {format_mfov_list(mfovs)}"
 
 
 def report_slab(xlog: xarray.Dataset,
@@ -109,8 +126,18 @@ def report_slab(xlog: xarray.Dataset,
             nominal_scan_count += 1
             continue
 
-        summary = ", ".join(f"{action_name}: {len(action_mfovs)} mfovs {format_mfov_list(action_mfovs)}"
-                            for action_name, action_mfovs in sorted(mfovs_for_action.items()))
+        action_summary_list = []
+        # sort the nominal USE action last so that the actions of interest come first
+        for action_name, action_mfovs in sorted(mfovs_for_action.items(),
+                                                key=lambda item: (item[0] == ReviewAction.USE.name,
+                                                                  item[0])):
+            # naming specific mfovs only helps for the non-nominal actions
+            mfov_count = format_mfov_count(mfovs=action_mfovs,
+                                           slab_mfov_count=len(mfovs),
+                                           with_mfov_list=action_name != ReviewAction.USE.name)
+            action_summary_list.append(f"{action_name}: {mfov_count}")
+
+        summary = ", ".join(action_summary_list)
         logger.info(f"{func_name}: magc slab {magc_slab} scan {scan}: {summary}")
 
     if nominal_scan_count > 0:
