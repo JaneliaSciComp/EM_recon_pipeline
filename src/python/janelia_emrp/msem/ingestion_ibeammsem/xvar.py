@@ -154,4 +154,9 @@ class XVar(StrEnum):
     E.g. if review.sel(scan=0, slab=0, mfov=0, review_flag=10) == True
     then this MFOV has the flag ReviewFlag.TEST
     (ReviewFlag is an IntEnum and ReviewFlag.TEST == 10).
+    BEAM_HOMOGENIZATION = auto()
+    """Beam intensity homogenization parameters.
+    
+    See the homogenize module.
+    Dimensions: scan, slab, sfov, homogenization_parameter.
     """

@@ -43,17 +43,18 @@ export RUNTIME="233:59"
 
 RUN_TIME=$(date +"%Y%m%d_%H%M%S")
 
-JAR="/groups/flyem/data/render/lib/hot-knife-0.0.5-SNAPSHOT.jar"
+JAR="/groups/flyem/data/render/lib/hot-knife-0.0.6-SNAPSHOT.jar"
 CLASS="org.janelia.saalfeldlab.hotknife.SparkNormalizeLayerIntensityN5"
-
-ARGS="\
---n5PathInput=${BASE_N5_DIR} \
---n5DatasetInput=${SOURCE_DATASET} \
---factors 2,2,1"
-# --invert"
 
 NORMALIZED_DATASET="${SOURCE_DATASET}_norm-layer"
 NORMALIZED_DATASET_DIR="${BASE_N5_DIR}${NORMALIZED_DATASET}"
+
+ARGS="\
+--n5Path=${BASE_N5_DIR} \
+--n5DatasetInput=${SOURCE_DATASET} \
+--n5DatasetOutput=${NORMALIZED_DATASET} \
+--factors 2,2,1"
+# --invert"
 
 if [[ ! -d ${NORMALIZED_DATASET_DIR} ]]; then
   mkdir -p "${NORMALIZED_DATASET_DIR}"

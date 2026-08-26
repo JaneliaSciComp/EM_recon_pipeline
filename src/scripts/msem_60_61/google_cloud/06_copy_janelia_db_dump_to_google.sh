@@ -10,7 +10,7 @@ if (( $# != 2 )); then
   echo "
 Usage:    $0 <collection dump directory> <google VM>
 
-Examples: $0 dump_20250220_155604 render-ws-mongodb-8c-32gb-abd
+Examples: $0  mongodb_janelia/dump_render_w61_s070_to_079_r0n_gc  render-ws-mongodb-16c-64gb-aaa
 "
   exit 1
 fi

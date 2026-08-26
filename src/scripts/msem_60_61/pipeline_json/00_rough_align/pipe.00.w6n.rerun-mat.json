@@ -1,0 +1,32 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://localhost:8080/render-ws/v1",
+    "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
+    "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
+  },
+  "pipelineStackGroups": {
+    "raw":   { "stackPattern": "^w6._s..._r.._gc$" },
+    "other": { "stackPattern": "^w6._s..._r.._gc_icc$" }
+  },
+  "pipelineSteps": [
+    "MFOV_AS_TILE",
+    "RENAME_MATCH_COLLECTIONS"
+  ],
+  "mfovAsTile": {
+    "mfovRenderScale": 0.2,
+    "mfovRootDirectory": "gs://janelia-spark-test/tiles_mfov",
+    "prealignedSfovStackSuffix": "_pa",
+    "dynamicMfovStackSuffix": "_mat",
+    "renderedMfovStackSuffix": "_render",
+    "renderedMfovRunTimestamp": "20260811_152700",
+    "alignedMfovStackSuffix" : "_align",
+    "roughSfovStackSuffix": "_par",
+    "minCrossMatchPixelDistance": 1.0,
+    "deriveSfovMatchData": false
+  },
+  "matchCollectionRename": {
+    "matchCollectionOwner": "hess_wafers_60_61",
+    "sourceNamePattern": "(w6.*_gc_icc)_match",
+    "targetNamePattern": "$1_par_match"
+  }
+}

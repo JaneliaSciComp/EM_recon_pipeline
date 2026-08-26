@@ -1,12 +1,8 @@
 {
   "multiProject": {
     "baseDataUrl" : "http://10.40.3.113:8080/render-ws/v1",
-    "owner" : "trautmane", "project" : "w60_serial_290_to_299",
-    "stackIdWithZ" : { "projectPattern": "^w60_serial_290_to_299$", "stackPattern": "^w60_s2.._r.._d00_align_avgshd$", "zValuesPerBatch": 1 }
-  },
-  "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w.._s..._r.._d00$" },
-    "aligned":            { "stackPattern": "^w.._s..._r.._d00_align_avgshd$" }
+    "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
+    "stackIdWithZ" : { "projectPattern": "^w61_serial_..._to_...$", "stackPattern": "^w61_s..._r00_gc_par_align_stitch_only$", "zValuesPerBatch": 1 }
   },
   "pipelineSteps": [
     "CORRECT_INTENSITY"
@@ -16,15 +12,18 @@
       "maxAllowedErrorGlobal" : 10.0,
       "maxIterationsGlobal" : 10000,
       "maxPlateauWidthGlobal" : 100,
-      "threadsWorker" : 3,
-      "threadsGlobal" : 8,
+      "threadsWorker" : 0,
+      "threadsGlobal" : 0,
       "deriveThreadsUsingSparkConfig" : true
     },
     "intensityAdjust" : {
-      "lambda1" : 0.01,
-      "lambda2" : 0.01,
-      "maxPixelCacheGb" : 1,
+      "maxAllowedError" : 0.01,
+      "maxIterations" : 10000,
+      "maxPlateauWidth" : 2000,
+      "lambda1" : 0.1,
+      "lambda2" : 0.0,
       "renderScale" : 0.1,
+      "maxPixelCacheGb" : 1,
       "zDistance" : {
         "simpleZDistance" : [
           0
@@ -34,11 +33,15 @@
       "equilibrationWeight" : 0.0
     },
     "targetStack": {
-      "stackSuffix": "_ic",
+      "stackSuffix": "_ic2d",
       "completeStack": true
     },
     "blockPartition": {
       "sizeZ": 1
+    },
+    "alternatingRuns": {
+      "nRuns": 1,
+      "keepIntermediateStacks": false
     }
   }
 }
