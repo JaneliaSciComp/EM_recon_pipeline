@@ -87,10 +87,10 @@ def load_slab_info(xlog: xarray.Dataset,
     for slab in magc_ids:
         id_serial=get_serial_ids(xlog=xlog,magc_ids=[slab])[0]
         mfovs = get_mfovs(xlog=xlog, slab=slab)
-        region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
-        if len(region_ids) == 0:
+        if mfovs.size == 0:
             magc_ids_without_regions.append(slab)
             continue
+        region_ids = get_region_ids(xlog=xlog, slab=slab, mfovs=mfovs)
         id_region = region_ids[0]
 
         slabs.append(
