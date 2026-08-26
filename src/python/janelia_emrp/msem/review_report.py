@@ -39,6 +39,17 @@ WAFER_XLOG_PATH_PATTERN = \
     "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_{wafer_id}/xlog/xlog_wafer_{wafer_id}.zarr"
 
 
+# Scans already excluded from import for each wafer.
+# These are the known bad scans we account for when running 01_msem_to_render.sh,
+# so the review data for them is not a new problem.
+# NOTE: keep in sync with the WAFER_EXCLUDED_SCAN_ARG values in
+#       src/scripts/msem_60_61/01_msem_to_render.sh
+WAFER_EXCLUDED_SCANS: dict[str, List[int]] = {
+    "60": [0, 1, 2, 3, 7, 19],
+    "61": [0, 1, 2, 3, 17],
+}
+
+
 def build_wafer_xlog_path(wafer_id: str) -> Path:
     """Returns the standard xlog path for a wafer id."""
     return Path(WAFER_XLOG_PATH_PATTERN.format(wafer_id=wafer_id))
@@ -78,33 +89,51 @@ def format_mfov_count(mfovs: List[int],
 def report_slab(xlog: xarray.Dataset,
                 magc_slab: int,
                 review_strategy: int,
-                show_all_scans: bool):
+                show_all_scans: bool,
+                exclude_scan_list: List[int],
+                problems_only: bool) -> List[int]:
     """Prints the review flags and resulting actions for one slab.
 
     The scan and mfov dimensions of the xlog are over-dimensioned, so this
     restricts the report to the effective scans and mfovs of the slab.
     Padded items have no flags set and have no action in any strategy.
+
+    Scans in exclude_scan_list are left out of the report entirely since they
+    are already excluded from import.
+
+    In problems_only mode, the flag sets and the nominal scans are not printed,
+    leaving just the scans that have at least one non-USE action.
+
+    Returns the scans that have at least one non-USE action.
     """
     func_name = "report_slab"
 
-    scans = get_effective_scans(xlog=xlog, slab=magc_slab)
+    excluded_scans = set(exclude_scan_list)
+    effective_scans = get_effective_scans(xlog=xlog, slab=magc_slab)
+    scans = [scan for scan in effective_scans if scan not in excluded_scans]
     mfovs = [int(mfov) for mfov in get_mfovs(xlog=xlog, slab=magc_slab)]
 
     if len(scans) == 0 or len(mfovs) == 0:
         logger.warning(f"{func_name}: magc slab {magc_slab} has {len(scans)} effective scans "
-                       f"and {len(mfovs)} mfovs, skipping")
-        return
+                       f"to report and {len(mfovs)} mfovs, skipping")
+        return []
 
     review = get_review(xlog=xlog, slab=magc_slab, scan=scans, mfov=mfovs).load()
 
     serial_slab = get_serial_ids(xlog=xlog, magc_ids=[magc_slab])[0]
-    logger.info(f"{func_name}: magc slab {magc_slab} (serial slab {serial_slab}) has {len(scans)} "
-                f"effective scans (first {scans[0]}, last {scans[-1]}) and {len(mfovs)} mfovs")
+    slab_context = f"magc slab {magc_slab} (serial slab {serial_slab})"
 
-    for flag_set in sorted(get_unique_flag_sets(review),
-                           key=lambda s: sorted(flag.value for flag in s)):
-        logger.info(f"{func_name}: magc slab {magc_slab} contains flag set {format_flag_set(flag_set)}")
+    if not problems_only:
+        excluded_count = len(effective_scans) - len(scans)
+        logger.info(f"{func_name}: {slab_context} has {len(scans)} effective scans to report "
+                    f"(first {scans[0]}, last {scans[-1]}, {excluded_count} excluded) "
+                    f"and {len(mfovs)} mfovs")
 
+        for flag_set in sorted(get_unique_flag_sets(review),
+                               key=lambda s: sorted(flag.value for flag in s)):
+            logger.info(f"{func_name}: magc slab {magc_slab} contains flag set {format_flag_set(flag_set)}")
+
+    problem_scans: List[int] = []
     nominal_scan_count = 0
     for scan in scans:
         mfovs_for_action: dict[str, List[int]] = {}
@@ -122,7 +151,11 @@ def report_slab(xlog: xarray.Dataset,
                                                          if undefined_flags is not None else str(e))
             mfovs_for_action.setdefault(action_name, []).append(mfov)
 
-        if not show_all_scans and list(mfovs_for_action) == ["USE"]:
+        is_nominal_scan = list(mfovs_for_action) == [ReviewAction.USE.name]
+        if not is_nominal_scan:
+            problem_scans.append(scan)
+
+        if is_nominal_scan and (problems_only or not show_all_scans):
             nominal_scan_count += 1
             continue
 
@@ -138,11 +171,13 @@ def report_slab(xlog: xarray.Dataset,
             action_summary_list.append(f"{action_name}: {mfov_count}")
 
         summary = ", ".join(action_summary_list)
-        logger.info(f"{func_name}: magc slab {magc_slab} scan {scan}: {summary}")
+        logger.info(f"{func_name}: {slab_context} scan {scan}: {summary}")
 
-    if nominal_scan_count > 0:
+    if nominal_scan_count > 0 and not problems_only:
         logger.info(f"{func_name}: magc slab {magc_slab} has {nominal_scan_count} scans with all mfovs USE "
                     f"(not listed above, use --show_all_scans to see them)")
+
+    return problem_scans
 
 
 def resolve_magc_slabs(xlog: xarray.Dataset,
@@ -172,13 +207,15 @@ def report_review(wafer_xlog_path: Path,
                   serial_slab_list: List[int],
                   review_strategy: int,
                   show_all_scans: bool,
-                  report_excluded_scans: bool):
+                  report_excluded_scans: bool,
+                  exclude_scan_list: List[int],
+                  problems_only: bool):
 
     func_name = "report_review"
 
     if len(magc_slab_list) == 0 and len(serial_slab_list) == 0 and not report_excluded_scans:
         raise RuntimeError("nothing to report, specify --magc_slab, --serial_slab, "
-                           "and/or --report_excluded_scans")
+                           "--serial_slab_range, and/or --report_excluded_scans")
 
     logger.info(f"{func_name}: opening {wafer_xlog_path}")
 
@@ -194,15 +231,36 @@ def report_review(wafer_xlog_path: Path,
     logger.info(f"{func_name}: using review strategy {review_strategy} with "
                 f"{len(REVIEW_STRATEGY[review_strategy])} defined flag sets")
 
+    logger.info(f"{func_name}: ignoring the {len(exclude_scan_list)} scans already excluded "
+                f"from import: {sorted(exclude_scan_list)}")
+
     slabs_to_report = resolve_magc_slabs(xlog=xlog,
                                          magc_slab_list=magc_slab_list,
                                          serial_slab_list=serial_slab_list)
 
+    problem_scans_for_slab: dict[int, List[int]] = {}
     for magc_slab in slabs_to_report:
-        report_slab(xlog=xlog,
-                    magc_slab=magc_slab,
-                    review_strategy=review_strategy,
-                    show_all_scans=show_all_scans)
+        problem_scans = report_slab(xlog=xlog,
+                                    magc_slab=magc_slab,
+                                    review_strategy=review_strategy,
+                                    show_all_scans=show_all_scans,
+                                    exclude_scan_list=exclude_scan_list,
+                                    problems_only=problems_only)
+        if len(problem_scans) > 0:
+            problem_scans_for_slab[magc_slab] = problem_scans
+
+    if len(slabs_to_report) > 0:
+        if len(problem_scans_for_slab) == 0:
+            logger.info(f"{func_name}: found no scans with non-USE actions in the "
+                        f"{len(slabs_to_report)} reported slabs")
+        else:
+            problem_scan_count = sum(len(scans) for scans in problem_scans_for_slab.values())
+            logger.info(f"{func_name}: found {problem_scan_count} scans with non-USE actions in "
+                        f"{len(problem_scans_for_slab)} of the {len(slabs_to_report)} reported slabs")
+            for magc_slab, problem_scans in problem_scans_for_slab.items():
+                serial_slab = get_serial_ids(xlog=xlog, magc_ids=[magc_slab])[0]
+                logger.info(f"{func_name}:   magc slab {magc_slab} (serial slab {serial_slab}) "
+                            f"scans {problem_scans}")
 
     if report_excluded_scans:
         # NOTE: this loads the review array for the entire wafer, so it is slow
@@ -243,6 +301,29 @@ def main(arg_list: List[str]):
         default=[]
     )
     parser.add_argument(
+        "--serial_slab_range",
+        help="Report review data for all slabs in this inclusive range of serial ids (e.g. 70 89)",
+        type=int,
+        nargs=2,
+        metavar=("FIRST", "LAST"),
+    )
+    parser.add_argument(
+        "--exclude_scan",
+        help="Leave these scans out of the report since they are already excluded from import "
+             f"(e.g. 0 1 2 3 17).  Defaults to the known scans for the wafer {WAFER_EXCLUDED_SCANS}.  "
+             "Specify with no values to report every scan.",
+        type=int,
+        nargs='*',
+        default=None
+    )
+    parser.add_argument(
+        "--problems_only",
+        help="Only report the scans that have at least one non-USE action, "
+             "to highlight problems not accounted for when importing",
+        default=False,
+        action="store_true"
+    )
+    parser.add_argument(
         "--review_strategy",
         help="strategy for edge cases documented in review array.",
         type=int,
@@ -272,12 +353,33 @@ def main(arg_list: List[str]):
     else:
         parser.error("specify --wafer_id or --path_xlog")
 
+    serial_slab_list = list(args.serial_slab)
+    if args.serial_slab_range is not None:
+        first_serial_slab, last_serial_slab = args.serial_slab_range
+        if last_serial_slab < first_serial_slab:
+            parser.error(f"serial_slab_range {first_serial_slab} {last_serial_slab} is not an increasing range")
+        serial_slab_list.extend(range(first_serial_slab, last_serial_slab + 1))
+
+    if args.exclude_scan is not None:
+        exclude_scan_list = args.exclude_scan
+    elif args.wafer_id in WAFER_EXCLUDED_SCANS:
+        exclude_scan_list = WAFER_EXCLUDED_SCANS[args.wafer_id]
+    else:
+        exclude_scan_list = []
+        if args.problems_only:
+            wafer_context = "no wafer_id was specified" if args.wafer_id is None \
+                else f"wafer {args.wafer_id} has no known excluded scans"
+            logger.warning(f"{wafer_context}, so scans already excluded from import may show up "
+                           f"as problems, use --exclude_scan to leave them out")
+
     report_review(wafer_xlog_path=wafer_xlog_path,
                   magc_slab_list=args.magc_slab,
-                  serial_slab_list=args.serial_slab,
+                  serial_slab_list=serial_slab_list,
                   review_strategy=args.review_strategy,
                   show_all_scans=args.show_all_scans,
-                  report_excluded_scans=args.report_excluded_scans)
+                  report_excluded_scans=args.report_excluded_scans,
+                  exclude_scan_list=exclude_scan_list,
+                  problems_only=args.problems_only)
 
 
 if __name__ == '__main__':
