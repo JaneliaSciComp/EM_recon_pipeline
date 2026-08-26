@@ -86,8 +86,9 @@ On ${VM_LABEL}, run:
 
 ./other/remove-stacks.sh
 
+# ic2d data load typically takes 1 to 2 minutes
 ./db-restore-collections.sh --pattern '03_ic2d_nc4_hist_rs0p5.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}'
-# for dump directories prompt, enter:         1 2
+# for dump directories prompt, enter:         1
 
 ./list-stacks.sh
 
@@ -96,7 +97,9 @@ On ${VM_LABEL}, run:
 # -------------------------------------
 On launch box, run:
 
-./02_run_pipeline.sh  ${VM_IP}  04_3d_align/pipe.04.w6n.layer-as-tile.json  250  4  premium  250  ${BATCH_NAME}  disableDynamic
+# 250 executor run for w61-s190-to-s199 (only has r00)     took 15 minutes
+#  50 executor run for w61-s080-to-s089 (with r00 and r01) took 60 minutes
+./02_run_pipeline.sh  ${VM_IP}  04_3d_align/pipe.04.w6n.layer-as-tile.json  50  4  premium  50  ${BATCH_NAME}  disableDynamic
 
 # launch information:
 ...
@@ -106,16 +109,17 @@ On launch box, run:
 # -------------------------------------
 After the run completes (typically 4 to 5 hours), on ${VM_LABEL}, run:
 
-# 3d render collection dump takes ? seconds
+# layer-as-tile render collection dump takes 15 seconds
+./db-dump-google-collections.sh --db render --stage ${LAYER_AS_TILE_STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_lat
+
+# Should dump collections to:
+#  /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
+
+# 3d render collection dump takes 2 to 3 minutes
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
-# layer-as-tile render collection dump takes ? minutes
-./db-dump-google-collections.sh --db render --stage ${LAYER_AS_TILE_STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_lat
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
 "
