@@ -66,11 +66,12 @@ def format_flag_set(flag_set: frozenset[ReviewFlag]) -> str:
     return "{" + ", ".join(sorted(flag.name for flag in flag_set)) + "}"
 
 
-def format_mfov_list(mfovs: List[int], max_shown: int = 8) -> str:
-    """Returns a readable mfov list, truncated when long."""
-    if len(mfovs) > max_shown:
-        shown = ", ".join(str(mfov) for mfov in mfovs[:max_shown])
-        return f"[{shown}, ... {len(mfovs) - max_shown} more]"
+def format_mfov_list(mfovs: List[int]) -> str:
+    """Returns a readable list of all mfov ids.
+
+    The ids are not truncated since the problem mfovs need to be identifiable
+    and a slab has at most a few dozen of them.
+    """
     return "[" + ", ".join(str(mfov) for mfov in mfovs) + "]"
 
 
