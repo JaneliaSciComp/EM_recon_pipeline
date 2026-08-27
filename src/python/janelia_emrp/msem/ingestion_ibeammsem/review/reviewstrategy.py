@@ -50,6 +50,18 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
         ): Action.NO_Z_DROP,
         fset({Flag.DEPLETED}): Action.NO_Z_DROP,
         fset({Flag.NO_SAMPLE_IN_SLAB_NO_LOSS}): Action.NO_Z_DROP,
+        fset(
+            {
+                Flag.NO_SAMPLE_IN_SLAB_NO_LOSS,
+                Flag.DISTORTION_Y_NONLINEAR_MAYBE,
+            }
+        ): Action.NO_Z_DROP,
+        fset(
+            {
+                Flag.NO_SAMPLE_IN_SLAB_NO_LOSS,
+                Flag.TEST,
+            }
+        ): Action.NO_Z_DROP,
         fset({Flag.TEST}): Action.NO_Z_DROP,
     },
     # 1: add your custom strategy
