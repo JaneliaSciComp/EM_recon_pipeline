@@ -60,19 +60,41 @@ def get_review(
     return xlog[XVar.REVIEW].sel(scan=scan, slab=slab, mfov=mfov)
 
 
+def _get_flag_sets(
+    review: xr.DataArray,
+) -> tuple[list[frozenset[ReviewFlag]], np.ndarray]:
+    """Unique flag sets of a review array and their inverse mapping.
+
+    Returns the unique flag sets
+    and for every MFOV the index of its flag set into the unique flag sets.
+    The MFOVs are ordered by the review dimensions without review_flag.
+    """
+    review = review.transpose(..., XDim.REVIEW_FLAG)
+    used_flags = review.any(tuple(set(review.dims) - {XDim.REVIEW_FLAG}))
+    n_used_flags = used_flags.sum().item()
+
+    if n_used_flags > np.iinfo(np.uint64).bits:
+        raise NotImplementedError(f"{n_used_flags=} do not fit into uint64 codes")
+
+    review = review.isel({XDim.REVIEW_FLAG: used_flags})
+    flag_values = review[XDim.REVIEW_FLAG].values
+    # encode flag patterns as integers
+    values = review.values.reshape(-1, flag_values.size)
+    weights = np.left_shift(np.uint64(1), np.arange(flag_values.size, dtype=np.uint64))
+    _, first_indices, inverse = np.unique(
+        values @ weights, return_index=True, return_inverse=True
+    )
+    flag_sets = [
+        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[pattern])
+        for pattern in values[first_indices]
+    ]
+    return flag_sets, inverse
+
+
 def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
     """Unique flag sets present in a review array."""
-    flag_patterns = np.unique(
-        review.stack(all_mfovs=tuple(set(review.dims) - {XDim.REVIEW_FLAG})).transpose(
-            "all_mfovs", ...
-        ),
-        axis=0,
-    )
-    flag_values = review[XDim.REVIEW_FLAG].values
-    return {
-        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[flag_pattern])
-        for flag_pattern in flag_patterns
-    }
+    flag_sets, _ = _get_flag_sets(review)
+    return set(flag_sets)
 
 
 def get_review_action(
