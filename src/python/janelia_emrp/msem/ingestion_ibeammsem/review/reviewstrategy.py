@@ -24,6 +24,7 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
         fset({Flag.NOMINAL}): Action.USE,
         fset({Flag.DISTORTION_Y_LINEAR_MILD}): Action.USE,
         fset({Flag.DISTORTION_Y_NONLINEAR_MAYBE}): Action.USE,
+        fset({Flag.COMPRESSED_LINES}): Action.USE,
         # Action.WITH_Z_MASK
         fset({Flag.NO_FILE}): Action.WITH_Z_MASK,
         fset({Flag.OFFSET_LOSS}): Action.WITH_Z_MASK,

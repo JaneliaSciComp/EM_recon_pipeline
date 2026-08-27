@@ -145,3 +145,9 @@ class ReviewFlag(IntEnum):
     but is restricted to specific scans only.
     All SFOVs of an affected MFOV show the same distortion.
     """
+    COMPRESSED_LINES = 12
+    """A few consecutive lines appear compressed.
+
+    The origin is unclear.
+    Maybe a small microarc, or a very small mechanical vibration.
+    """
