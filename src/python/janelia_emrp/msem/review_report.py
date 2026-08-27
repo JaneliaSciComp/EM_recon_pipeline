@@ -38,17 +38,6 @@ logger = logging.getLogger(__name__)
 WAFER_XLOG_PATH_PATTERN = \
     "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_{wafer_id}/xlog/xlog_wafer_{wafer_id}.zarr"
 
-
-# Scans already excluded from import for each wafer.
-# These are the known bad scans we account for when running 01_msem_to_render.sh,
-# so the review data for them is not a new problem.
-# NOTE: keep in sync with the WAFER_EXCLUDED_SCAN_ARG values in
-#       src/scripts/msem_60_61/01_msem_to_render.sh
-WAFER_EXCLUDED_SCANS: dict[str, List[int]] = {
-    "60": [0, 1, 2, 3, 7, 19],
-    "61": [0, 1, 2, 3, 17],
-}
-
 # number of slabs to process between progress messages
 SLAB_PROGRESS_INTERVAL = 5
 
@@ -104,8 +93,7 @@ def report_slab(xlog: xarray.Dataset,
     restricts the report to the effective scans and mfovs of the slab.
     Padded items have no flags set and have no action in any strategy.
 
-    Scans in exclude_scan_list are left out of the report entirely since they
-    are already excluded from import.
+    Scans in exclude_scan_list are left out of the report entirely.
 
     In problems_only mode, the flag sets and the nominal scans are not printed,
     leaving just the scans that have at least one non-USE action.
@@ -216,7 +204,7 @@ def report_review(wafer_xlog_path: Path,
                   review_strategy: int,
                   show_all_scans: bool,
                   report_excluded_scans: bool,
-                  exclude_scan_list: List[int],
+                  exclude_scan_list: List[int] | None,
                   problems_only: bool):
 
     func_name = "report_review"
@@ -258,8 +246,13 @@ def report_review(wafer_xlog_path: Path,
         else:
             review_actions = get_review_actions(review=review, review_strategy=review_strategy)
 
-    logger.info(f"{func_name}: ignoring the {len(exclude_scan_list)} scans already excluded "
-                f"from import: {sorted(exclude_scan_list)}")
+    if exclude_scan_list is None:
+        exclude_scan_list = get_excluded_scans(review=review, review_strategy=review_strategy)
+        logger.info(f"{func_name}: derived the scans that import excludes "
+                    f"with review strategy {review_strategy}")
+
+    logger.info(f"{func_name}: ignoring the {len(exclude_scan_list)} scans that import "
+                f"excludes: {sorted(exclude_scan_list)}")
 
     slabs_to_report = resolve_magc_slabs(xlog=xlog,
                                          magc_slab_list=magc_slab_list,
@@ -352,8 +345,7 @@ def main(arg_list: List[str]):
     )
     parser.add_argument(
         "--exclude_scan",
-        help="Leave these scans out of the report since they are already excluded from import "
-             f"(e.g. 0 1 2 3 17).  Defaults to the known scans for the wafer {WAFER_EXCLUDED_SCANS}.  "
+        help="Leave these scans out of the report (e.g. 0 1 2 3 17).  "
              "Specify with no values to report every scan.",
         type=int,
         nargs='*',
@@ -403,25 +395,13 @@ def main(arg_list: List[str]):
             parser.error(f"serial_slab_range {first_serial_slab} {last_serial_slab} is not an increasing range")
         serial_slab_list.extend(range(first_serial_slab, last_serial_slab + 1))
 
-    if args.exclude_scan is not None:
-        exclude_scan_list = args.exclude_scan
-    elif args.wafer_id in WAFER_EXCLUDED_SCANS:
-        exclude_scan_list = WAFER_EXCLUDED_SCANS[args.wafer_id]
-    else:
-        exclude_scan_list = []
-        if args.problems_only:
-            wafer_context = "no wafer_id was specified" if args.wafer_id is None \
-                else f"wafer {args.wafer_id} has no known excluded scans"
-            logger.warning(f"{wafer_context}, so scans already excluded from import may show up "
-                           f"as problems, use --exclude_scan to leave them out")
-
     report_review(wafer_xlog_path=wafer_xlog_path,
                   magc_slab_list=args.magc_slab,
                   serial_slab_list=serial_slab_list,
                   review_strategy=args.review_strategy,
                   show_all_scans=args.show_all_scans,
                   report_excluded_scans=args.report_excluded_scans,
-                  exclude_scan_list=exclude_scan_list,
+                  exclude_scan_list=args.exclude_scan,
                   problems_only=args.problems_only)
 
 
