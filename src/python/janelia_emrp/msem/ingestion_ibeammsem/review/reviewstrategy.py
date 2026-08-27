@@ -40,7 +40,10 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
         ): Action.NO_Z_DROP,
         fset({Flag.REDEPOSITED_MATERIAL}): Action.NO_Z_DROP,
         fset(
-            {Flag.REDEPOSITED_MATERIAL, Flag.DISTORTION_Y_NONLINEAR_MAYBE}
+            {
+                Flag.REDEPOSITED_MATERIAL,
+                Flag.DISTORTION_Y_NONLINEAR_MAYBE,
+            }
         ): Action.NO_Z_DROP,
         fset(
             {
