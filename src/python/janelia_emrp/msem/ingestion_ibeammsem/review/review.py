@@ -153,6 +153,37 @@ def has_flag(
     )
 
 
+def get_flag_sets_without_action(
+    review: xr.DataArray, review_strategy: int
+) -> dict[frozenset[ReviewFlag], list[int]]:
+    """Flag sets of a review array that the review strategy does not cover.
+
+    Returns a mapping
+    from each flag set without an action
+    to the sorted scans containing that flag set.
+    """
+    flag_sets, inverse = _get_flag_sets(review)
+    flag_sets_without_action = [
+        (index, flag_set)
+        for index, flag_set in enumerate(flag_sets)
+        if flag_set not in REVIEW_STRATEGY[review_strategy]
+    ]
+    if not flag_sets_without_action:
+        return {}
+    template = review.transpose(..., XDim.REVIEW_FLAG).isel(
+        {XDim.REVIEW_FLAG: 0}, drop=True
+    )
+    inverse = inverse.reshape(template.shape)
+    scan_axis = template.dims.index(XDim.SCAN)
+    other_axes = tuple(axis for axis in range(inverse.ndim) if axis != scan_axis)
+    return {
+        flag_set: template[XDim.SCAN]
+        .values[(inverse == index).any(other_axes)]
+        .tolist()
+        for index, flag_set in flag_sets_without_action
+    }
+
+
 def check_review_strategy(review: xr.DataArray, review_strategy: int) -> None:
     """Checks that the review strategy covers all cases in the review array.
 
@@ -161,13 +192,14 @@ def check_review_strategy(review: xr.DataArray, review_strategy: int) -> None:
             the review array contains flag sets without an action,
             add entries to the review strategy.
     """
-    flag_sets_without_action = get_unique_flag_sets(review) - set(
-        REVIEW_STRATEGY[review_strategy].keys()
+    flag_sets_without_action = get_flag_sets_without_action(
+        review=review, review_strategy=review_strategy
     )
     if flag_sets_without_action:
         raise FlagSetWithNoActionError(
             f"add actions to {review_strategy=}"
-            f" for these flag sets: {flag_sets_without_action}"
+            f" for these flag sets and the scans containing them:"
+            f" {flag_sets_without_action}"
         )
 
 
