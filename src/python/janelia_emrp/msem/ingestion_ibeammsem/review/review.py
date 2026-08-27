@@ -30,9 +30,8 @@ E.g., in strategy #1, we are less conservative and ingest more edge cases.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
+import xarray as xr
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewerror import (
     FlagSetWithNoActionError,
@@ -44,9 +43,6 @@ from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import (
 )
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
-
-if TYPE_CHECKING:
-    import xarray as xr
 
 
 def get_review(
@@ -150,8 +146,15 @@ def get_excluded_scans(xlog: xr.Dataset, review_strategy: int) -> list[int]:
         review_strategy=review_strategy, action=ReviewAction.NO_Z_DROP
     )
     review = get_review(xlog=xlog).load()
-    return [
-        scan.item()
-        for scan in review[XDim.SCAN]
-        if get_unique_flag_sets(review.sel(scan=scan)) <= no_z_drop_flag_sets
-    ]
+    used_flags = review.any((XDim.SCAN, XDim.SLAB, XDim.MFOV))
+    review = review.isel({XDim.REVIEW_FLAG: used_flags})
+    used_values = set(review[XDim.REVIEW_FLAG].values.tolist())
+    no_z_drop = xr.zeros_like(review.isel({XDim.REVIEW_FLAG: 0}, drop=True))
+    for flag_set in no_z_drop_flag_sets:
+        # a set requiring a flag that never occurs cannot match any cell
+        if not flag_set <= used_values:
+            continue
+        flag_pattern = review[XDim.REVIEW_FLAG].isin(list(flag_set))
+        no_z_drop = no_z_drop | (review == flag_pattern).all(XDim.REVIEW_FLAG)
+    excluded = no_z_drop.all((XDim.SLAB, XDim.MFOV))
+    return review[XDim.SCAN][excluded].values.tolist()
