@@ -50,6 +50,10 @@
         "tileRemoval": { "scanMfovNames": [ "scan027_m0020", "scan027_m0025", "scan068_m0020", "scan068_m0025" ], "collapseStack": false }
       },
       {
+        "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_170_to_179", "stack": "w61_s175_r00_gc" },
+        "tileRemoval": { "scanNames": [ "scan079" ], "collapseStack": true }
+      },
+      {
         "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_170_to_179", "stack": "w61_s175_r01_gc" },
         "tileRemoval": { "scanNames": [ "scan079" ], "collapseStack": true }
       },
@@ -69,6 +73,10 @@
       },
       {
         "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_170_to_179", "stack": "w61_s178_r00_gc" },
+        "tileRemoval": { "scanNames": [ "scan021" ], "collapseStack": true  }
+      },
+      {
+        "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_170_to_179", "stack": "w61_s178_r01_gc" },
         "tileRemoval": { "scanNames": [ "scan021" ], "collapseStack": true  }
       }
     ]
