@@ -314,7 +314,8 @@ def report_review(wafer_xlog_path: Path,
     if report_excluded_scans:
         # NOTE: this loads the review array for the entire wafer, so it is slow
         logger.info(f"{func_name}: loading review array for the entire wafer to find excluded scans ...")
-        excluded_scans = get_excluded_scans(xlog=xlog, review_strategy=review_strategy)
+        excluded_scans = get_excluded_scans(review=get_review(xlog=xlog).load(),
+                                            review_strategy=review_strategy)
         logger.info(f"{func_name}: review strategy {review_strategy} excludes "
                     f"{len(excluded_scans)} scans for the entire wafer: {sorted(excluded_scans)}")
 

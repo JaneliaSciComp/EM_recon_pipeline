@@ -97,6 +97,20 @@ def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
     return set(flag_sets)
 
 
+def get_review_actions(review: xr.DataArray, review_strategy: int) -> xr.DataArray:
+    """Review actions of all MFOVs in the review array given a review strategy.
+
+    Returns an array of ReviewAction integer values
+    with dimensions scan, slab, and mfov.
+    """
+    flag_sets, inverse = _get_flag_sets(review)
+    actions = np.array(
+        [REVIEW_STRATEGY[review_strategy][flag_set] for flag_set in flag_sets]
+    )
+    template = review.isel({XDim.REVIEW_FLAG: 0}, drop=True)
+    return template.copy(data=actions[inverse].reshape(template.shape))
+
+
 def get_review_action(
     review: xr.DataArray, scan: int, slab: int, mfov: int, review_strategy: int
 ) -> ReviewAction:
@@ -139,7 +153,7 @@ def has_flag(
     )
 
 
-def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
+def check_review_strategy(review: xr.DataArray, review_strategy: int) -> None:
     """Checks that the review strategy covers all cases in the review array.
 
     Raises:
@@ -147,7 +161,7 @@ def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
             the review array contains flag sets without an action,
             add entries to the review strategy.
     """
-    flag_sets_without_action = get_unique_flag_sets(get_review(xlog=xlog)) - set(
+    flag_sets_without_action = get_unique_flag_sets(review) - set(
         REVIEW_STRATEGY[review_strategy].keys()
     )
     if flag_sets_without_action:
@@ -157,17 +171,17 @@ def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
         )
 
 
-def get_excluded_scans(xlog: xr.Dataset, review_strategy: int) -> list[int]:
+def get_excluded_scans(review: xr.DataArray, review_strategy: int) -> list[int]:
     """Scans that we exclude from ingestion.
 
     A scan is excluded
     if all its MFOVs map to ReviewAction.NO_Z_DROP
     under the review strategy.
+    The review array must cover all slabs and MFOVs of the wafer.
     """
     no_z_drop_flag_sets = get_flag_sets_with_action(
         review_strategy=review_strategy, action=ReviewAction.NO_Z_DROP
     )
-    review = get_review(xlog=xlog).load()
     used_flags = review.any((XDim.SCAN, XDim.SLAB, XDim.MFOV))
     review = review.isel({XDim.REVIEW_FLAG: used_flags})
     used_values = set(review[XDim.REVIEW_FLAG].values.tolist())

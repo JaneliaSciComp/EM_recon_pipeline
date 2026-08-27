@@ -166,9 +166,10 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
     else:
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
 
-    check_review_strategy(xlog=xlog, review_strategy=review_strategy)
+    review = get_review(xlog=xlog).load()
+    check_review_strategy(review=review, review_strategy=review_strategy)
 
-    excluded_scans: set[int] = set(get_excluded_scans(xlog=xlog, review_strategy=review_strategy))
+    excluded_scans: set[int] = set(get_excluded_scans(review=review, review_strategy=review_strategy))
     logger.info(f"{func_name}: review strategy {review_strategy} excludes scans {sorted(excluded_scans)}")
 
     logger.info(f"{func_name}: loading slab info, {wafer_id=}, number_of_slabs_per_group={number_of_slabs_per_render_project}")
