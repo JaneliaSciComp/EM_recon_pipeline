@@ -13,7 +13,17 @@
     "PATCH_MFOV_MONTAGE_MATCHES"
   ],
   "tileRemoval": {
-    "peakScanJson": "gs://janelia-spark-test/library/hess_wafers_60_61.peak_scan.json"
+    "peakScanJson": "gs://janelia-spark-test/library/hess_wafers_60_61.peak_scan.json",
+    "stackList": [
+      {
+        "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_100_to_109", "stack": "w61_s109_r00_gc" },
+        "tileRemoval": { "scanNames": [ "scan021" ], "collapseStack": true }
+      },
+      {
+        "stackId": { "owner": "hess_wafers_60_61", "project": "w61_serial_100_to_109", "stack": "w61_s109_r01_gc" },
+        "tileRemoval": { "scanNames": [ "scan021" ], "collapseStack": true }
+      }
+    ]
   },
   "matchRunList": [
     {
