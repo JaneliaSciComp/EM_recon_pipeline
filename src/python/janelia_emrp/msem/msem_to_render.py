@@ -262,7 +262,7 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 )
                 at_least_one_mfov_with_z = False
                 for mfov in slab_info.mfovs:
-                    action = get_review_action(review_flag=review_slab, scan=scan,
+                    action = get_review_action(review=review_slab, scan=scan,
                                                slab=slab_info.magc_id, mfov=mfov,
                                                review_strategy=review_strategy)
                     if action is ReviewAction.NO_Z_DROP:

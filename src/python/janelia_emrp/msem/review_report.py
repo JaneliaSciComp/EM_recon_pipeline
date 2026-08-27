@@ -161,7 +161,7 @@ def report_slab(xlog: xarray.Dataset,
         mfovs_for_action: dict[str, List[int]] = {}
         for mfov in mfovs:
             try:
-                action_name = get_review_action(review_flag=review,
+                action_name = get_review_action(review=review,
                                                 scan=scan,
                                                 slab=magc_slab,
                                                 mfov=mfov,

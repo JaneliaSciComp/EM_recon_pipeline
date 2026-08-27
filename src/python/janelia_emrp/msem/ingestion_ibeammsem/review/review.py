@@ -76,28 +76,28 @@ def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
 
 
 def get_review_action(
-    review_flag: xr.DataArray, scan: int, slab: int, mfov: int, review_strategy: int
+    review: xr.DataArray, scan: int, slab: int, mfov: int, review_strategy: int
 ) -> ReviewAction:
-    """Gets the review action of an MFOV given a review flag array.
+    """Gets the review action of an MFOV given a review array.
 
-    The review flag array must contain the MFOV of interest.
+    The review array must contain the MFOV of interest.
 
     Possible use:
-    review_flag_slab = get_review(slab=0).load()
+    review_slab = get_review(slab=0).load()
     for scan in scans:
         for mfov in mfovs:
-            action = get_review_action(review_flag_slab, scan=scan, slab=0, mfov=mfov)
+            action = get_review_action(review_slab, scan=scan, slab=0, mfov=mfov)
             if action is Action.USE:
                 ...
             elif action is Action.WITH_Z_MASK:
                 ...
     """
-    review_flag_mfov = review_flag.expand_dims(
-        tuple({XDim.SCAN, XDim.SLAB, XDim.MFOV} - set(review_flag.dims))
+    review_mfov = review.expand_dims(
+        tuple({XDim.SCAN, XDim.SLAB, XDim.MFOV} - set(review.dims))
     ).sel(scan=scan, slab=slab, mfov=mfov)
     key_flags = frozenset(
         ReviewFlag(flag_value)
-        for flag_value in review_flag_mfov.where(review_flag_mfov)
+        for flag_value in review_mfov.where(review_mfov)
         .dropna(XDim.REVIEW_FLAG)[XDim.REVIEW_FLAG]
         .values
     )
