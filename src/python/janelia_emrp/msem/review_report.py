@@ -19,14 +19,13 @@ import xarray
 from janelia_emrp.msem.ingestion_ibeammsem.assembly import get_effective_scans
 from janelia_emrp.msem.ingestion_ibeammsem.id import get_magc_ids, get_serial_ids
 from janelia_emrp.msem.ingestion_ibeammsem.review.review import (
-    get_excluded_scans, get_review, get_review_action, get_unique_flag_sets
+    get_excluded_scans, get_flag_sets_without_action, get_review, get_review_actions,
+    get_unique_flag_sets
 )
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
-from janelia_emrp.msem.ingestion_ibeammsem.review.reviewerror import FlagSetWithNoActionError
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import REVIEW_STRATEGY
 from janelia_emrp.msem.ingestion_ibeammsem.roi import get_mfovs
-from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
 from janelia_emrp.root_logger import init_logger
 
@@ -38,17 +37,6 @@ logger = logging.getLogger(__name__)
 #   /groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_60/xlog/xlog_wafer_60.zarr
 WAFER_XLOG_PATH_PATTERN = \
     "/groups/hess/hesslab/ibeammsem/system_02/wafers/wafer_{wafer_id}/xlog/xlog_wafer_{wafer_id}.zarr"
-
-
-# Scans already excluded from import for each wafer.
-# These are the known bad scans we account for when running 01_msem_to_render.sh,
-# so the review data for them is not a new problem.
-# NOTE: keep in sync with the WAFER_EXCLUDED_SCAN_ARG values in
-#       src/scripts/msem_60_61/01_msem_to_render.sh
-WAFER_EXCLUDED_SCANS: dict[str, List[int]] = {
-    "60": [0, 1, 2, 3, 7, 19],
-    "61": [0, 1, 2, 3, 17],
-}
 
 # number of slabs to process between progress messages
 SLAB_PROGRESS_INTERVAL = 5
@@ -91,19 +79,9 @@ def format_mfov_count(mfovs: List[int],
     return f"{count_phrase} {format_mfov_list(mfovs)}"
 
 
-def find_undefined_review_flags(xlog: xarray.Dataset) -> List[int]:
-    """Returns the review flag values in the xlog that ReviewFlag does not define.
-
-    The acquisition side can add flags to the xlog before ReviewFlag knows about them,
-    which makes ReviewFlag(value) raise a ValueError for those flags.
-    """
-    defined_flag_values = {flag.value for flag in ReviewFlag}
-    return [int(flag_value)
-            for flag_value in xlog[XVar.REVIEW][XDim.REVIEW_FLAG].values
-            if int(flag_value) not in defined_flag_values]
-
-
 def report_slab(xlog: xarray.Dataset,
+                review: xarray.DataArray,
+                review_actions: xarray.DataArray | None,
                 magc_slab: int,
                 review_strategy: int,
                 show_all_scans: bool,
@@ -115,8 +93,7 @@ def report_slab(xlog: xarray.Dataset,
     restricts the report to the effective scans and mfovs of the slab.
     Padded items have no flags set and have no action in any strategy.
 
-    Scans in exclude_scan_list are left out of the report entirely since they
-    are already excluded from import.
+    Scans in exclude_scan_list are left out of the report entirely.
 
     In problems_only mode, the flag sets and the nominal scans are not printed,
     leaving just the scans that have at least one non-USE action.
@@ -135,7 +112,7 @@ def report_slab(xlog: xarray.Dataset,
                        f"to report and {len(mfovs)} mfovs, skipping")
         return []
 
-    review = get_review(xlog=xlog, slab=magc_slab, scan=scans, mfov=mfovs).load()
+    review = review.sel(scan=scans, slab=magc_slab, mfov=mfovs)
 
     serial_slab = get_serial_ids(xlog=xlog, magc_ids=[magc_slab])[0]
     slab_context = f"magc slab {magc_slab} (serial slab {serial_slab})"
@@ -155,25 +132,19 @@ def report_slab(xlog: xarray.Dataset,
             logger.warning(f"{func_name}: cannot list the flag sets of magc slab {magc_slab} "
                            f"because the xlog has an undefined review flag ({e})")
 
+    if review_actions is None:
+        logger.warning(f"{func_name}: skipping the action summary of magc slab {magc_slab} "
+                       f"since review actions could not be derived")
+        return []
+
+    review_actions_slab = review_actions.sel(scan=scans, slab=magc_slab, mfov=mfovs)
+
     problem_scans: List[int] = []
     nominal_scan_count = 0
     for scan in scans:
         mfovs_for_action: dict[str, List[int]] = {}
         for mfov in mfovs:
-            try:
-                action_name = get_review_action(review_flag=review,
-                                                scan=scan,
-                                                slab=magc_slab,
-                                                mfov=mfov,
-                                                review_strategy=review_strategy).name
-            except FlagSetWithNoActionError as e:
-                # get_review_action raises with the set of flags that has no action
-                undefined_flags = e.args[0] if e.args and isinstance(e.args[0], (set, frozenset)) else None
-                action_name = "UNDEFINED_ACTION_FOR_" + (format_flag_set(frozenset(undefined_flags))
-                                                         if undefined_flags is not None else str(e))
-            except ValueError as e:
-                # ReviewFlag(value) raises for review flags the xlog has but this code does not define
-                action_name = f"UNDEFINED_REVIEW_FLAG ({e})"
+            action_name = ReviewAction(review_actions_slab.sel(scan=scan, mfov=mfov).item()).name
             mfovs_for_action.setdefault(action_name, []).append(mfov)
 
         is_nominal_scan = list(mfovs_for_action) == [ReviewAction.USE.name]
@@ -233,7 +204,7 @@ def report_review(wafer_xlog_path: Path,
                   review_strategy: int,
                   show_all_scans: bool,
                   report_excluded_scans: bool,
-                  exclude_scan_list: List[int],
+                  exclude_scan_list: List[int] | None,
                   problems_only: bool):
 
     func_name = "report_review"
@@ -253,19 +224,35 @@ def report_review(wafer_xlog_path: Path,
         raise RuntimeError(f"{wafer_xlog_path} has no '{XVar.REVIEW}' variable, "
                            f"so the acquisition review has not been added to this xlog")
 
+    review = get_review(xlog=xlog).load()
+
     logger.info(f"{func_name}: using review strategy {review_strategy} with "
                 f"{len(REVIEW_STRATEGY[review_strategy])} defined flag sets")
 
-    undefined_review_flags = find_undefined_review_flags(xlog=xlog)
-    if len(undefined_review_flags) > 0:
-        logger.warning(f"{func_name}: the xlog has review flag values {undefined_review_flags} that "
-                       f"ReviewFlag does not define (it defines 0 to "
-                       f"{max(flag.value for flag in ReviewFlag)}), so mfovs with those flags get "
-                       f"reported as UNDEFINED_REVIEW_FLAG.  NOTE: msem_to_render.py fails outright "
-                       f"for these, so ReviewFlag needs to be updated before importing.")
+    review_actions = None
+    try:
+        flag_sets_without_action = get_flag_sets_without_action(review=review,
+                                                                review_strategy=review_strategy)
+    except ValueError as e:
+        # the xlog has review flag values that ReviewFlag does not define
+        logger.warning(f"{func_name}: cannot derive review actions ({e}), "
+                       f"ReviewFlag needs to be updated before importing")
+    else:
+        if len(flag_sets_without_action) > 0:
+            for flag_set, scans in flag_sets_without_action.items():
+                logger.warning(f"{func_name}: flag set {format_flag_set(flag_set)} has no action in "
+                               f"review strategy {review_strategy} and is present in scans {scans}, "
+                               f"add an action before importing")
+        else:
+            review_actions = get_review_actions(review=review, review_strategy=review_strategy)
 
-    logger.info(f"{func_name}: ignoring the {len(exclude_scan_list)} scans already excluded "
-                f"from import: {sorted(exclude_scan_list)}")
+    if exclude_scan_list is None:
+        exclude_scan_list = get_excluded_scans(review=review, review_strategy=review_strategy)
+        logger.info(f"{func_name}: derived the scans that import excludes "
+                    f"with review strategy {review_strategy}")
+
+    logger.info(f"{func_name}: ignoring the {len(exclude_scan_list)} scans that import "
+                f"excludes: {sorted(exclude_scan_list)}")
 
     slabs_to_report = resolve_magc_slabs(xlog=xlog,
                                          magc_slab_list=magc_slab_list,
@@ -290,6 +277,8 @@ def report_review(wafer_xlog_path: Path,
                             f"({slab_index + len(batch)} of {len(slabs_to_report)} slabs)")
 
         problem_scans = report_slab(xlog=xlog,
+                                    review=review,
+                                    review_actions=review_actions,
                                     magc_slab=magc_slab,
                                     review_strategy=review_strategy,
                                     show_all_scans=show_all_scans,
@@ -312,9 +301,7 @@ def report_review(wafer_xlog_path: Path,
                             f"scans {problem_scans}")
 
     if report_excluded_scans:
-        # NOTE: this loads the review array for the entire wafer, so it is slow
-        logger.info(f"{func_name}: loading review array for the entire wafer to find excluded scans ...")
-        excluded_scans = get_excluded_scans(xlog=xlog, review_strategy=review_strategy)
+        excluded_scans = get_excluded_scans(review=review, review_strategy=review_strategy)
         logger.info(f"{func_name}: review strategy {review_strategy} excludes "
                     f"{len(excluded_scans)} scans for the entire wafer: {sorted(excluded_scans)}")
 
@@ -358,8 +345,7 @@ def main(arg_list: List[str]):
     )
     parser.add_argument(
         "--exclude_scan",
-        help="Leave these scans out of the report since they are already excluded from import "
-             f"(e.g. 0 1 2 3 17).  Defaults to the known scans for the wafer {WAFER_EXCLUDED_SCANS}.  "
+        help="Leave these scans out of the report (e.g. 0 1 2 3 17).  "
              "Specify with no values to report every scan.",
         type=int,
         nargs='*',
@@ -409,25 +395,13 @@ def main(arg_list: List[str]):
             parser.error(f"serial_slab_range {first_serial_slab} {last_serial_slab} is not an increasing range")
         serial_slab_list.extend(range(first_serial_slab, last_serial_slab + 1))
 
-    if args.exclude_scan is not None:
-        exclude_scan_list = args.exclude_scan
-    elif args.wafer_id in WAFER_EXCLUDED_SCANS:
-        exclude_scan_list = WAFER_EXCLUDED_SCANS[args.wafer_id]
-    else:
-        exclude_scan_list = []
-        if args.problems_only:
-            wafer_context = "no wafer_id was specified" if args.wafer_id is None \
-                else f"wafer {args.wafer_id} has no known excluded scans"
-            logger.warning(f"{wafer_context}, so scans already excluded from import may show up "
-                           f"as problems, use --exclude_scan to leave them out")
-
     report_review(wafer_xlog_path=wafer_xlog_path,
                   magc_slab_list=args.magc_slab,
                   serial_slab_list=serial_slab_list,
                   review_strategy=args.review_strategy,
                   show_all_scans=args.show_all_scans,
                   report_excluded_scans=args.report_excluded_scans,
-                  exclude_scan_list=exclude_scan_list,
+                  exclude_scan_list=args.exclude_scan,
                   problems_only=args.problems_only)
 
 

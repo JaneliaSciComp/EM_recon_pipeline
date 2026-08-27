@@ -30,9 +30,8 @@ E.g., in strategy #1, we are less conservative and ingest more edge cases.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
+import xarray as xr
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewerror import (
     FlagSetWithNoActionError,
@@ -44,9 +43,6 @@ from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import (
 )
 from janelia_emrp.msem.ingestion_ibeammsem.xdim import XDim
 from janelia_emrp.msem.ingestion_ibeammsem.xvar import XVar
-
-if TYPE_CHECKING:
-    import xarray as xr
 
 
 def get_review(
@@ -64,44 +60,80 @@ def get_review(
     return xlog[XVar.REVIEW].sel(scan=scan, slab=slab, mfov=mfov)
 
 
+def _get_flag_sets(
+    review: xr.DataArray,
+) -> tuple[list[frozenset[ReviewFlag]], np.ndarray]:
+    """Unique flag sets of a review array and their inverse mapping.
+
+    Returns the unique flag sets
+    and for every MFOV the index of its flag set into the unique flag sets.
+    The MFOVs are ordered by the review dimensions without review_flag.
+    """
+    review = review.transpose(..., XDim.REVIEW_FLAG)
+    used_flags = review.any(tuple(set(review.dims) - {XDim.REVIEW_FLAG}))
+    n_used_flags = used_flags.sum().item()
+
+    if n_used_flags > np.iinfo(np.uint64).bits:
+        raise NotImplementedError(f"{n_used_flags=} do not fit into uint64 codes")
+
+    review = review.isel({XDim.REVIEW_FLAG: used_flags})
+    flag_values = review[XDim.REVIEW_FLAG].values
+    # encode flag patterns as integers
+    values = review.values.reshape(-1, flag_values.size)
+    weights = np.left_shift(np.uint64(1), np.arange(flag_values.size, dtype=np.uint64))
+    _, first_indices, inverse = np.unique(
+        values @ weights, return_index=True, return_inverse=True
+    )
+    flag_sets = [
+        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[pattern])
+        for pattern in values[first_indices]
+    ]
+    return flag_sets, inverse
+
+
 def get_unique_flag_sets(review: xr.DataArray) -> set[frozenset[ReviewFlag]]:
     """Unique flag sets present in a review array."""
-    flag_patterns = np.unique(
-        review.stack(all_mfovs=tuple(set(review.dims) - {XDim.REVIEW_FLAG})).transpose(
-            "all_mfovs", ...
-        ),
-        axis=0,
+    flag_sets, _ = _get_flag_sets(review)
+    return set(flag_sets)
+
+
+def get_review_actions(review: xr.DataArray, review_strategy: int) -> xr.DataArray:
+    """Review actions of all MFOVs in the review array given a review strategy.
+
+    Returns an array of ReviewAction integer values
+    with dimensions scan, slab, and mfov.
+    """
+    flag_sets, inverse = _get_flag_sets(review)
+    actions = np.array(
+        [REVIEW_STRATEGY[review_strategy][flag_set] for flag_set in flag_sets]
     )
-    flag_values = review[XDim.REVIEW_FLAG].values
-    return {
-        frozenset(ReviewFlag(flag_value) for flag_value in flag_values[flag_pattern])
-        for flag_pattern in flag_patterns
-    }
+    template = review.isel({XDim.REVIEW_FLAG: 0}, drop=True)
+    return template.copy(data=actions[inverse].reshape(template.shape))
 
 
 def get_review_action(
-    review_flag: xr.DataArray, scan: int, slab: int, mfov: int, review_strategy: int
+    review: xr.DataArray, scan: int, slab: int, mfov: int, review_strategy: int
 ) -> ReviewAction:
-    """Gets the review action of an MFOV given a review flag array.
+    """Gets the review action of an MFOV given a review array.
 
-    The review flag array must contain the MFOV of interest.
+    The review array must contain the MFOV of interest.
 
     Possible use:
-    review_flag_slab = get_review(slab=0).load()
+    review_slab = get_review(slab=0).load()
     for scan in scans:
         for mfov in mfovs:
-            action = get_review_action(review_flag_slab, scan=scan, slab=0, mfov=mfov)
+            action = get_review_action(review_slab, scan=scan, slab=0, mfov=mfov)
             if action is Action.USE:
                 ...
             elif action is Action.WITH_Z_MASK:
                 ...
     """
-    review_flag_mfov = review_flag.expand_dims(
-        tuple({XDim.SCAN, XDim.SLAB, XDim.MFOV} - set(review_flag.dims))
+    review_mfov = review.expand_dims(
+        tuple({XDim.SCAN, XDim.SLAB, XDim.MFOV} - set(review.dims))
     ).sel(scan=scan, slab=slab, mfov=mfov)
     key_flags = frozenset(
         ReviewFlag(flag_value)
-        for flag_value in review_flag_mfov.where(review_flag_mfov)
+        for flag_value in review_mfov.where(review_mfov)
         .dropna(XDim.REVIEW_FLAG)[XDim.REVIEW_FLAG]
         .values
     )
@@ -121,7 +153,38 @@ def has_flag(
     )
 
 
-def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
+def get_flag_sets_without_action(
+    review: xr.DataArray, review_strategy: int
+) -> dict[frozenset[ReviewFlag], list[int]]:
+    """Flag sets of a review array that the review strategy does not cover.
+
+    Returns a mapping
+    from each flag set without an action
+    to the sorted scans containing that flag set.
+    """
+    flag_sets, inverse = _get_flag_sets(review)
+    flag_sets_without_action = [
+        (index, flag_set)
+        for index, flag_set in enumerate(flag_sets)
+        if flag_set not in REVIEW_STRATEGY[review_strategy]
+    ]
+    if not flag_sets_without_action:
+        return {}
+    template = review.transpose(..., XDim.REVIEW_FLAG).isel(
+        {XDim.REVIEW_FLAG: 0}, drop=True
+    )
+    inverse = inverse.reshape(template.shape)
+    scan_axis = template.dims.index(XDim.SCAN)
+    other_axes = tuple(axis for axis in range(inverse.ndim) if axis != scan_axis)
+    return {
+        flag_set: template[XDim.SCAN]
+        .values[(inverse == index).any(other_axes)]
+        .tolist()
+        for index, flag_set in flag_sets_without_action
+    }
+
+
+def check_review_strategy(review: xr.DataArray, review_strategy: int) -> None:
     """Checks that the review strategy covers all cases in the review array.
 
     Raises:
@@ -129,29 +192,37 @@ def check_review_strategy(xlog: xr.Dataset, review_strategy: int) -> None:
             the review array contains flag sets without an action,
             add entries to the review strategy.
     """
-    flag_sets_without_action = get_unique_flag_sets(get_review(xlog=xlog)) - set(
-        REVIEW_STRATEGY[review_strategy].keys()
+    flag_sets_without_action = get_flag_sets_without_action(
+        review=review, review_strategy=review_strategy
     )
     if flag_sets_without_action:
         raise FlagSetWithNoActionError(
             f"add actions to {review_strategy=}"
-            f" for these flag sets: {flag_sets_without_action}"
+            f" for these flag sets and the scans containing them:"
+            f" {flag_sets_without_action}"
         )
 
 
-def get_excluded_scans(xlog: xr.Dataset, review_strategy: int) -> list[int]:
+def get_excluded_scans(review: xr.DataArray, review_strategy: int) -> list[int]:
     """Scans that we exclude from ingestion.
 
     A scan is excluded
     if all its MFOVs map to ReviewAction.NO_Z_DROP
     under the review strategy.
+    The review array must cover all slabs and MFOVs of the wafer.
     """
     no_z_drop_flag_sets = get_flag_sets_with_action(
         review_strategy=review_strategy, action=ReviewAction.NO_Z_DROP
     )
-    review = get_review(xlog=xlog).load()
-    return [
-        scan.item()
-        for scan in review[XDim.SCAN]
-        if get_unique_flag_sets(review.sel(scan=scan)) <= no_z_drop_flag_sets
-    ]
+    used_flags = review.any((XDim.SCAN, XDim.SLAB, XDim.MFOV))
+    review = review.isel({XDim.REVIEW_FLAG: used_flags})
+    used_values = set(review[XDim.REVIEW_FLAG].values.tolist())
+    no_z_drop = xr.zeros_like(review.isel({XDim.REVIEW_FLAG: 0}, drop=True))
+    for flag_set in no_z_drop_flag_sets:
+        # a set requiring a flag that never occurs cannot match any cell
+        if not flag_set <= used_values:
+            continue
+        flag_pattern = review[XDim.REVIEW_FLAG].isin(list(flag_set))
+        no_z_drop = no_z_drop | (review == flag_pattern).all(XDim.REVIEW_FLAG)
+    excluded = no_z_drop.all((XDim.SLAB, XDim.MFOV))
+    return review[XDim.SCAN][excluded].values.tolist()

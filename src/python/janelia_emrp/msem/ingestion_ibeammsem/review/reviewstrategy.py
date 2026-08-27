@@ -24,6 +24,7 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
         fset({Flag.NOMINAL}): Action.USE,
         fset({Flag.DISTORTION_Y_LINEAR_MILD}): Action.USE,
         fset({Flag.DISTORTION_Y_NONLINEAR_MAYBE}): Action.USE,
+        fset({Flag.COMPRESSED_LINES}): Action.USE,
         # Action.WITH_Z_MASK
         fset({Flag.NO_FILE}): Action.WITH_Z_MASK,
         fset({Flag.OFFSET_LOSS}): Action.WITH_Z_MASK,
@@ -39,7 +40,10 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
         ): Action.NO_Z_DROP,
         fset({Flag.REDEPOSITED_MATERIAL}): Action.NO_Z_DROP,
         fset(
-            {Flag.REDEPOSITED_MATERIAL, Flag.DISTORTION_Y_NONLINEAR_MAYBE}
+            {
+                Flag.REDEPOSITED_MATERIAL,
+                Flag.DISTORTION_Y_NONLINEAR_MAYBE,
+            }
         ): Action.NO_Z_DROP,
         fset(
             {
@@ -50,6 +54,18 @@ REVIEW_STRATEGY: dict[int, dict[frozenset[Flag], Action]] = {
         ): Action.NO_Z_DROP,
         fset({Flag.DEPLETED}): Action.NO_Z_DROP,
         fset({Flag.NO_SAMPLE_IN_SLAB_NO_LOSS}): Action.NO_Z_DROP,
+        fset(
+            {
+                Flag.NO_SAMPLE_IN_SLAB_NO_LOSS,
+                Flag.DISTORTION_Y_NONLINEAR_MAYBE,
+            }
+        ): Action.NO_Z_DROP,
+        fset(
+            {
+                Flag.NO_SAMPLE_IN_SLAB_NO_LOSS,
+                Flag.TEST,
+            }
+        ): Action.NO_Z_DROP,
         fset({Flag.TEST}): Action.NO_Z_DROP,
     },
     # 1: add your custom strategy

@@ -28,7 +28,7 @@ from janelia_emrp.msem.scan_fit_parameters import ScanFitParameters, WAFER_60_61
 from janelia_emrp.msem.slab_info import load_slab_info, ContiguousOrderedSlabGroup
 from janelia_emrp.root_logger import init_logger
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewstrategy import REVIEW_STRATEGY
-from janelia_emrp.msem.ingestion_ibeammsem.review.review import check_review_strategy, get_excluded_scans, get_review, get_review_action, has_flag
+from janelia_emrp.msem.ingestion_ibeammsem.review.review import check_review_strategy, get_excluded_scans, get_review, get_review_actions
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewaction import ReviewAction
 from janelia_emrp.msem.ingestion_ibeammsem.review.reviewflag import ReviewFlag
 
@@ -166,10 +166,14 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
     else:
         raise RuntimeError(f"cannot find wafer xlog: {wafer_xlog_path}")
 
-    check_review_strategy(xlog=xlog, review_strategy=review_strategy)
+    review = get_review(xlog=xlog).load()
+    check_review_strategy(review=review, review_strategy=review_strategy)
 
-    excluded_scans: set[int] = set(get_excluded_scans(xlog=xlog, review_strategy=review_strategy))
+    excluded_scans: set[int] = set(get_excluded_scans(review=review, review_strategy=review_strategy))
     logger.info(f"{func_name}: review strategy {review_strategy} excludes scans {sorted(excluded_scans)}")
+
+    review_actions = get_review_actions(review=review, review_strategy=review_strategy)
+    review_no_file = review.sel(review_flag=ReviewFlag.NO_FILE)
 
     logger.info(f"{func_name}: loading slab info, {wafer_id=}, number_of_slabs_per_group={number_of_slabs_per_render_project}")
     
@@ -250,7 +254,8 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
 
             logger.info(f'{func_name}: found {len(scans)} scans to import for stack {stack}')
 
-            review_slab = get_review(xlog=xlog, slab=slab_info.magc_id).load()
+            review_actions_slab = review_actions.sel(slab=slab_info.magc_id)
+            review_no_file_slab = review_no_file.sel(slab=slab_info.magc_id)
             for scan in scans:
                 slab_scan_sfov_path_list: list[Path] = []
                 slab_scan_sfov_xy_list: list[tuple[int, int]] = []
@@ -262,14 +267,11 @@ def import_slab_stacks_for_wafer(render_ws_host: str,
                 )
                 at_least_one_mfov_with_z = False
                 for mfov in slab_info.mfovs:
-                    action = get_review_action(review_flag=review_slab, scan=scan,
-                                               slab=slab_info.magc_id, mfov=mfov,
-                                               review_strategy=review_strategy)
+                    action = ReviewAction(review_actions_slab.sel(scan=scan, mfov=mfov).item())
                     if action is ReviewAction.NO_Z_DROP:
                         continue
                     at_least_one_mfov_with_z = True
-                    if has_flag(review=review_slab, scan=scan, slab=slab_info.magc_id,
-                                mfov=mfov, flag=ReviewFlag.NO_FILE):
+                    if review_no_file_slab.sel(scan=scan, mfov=mfov).item():
                         continue
                     mfov_path_list, mfov_xys = get_xys_sfov_and_paths(xlog=xlog,
                                                                       scan=scan,
