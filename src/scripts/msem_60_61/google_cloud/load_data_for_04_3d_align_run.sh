@@ -80,6 +80,9 @@ On ${VM_LABEL}, run:
 
 # remove collections from previous run
 
+./other/remove-match-collections.sh
+# for match number prompt, enter:    1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+
 ./other/remove-stacks.sh
 # for [r]emoved or [k]ept prompt, enter:  k
 # for stack number prompt, enter:         1
@@ -114,6 +117,9 @@ After the run completes (typically 4 to 5 hours), on ${VM_LABEL}, run:
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
+
+# layer-as-tile match collection dump takes ?
+./db-dump-google-collections.sh --db match --stage ${LAYER_AS_TILE_STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_lat
 
 # 3d render collection dump takes 2 to 3 minutes
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d
