@@ -131,7 +131,7 @@ def main():
                 plot(pdf, r)
         print("wrote", args.plot_out)
     if args.json_out:
-        # value = 1-based layer number of the peak (matches the importer's scan numbering)
+        # value = xlog scan number of the peak, matching the name in the render tile IDs
         projects = {}  # slabs grouped by decade of id_serial
         for r in results:
             for i in r["slabs"]:
@@ -139,7 +139,7 @@ def main():
                 lo = sid // 10 * 10
                 proj = f"{r['wafer']}_serial_{lo:03d}_to_{lo + 9:03d}"
                 projects.setdefault(proj, {})[f"{r['wafer']}_s{sid:03d}"] = (
-                    int(r["layer_no"][r["peak_scan"][i], i]) if r["has_cutoff"][i] else None)
+                    int(r["scans"][r["peak_scan"][i]]) if r["has_cutoff"][i] else None)
         args.json_out.write_text(json.dumps(
             {"owner": args.json_out.name.split(".")[0],
              "project_to_slab_peak_scan": projects}, indent=2))
