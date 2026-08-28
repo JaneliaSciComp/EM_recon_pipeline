@@ -1,10 +1,8 @@
 """Per-slab substrate % inside the ROI vs scan, with peak/cutoff detection.
 
-ROI      = sfovs with signed distance_roi <= 0 (negative is inside).
-slab_end = logged scan count per slab; anything at or past it is not part of the slab.
-DISCARD_SCANS are dropped outright, per wafer, in `scan` numbering.
+ROI = sfovs with signed distance_roi <= 0 (negative is inside).
 
-Needs these datasets in each xlog.zarr: substrate, distance_roi, scan, id_serial, slab_end.
+Needs these datasets in each xlog.zarr: substrate, distance_roi, scan, id_serial.
 """
 import argparse
 import json
@@ -19,7 +17,6 @@ import zarr
 from matplotlib.backends.backend_pdf import PdfPages
 
 ROWS, COLS = 4, 5  # subplots per PDF page
-DISCARD_SCANS = {"w60": [0, 1, 2, 3, 21, 22, 23], "w61": [0, 1, 2, 3, 21]}
 
 
 def analyze(path, wafer, threshold):
@@ -29,7 +26,6 @@ def analyze(path, wafer, threshold):
     in_roi = arr("distance_roi")[:] <= 0  # (slab, mfov, sfov)
     scans = arr("scan")[:]  # real scan numbers; they start at -5, so index 5 == scan 0
     id_serial = arr("id_serial")[:]  # id_serial renumbers the slabs
-    slab_end = arr("slab_end")[:]
     n_scan, n_slab = sub.shape[:2]
 
     curves = np.full((n_scan, n_slab), np.nan)  # read in slab-chunk blocks; substrate is big
@@ -40,34 +36,11 @@ def analyze(path, wafer, threshold):
             warnings.simplefilter("ignore", RuntimeWarning)
             curves[:, lo:hi] = np.nanmean(s.reshape(n_scan, hi - lo, -1), axis=2)
 
-    discard = DISCARD_SCANS[wafer]
-    dropped = np.isin(scans, discard)
-    print(f"[{wafer}] discarding scans {discard}: "
-          f"{(dropped[:, None] & np.isfinite(curves)).sum()} layers")
-    curves[dropped] = np.nan
-
-    past_end = np.isfinite(curves) & (scans[:, None] >= slab_end[None, :])
-    if past_end.any():
-        stray = np.flatnonzero(past_end.any(0))
-        print(f"[{wafer}] dropping {past_end.sum()} layers past slab_end in slabs "
-              + ", ".join(f"id {id_serial[i]:.0f} (+{past_end[:, i].sum()})" for i in stray))
-        curves[past_end] = np.nan
-
     valid = np.isfinite(curves)
     n_layers = valid.sum(0)
-    layer_no = np.cumsum(valid, axis=0)  # 1-based layer number within each slab
     slabs = sorted((i for i in range(n_slab) if n_layers[i]), key=lambda i: id_serial[i])
     print(f"[{wafer}] {len(slabs)}/{n_slab} slabs with data, {in_roi.sum()} ROI sfovs, "
           f"{n_layers.sum()} layers")
-
-    # sanity check: a full slab is slab_end scans minus the discarded ones
-    want = np.array([np.count_nonzero((scans >= 0) & (scans < slab_end[i]) & ~dropped)
-                     for i in slabs])
-    odd = np.flatnonzero(want != n_layers[slabs])
-    if len(odd):
-        print(f"[{wafer}] {len(odd)} slabs off the expected layer count, e.g. "
-              + ", ".join(f"id {id_serial[slabs[i]]:.0f} ({n_layers[slabs[i]]} vs {want[i]})"
-                          for i in odd[:5]))
 
     # cutoff = scan of the peak, but only where the peak clears the threshold
     peak_scan = np.nanargmax(np.where(valid, curves, -np.inf), axis=0)
@@ -78,7 +51,7 @@ def analyze(path, wafer, threshold):
     if below:
         print(f"[{wafer}]   slabs with data but no cutoff: {', '.join(below)}")
     return dict(wafer=wafer, scans=scans, curves=curves, id_serial=id_serial, slabs=slabs,
-                n_layers=n_layers, layer_no=layer_no, peak_scan=peak_scan, peak=peak,
+                n_layers=n_layers, peak_scan=peak_scan, peak=peak,
                 has_cutoff=has_cutoff)
 
 
@@ -92,7 +65,7 @@ def plot(pdf, r):
             if r["has_cutoff"][slab]:
                 x, y = r["scans"][r["peak_scan"][slab]], r["peak"][slab]
                 ax.plot(x, y, "o", color="red", ms=5)
-                ax.annotate(f" #{r['layer_no'][r['peak_scan'][slab], slab]}", (x, y),
+                ax.annotate(f" scan {r['scans'][r['peak_scan'][slab]]}", (x, y),
                             color="red", fontsize=8, va="center")
         for ax in axes.ravel()[len(r["slabs"]) - page :]:
             ax.axis("off")
@@ -131,7 +104,7 @@ def main():
                 plot(pdf, r)
         print("wrote", args.plot_out)
     if args.json_out:
-        # value = xlog scan number of the peak, matching the name in the render tile IDs
+        # value = the `scan` number of the peak
         projects = {}  # slabs grouped by decade of id_serial
         for r in results:
             for i in r["slabs"]:
