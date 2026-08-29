@@ -33,13 +33,13 @@ def sfov_draw_order(wafer: str) -> np.ndarray:
 
 
 def draw_order_indices(n_mfovs: int, wafer: str) -> np.ndarray:
-    """Flat indices (mfov, sfov) of the draw order.
+    """Flat SFOV indices in draw order.
 
-    Each MFOV draws its SFOVs in the wafer render order from sfov_draw_order,
-    and the MFOVs keep their natural order so later MFOVs draw over earlier ones.
+    We draw MFOVs acquired first on top.
+    Within one MFOV the SFOVs follow sfov_draw_order for the wafer.
     """
     return (
-        np.arange(n_mfovs)[:, np.newaxis] * N_BEAMS + sfov_draw_order(wafer)
+        np.arange(n_mfovs)[::-1, np.newaxis] * N_BEAMS + sfov_draw_order(wafer)
     ).ravel()
 
 
