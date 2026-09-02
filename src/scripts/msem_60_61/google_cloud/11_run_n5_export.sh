@@ -80,6 +80,7 @@ SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 SPARK_PROPS="spark.default.parallelism=240,spark.executor.instances=${MAX_EXECUTORS}"
 SPARK_PROPS="${SPARK_PROPS},spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
+SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
 
 # see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/spark-runtime-1.1
 # see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/dataproc-serverless-versions
