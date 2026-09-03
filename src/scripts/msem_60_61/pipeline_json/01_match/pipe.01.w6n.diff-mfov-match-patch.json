@@ -295,8 +295,9 @@
   ],
   "mfovMontagePatch": {
     "addIsolatedEdgeLabel": true,
-    "resinMfovStartPositionMatchWeight": 0.0001,
     "startPositionMatchWeight": 0.001,
+    "resinMfovStartPositionMatchWeight": 0.0001,
+    "crossMfovStartPositionMatchWeight": 0.00001,
     "xyNeighborFactor": 0.6,
     "numberOfMFOVsPerBatch": 10,
     "patchUnconnectedPairsWithinAnMfovUsingStageCoordinates": true,
