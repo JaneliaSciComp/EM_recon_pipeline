@@ -118,14 +118,16 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 # remove everything except icc_par stacks
 ./other/remove-stacks.sh
+
 # for [r]emoved or [k]ept prompt, enter:  k
 # for stack number prompt, enter:    7 14 21 28 35 42 49 56 63 70
 
 # -------------------------------------
 On launch box, run:
 
-# 100 4-core executor runs take ~90 minutes to complete and  7 concurrent runs will use 2828 cores (404 cores per run)
-#  25 4-core executor runs take  ~6 hours   to complete and 26 concurrent runs will use 2704 cores (104 cores per run)
+# 300 4-core executor run  took  40 minutes for w61-s125-to-129
+# 100 4-core executor runs take ~90 minutes and  7 concurrent runs will use 2828 cores (404 cores per run)
+#  25 4-core executor runs take  ~6 hours   and 26 concurrent runs will use 2704 cores (104 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01.w6n.diff-mfov-match-patch.json  25  4  premium  25  ${BATCH_NAME}  disableDynamic
 
