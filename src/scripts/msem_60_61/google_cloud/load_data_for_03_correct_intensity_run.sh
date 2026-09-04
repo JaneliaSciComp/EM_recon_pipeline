@@ -92,6 +92,9 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 # remove collections from previous run
 
+./other/remove-match-collections.sh
+# for match number prompt, enter:    1 2 3 4 5 6 7 8 9 10
+
 ./other/remove-stacks.sh
 # for [r]emoved or [k]ept prompt, enter:  k
 # for stack number prompt, enter:         1
