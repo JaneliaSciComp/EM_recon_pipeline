@@ -120,7 +120,7 @@ On launch box, run:
 #  50 4-core executor runs take ~90 minutes to complete and 14 concurrent runs will use 2856 cores (204 cores per run)
 #  20 4-core executor runs take  ~4 hours   to complete and 26 concurrent runs will use 2184 cores ( 84 cores per run)
 
-/02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.02.w6n.align-stitch-only.json  20  4  premium  20  ${BATCH_NAME}  disableDynamic
+./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.02.w6n.align-stitch-only.json  20  4  premium  20  ${BATCH_NAME}  disableDynamic
 
 # launch information:
 ...
