@@ -15,7 +15,7 @@
     "layerRootDirectory": "gs://janelia-spark-test/tiles_layer",
     "dynamicLayerStackSuffix": "_lat",
     "renderedLayerStackSuffix": "r",
-    "renderedLayerRunTimestamp": "20260825_150000",
+    "renderedLayerRunTimestamp": "20260904_180000",
     "alignedLayerStackSuffix" : "_align",
     "align3DSfovStackSuffix": "_3d"
   }
