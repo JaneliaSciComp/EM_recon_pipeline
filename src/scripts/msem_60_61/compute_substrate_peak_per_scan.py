@@ -113,9 +113,9 @@ def main():
                 proj = f"{r['wafer']}_serial_{lo:03d}_to_{lo + 9:03d}"
                 projects.setdefault(proj, {})[f"{r['wafer']}_s{sid:03d}"] = (
                     int(r["scans"][r["peak_scan"][i]]) if r["has_cutoff"][i] else None)
+        # NOTE: the render owner is not included here, it is defined in each pipeline's tileRemoval block
         args.json_out.write_text(json.dumps(
-            {"owner": args.json_out.name.split(".")[0],
-             "project_to_slab_peak_scan": projects}, indent=2))
+            {"project_to_slab_peak_scan": projects}, indent=2))
         print("wrote", args.json_out)
 
 
