@@ -7,13 +7,20 @@
 
 set -e
 
-MAX_EXECUTORS=10       # 10 executors for w61_s099 pixel with 82 z layers took 4 hours, 15 minutes
-                       # 40 executors for w61_s081 pixel with 82 z layers took 2 hours,  1 minute
-                       # 10 executors for w61_s122 mask  with 89 z layers took 1 hour,  30 minutes
-                       # 40 executors for w61_s076 mask  with 89 z layers took 0 hours, 42 minutes
+MAX_EXECUTORS=5        #  5 executors for w61_s083_r00 pixel with 80 z layers took 8 hours, 43 minutes
+                       #  5 executors for w61_s097_r00 pixel with 75 z layers took 6 hours, 52 minutes
+                       #  5 executors for w61_s083_r01 pixel with 80 z layers took 3 hours, 11 minutes
+                       #  5 executors for w61_s097_r01 pixel with 75 z layers took 2 hours, 38 minutes
+                       # 10 executors for w61_s099_r00 pixel with 82 z layers took 4 hours, 15 minutes
+                       # 40 executors for w61_s081_r00 pixel with 82 z layers took 2 hours,  1 minute
+                       # 10 executors for w61_s122_r00 mask  with 89 z layers took 1 hour,  30 minutes
+                       # 40 executors for w61_s076_r00 mask  with 89 z layers took 0 hours, 42 minutes
 
-IP="10.150.0.2"        # a=10.150.0.2  b=10.150.0.3  c=10.150.0.4
-STACK_PREFIX="07"      # set to 07, 08, 09, 10, ...
+IP="10.150.0.8"        # A=10.150.0.2  B=10.150.0.3  C=10.150.0.4   D=10.150.0.5   E=10.150.0.6   F=10.150.0.7
+                       # G=10.150.0.8  H=10.150.0.9  I=10.150.0.10  J=10.150.0.11  K=10.150.0.12  L=10.150.0.13
+
+STACK_PREFIX="13"      # A=07,         B=08,         C=09,          D=10,          E=11,          F=12,
+                       # G=13,         H=14,         I=15,          J=16,          K=17,          L=18 and 19
 
 PIXEL_OR_MASK="pixel"  # mask
 LAUNCH_JOBS="n"        # set to "y" to launch jobs, anything else to just print commands
