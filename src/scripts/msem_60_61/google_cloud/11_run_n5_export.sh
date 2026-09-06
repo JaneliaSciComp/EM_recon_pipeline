@@ -2,19 +2,19 @@
 
 set -e
 
-if (( $# < 5 )); then
+if (( $# < 4 )); then
   echo "
-Usage:    ./11_run_n5_export.sh <render-ws-internal-ip> <render-project> <render-stack> <max-z> <max-executors> [pixel | mask] [skip-timestamp]
+Usage:    ./11_run_n5_export.sh <render-ws-internal-ip> <render-project> <render-stack> <max-executors> [pixel | mask] [skip-timestamp]
 
           max-executors must be at least 2
 
 Examples:
 
-  $0 10.150.0.4 w61_serial_100_to_109 w61_s109_r00_gc_par_align_ic2d 82 100
+  $0 10.150.0.4 w61_serial_100_to_109 w61_s109_r00_gc_par_align_ic2d 100
 
-  $0 10.150.0.4 w61_serial_080_to_089 w61_s080_r00_gc_par_align_ic2d 89 10 mask
+  $0 10.150.0.4 w61_serial_080_to_089 w61_s080_r00_gc_par_align_ic2d 10 mask
 
-  $0 10.150.0.4 w61_serial_070_to_079 w61_s074_r00_gc_par_align_ic2d 96 50 pixel skip-timestamp
+  $0 10.150.0.4 w61_serial_070_to_079 w61_s074_r00_gc_par_align_ic2d 50 pixel skip-timestamp
 "
   exit 1
 fi
@@ -22,7 +22,6 @@ fi
 RENDER_WS_IP="${1}"
 RENDER_PROJECT="${2}"
 STACK="${3}"
-MAX_Z="${4}"
 
 MAX_EXECUTORS="${5}"
 if (( MAX_EXECUTORS < 2 )); then
@@ -94,8 +93,11 @@ ARGS="--baseDataUrl http://${RENDER_WS_IP}:8080/render-ws/v1"
 ARGS="${ARGS} --owner ${RENDER_OWNER} --project ${RENDER_PROJECT} --stack ${STACK}"
 ARGS="${ARGS} --n5Path ${N5_PATH} "
 ARGS="${ARGS} --n5Dataset ${N5_DATASET}"
-ARGS="${ARGS} --tileWidth 2048 --tileHeight 2048 --blockSize 1024,1024,${MAX_Z} --factors 2,2,1"
-ARGS="${ARGS} --minZ 1 --maxZ ${MAX_Z}"
+
+# block z size of 200 will be reset to (stackDeltaZ + 1) when stackDeltaZ < 200
+ARGS="${ARGS} --tileWidth 2048 --tileHeight 2048 --blockSize 1024,1024,200 --factors 2,2,1"
+
+#ARGS="${ARGS} --minZ 1 --maxZ ${MAX_Z}"
 # ARGS="${ARGS} --minX 84000 --maxX 94000 --minY 70000 --maxY 80000"
 ARGS="${ARGS} ${MASK_ARG}"
 
