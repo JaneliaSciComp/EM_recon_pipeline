@@ -29,6 +29,8 @@ LAUNCH_JOBS="n"        # set to "y" to launch jobs, anything else to just print 
 #   w61_s070_r00_gc_icc_par_asoi_3d
 #   w61_s129_r01_gc_icc_par_asoi_3d
 
+# don't forget to remove all w61_..._r01_... entries below for w61_s179 or higher
+
 STACK_NAMES="
 w61_s${STACK_PREFIX}0_r00_gc_icc_par_asoi_3d
 w61_s${STACK_PREFIX}0_r01_gc_icc_par_asoi_3d
