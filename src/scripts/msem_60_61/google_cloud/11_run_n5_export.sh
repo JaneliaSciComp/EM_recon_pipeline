@@ -23,7 +23,7 @@ RENDER_WS_IP="${1}"
 RENDER_PROJECT="${2}"
 STACK="${3}"
 
-MAX_EXECUTORS="${5}"
+MAX_EXECUTORS="${4}"
 if (( MAX_EXECUTORS < 2 )); then
   echo "ERROR: max-executors must be at least 2"
   exit 1
@@ -32,12 +32,12 @@ elif (( MAX_EXECUTORS > 500 )); then
   exit 1
 fi
 
-DATASET_SUFFIX="${6:-pixel}"
-if [[ "${6}" == "mask" ]]; then
+DATASET_SUFFIX="${5:-pixel}"
+if [[ "${5}" == "mask" ]]; then
   MASK_ARG="--exportMask"
-elif [[ "${DATASET_SUFFIX}" == "pixel" || -z "${6}" ]]; then
+elif [[ "${DATASET_SUFFIX}" == "pixel" || -z "${5}" ]]; then
   MASK_ARG=""
-elif (( $# >= 6 )); then
+elif (( $# >= 5 )); then
   echo "ERROR: sixth argument, if provided, must be 'pixel' or 'mask'"
   exit 1
 fi
@@ -52,9 +52,9 @@ RENDER_OWNER="hess_wafers_60_61"
 N5_PATH="gs://janelia-spark-test/hess_wafers_60_61_export"           # /nrs/hess/data/hess_wafers_60_61/export/hess_wafers_60_61.n5
 N5_DATASET="/render/${RENDER_PROJECT}/${STACK}___${DATASET_SUFFIX}"  # /render/w60_serial_360_to_369/w60_s360_r00_d20_gc_align___20250320_131555
 
-if (( $# >=7 )); then
+if (( $# >=6 )); then
 
-  if [[ "${7}" != "skip-timestamp" ]]; then
+  if [[ "${6}" != "skip-timestamp" ]]; then
     echo "ERROR: seventh argument, if provided, must be 'skip-timestamp'"
     exit 1
   fi
