@@ -152,7 +152,7 @@ After the run completes (typically 4 to 5 hours), on ${VM_LABEL}, run:
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
-# layer-as-tile match collection dump takes ?
+# layer-as-tile match collection dump takes 1 to 2 minutes
 ./db-dump-google-collections.sh --db match --stage ${LAYER_AS_TILE_STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_lat
 
 # 3d render collection dump takes 2 to 3 minutes
