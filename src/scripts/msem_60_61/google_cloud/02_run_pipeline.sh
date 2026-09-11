@@ -31,7 +31,7 @@ RENDER_WS_IP="${1}"
 PIPELINE_JSON_REL_PATH="${2}"
 SPARK_EXEC_INSTANCES="${3}"
 SPARK_EXEC_CORES=${4}
-COMPUTE_TIER="${5}"
+DATAPROC_TIER="${5}"
 MAX_EXECUTORS="${6}"
 BATCH_ID_SUFFIX="${7}"
 
@@ -46,27 +46,24 @@ if (( SPARK_EXEC_CORES != 4 && SPARK_EXEC_CORES != 8 && SPARK_EXEC_CORES != 16 )
 fi
 
 # For Dataproc properties, see https://cloud.google.com/dataproc-serverless/docs/concepts/properties.md
-if [ "${COMPUTE_TIER}" == "premium" ]; then
+if [ "${DATAPROC_TIER}" == "premium" ]; then
 
   # For premium compute tier and spark runtime, total of spark.memory.offHeap.size,
   # spark.executor.memory and spark.executor.memoryOverhead must be between 1024mb and 24576mb per core.
   # Note that if not set, spark.executor.memoryOverhead defaults to 0.10 of spark.executor.memory.
 
   SINGLE_CORE_MB=22300 # leave room for spark.executor.memoryOverhead, 22300 + 2230 = 24530 < 24576
-  DATAPROC_TIER="dataproc.tier=premium,"
 
-elif [ "${COMPUTE_TIER}" == "standard" ]; then
+elif [ "${DATAPROC_TIER}" == "standard" ]; then
 
   # For standard compute tier and spark runtime, total of spark.memory.offHeap.size,
   # spark.executor.memory and spark.executor.memoryOverhead must be between 1024mb and 7424mb per core.
   # Note that if not set, spark.executor.memoryOverhead defaults to 0.10 of spark.executor.memory.
 
   SINGLE_CORE_MB=6700 # leave room for spark.executor.memoryOverhead, 6700 + 670 = 7370 < 7424
-  SPARK_PROPS=""
-  DATAPROC_TIER=""
 
 else
-  echo "ERROR: invalid compute tier ${COMPUTE_TIER} (must be 'standard' or 'premium')"
+  echo "ERROR: invalid compute tier ${DATAPROC_TIER} (must be 'standard' or 'premium')"
   exit 1
 fi
 
@@ -95,8 +92,7 @@ fi
 
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
-SPARK_PROPS="${DATAPROC_TIER}spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.executor.compute.tier=${COMPUTE_TIER}"
-SPARK_PROPS="${SPARK_PROPS},spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
+SPARK_PROPS="dataproc.tier=${DATAPROC_TIER},spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
