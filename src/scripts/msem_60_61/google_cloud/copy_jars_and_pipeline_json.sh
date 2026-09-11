@@ -13,7 +13,7 @@ set -e
 
 BASE_GIT_DIR="${1:-/Users/trautmane/projects/git}"
 
-RENDER_JAR_FILE_NAME="render-ws-spark-client-4.3.0-SNAPSHOT-standalone.jar"
+RENDER_JAR_FILE_NAME="render-ws-spark-client-5.0.0-SNAPSHOT-standalone.jar"
 BASE_GOOGLE_BUCKET_DIR="gs://janelia-spark-test/library"
 
 # --------------------------

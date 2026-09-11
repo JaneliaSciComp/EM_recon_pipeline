@@ -81,11 +81,14 @@ SPARK_PROPS="${SPARK_PROPS},spark.dynamicAllocation.maxExecutors=${MAX_EXECUTORS
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
 
-# see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/spark-runtime-1.1
+# The 3.0 runtime provides Spark 4.0.x on Java 21 with Scala 2.13.
+# It is required (not just preferred) because render jars are now compiled for Java 21 and
+# will not load on the Java 17 and Java 11 runtimes used by the 2.x and 1.x runtimes.
+# see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/spark-runtime-3.0
 # see https://cloud.google.com/dataproc-serverless/docs/concepts/versions/dataproc-serverless-versions
-SPARK_VERSION="1.1"
+SPARK_VERSION="3.0"
 
-GS_JAR_URL="gs://janelia-spark-test/library/render-ws-spark-client-4.3.0-SNAPSHOT-standalone.jar"
+GS_JAR_URL="gs://janelia-spark-test/library/render-ws-spark-client-5.0.0-SNAPSHOT-standalone.jar"
 
 CLASS="org.janelia.render.client.spark.n5.N5Client"
 
