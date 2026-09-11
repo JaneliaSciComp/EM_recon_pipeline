@@ -53,6 +53,7 @@ if [ "${COMPUTE_TIER}" == "premium" ]; then
   # Note that if not set, spark.executor.memoryOverhead defaults to 0.10 of spark.executor.memory.
 
   SINGLE_CORE_MB=22300 # leave room for spark.executor.memoryOverhead, 22300 + 2230 = 24530 < 24576
+  DATAPROC_TIER="dataproc.tier=premium,"
 
 elif [ "${COMPUTE_TIER}" == "standard" ]; then
 
@@ -62,6 +63,7 @@ elif [ "${COMPUTE_TIER}" == "standard" ]; then
 
   SINGLE_CORE_MB=6700 # leave room for spark.executor.memoryOverhead, 6700 + 670 = 7370 < 7424
   SPARK_PROPS=""
+  DATAPROC_TIER=""
 
 else
   echo "ERROR: invalid compute tier ${COMPUTE_TIER} (must be 'standard' or 'premium')"
@@ -93,7 +95,7 @@ fi
 
 SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
 
-SPARK_PROPS="spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.executor.compute.tier=${COMPUTE_TIER}"
+SPARK_PROPS="${DATAPROC_TIER}spark.dataproc.driver.compute.tier=${COMPUTE_TIER},spark.dataproc.executor.compute.tier=${COMPUTE_TIER}"
 SPARK_PROPS="${SPARK_PROPS},spark.default.parallelism=240,spark.executor.instances=${SPARK_EXEC_INSTANCES}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
