@@ -123,7 +123,7 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 # -------------------------------------
 On launch box, run:
 
-#  25 4-core executor runs take ?? minutes to complete and 26 concurrent runs will use 2704 cores (104 cores per run)
+#  25 4-core executor runs take 10 minutes to complete and 26 concurrent runs will use 2704 cores (104 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  05_import_sofima/pipe.05.w6n.import-sofima.json  25  4  premium  25  ${BATCH_NAME}  disableDynamic
 
@@ -133,10 +133,10 @@ On launch box, run:
 
 
 # -------------------------------------
-After the run completes (typically ?), on ${VM_LABEL}, run:
+After the run completes, on ${VM_LABEL}, run:
 
 # sofima render collection dump takes 2 to 3 minutes
-./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_s
+./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d_s
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
