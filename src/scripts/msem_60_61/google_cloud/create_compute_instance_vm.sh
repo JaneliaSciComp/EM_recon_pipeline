@@ -110,7 +110,7 @@ if [ -n "${ARG_PRIVATE_NETWORK_IP}" ]; then
 fi
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
-CONTAINER_IMAGE_VERSION="1.0.4"
+CONTAINER_IMAGE_VERSION="1.0.5"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
 # If boot-disk-size > 10GB, the following warning will be printed but the warning can be ignored:
