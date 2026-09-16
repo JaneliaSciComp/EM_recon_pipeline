@@ -3,35 +3,119 @@
 ABSOLUTE_SCRIPT=$(readlink -m "$0")
 SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
 
-if (( $# < 1 )); then
-  echo "USAGE $0 <vm suffix> [private-network-ip]
+# ----------------------------------------------------------------------------
+# Parse named parameters
+
+ARG_SUFFIX=""
+ARG_PRIVATE_NETWORK_IP=""
+ARG_CORES="16"
+ARG_BOOT_DISK_GB="50"
+
+usage() {
+  echo "
+USAGE $0 --suffix <vm-suffix> [--private-network-ip <ip>] [--cores <16|32|48>] [--boot-disk-gb <gb>]
+
+  --suffix              suffix for the VM name (required, e.g. aaa)
+  --private-network-ip  static private ip for the default subnet (optional, e.g. 10.150.0.2)
+  --cores               number of vCPUs: 16, 32, or 48 (default: ${ARG_CORES})
+  --boot-disk-gb        boot disk size in GB, minimum 50 (default: ${ARG_BOOT_DISK_GB})
 
 Examples:
-  $0 aaa 10.150.0.2
-  $0 aab 10.150.0.3
-  $0 aac 10.150.0.4
-  $0 aad 10.150.0.5
-  $0 aae 10.150.0.6
-  $0 abm
+  $0 --suffix aaa --private-network-ip 10.150.0.2
+  $0 --suffix aab --private-network-ip 10.150.0.3
+  $0 --suffix abm
+  $0 --suffix abn --cores 32
+  $0 --suffix abo --cores 48 --boot-disk-gb 200
 "
+  exit 1
+}
+
+if (( $# < 1 )); then
+  usage
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "${1}" in
+    --suffix)
+      ARG_SUFFIX="${2:?'--suffix requires a value'}"
+      shift 2
+      ;;
+    --private-network-ip)
+      ARG_PRIVATE_NETWORK_IP="${2:?'--private-network-ip requires a value'}"
+      shift 2
+      ;;
+    --cores)
+      ARG_CORES="${2:?'--cores requires a value'}"
+      shift 2
+      ;;
+    --boot-disk-gb)
+      ARG_BOOT_DISK_GB="${2:?'--boot-disk-gb requires a value'}"
+      shift 2
+      ;;
+    *)
+      # Unlike db-dump-google-collections.sh, an unrecognized parameter is an error here because
+      # ignoring it would quietly create a VM with the wrong size (and the wrong name).
+      echo "ERROR: unrecognized parameter '${1}'"
+      usage
+      ;;
+  esac
+done
+
+# ----------------------------------------------------------------------------
+# Validate parameters
+
+if [ -z "${ARG_SUFFIX}" ]; then
+  echo "ERROR: --suffix is required"
+  usage
+fi
+
+# The n2-standard machine types have 4GB of memory per vCPU, so the memory size below is derived
+# from the core count instead of being a separate parameter.
+case "${ARG_CORES}" in
+  16|32|48)
+    ;;
+  *)
+    echo "ERROR: --cores must be 16, 32, or 48 (not '${ARG_CORES}')"
+    exit 1
+    ;;
+esac
+
+if [[ ! "${ARG_BOOT_DISK_GB}" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: --boot-disk-gb must be an integer (not '${ARG_BOOT_DISK_GB}')"
   exit 1
 fi
 
-VM_NAME="render-ws-mongodb-16c-64gb-${1}"
+# 50GB is the minimum because the disk needs to hold the container image and any MongoDB data.
+if (( ARG_BOOT_DISK_GB < 50 )); then
+  echo "ERROR: --boot-disk-gb must be at least 50 (not ${ARG_BOOT_DISK_GB})"
+  exit 1
+fi
+
+# ----------------------------------------------------------------------------
+# Derive VM configuration
+
+# For the vCPU and memory sizes of the n2-standard (4GB per vCPU), n2-highmem (8GB per vCPU),
+# and n2-highcpu (1GB per vCPU) machine types, see
+#   https://cloud.google.com/compute/docs/general-purpose-machines
+# To see what is actually available in this script's zone, use
+#   gcloud compute machine-types list --filter="zone:us-east4-c AND name~'^n2-'" --sort-by=guestCpus
+MACHINE_TYPE="n2-standard-${ARG_CORES}"
+MEMORY_GB=$(( ARG_CORES * 4 ))
+
+VM_NAME="render-ws-mongodb-${ARG_CORES}c-${MEMORY_GB}gb-${ARG_SUFFIX}"
 
 NETWORK_INTERFACE="address=,stack-type=IPV4_ONLY"
-if (( $# > 1 )); then
-  NETWORK_INTERFACE="${NETWORK_INTERFACE},subnet=default,private-network-ip=${2}"
+if [ -n "${ARG_PRIVATE_NETWORK_IP}" ]; then
+  NETWORK_INTERFACE="${NETWORK_INTERFACE},subnet=default,private-network-ip=${ARG_PRIVATE_NETWORK_IP}"
 fi
 
 # see https://github.com/JaneliaSciComp/containers/pkgs/container/render-ws-with-mongodb
 CONTAINER_IMAGE_VERSION="1.0.3"
 CONTAINER_IMAGE="ghcr.io/janeliascicomp/render-ws-with-mongodb:${CONTAINER_IMAGE_VERSION}"
 
-# The boot disk needs to be big enough to hold the container image and any MongoDB data.
 # If boot-disk-size > 10GB, the following warning will be printed but the warning can be ignored:
 # - Disk size: '50 GB' is larger than image size: '10 GB'. ...
-BOOT_DISK_SIZE="50GB"
+BOOT_DISK_SIZE="${ARG_BOOT_DISK_GB}GB"
 
 # Create vm_metadata.txt with current container image id.
 # The template mounts the shared dump disk from 10.138.206.2 and restarts the container
@@ -42,6 +126,7 @@ sed "s@CONTAINER_IMAGE@${CONTAINER_IMAGE}@g" "${SCRIPT_DIR}"/vm_metadata_templat
 echo "
 Creating Google Cloud VM ${VM_NAME} with:
   container image: ${CONTAINER_IMAGE}
+  machine type:    ${MACHINE_TYPE} (${ARG_CORES} vCPU, ${MEMORY_GB}GB memory)
   boot disk size:  ${BOOT_DISK_SIZE}
   metadata file:   ${VM_METADATA_FILE}
 
@@ -62,7 +147,7 @@ gcloud compute instances create "${VM_NAME}" \
   --boot-disk-size="${BOOT_DISK_SIZE}" --boot-disk-type=pd-balanced \
   --description='' \
   --labels=container-vm="${VM_NAME}" \
-  --machine-type=n2-standard-16 \
+  --machine-type="${MACHINE_TYPE}" \
   --image-project=cos-cloud \
   --image-family=cos-125-lts \
   --metadata-from-file=user-data="${VM_METADATA_FILE}" \
