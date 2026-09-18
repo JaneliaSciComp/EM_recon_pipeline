@@ -1,0 +1,168 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://localhost:8080/render-ws/v1",
+    "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
+    "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
+  },
+  "pipelineStackGroups": {
+    "raw":   { "stackPattern": "^w6._s..._r.._gc_bc$" },
+    "other": { "stackPattern": "^w6._s..._r.._gc_bc$" }
+  },
+  "pipelineSteps": [
+    "RENAME_STACKS",
+    "REMOVE_TILES",
+    "HACK_TILE_ID",
+    "CORRECT_BEAM_INTENSITY",
+    "DERIVE_TILE_MATCHES",
+    "PATCH_MFOV_MONTAGE_MATCHES",
+    "MFOV_AS_TILE"
+  ],
+  "stackRename": {
+    "stackOwner": "hess_wafers_60_61",
+    "sourceNamePattern": "(w6._s..._r.._gc)",
+    "targetNamePattern": "$1_bc"
+  },
+  "tileRemoval": {
+    "owner": "hess_wafers_60_61",
+    "peakScanJson": "gs://janelia-spark-test/library/hess_wafers_60_61.peak_scan.json",
+    "project_to_stack_scans": {
+      "w61_serial_070_to_079": {
+        "w61_s071_r00_gc_bc": [ "scan005" ], "w61_s071_r01_gc_bc": [ "scan005" ],
+        "w61_s073_r00_gc_bc": [ "scan005" ], "w61_s073_r01_gc_bc": [ "scan005" ],
+        "w61_s075_r00_gc_bc": [ "scan005" ], "w61_s075_r01_gc_bc": [ "scan005" ],
+        "w61_s077_r00_gc_bc": [ "scan005" ], "w61_s077_r01_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_080_to_089": {
+        "w61_s080_r00_gc_bc": [ "scan006" ], "w61_s080_r01_gc_bc": [ "scan006" ],
+        "w61_s081_r00_gc_bc": [ "scan006" ], "w61_s081_r01_gc_bc": [ "scan006" ],
+        "w61_s082_r00_gc_bc": [ "scan006" ], "w61_s082_r01_gc_bc": [ "scan006" ]
+      },
+      "w61_serial_090_to_099": {
+        "w61_s096_r00_gc_bc": [ "scan005" ], "w61_s096_r01_gc_bc": [ "scan005" ],
+        "w61_s097_r00_gc_bc": [ "scan006" ], "w61_s097_r01_gc_bc": [ "scan006" ]
+      },
+      "w61_serial_100_to_109": {
+        "w61_s109_r00_gc_bc": [ "scan021" ], "w61_s109_r01_gc_bc": [ "scan021" ]
+      },
+      "w61_serial_110_to_119": {
+        "w61_s113_r00_gc_bc": [ "scan005" ], "w61_s113_r01_gc_bc": [ "scan005" ],
+        "w61_s116_r00_gc_bc": [ "scan006" ], "w61_s116_r01_gc_bc": [ "scan006" ]
+      },
+      "w61_serial_120_to_129": {
+        "w61_s129_r00_gc_bc": [ "scan004" ], "w61_s129_r01_gc_bc": [ "scan004" ]
+      },
+      "w61_serial_130_to_139": {
+        "w61_s130_r00_gc_bc": [ "scan005" ], "w61_s130_r01_gc_bc": [ "scan005" ],
+        "w61_s133_r00_gc_bc": [ "scan005" ], "w61_s133_r01_gc_bc": [ "scan005" ],
+        "w61_s135_r00_gc_bc": [ "scan006" ], "w61_s135_r01_gc_bc": [ "scan006" ],
+        "w61_s136_r00_gc_bc": [ "scan006" ], "w61_s136_r01_gc_bc": [ "scan006" ]
+      },
+      "w61_serial_140_to_149": {
+        "w61_s144_r00_gc_bc": [ "scan005" ], "w61_s144_r01_gc_bc": [ "scan005" ],
+        "w61_s146_r00_gc_bc": [ "scan005" ], "w61_s146_r01_gc_bc": [ "scan005" ],
+        "w61_s147_r00_gc_bc": [ "scan005" ], "w61_s147_r01_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_150_to_159": {
+        "w61_s158_r00_gc_bc": [ "scan005" ], "w61_s158_r01_gc_bc": [ "scan005" ],
+        "w61_s159_r00_gc_bc": [ "scan005" ], "w61_s159_r01_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_160_to_169": {
+        "w61_s162_r00_gc_bc": [ "scan005" ], "w61_s162_r01_gc_bc": [ "scan005" ],
+        "w61_s164_r00_gc_bc": [ "scan005" ], "w61_s164_r01_gc_bc": [ "scan005" ],
+        "w61_s165_r00_gc_bc": [ "scan005" ], "w61_s165_r01_gc_bc": [ "scan005" ],
+        "w61_s166_r00_gc_bc": [ "scan021" ], "w61_s166_r01_gc_bc": [ "scan021" ]
+      },
+      "w61_serial_170_to_179": {
+        "w61_s178_r00_gc_bc": [ "scan021" ], "w61_s178_r01_gc_bc": [ "scan021" ]
+      },
+      "w61_serial_180_to_189": {
+        "w61_s182_r00_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_190_to_199": {
+        "w61_s198_r00_gc_bc": [ "scan005" ],
+        "w61_s199_r00_gc_bc": [ "scan005" ]
+      }
+    }
+  },
+  "beamCorrection": {
+    "zarrPath": "gs://janelia-spark-test/library/xlog_wafer_61.zarr",
+    "homogenizationDataset": "beam_homogenization",
+    "scanDataset": "scan",
+    "slabDataset": "slab",
+    "sfovDataset": "sfov",
+    "serialDataset": "id_serial",
+    "gainIndex": 21,
+    "deg0Index": 22,
+    "inverted": true,
+    "sfovLabelOffset": -1,
+    "targetStackSuffix": "not_applicable",
+    "overwriteSourceStack": true
+  },
+  "matchRunList": [
+    {
+      "runName": "montageWithinMfovRun",
+      "matchCommon": {
+        "maxPairsPerStackBatch" : 30,
+        "featureStorage": { "maxFeatureSourceCacheGb": 6 },
+        "maxPeakCacheGb" : 2
+      },
+      "tilePairDerivationParameters": {
+        "xyNeighborFactor": 0.6, "useRowColPositions": false,
+        "zNeighborDistance": 0, "excludeCornerNeighbors": false,
+        "excludeCompletelyObscuredTiles": false, "excludeSameLayerNeighbors": false, "excludeSameSectionNeighbors": false,
+        "excludeSameMfovNeighbors": false, "excludeDifferentMfovNeighbors": true,
+        "excludePairsInMatchCollection": "pairsFromPriorRuns", "minExistingMatchCount": 0
+      },
+      "matchStageParametersList": [
+        {
+          "stageName": "montageWithinMfovPass1",
+          "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
+          "featureMatchDerivation": {
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchMinCoveragePercentage": 20.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 25, "matchModelType": "TRANSLATION", "matchRod": 0.92
+          },
+          "featureRender": { "renderScale": 0.8, "renderWithFilter": true, "renderWithoutMask": false },
+          "featureRenderClip": { "clipHeight": 150, "clipWidth": 150 },
+          "geometricDescriptorAndMatch": { "gdEnabled": false }
+        },
+        {
+          "stageName": "montageWithinMfovPass2",
+          "featureExtraction": { "fdSize": 4, "maxScale": 1.0, "minScale": 0.25, "steps": 5 },
+          "featureMatchDerivation": {
+            "matchFilter": "AGGREGATED_CONSENSUS_SETS", "matchFullScaleCoverageRadius": 300.0, "matchIterations": 1000, "matchMaxEpsilonFullScale": 5.0, "matchMaxTrust": 4.0,
+            "matchMinCoveragePercentage": 0.0, "matchMinInlierRatio": 0.0, "matchMinNumInliers": 10, "matchModelType": "TRANSLATION", "matchRod": 0.92
+          },
+          "featureRender": { "renderScale": 1.0, "renderWithFilter": true, "renderWithoutMask": false },
+          "featureRenderClip": { "clipHeight": 150, "clipWidth": 150 },
+          "geometricDescriptorAndMatch": { "gdEnabled": false }
+        }
+      ]
+    }
+  ],
+  "mfovMontagePatch": {
+    "addIsolatedEdgeLabel": false,
+    "resinMfovStartPositionMatchWeight": -9.9,
+    "startPositionMatchWeight": 0.001,
+    "xyNeighborFactor": 0.6,
+    "numberOfMFOVsPerBatch": 10,
+    "patchUnconnectedPairsWithinAnMfovUsingStageCoordinates": true,
+    "checkLayerConnectedClusters": true
+  },
+  "tileCluster": {
+    "maxLayersPerBatch": 200,
+    "maxOverlapLayers": 10,
+    "includeMatchesOutsideGroup": false
+  },
+  "mfovAsTile": {
+    "mfovRenderScale": 0.2,
+    "mfovRootDirectory": "gs://janelia-spark-test/tiles_mfov",
+    "prealignedSfovStackSuffix": "_pa",
+    "dynamicMfovStackSuffix": "_mat",
+    "renderedMfovStackSuffix": "_render",
+    "renderedMfovRunTimestamp": "20260918_103000",
+    "alignedMfovStackSuffix" : "_align",
+    "roughSfovStackSuffix": "_par",
+    "minCrossMatchPixelDistance": 1.0,
+    "deriveSfovMatchData": false
+  }
+}
