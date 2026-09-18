@@ -1,40 +1,65 @@
 #!/bin/bash
 
+# NOTE: readlink -m is a GNU extension that the BSD readlink on macOS does not support,
+#       so derive the absolute script directory with cd and pwd instead
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 # Batch identifier appended to each slab group name (edit this for each round of runs).
-SLAB_GROUP_SUFFIX="20260811b"
+SLAB_GROUP_SUFFIX="20260918"
 STAGE="00_par"
 
-VM_IPS=(10.150.0.2 10.150.0.3 10.150.0.4 10.150.0.5 10.150.0.6 10.150.0.7
-        10.150.0.8 10.150.0.9 10.150.0.10 10.150.0.11)
+OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
+WAFER="$1"
+FIRST_SERIAL_NUMBER="$2"
+VM_LETTER="$3"
+
+if (( $# != 3 )); then
+  printf "\nUSAGE: %s <wafer> <first serial number> <VM letter>\n\n" "$(basename "$0")"
+  exit 1
+fi
+
+case "${WAFER}" in
+  60|61)
+    ;;
+  *)
+    printf "\nExiting, wafer '%s' is not 60 or 61\n\n" "${WAFER}"
+    exit 1
+    ;;
+esac
+
+PIPELINE_JSON="00_rough_align/pipe.00.w${WAFER}.bc-match-mat.json"
+MAT_RERUN_PIPELINE_JSON="00_rough_align/pipe.00.w6n.rerun-mat.json"
+
+VM_IPS=(10.150.0.2  10.150.0.3  10.150.0.4  10.150.0.5  10.150.0.6
+        10.150.0.7  10.150.0.8  10.150.0.9  10.150.0.10 10.150.0.11
+        10.150.0.12 10.150.0.13 10.150.0.14 10.150.0.15 10.150.0.16
+        10.150.0.17 10.150.0.18 10.150.0.19 10.150.0.20 10.150.0.21
+        10.150.0.22 10.150.0.23 10.150.0.24 10.150.0.25 10.150.0.26
+        10.150.0.27)
 
 # VMs are lettered in IP order (A is the first IP, B is the second, ...)
 VM_LETTERS=({A..Z})
 VM_LABELS=()
 for I in "${!VM_IPS[@]}"; do
-  VM_LABELS+=("${VM_LETTERS[I]} - ${VM_IPS[I]}")
-done
-
-printf "\nWhich VM do you want to use?\n\n"
-select VM_LABEL in "${VM_LABELS[@]}"; do
-  if [ -n "${VM_LABEL}" ]; then
-    VM_IP="${VM_IPS[REPLY-1]}"
-    break
-  else
-    echo "Invalid selection, try again."
+  VM_LABEL_FOR_INDEX="${VM_LETTERS[I]} - ${VM_IPS[I]}"
+  VM_LABELS+=("${VM_LABEL_FOR_INDEX}")
+  if [[ "${VM_LETTERS[I]}" == "${VM_LETTER}" ]]; then
+    VM_IP="${VM_IPS[I]}"
+    VM_LABEL="${VM_LABEL_FOR_INDEX}"
   fi
 done
 
-printf "\nWhich wafer do you want to use?\n\n"
-select WAFER in 60 61; do
-  if [ -n "${WAFER}" ]; then
-    break
-  else
-    echo "Invalid selection, try again."
-  fi
-done
+if [[ ! ${VM_LETTER} =~ ^[A-Z]$ ]]; then
+  printf "\nExiting, VM letter '%s' is not a single upper case letter from A to Z\n\n" "${VM_LETTER}"
+  exit 1
+fi
 
-echo
-read -rp "Enter the first serial number (a multiple of 5 between 0 and 410): " FIRST_SERIAL_NUMBER
+# only letters with a corresponding IP are matched above, so an unset VM_IP means the letter is out of range
+if [[ -z "${VM_IP}" ]]; then
+  printf "\nExiting, VM letter '%s' is not one of the %d defined VMs (A to %s)\n\n" \
+         "${VM_LETTER}" "${#VM_IPS[@]}" "${VM_LETTERS[${#VM_IPS[@]}-1]}"
+  exit 1
+fi
 
 if [[ ! ${FIRST_SERIAL_NUMBER} =~ ^[0-9]+$ ]]; then
   printf "\nExiting, '%s' is not a number\n\n" "${FIRST_SERIAL_NUMBER}"
@@ -69,15 +94,22 @@ LAST_PROJECT=$(printf "%03d" "${LAST_PROJECT_NUMBER}")
 
 SLAB_GROUP="s${FIRST_SERIAL}_to_s${LAST_SERIAL}_${SLAB_GROUP_SUFFIX}"
 BATCH_NAME="rough-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
+MAT_RERUN_BATCH_NAME="rough-mat-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 PROJECT_GROUP="w${WAFER}_serial_${FIRST_PROJECT}_to_${LAST_PROJECT}"
+
+RUN_FILE="${OUTPUT_DIR}/run.$(date '+%Y%m%d').${STAGE}.vm${VM_LETTER}.txt"
 
 echo "
 # ----------------------------------------------------------------------------
 # Run $(date)
 
+
 Set up for slab group ${SLAB_GROUP} from project group ${PROJECT_GROUP}:
 
-On ${VM_IP}, run:
+# -------------------------------------
+On ${VM_LABEL}, run:
+
+docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 ./db-restore-collections.sh --pattern 'janelia/00_gc/.*s${FIRST_PROJECT}'
 
@@ -90,11 +122,16 @@ On ${VM_IP}, run:
 # -------------------------------------
 On launch box, run:
 
-./02_run_pipeline.sh  ${VM_IP}  00_rough_align/pipe.00.w${WAFER}.icc-match-mat.json  120  4  premium  120  ${BATCH_NAME}
+./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  120  4  premium  120  ${BATCH_NAME}  disableDynamic
 
 # launch information:
 ...
 
+# if run fails, use the following to download the driver log:
+${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
+
+# if mfov-as-tile processing needs to be rerun, launch:
+# ./02_run_pipeline.sh  ${VM_IP}  ${MAT_RERUN_PIPELINE_JSON}  120  4  premium  120  ${MAT_RERUN_BATCH_NAME}  disableDynamic
 
 
 # -------------------------------------
@@ -112,4 +149,9 @@ After the run completes (typically 8 to 12 hours), on ${VM_LABEL}, run:
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
 
+" | tee -a "${RUN_FILE}"
+
+echo "
+Appended run information to:
+  ${RUN_FILE}
 "
