@@ -93,6 +93,12 @@ FIRST_PROJECT=$(printf "%03d" "${FIRST_PROJECT_NUMBER}")
 LAST_PROJECT=$(printf "%03d" "${LAST_PROJECT_NUMBER}")
 
 SLAB_GROUP="s${FIRST_SERIAL}_to_s${LAST_SERIAL}_${SLAB_GROUP_SUFFIX}"
+
+# The _gc_bc_par stacks (and their match collections) are what later stages need, so they are dumped
+# with the standard slab group.  The intermediate MFOV-as-tile stacks (_gc_bc, _gc_bc_pa,
+# _gc_bc_pa_mat, _gc_bc_pa_mat_render, _gc_bc_pa_mat_render_align) are dumped separately so that they
+# can be restored (or skipped) independently.
+MAT_SLAB_GROUP="${SLAB_GROUP}_mat"
 BATCH_NAME="rough-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 MAT_RERUN_BATCH_NAME="rough-mat-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 PROJECT_GROUP="w${WAFER}_serial_${FIRST_PROJECT}_to_${LAST_PROJECT}"
@@ -137,17 +143,29 @@ ${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 # -------------------------------------
 After the run completes (typically 8 to 12 hours), on ${VM_LABEL}, run:
 
-# render collection dump takes ...
-./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '.*'
+# par render collection dump takes ...
+./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '_gc_bc_par'
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
-# match collection dump takes 10 minutes
-./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '.*'
+# par match collection dump takes 10 minutes
+./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '_gc_bc_par'
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
+
+# mfov-as-tile render collection dump takes ...
+./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${MAT_SLAB_GROUP} --pattern '_gc_bc(?!_par)'
+
+# Should dump collections to:
+#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/render
+
+# mfov-as-tile match collection dump takes ...
+./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${MAT_SLAB_GROUP} --pattern '_gc_bc(?!_par)'
+
+# Should dump collections to:
+#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/match
 
 " | tee -a "${RUN_FILE}"
 
