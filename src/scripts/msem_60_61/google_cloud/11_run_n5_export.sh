@@ -115,6 +115,7 @@ Running gcloud dataproc batches submit spark with:
 # use --async to return immediately
 gcloud dataproc batches submit spark \
   --region=us-east4 \
+  --ttl=24h \
   --jars=${GS_JAR_URL} \
   --class=${CLASS} \
   --batch=${BATCH_ID} \
