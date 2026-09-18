@@ -43,6 +43,21 @@ MIN_TIMESTAMP="${RUN_DATE}T00:00:00Z"
 
 OUTPUT_FILE="${ARG_OUTPUT_FILE:-${ARG_BATCH_ID}.driver.log}"
 
+# Each line is prefixed with the entry's UTC timestamp so that log lines can be correlated with
+# wall clock time (log timestamps are UTC while the batch id timestamp is local time).
+# The date transform drops the nanoseconds from the raw 2026-09-18T00:22:50.278894893Z value.
+# To see local times instead, add a tz to the transform, e.g.
+#   timestamp.date(format="%Y-%m-%d %H:%M:%S", tz="EST5EDT")
+# To go back to messages without timestamps, use:
+#   --format='value(jsonPayload.message)'
+LOG_FORMAT='value(timestamp.date(format="%Y-%m-%d %H:%M:%S"), jsonPayload.message)'
+
+# Spark logs one of these lines for every executor as it comes and goes, which buries the
+# pipeline's own messages in runs with hundreds of executors.  They are dropped after the
+# download (instead of being filtered in the logging query) so that whole multi-line entries
+# like stack traces are never removed because of one noisy line.
+EXCLUDE_LINE_PATTERN='No executor found for|Registered executor NettyRpcEndpointRef'
+
 printf "\nreading driver log for batch %s (entries at or after %s) ...\n" "${ARG_BATCH_ID}" "${MIN_TIMESTAMP}"
 
 gcloud logging read \
@@ -52,10 +67,17 @@ gcloud logging read \
    timestamp>=\"${MIN_TIMESTAMP}\"" \
   --project="${PROJECT}" \
   --order=asc \
-  --format='value(jsonPayload.message)' \
+  --format="${LOG_FORMAT}" \
   > "${OUTPUT_FILE}"
 
+DOWNLOADED_LINE_COUNT=$(wc -l < "${OUTPUT_FILE}" | tr -d ' ')
+
+# grep exits 1 when nothing survives the filter, which is not an error here
+grep -E -v "${EXCLUDE_LINE_PATTERN}" "${OUTPUT_FILE}" > "${OUTPUT_FILE}.tmp" || true
+mv "${OUTPUT_FILE}.tmp" "${OUTPUT_FILE}"
+
 LINE_COUNT=$(wc -l < "${OUTPUT_FILE}" | tr -d ' ')
+EXCLUDED_LINE_COUNT=$(( DOWNLOADED_LINE_COUNT - LINE_COUNT ))
 
 if (( LINE_COUNT == 0 )); then
   printf "
@@ -74,7 +96,9 @@ else
 wrote %s lines to:
   %s
 
-" "${LINE_COUNT}" "${ABSOLUTE_OUTPUT_FILE}"
+(excluded %s executor registration line(s) from the %s downloaded)
+
+" "${LINE_COUNT}" "${ABSOLUTE_OUTPUT_FILE}" "${EXCLUDED_LINE_COUNT}" "${DOWNLOADED_LINE_COUNT}"
 
   printf "errors and exceptions in the log:\n"
   grep -c -E 'ERROR|Exception' "${OUTPUT_FILE}" || true
