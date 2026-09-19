@@ -12,17 +12,25 @@ Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
 Examples:
 
   Rough Align:
-    $0  10.150.0.2  00_rough_align/pipe.00.w61.icc-match-mat.json          120  4  premium  120  rough-w61-s070-to-s074
-    $0  10.150.0.2  00_rough_align/pipe.00.w61.rerun-mat.json              120  4  premium  120  rough-w61-s075-to-s079
+    $0  10.150.0.2  00_rough_align/pipe.00.w61.bc-match-mat.json           120  4  premium  120  rough-w61-s070-to-s074
+    $0  10.150.0.2  00_rough_align/pipe.00.w6n.rerun-mat.json              120  4  premium  120  rough-mat-w61-s075-to-s079  disableDynamic
 
   Match:
-    $0  10.150.0.3  01_match/pipe.01.w6n.diff-mfov-match-patch.json        100  4  premium  100  match-w61-s105-to-s109  disableDynamic
+    $0  10.150.0.3  01_match/pipe.01a.w6n.diff-mfov-match-patch.json       100  4  premium  100  match-w61-s105-to-s109  disableDynamic
+    $0  10.150.0.3  01_match/pipe.01b.w6n.creep-correct.json                25  4  premium   25  creep-w61-s105-to-s109  disableDynamic
 
   Align:
     $0  10.150.0.4  02_align/pipe.02.w6n.align-stitch-only.json             48  4  premium   48  aso-w61-s130-to-s135    disableDynamic
 
   Correct Intensity:
     $0  10.150.0.5  03_correct_intensity/pipe.03.w6n.ic2d-stitch-only.json  15  4  premium   15  ic2d-w61-s145-to-149    disableDynamic
+
+  3D Align:
+    $0  10.150.0.6  04_3d_align/pipe.04.w6n.layer-as-tile.json              50  4  premium   50  a3d-w61-s150-to-s154    disableDynamic
+    $0  10.150.0.6  04_3d_align/pipe.04.w61.remove-scans.json                2  4  premium    2  remove-bad-scans-from-04b_3d_align-data  disableDynamic
+
+  Import SOFIMA:
+    $0  10.150.0.7  05_import_sofima/pipe.05.w6n.import-sofima.json         25  4  premium   25  import-sofima-w61-s070-to-s074  disableDynamic
   "
   exit 1
 fi
