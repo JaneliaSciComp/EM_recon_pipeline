@@ -27,8 +27,8 @@ case "${WAFER}" in
     ;;
 esac
 
-PIPELINE_JSON="00_rough_align/pipe.00.w${WAFER}.bc-match-mat.json"
-MAT_RERUN_PIPELINE_JSON="00_rough_align/pipe.00.w6n.rerun-mat.json"
+PIPELINE_JSON="00_rough_align/pipe.00a.w${WAFER}.bc-match-mat.json"
+MAT_RERUN_PIPELINE_JSON="00_rough_align/pipe.00b.w6n.rerun-mat.json"
 
 VM_IPS=(10.150.0.2  10.150.0.3  10.150.0.4  10.150.0.5  10.150.0.6
         10.150.0.7  10.150.0.8  10.150.0.9  10.150.0.10 10.150.0.11

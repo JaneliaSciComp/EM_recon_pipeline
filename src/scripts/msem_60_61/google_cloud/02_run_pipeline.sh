@@ -12,8 +12,8 @@ Usage:    ./02_run_pipeline <render-ws-internal-ip> <pipeline-json-rel-path>
 Examples:
 
   Rough Align:
-    $0  10.150.0.2  00_rough_align/pipe.00.w61.bc-match-mat.json           120  4  premium  120  rough-w61-s070-to-s074
-    $0  10.150.0.2  00_rough_align/pipe.00.w6n.rerun-mat.json              120  4  premium  120  rough-mat-w61-s075-to-s079  disableDynamic
+    $0  10.150.0.2  00_rough_align/pipe.00a.w61.bc-match-mat.json          120  4  premium  120  rough-w61-s070-to-s074      disableDynamic
+    $0  10.150.0.2  00_rough_align/pipe.00b.w6n.rerun-mat.json             120  4  premium  120  rough-mat-w61-s075-to-s079  disableDynamic
 
   Match:
     $0  10.150.0.3  01_match/pipe.01a.w6n.diff-mfov-match-patch.json       100  4  premium  100  match-w61-s105-to-s109  disableDynamic
