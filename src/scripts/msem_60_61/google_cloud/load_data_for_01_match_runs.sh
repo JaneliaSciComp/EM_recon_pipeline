@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# NOTE: readlink -m is a GNU extension that the BSD readlink on macOS does not support,
+#       so derive the absolute script directory with cd and pwd instead
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 # Batch identifier appended to each slab group name (edit this for each round of runs).
 SLAB_GROUP_SUFFIX="20260918"
 STAGE="01_match"
@@ -78,6 +82,8 @@ LAST_PROJECT=$(printf "%03d" "${LAST_PROJECT_NUMBER}")
 
 SLAB_GROUP="s${FIRST_SERIAL}_to_s${LAST_SERIAL}_${SLAB_GROUP_SUFFIX}"
 BATCH_NAME="match-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
+CREEP_BATCH_NAME="creep-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
+CREEP_SLAB_GROUP="${SLAB_GROUP}_creep"
 PROJECT_GROUP="w${WAFER}_serial_${FIRST_PROJECT}_to_${LAST_PROJECT}"
 
 RUN_FILE="${OUTPUT_DIR}/run.$(date '+%Y%m%d').${STAGE}.vm${VM_LETTER}.txt"
@@ -118,7 +124,37 @@ On launch box, run:
 # 100 4-core executor runs take ~90 minutes and  7 concurrent runs will use 2828 cores (404 cores per run)
 #  25 4-core executor runs take  ~6 hours   and 26 concurrent runs will use 2704 cores (104 cores per run)
 
-./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01.w6n.diff-mfov-match-patch.json  25  4  premium  25  ${BATCH_NAME}  disableDynamic
+./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01a.w6n.diff-mfov-match-patch.json  25  4  premium  25  ${BATCH_NAME}  disableDynamic
+
+# launch information:
+...
+
+
+# if run fails, use the following to download the driver log:
+${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
+
+# -------------------------------------
+After the run completes (typically 2 hours), on ${VM_LABEL}, run:
+
+# render collection dump takes 30 seconds
+./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern 'bc_par(?!_cc)'
+
+# Should dump collections to:
+#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
+
+# match collection dump takes 10 minutes
+./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern 'bc_par(?!_cc)'
+
+# Should dump collections to:
+#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
+
+
+# -------------------------------------
+On launch box, run:
+
+#  25 4-core executor runs take  ? minutes   and 26 concurrent runs will use 2704 cores (104 cores per run)
+
+./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01b.w6n.creep-correct.json  25  4  premium  25  ${CREEP_BATCH_NAME}  disableDynamic
 
 # launch information:
 ...
@@ -129,16 +165,16 @@ On launch box, run:
 After the run completes (typically 2 hours), on ${VM_LABEL}, run:
 
 # render collection dump takes 30 seconds
-./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern bc_par
+./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${CREEP_SLAB_GROUP} --pattern bc_par_cc
 
 # Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
+#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${CREEP_SLAB_GROUP}/render
 
 # match collection dump takes 10 minutes
-./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern bc_par
+./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${CREEP_SLAB_GROUP} --pattern bc_par_cc
 
 # Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
+#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${CREEP_SLAB_GROUP}/match
 
 " | tee -a "${RUN_FILE}"
 
