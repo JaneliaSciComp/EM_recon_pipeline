@@ -5,14 +5,23 @@ SLAB_GROUP_SUFFIX="20260901"
 STAGE="02_align"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
-WAFER=61
-FIRST_SERIAL_NUMBER="$1"
-VM_LETTER="$2"
+WAFER="$1"
+FIRST_SERIAL_NUMBER="$2"
+VM_LETTER="$3"
 
-if (( $# != 2 )); then
-  printf "\nUSAGE: %s <first serial number> <VM letter>\n\n" "$(basename "$0")"
+if (( $# != 3 )); then
+  printf "\nUSAGE: %s <wafer> <first serial number> <VM letter>\n\n" "$(basename "$0")"
   exit 1
 fi
+
+case "${WAFER}" in
+  60|61)
+    ;;
+  *)
+    printf "\nExiting, wafer '%s' is not 60 or 61\n\n" "${WAFER}"
+    exit 1
+    ;;
+esac
 
 VM_IPS=(10.150.0.2  10.150.0.3  10.150.0.4  10.150.0.5  10.150.0.6
         10.150.0.7  10.150.0.8  10.150.0.9  10.150.0.10 10.150.0.11
