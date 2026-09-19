@@ -143,7 +143,7 @@ On launch box, run:
 ${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 # -------------------------------------
-After the run completes (typically 2 hours), on ${VM_LABEL}, run:
+After the run completes, on ${VM_LABEL}, run:
 
 # render collection dump takes 30 seconds
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern 'bc_par(?!_cc)'
@@ -161,9 +161,11 @@ After the run completes (typically 2 hours), on ${VM_LABEL}, run:
 # -------------------------------------
 On launch box, run:
 
-#  25 4-core executor runs take  ? minutes   and 26 concurrent runs will use 2704 cores (104 cores per run)
+#  10 4-core executor runs take  15 minutes   and 26 concurrent runs will use 1144 cores (44 cores per run)
+#  25 4-core executor run takes same amount of time as 10 4-core executor run because it serially goes
+#                         through each stack and then parallelizes work by z layer
 
-./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01b.w6n.creep-correct.json  25  4  premium  25  ${CREEP_BATCH_NAME}  disableDynamic
+./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01b.w6n.creep-correct.json  10  4  premium  10  ${CREEP_BATCH_NAME}  disableDynamic
 
 # launch information:
 ...
@@ -171,7 +173,7 @@ On launch box, run:
 
 
 # -------------------------------------
-After the run completes (typically 2 hours), on ${VM_LABEL}, run:
+After the run completes, on ${VM_LABEL}, run:
 
 # render collection dump takes 30 seconds
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${CREEP_SLAB_GROUP} --pattern bc_par_cc
