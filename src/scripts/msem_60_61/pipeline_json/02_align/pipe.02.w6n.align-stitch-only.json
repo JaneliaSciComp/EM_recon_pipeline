@@ -5,7 +5,7 @@
     "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w6._s..._r.._gc_icc_par$" }
+    "raw":                { "stackPattern": "^w6._s..._r.._gc_bc_par_cc$" }
   },
   "pipelineSteps": [
     "ALIGN_TILES"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Batch identifier appended to each slab group name (edit this for each round of runs).
-SLAB_GROUP_SUFFIX="20260901"
+SLAB_GROUP_SUFFIX="20260918"
 STAGE="02_align"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
@@ -136,7 +136,7 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 ./other/remove-stacks.sh
 
-./db-restore-collections.sh --pattern '01_match.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}'
+./db-restore-collections.sh --pattern '01_match.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}_creep/'
 
 # select 1 2
 # for match restore prompts, enter:    y y   y y   y y   y y   y y
@@ -160,7 +160,7 @@ On launch box, run:
 
 
 # -------------------------------------
-After the run completes (typically 2 hours), on ${VM_LABEL}, run:
+After the run completes, on ${VM_LABEL}, run:
 
 # render collection dump takes 30 seconds
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern aso
