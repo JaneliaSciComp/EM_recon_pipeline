@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Batch identifier appended to each slab group name (edit this for each round of runs).
-ROUGH_SLAB_GROUP_SUFFIX="20260811b"
-SLAB_GROUP_SUFFIX="20260901"
+SLAB_GROUP_SUFFIX="20260918"
 STAGE="01_match"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
@@ -46,29 +45,6 @@ if [[ -z "${VM_IP}" ]]; then
   exit 1
 fi
 
-#printf "\nWhich VM do you want to use?\n\n"
-#select VM_LABEL in "${VM_LABELS[@]}"; do
-#  if [ -n "${VM_LABEL}" ]; then
-#    VM_IP="${VM_IPS[REPLY-1]}"
-#    VM_LETTER="${VM_LETTERS[REPLY-1]}"
-#    break
-#  else
-#    echo "Invalid selection, try again."
-#  fi
-#done
-
-#printf "\nWhich wafer do you want to use?\n\n"
-#select WAFER in 60 61; do
-#  if [ -n "${WAFER}" ]; then
-#    break
-#  else
-#    echo "Invalid selection, try again."
-#  fi
-#done
-#
-#echo
-#read -rp "Enter the first serial number (a multiple of 5 between 0 and 410): " FIRST_SERIAL_NUMBER
-
 if [[ ! ${FIRST_SERIAL_NUMBER} =~ ^[0-9]+$ ]]; then
   printf "\nExiting, '%s' is not a number\n\n" "${FIRST_SERIAL_NUMBER}"
   exit 1
@@ -100,7 +76,6 @@ LAST_SERIAL=$(printf "%03d" "${LAST_SERIAL_NUMBER}")
 FIRST_PROJECT=$(printf "%03d" "${FIRST_PROJECT_NUMBER}")
 LAST_PROJECT=$(printf "%03d" "${LAST_PROJECT_NUMBER}")
 
-ROUGH_SLAB_GROUP="s${FIRST_SERIAL}_to_s${LAST_SERIAL}_${ROUGH_SLAB_GROUP_SUFFIX}"
 SLAB_GROUP="s${FIRST_SERIAL}_to_s${LAST_SERIAL}_${SLAB_GROUP_SUFFIX}"
 BATCH_NAME="match-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 PROJECT_GROUP="w${WAFER}_serial_${FIRST_PROJECT}_to_${LAST_PROJECT}"
@@ -130,20 +105,11 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 ./other/remove-stacks.sh
 
-./db-restore-collections.sh --pattern '00_par.*s${FIRST_SERIAL}.*${ROUGH_SLAB_GROUP_SUFFIX}'
+./db-restore-collections.sh --pattern '00_par.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}/'
+# load takes 8? minutes
 
-# select 1 2
-# for match restore prompts, enter:    n y n y   n y n y   n y n y   n y n y   n y n y
-# load takes 8 minutes
-
-# make sure no pa_mat... match collections were loaded
+./list-stacks.sh
 ./list-match-collections.sh
-
-# remove everything except icc_par stacks
-./other/remove-stacks.sh
-
-# for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:    7 14 21 28 35 42 49 56 63 70
 
 # -------------------------------------
 On launch box, run:
@@ -163,13 +129,13 @@ On launch box, run:
 After the run completes (typically 2 hours), on ${VM_LABEL}, run:
 
 # render collection dump takes 30 seconds
-./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern icc
+./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern bc_par
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
 # match collection dump takes 10 minutes
-./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern icc
+./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern bc_par
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
