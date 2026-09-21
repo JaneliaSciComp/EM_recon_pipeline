@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# NOTE: readlink -m is a GNU extension that the BSD readlink on macOS does not support,
+#       so derive the absolute script directory with cd and pwd instead
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 # Batch identifier appended to each slab group name (edit this for each round of runs).
 SLAB_GROUP_SUFFIX="20260918"
 STAGE="02_align"
@@ -125,39 +129,31 @@ On ${VM_LABEL}, run:
 
 docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
-# remove collections from previous run
-
-./other/remove-match-collections.sh
-# for match number prompt, enter:    1 2 3 4 5 6 7 8 9 10
+# remove collections from 01_match run
 
 ./other/remove-stacks.sh
 # for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:         1
+# for stack number prompt, enter:         2 4 6 8 10 12 14 16 18 20
 
-./other/remove-stacks.sh
-
-./db-restore-collections.sh --pattern '01_match.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}_creep/'
-
-# select 1 2
-# for match restore prompts, enter:    y y   y y   y y   y y   y y
-# load takes 5 to 8 minutes
-
-./list-match-collections.sh
-./list-stacks.sh
+# to restore on new VM:
+#   ./db-restore-collections.sh --pattern '01_match.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}_creep/'
 
 # -------------------------------------
 On launch box, run:
 
 # 200 4-core executor run  took  20 minutes to complete for w61-s170-to-s174
+# 120 4-core executor runs take ? minutes to complete and  6 concurrent runs will use 2904 cores (484 cores per run)
 #  50 4-core executor runs take ~90 minutes to complete and 14 concurrent runs will use 2856 cores (204 cores per run)
 #  20 4-core executor runs take  ~5 hours   to complete and 26 concurrent runs will use 2184 cores ( 84 cores per run)
 
-./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.02.w6n.align-stitch-only.json  20  4  premium  20  ${BATCH_NAME}  disableDynamic
+./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.02.w6n.align-stitch-only.json  120  4  premium  120  ${BATCH_NAME}  disableDynamic
 
 # launch information:
 ...
 
 
+# if run fails, use the following to download the driver log:
+${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:

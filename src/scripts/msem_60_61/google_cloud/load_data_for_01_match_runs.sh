@@ -107,21 +107,19 @@ Set up for slab group ${SLAB_GROUP} from project group ${PROJECT_GROUP}:
 # -------------------------------------
 On ${VM_LABEL}, run:
 
-docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
-
-# remove collections from previous run
+# remove collections from 00_par run
 
 ./other/remove-match-collections.sh
-# for match number prompt, enter:    1 2 3 4 5 6 7 8 9 10
+# for match number prompt, enter:    1 3 5 7 9 11 13 15 17 19
 
 ./other/remove-stacks.sh
 # for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:         1
+# for stack number prompt, enter:         6 12 18 24 30 36 42 48 54 60
 
 ./other/remove-stacks.sh
 
-./db-restore-collections.sh --pattern '00_par.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}/'
-# load takes 8? minutes
+# to restore on new VM:
+#   ./db-restore-collections.sh --pattern '00_par.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}/'
 
 ./list-stacks.sh
 ./list-match-collections.sh
@@ -130,10 +128,10 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 On launch box, run:
 
 # 300 4-core executor run  took  40 minutes for w61-s125-to-129
-# 100 4-core executor runs take ~90 minutes and  7 concurrent runs will use 2828 cores (404 cores per run)
+# 120 4-core executor runs take ~90 minutes and  6 concurrent runs will use 2904 cores (484 cores per run)
 #  25 4-core executor runs take  ~6 hours   and 26 concurrent runs will use 2704 cores (104 cores per run)
 
-./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01a.w6n.diff-mfov-match-patch.json  25  4  premium  25  ${BATCH_NAME}  disableDynamic
+./02_run_pipeline.sh  ${VM_IP}  ${STAGE}/pipe.01a.w6n.diff-mfov-match-patch.json  120  4  premium  120  ${BATCH_NAME}  disableDynamic
 
 # launch information:
 ...

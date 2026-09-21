@@ -117,6 +117,20 @@ On ${VM_LABEL}, run:
 
 docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
+# remove collections from previous 02_align run
+
+./other/remove-match-collections.sh
+# for match number prompt, enter:    1 2 3 4 5 6 7 8 9 10
+
+./other/remove-stacks.sh
+# for [r]emoved or [k]ept prompt, enter:  k
+# for stack number prompt, enter:         1
+
+./other/remove-stacks.sh
+
+# nothing should be in the database at this point ...
+
+# load janelia stacks:
 ./db-restore-collections.sh --pattern 'janelia/00_gc/.*s${FIRST_PROJECT}'
 
 ./other/remove-stacks.sh
@@ -127,6 +141,8 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 # -------------------------------------
 On launch box, run:
+
+# 120 4-core executor runs take ~7 hours to complete and 6 concurrent runs will use 2904 cores (484 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  120  4  premium  120  ${BATCH_NAME}  disableDynamic
 
@@ -141,9 +157,9 @@ ${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 
 # -------------------------------------
-After the run completes (typically 8 to 12 hours), on ${VM_LABEL}, run:
+After the run completes, on ${VM_LABEL}, run:
 
-# par render collection dump takes ...
+# par render collection dump takes 30 seconds
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '_gc_bc_par'
 
 # Should dump collections to:
@@ -155,13 +171,13 @@ After the run completes (typically 8 to 12 hours), on ${VM_LABEL}, run:
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
 
-# mfov-as-tile render collection dump takes ...
+# mfov-as-tile render collection dump takes 1 minute
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${MAT_SLAB_GROUP} --pattern '_gc_bc(?!_par)'
 
 # Should dump collections to:
 #  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/render
 
-# mfov-as-tile match collection dump takes ...
+# mfov-as-tile match collection dump takes 1 minute
 ./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${MAT_SLAB_GROUP} --pattern '_gc_bc(?!_par)'
 
 # Should dump collections to:
