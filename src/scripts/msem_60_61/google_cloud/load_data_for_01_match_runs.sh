@@ -116,8 +116,6 @@ On ${VM_LABEL}, run:
 # for [r]emoved or [k]ept prompt, enter:  k
 # for stack number prompt, enter:         6 12 18 24 30 36 42 48 54 60
 
-./other/remove-stacks.sh
-
 # to restore on new VM:
 #   ./db-restore-collections.sh --pattern '00_par.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}/'
 
