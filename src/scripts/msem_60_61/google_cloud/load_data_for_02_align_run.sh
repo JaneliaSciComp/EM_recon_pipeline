@@ -49,11 +49,8 @@ ${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:
 
-# render collection dump takes 30 seconds
+# render collection dump takes 30 seconds, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern aso
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
 " | tee -a "${RUN_FILE}"
 

@@ -85,29 +85,17 @@ ${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:
 
-# par render collection dump takes 30 seconds
+# par render collection dump takes 30 seconds, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '_gc_bc_par'
 
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
-
-# par match collection dump takes 10 minutes
+# par match collection dump takes 10 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
 ./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern '_gc_bc_par'
 
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
-
-# mfov-as-tile render collection dump takes 1 minute
+# mfov-as-tile render collection dump takes 1 minute, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${MAT_SLAB_GROUP} --pattern '_gc_bc(?!_par)'
 
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/render
-
-# mfov-as-tile match collection dump takes 1 minute
+# mfov-as-tile match collection dump takes 1 minute, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/match
 ./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${MAT_SLAB_GROUP} --pattern '_gc_bc(?!_par)'
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${MAT_SLAB_GROUP}/match
 
 " | tee -a "${RUN_FILE}"
 

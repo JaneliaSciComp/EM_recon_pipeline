@@ -55,11 +55,8 @@ On launch box, run:
 # -------------------------------------
 After the run completes (typically 4 to 5 hours), on ${VM_LABEL}, run:
 
-# render collection dump takes 3 minutes
+# render collection dump takes 3 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
 " | tee -a "${RUN_FILE}"
 

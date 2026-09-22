@@ -43,11 +43,8 @@ On launch box, run:
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:
 
-# sofima render collection dump takes 2 to 3 minutes
+# sofima render collection dump takes 2 to 3 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d_s
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
 " | tee -a "${RUN_FILE}"
 

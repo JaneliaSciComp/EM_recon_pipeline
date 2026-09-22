@@ -54,20 +54,14 @@ On launch box, run:
 # -------------------------------------
 After the run completes (typically 4 to 5 hours), on ${VM_LABEL}, run:
 
-# layer-as-tile render collection dump takes 15 seconds
+# layer-as-tile render collection dump takes 15 seconds, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${LAYER_AS_TILE_STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_lat
 
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
-
-# layer-as-tile match collection dump takes 1 to 2 minutes
+# layer-as-tile match collection dump takes 1 to 2 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${LAYER_AS_TILE_STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
 ./db-dump-google-collections.sh --db match --stage ${LAYER_AS_TILE_STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_lat
 
-# 3d render collection dump takes 2 to 3 minutes
+# 3d render collection dump takes 2 to 3 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 
 " | tee -a "${RUN_FILE}"
 

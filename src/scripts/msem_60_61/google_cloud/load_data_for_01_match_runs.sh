@@ -56,17 +56,11 @@ ${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:
 
-# render collection dump takes 30 seconds
+# render collection dump takes 30 seconds, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern 'bc_par(?!_cc)'
 
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/render
-
-# match collection dump takes 10 minutes
+# match collection dump takes 10 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
 ./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern 'bc_par(?!_cc)'
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}/match
 
 
 # -------------------------------------
@@ -86,17 +80,11 @@ On launch box, run:
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:
 
-# render collection dump takes 30 seconds
+# render collection dump takes 30 seconds, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${CREEP_SLAB_GROUP}/render
 ./db-dump-google-collections.sh --db render --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${CREEP_SLAB_GROUP} --pattern bc_par_cc
 
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${CREEP_SLAB_GROUP}/render
-
-# match collection dump takes 10 minutes
+# match collection dump takes 10 minutes, dump directory is: /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${CREEP_SLAB_GROUP}/match
 ./db-dump-google-collections.sh --db match --stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${CREEP_SLAB_GROUP} --pattern bc_par_cc
-
-# Should dump collections to:
-#  /mnt/disks/mongodb_dump_fs/dump/google/${STAGE}/${PROJECT_GROUP}/${CREEP_SLAB_GROUP}/match
 
 " | tee -a "${RUN_FILE}"
 
