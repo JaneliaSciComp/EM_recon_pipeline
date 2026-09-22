@@ -14,23 +14,24 @@ MAT_SLAB_GROUP="${SLAB_GROUP}_mat"
 BATCH_NAME="rough-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 MAT_RERUN_BATCH_NAME="rough-mat-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 
-# Wafer 61 slabs below 179 have two regions each, so a five slab run restores a whole project's
-# worth of janelia stacks and half of them have to be removed before the run.  Every other case
-# (e.g. the ten slab runs for wafer 61 slabs 180 and up) restores exactly what it needs.
-REMOVE_EXTRA_STACKS=""
-if [ "${WAFER}" = "61" ] && (( FIRST_SERIAL_NUMBER < 179 )); then
+# The janelia dumps are organized by project, so a five slab run would restore a whole project's
+# worth of stacks (ten slabs).  db-restore-collections.sh greps --exclude-pattern against each
+# collection dump file name (e.g. hess_wafers_60_61__w61_serial_170_to_179__w61_s175_r00_gc__tile.bson.gz),
+# so the other half of the project's slabs can be skipped instead of being loaded and then removed.
+#
+# A ten slab run wants the whole project, so it needs no exclusion.
+EXCLUDE_PATTERN_ARG=""
+if (( SLABS_PER_RUN == 5 )); then
 
-  # even serial numbers are the first half of a project's slabs, odd ones are the second half
-  if (( FIRST_SERIAL_NUMBER % 2 == 0 )); then
-    KEEP_OR_REMOVE="[k]ept"
+  # project serials share their first two digits (e.g. 170 to 179), so the excluded half is
+  # the other five last digits
+  if (( FIRST_SERIAL_NUMBER == FIRST_PROJECT_NUMBER )); then
+    EXCLUDED_LAST_DIGITS="[5-9]"   # keeping the first half, so skip the second
   else
-    KEEP_OR_REMOVE="[r]emoved"
+    EXCLUDED_LAST_DIGITS="[0-4]"   # keeping the second half, so skip the first
   fi
 
-  REMOVE_EXTRA_STACKS="./other/remove-stacks.sh
-
-# you want stacks to be ${KEEP_OR_REMOVE}
-# then enter ' 1 2 3 4 5 6 7 8 9 10 '"
+  EXCLUDE_PATTERN_ARG=" --exclude-pattern '_s${FIRST_PROJECT:0:2}${EXCLUDED_LAST_DIGITS}_'"
 
 fi
 
@@ -60,9 +61,7 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 # nothing should be in the database at this point ...
 
 # load janelia stacks:
-./db-restore-collections.sh --pattern 'janelia/00_gc/.*s${FIRST_PROJECT}'
-
-${REMOVE_EXTRA_STACKS}
+./db-restore-collections.sh --pattern 'janelia/00_gc/.*s${FIRST_PROJECT}'${EXCLUDE_PATTERN_ARG}
 
 
 # -------------------------------------
