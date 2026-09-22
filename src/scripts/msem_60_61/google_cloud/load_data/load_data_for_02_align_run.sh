@@ -22,10 +22,7 @@ On ${VM_LABEL}, run:
 docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 # remove collections from 01_match run
-
-./other/remove-stacks.sh
-# for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:         2 4 6 8 10 12 14 16 18 20
+./remove-collections.sh --db render --method keep --items '2 4 6 8 10 12 14 16 18 20'
 
 # to restore on new VM:
 #   ./db-restore-collections.sh --pattern '01_match.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}_creep/'

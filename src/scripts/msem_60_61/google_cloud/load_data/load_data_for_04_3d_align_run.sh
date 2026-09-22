@@ -23,12 +23,7 @@ On ${VM_LABEL}, run:
 docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 # remove collections from previous run
-
-./other/remove-stacks.sh
-# for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:         1
-
-./other/remove-stacks.sh
+./remove-collections.sh --db render --method remove --items 'all'
 
 # ic2d data load typically takes 1 to 2 minutes
 ./db-restore-collections.sh --pattern '03_ic2d_nc4_hist_rs0p5.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/'

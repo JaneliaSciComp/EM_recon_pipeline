@@ -48,17 +48,8 @@ On ${VM_LABEL}, run:
 docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 # remove collections from previous 02_align run
-
-./other/remove-match-collections.sh
-# for match number prompt, enter:    1 2 3 4 5 6 7 8 9 10
-
-./other/remove-stacks.sh
-# for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:         1
-
-./other/remove-stacks.sh
-
-# nothing should be in the database at this point ...
+./remove-collections.sh --db match --method remove --items 'all'
+./remove-collections.sh --db render --method remove --items 'all'
 
 # load janelia stacks:
 ./db-restore-collections.sh --pattern 'janelia/00_gc/.*s${FIRST_PROJECT}'${EXCLUDE_PATTERN_ARG}

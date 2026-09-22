@@ -23,13 +23,8 @@ Set up for slab group ${SLAB_GROUP} from project group ${PROJECT_GROUP}:
 On ${VM_LABEL}, run:
 
 # remove collections from 00_par run
-
-./other/remove-match-collections.sh
-# for match number prompt, enter:    1 3 5 7 9 11 13 15 17 19
-
-./other/remove-stacks.sh
-# for [r]emoved or [k]ept prompt, enter:  k
-# for stack number prompt, enter:         6 12 18 24 30 36 42 48 54 60
+./remove-collections.sh --db match --method remove --items '1 3 5 7 9 11 13 15 17 19'
+./remove-collections.sh --db render --method keep --items '6 12 18 24 30 36 42 48 54 60'
 
 # to restore on new VM:
 #   ./db-restore-collections.sh --pattern '00_par.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}/'
