@@ -76,7 +76,7 @@ On launch box, run:
 ...
 
 # if run fails, use the following to download the driver log:
-${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
+${GOOGLE_CLOUD_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 # if mfov-as-tile processing needs to be rerun, launch:
 # ./02_run_pipeline.sh  ${VM_IP}  ${MAT_RERUN_PIPELINE_JSON}  120  4  premium  120  ${MAT_RERUN_BATCH_NAME}  disableDynamic

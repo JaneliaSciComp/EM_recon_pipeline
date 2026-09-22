@@ -51,7 +51,7 @@ On launch box, run:
 
 
 # if run fails, use the following to download the driver log:
-${SCRIPT_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
+${GOOGLE_CLOUD_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 # -------------------------------------
 After the run completes, on ${VM_LABEL}, run:

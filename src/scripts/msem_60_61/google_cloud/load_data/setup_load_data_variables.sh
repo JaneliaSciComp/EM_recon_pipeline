@@ -13,7 +13,7 @@
 # It parses <wafer> <first serial number> <VM letter> from the sourcing script's parameters,
 # validates them, and derives the variables the run instructions need:
 #
-#   WAFER  FIRST_SERIAL_NUMBER  VM_LETTER  VM_IP  VM_LABEL
+#   WAFER  FIRST_SERIAL_NUMBER  VM_LETTER  VM_IP  VM_LABEL  GOOGLE_CLOUD_DIR
 #   FIRST_SERIAL  LAST_SERIAL  FIRST_PROJECT  LAST_PROJECT
 #   SLAB_GROUP  PROJECT_GROUP  RUN_FILE
 #
@@ -32,6 +32,10 @@
 SLAB_GROUP_SUFFIX="20260918"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
+
+# These scripts live in google_cloud/load_data while the tools the run instructions reference
+# (e.g. download-driver-log.sh) live in google_cloud, so keep an absolute path to the parent.
+GOOGLE_CLOUD_DIR=$(cd "${SCRIPT_DIR}/.." && pwd)
 
 # ----------------------------------------------------------------------------
 # Validate what the sourcing script must define
