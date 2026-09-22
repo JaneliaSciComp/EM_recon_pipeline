@@ -17,10 +17,14 @@
 #   FIRST_SERIAL  LAST_SERIAL  FIRST_PROJECT  LAST_PROJECT
 #   SLAB_GROUP  PROJECT_GROUP  RUN_FILE
 #
-# SLABS_PER_RUN picks between the two run shapes used by these scripts:
+# SLABS_PER_RUN picks the run shape:
 #
-#   5   half a project per run (00 - 02 stages), also sets KEEP_OR_REMOVE
-#  10   a whole project per run (03 - 05 stages), also sets SECOND_SERIAL and SERIAL_PATTERN
+#     5   half a project per run
+#    10   a whole project per run, also sets SECOND_SERIAL and SERIAL_PATTERN
+#  auto   derive 5 or 10 from the wafer and first serial number (see deriveSlabsPerRun below)
+#
+# The 00 - 02 stages use auto because their run size depends on how many regions each slab has,
+# while the 03 - 05 stages always process a whole project at a time.
 #
 # The sourcing script is responsible for BATCH_NAME and anything else stage specific.
 
@@ -38,14 +42,39 @@ if [ -z "${STAGE}" ]; then
 fi
 
 case "${SLABS_PER_RUN}" in
-  5|10)
+  5|10|auto)
     ;;
   *)
-    printf "\nExiting, SLABS_PER_RUN must be 5 or 10 (not '%s') before sourcing %s\n\n" \
+    printf "\nExiting, SLABS_PER_RUN must be 5, 10, or auto (not '%s') before sourcing %s\n\n" \
            "${SLABS_PER_RUN}" "$(basename "${BASH_SOURCE[0]}")"
     exit 1
     ;;
 esac
+
+# Each run is sized to cover ten stacks, so the number of slabs per run depends on how many
+# regions each slab has:
+#
+#   wafer 61, serial slabs 000 to 179:  two regions (r00 and r01), so  5 slabs per run
+#   wafer 61, serial slabs 180 and up:  one region  (r00),         so 10 slabs per run
+#   wafer 60:                           region counts are not known yet
+#
+# NOTE: slab 179 has one region but is still processed in the 175 to 179 group of five,
+#       so that group covers nine stacks instead of ten.
+deriveSlabsPerRun() {
+  case "${WAFER}" in
+    61)
+      if (( FIRST_SERIAL_NUMBER < 180 )); then
+        echo 5
+      else
+        echo 10
+      fi
+      ;;
+    *)
+      # TODO: replace this with the wafer 60 group sizes once the region counts are known
+      echo 5
+      ;;
+  esac
+}
 
 # ----------------------------------------------------------------------------
 # Parse and validate the sourcing script's parameters
@@ -107,6 +136,12 @@ fi
 # force base 10 so that zero padded values (e.g. 070) are not treated as octal
 FIRST_SERIAL_NUMBER=$(( 10#${FIRST_SERIAL_NUMBER} ))
 
+# the derivation needs the wafer and the parsed serial number, so it happens after both are known
+# but before the multiple-of check below
+if [ "${SLABS_PER_RUN}" = "auto" ]; then
+  SLABS_PER_RUN=$(deriveSlabsPerRun)
+fi
+
 if (( FIRST_SERIAL_NUMBER > 410 )) || (( FIRST_SERIAL_NUMBER % SLABS_PER_RUN != 0 )); then
   printf "\nExiting, %d is not a multiple of %d between 0 and 410\n\n" \
          "${FIRST_SERIAL_NUMBER}" "${SLABS_PER_RUN}"
@@ -122,10 +157,8 @@ if (( SLABS_PER_RUN == 5 )); then
 
   # even serial numbers are the first half of a project's slabs, odd ones are the second half
   if (( FIRST_SERIAL_NUMBER % 2 == 0 )); then
-    KEEP_OR_REMOVE="[k]ept"
     FIRST_PROJECT_NUMBER=${FIRST_SERIAL_NUMBER}
   else
-    KEEP_OR_REMOVE="[r]emoved"
     FIRST_PROJECT_NUMBER=$(( FIRST_SERIAL_NUMBER - 5 ))
   fi
 

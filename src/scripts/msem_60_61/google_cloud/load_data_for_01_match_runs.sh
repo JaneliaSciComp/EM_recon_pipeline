@@ -3,7 +3,7 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 STAGE="01_match"
-SLABS_PER_RUN=5
+SLABS_PER_RUN=auto
 
 # shellcheck source=setup_load_data_variables.sh
 source "${SCRIPT_DIR}/setup_load_data_variables.sh"
