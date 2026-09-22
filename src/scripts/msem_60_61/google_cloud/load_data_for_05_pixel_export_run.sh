@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Batch identifier appended to each slab group name (edit this for each round of runs).
-SLAB_GROUP_SUFFIX="20260901"
+SLAB_GROUP_SUFFIX="20260918"
 STAGE="04b_3d_align"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
@@ -131,7 +131,7 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 ./other/remove-stacks.sh
 
 # 3d align data load typically takes 1 to 2 minutes
-./db-restore-collections.sh --pattern '04b_3d_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}'
+./db-restore-collections.sh --pattern '04b_3d_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/'
 
 # for dump directories prompt, enter:         1
 

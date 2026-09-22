@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Batch identifier appended to each slab group name (edit this for each round of runs).
-SLAB_GROUP_SUFFIX="20260901"
+SLAB_GROUP_SUFFIX="20260918"
 STAGE="03_ic2d_nc4_hist_rs0p5"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
@@ -133,7 +133,7 @@ docker exec --interactive --tty \"\$(docker ps -q)\" /bin/bash
 
 ./other/remove-stacks.sh
 
-./db-restore-collections.sh --pattern '02_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}'
+./db-restore-collections.sh --pattern '02_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/'
 # for dump directories prompt, enter:         1 2
 
 ./list-stacks.sh
