@@ -45,6 +45,8 @@ On launch box, run:
 ...
 
 
+# if run fails, use the following to download the driver log:
+${GOOGLE_CLOUD_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 # -------------------------------------
 After the run completes (typically 4 to 5 hours), on ${VM_LABEL}, run:
