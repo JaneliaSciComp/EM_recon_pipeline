@@ -139,7 +139,7 @@ FAILED_SUFFIXES=()
 
 for (( I=MIN_INDEX; I<=MAX_INDEX; I++ )); do
 
-  SUFFIX="${VM_LETTERS[I]}"
+  SUFFIX="aa${VM_LETTERS[I]}"
   PRIVATE_NETWORK_IP="${IP_PREFIX}.$(( FIRST_IP_OCTET + I ))"
 
   echo "
