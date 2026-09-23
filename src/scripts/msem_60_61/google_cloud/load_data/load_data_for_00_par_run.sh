@@ -10,6 +10,7 @@ source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 
 PIPELINE_JSON="00_rough_align/pipe.00a.w${WAFER}.bc-match-mat.json"
 MAT_RERUN_PIPELINE_JSON="00_rough_align/pipe.00b.w6n.rerun-mat.json"
+MAT_RERUN_3_PASS_PIPELINE_JSON="00_rough_align/pipe.00c.w6n.rerun-mat-w-3-cross-passes.json"
 MAT_SLAB_GROUP="${SLAB_GROUP}_mat"
 BATCH_NAME="rough-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 MAT_RERUN_BATCH_NAME="rough-mat-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
@@ -70,6 +71,9 @@ ${GOOGLE_CLOUD_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 
 # if mfov-as-tile processing needs to be rerun, launch:
 # ./02_run_pipeline.sh  ${VM_IP}  ${MAT_RERUN_PIPELINE_JSON}  120  4  premium  120  ${MAT_RERUN_BATCH_NAME}  disableDynamic
+
+# if the rerun still misses cross matches for small region 01 slabs, launch the slower three cross pass version:
+# ./02_run_pipeline.sh  ${VM_IP}  ${MAT_RERUN_3_PASS_PIPELINE_JSON}  120  4  premium  120  ${MAT_RERUN_BATCH_NAME}  disableDynamic
 
 
 # -------------------------------------

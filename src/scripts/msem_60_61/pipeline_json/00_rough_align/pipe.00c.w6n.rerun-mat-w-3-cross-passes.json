@@ -23,7 +23,7 @@
     "roughSfovStackSuffix": "_par",
     "minCrossMatchPixelDistance": 1.0,
     "deriveSfovMatchData": false,
-    "crossMatchPassCount": 2
+    "crossMatchPassCount": 3
   },
   "matchCollectionRename": {
     "matchCollectionOwner": "hess_wafers_60_61",

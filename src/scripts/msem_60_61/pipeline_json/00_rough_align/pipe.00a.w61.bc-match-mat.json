@@ -74,6 +74,7 @@
         "w61_s166_r00_gc_bc": [ "scan021" ], "w61_s166_r01_gc_bc": [ "scan021" ]
       },
       "w61_serial_170_to_179": {
+        "w61_s175_r00_gc_bc": [ "scan079" ], "w61_s175_r01_gc_bc": [ "scan079" ],
         "w61_s178_r00_gc_bc": [ "scan021" ], "w61_s178_r01_gc_bc": [ "scan021" ]
       },
       "w61_serial_180_to_189": {
@@ -164,7 +165,8 @@
     "alignedMfovStackSuffix" : "_align",
     "roughSfovStackSuffix": "_par",
     "minCrossMatchPixelDistance": 1.0,
-    "deriveSfovMatchData": false
+    "deriveSfovMatchData": false,
+    "crossMatchPassCount": 2
   },
   "matchCollectionRename": {
     "matchCollectionOwner": "hess_wafers_60_61",
