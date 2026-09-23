@@ -1,7 +1,6 @@
 #!/bin/bash
 
-ABSOLUTE_SCRIPT=$(readlink -m "$0")
-SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ----------------------------------------------------------------------------
 # Parse named parameters
