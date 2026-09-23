@@ -72,7 +72,7 @@ ${GOOGLE_CLOUD_DIR}/download-driver-log.sh rp-<launch-time>-${BATCH_NAME}
 # if mfov-as-tile processing needs to be rerun, launch:
 # ./02_run_pipeline.sh  ${VM_IP}  ${MAT_RERUN_PIPELINE_JSON}  120  4  premium  120  ${MAT_RERUN_BATCH_NAME}  disableDynamic
 
-# if the rerun still misses cross matches for small region 01 slabs, launch the slower three cross pass version:
+# if the rerun still misses cross matches for small region 01 slabs, remove the matches for the r01 slabs and launch the slower three cross pass version:
 # ./02_run_pipeline.sh  ${VM_IP}  ${MAT_RERUN_3_PASS_PIPELINE_JSON}  120  4  premium  120  ${MAT_RERUN_BATCH_NAME}  disableDynamic
 
 
