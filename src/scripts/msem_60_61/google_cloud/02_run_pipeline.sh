@@ -28,7 +28,6 @@ Examples:
 
   3D Align:
     $0  10.150.0.6  04_3d_align/pipe.04.w6n.layer-as-tile.json                    50  4  premium   50  a3d-w61-s150-to-s154    disableDynamic
-    $0  10.150.0.6  04_3d_align/pipe.04.w61.remove-scans.json                      2  4  premium    2  remove-bad-scans-from-04b_3d_align-data  disableDynamic
 
   Import SOFIMA:
     $0  10.150.0.7  05_import_sofima/pipe.05.w6n.import-sofima.json               25  4  premium   25  import-sofima-w61-s070-to-s074  disableDynamic
