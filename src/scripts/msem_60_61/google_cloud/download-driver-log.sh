@@ -11,23 +11,68 @@ set -e
 #       is only available from Cloud Logging (runtimeInfo.outputUri is empty for those runs).
 
 PROJECT="janelia-ibeam"
+REGION="us-east4"
 
 ARG_BATCH_ID="$1"
 ARG_OUTPUT_FILE="$2"
 
 if (( $# < 1 )) || (( $# > 2 )); then
-  printf "\nUSAGE: %s <batch-id> [output-file]
+  printf "\nUSAGE: %s <batch-id|pattern> [output-file]
 
-  batch-id     Dataproc batch id (e.g. rp-20260917-214456-rough-w61-s070-to-s074)
+  batch-id     Dataproc batch id (e.g. rp-20260917-214456-rough-w61-s070-to-s074
+               or rex-20260906-084102-w61-s199-r00-gc-icc-par-asoi-3d-pixel)
+               or a pattern to match against the ids of existing batches
+               (e.g. ic2d-w61-s180-to-s189), in which case the most recent
+               matching batch is used
   output-file  file to write the log to (default: <batch-id>.driver.log)
 
 " "$(basename "$0")"
   exit 1
 fi
 
-# The batch id starts with rp-<yyyymmdd>-<hhmmss>- (see 02_run_pipeline.sh RUN_TIMESTAMP).
-if [[ ! "${ARG_BATCH_ID}" =~ ^rp-([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}- ]]; then
-  printf "\nExiting, batch id '%s' does not start with rp-<yyyymmdd>-<hhmmss>-\n\n" "${ARG_BATCH_ID}"
+# Batch ids start with a submitting script's prefix followed by <yyyymmdd>-<hhmmss>-,
+# e.g. rp- from 02_run_pipeline.sh and rex- from 11_run_n5_export.sh.
+BATCH_ID_PATTERN='^[a-z]+-([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}-'
+
+# Anything that is not a full batch id is treated as a pattern and resolved against the
+# batches that still exist.
+#
+# The ListBatches API only supports filtering on batch_id, batch_uuid, state, and create_time
+# (and silently returns nothing for an unsupported field), so the pattern is matched here
+# instead of being passed to gcloud.
+if [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
+
+  printf "\nlooking for batches matching '%s' ...\n" "${ARG_BATCH_ID}"
+
+  # Sort on the <yyyymmdd> and <hhmmss> fields (2 and 3 of the dash delimited id) so that the
+  # most recent match is last even when the matches have different prefixes (rp- and rex-).
+  MATCHING_BATCH_IDS=$(gcloud dataproc batches list \
+                         --region="${REGION}" \
+                         --project="${PROJECT}" \
+                         --format='value(name.basename())' |
+                       grep -E "${ARG_BATCH_ID}" |
+                       sort -t'-' -k2,2 -k3,3) || true
+
+  if [ -z "${MATCHING_BATCH_IDS}" ]; then
+    printf "\nExiting, no batch id matches '%s'\n\n" "${ARG_BATCH_ID}"
+    exit 1
+  fi
+
+  MATCHING_BATCH_COUNT=$(printf '%s\n' "${MATCHING_BATCH_IDS}" | wc -l | tr -d ' ')
+
+  if (( MATCHING_BATCH_COUNT > 1 )); then
+    printf "\n%s batches match, using the most recent one:\n\n" "${MATCHING_BATCH_COUNT}"
+    printf '%s\n' "${MATCHING_BATCH_IDS}" | sed 's/^/  /'
+  fi
+
+  ARG_BATCH_ID=$(printf '%s\n' "${MATCHING_BATCH_IDS}" | tail -1)
+
+  printf "\nusing batch id %s\n" "${ARG_BATCH_ID}"
+
+fi
+
+if [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
+  printf "\nExiting, batch id '%s' does not start with <prefix>-<yyyymmdd>-<hhmmss>-\n\n" "${ARG_BATCH_ID}"
   exit 1
 fi
 
@@ -83,10 +128,10 @@ if (( LINE_COUNT == 0 )); then
   printf "
 WARNING: no driver log entries were found for %s
 
-  - check the batch id (gcloud dataproc batches list --region=us-east4 --project=%s)
+  - check the batch id (gcloud dataproc batches list --region=%s --project=%s)
   - Cloud Logging keeps entries for 30 days by default, so older runs may have expired
 
-" "${ARG_BATCH_ID}" "${PROJECT}"
+" "${ARG_BATCH_ID}" "${REGION}" "${PROJECT}"
 else
   # NOTE: readlink -m is a GNU extension that the BSD readlink on macOS does not support,
   #       so build the absolute path with cd and pwd instead
