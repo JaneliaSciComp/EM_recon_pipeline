@@ -55,7 +55,7 @@ Run file: ${RUN_FILE}
 
 # Each of the dumps will prompt for confirmation before continuing.
 # They are together here in one line so that you can copy and paste the line to run all dumps.
-${DUMP_DB_CMD} render ${LAT_PARMS}'; ${DUMP_DB_CMD} match ${LAT_PARMS}'; ${DUMP_DB_CMD} render ${RUN_PARMS}'
+${DUMP_DB_CMD} render ${LAT_PARMS}' && ${DUMP_DB_CMD} match ${LAT_PARMS}' && ${DUMP_DB_CMD} render ${RUN_PARMS}'
 
 " | tee -a "${RUN_FILE}"
 
