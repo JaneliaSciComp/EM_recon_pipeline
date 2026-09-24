@@ -196,3 +196,4 @@ PROJECT_GROUP="w${WAFER}_serial_${FIRST_PROJECT}_to_${LAST_PROJECT}"
 
 RUN_FILE="${OUTPUT_DIR}/run.$(date '+%Y%m%d').${STAGE}.vm${VM_LETTER}.txt"
 RIC_CMD="./run_in_container.sh --vm ${VM_LETTER} --command"
+DUMP_DB_CMD="${RIC_CMD} './db-dump-google-collections.sh --db"

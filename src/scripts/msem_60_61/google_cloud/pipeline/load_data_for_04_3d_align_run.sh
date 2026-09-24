@@ -50,13 +50,12 @@ Run file: ${RUN_FILE}
 # After the run completes, save result data:
 
 # The layer-as-tile render collection dump takes 15 seconds, dump directory is: ${LAT_DUMP_DIR}/render
-${RIC_CMD} './db-dump-google-collections.sh --db render ${LAT_PARMS}'
-
 # The layer-as-tile match collection dump takes 1 to 2 minutes, dump directory is: ${LAT_DUMP_DIR}/match
-${RIC_CMD} './db-dump-google-collections.sh --db match ${LAT_PARMS}'
-
 # The 3d render collection dump takes 2 to 3 minutes, dump directory is: ${RUN_DUMP_DIR}/render
-${RIC_CMD} './db-dump-google-collections.sh --db render ${RUN_PARMS}'
+
+# Each of the dumps will prompt for confirmation before continuing.
+# They are together here in one line so that you can copy and paste the line to run all dumps.
+${DUMP_DB_CMD} render ${LAT_PARMS}'; ${DUMP_DB_CMD} match ${LAT_PARMS}'; ${DUMP_DB_CMD} render ${RUN_PARMS}'
 
 " | tee -a "${RUN_FILE}"
 
