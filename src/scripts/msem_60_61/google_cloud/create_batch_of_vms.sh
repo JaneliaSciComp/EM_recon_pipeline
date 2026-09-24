@@ -12,6 +12,8 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 VM_LETTERS=({a..z})
 IP_PREFIX="10.150.0"
 
+VM_SUFFIX_PREFIX="aa"
+
 # the first two addresses in the subnet are reserved, so VM a starts at 10.150.0.2
 FIRST_IP_OCTET=2
 
@@ -33,7 +35,7 @@ USAGE $0 --min-vm <letter> --max-vm <letter>
   --max-vm  last VM letter to create, from a to ${LAST_VM_LETTER} (required)
 
 Examples:
-  $0 --min-vm a --max-vm f
+  $0 --min-vm a --max-vm f        # suffixes ${VM_SUFFIX_PREFIX}a through ${VM_SUFFIX_PREFIX}f
   $0 --min-vm g --max-vm l
   $0 --min-vm c --max-vm c
 "
@@ -76,8 +78,9 @@ fi
 
 # setup_load_data_variables.sh identifies the same VMs with upper case letters,
 # so accept either case here and use the lower case form the VM names need
-ARG_MIN_VM="${ARG_MIN_VM,,}"
-ARG_MAX_VM="${ARG_MAX_VM,,}"
+# (tr instead of ${ARG_MIN_VM,,} because macOS still ships bash 3.2)
+ARG_MIN_VM=$(printf '%s' "${ARG_MIN_VM}" | tr '[:upper:]' '[:lower:]')
+ARG_MAX_VM=$(printf '%s' "${ARG_MAX_VM}" | tr '[:upper:]' '[:lower:]')
 
 validateVmLetter() {
   local NAME="$1"
@@ -118,8 +121,9 @@ The following ${NUMBER_OF_VMS} VM(s) will be created:
 "
 
 for (( I=MIN_INDEX; I<=MAX_INDEX; I++ )); do
-  printf "  %s --suffix aa%s --private-network-ip %s.%d\n" \
-         "$(basename "${CREATE_VM_SCRIPT}")" "${VM_LETTERS[I]}" "${IP_PREFIX}" $(( FIRST_IP_OCTET + I ))
+  printf "  %s --suffix %s --private-network-ip %s.%d\n" \
+         "$(basename "${CREATE_VM_SCRIPT}")" "${VM_SUFFIX_PREFIX}${VM_LETTERS[I]}" \
+         "${IP_PREFIX}" $(( FIRST_IP_OCTET + I ))
 done
 
 echo
@@ -139,7 +143,7 @@ FAILED_SUFFIXES=()
 
 for (( I=MIN_INDEX; I<=MAX_INDEX; I++ )); do
 
-  SUFFIX="aa${VM_LETTERS[I]}"
+  SUFFIX="${VM_SUFFIX_PREFIX}${VM_LETTERS[I]}"
   PRIVATE_NETWORK_IP="${IP_PREFIX}.$(( FIRST_IP_OCTET + I ))"
 
   echo "
