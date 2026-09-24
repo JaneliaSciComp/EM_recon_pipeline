@@ -44,7 +44,7 @@ Run file: ${RUN_FILE}
 ./02_run_pipeline.sh  ${VM_IP}  04_3d_align/pipe.04.w6n.layer-as-tile.json 50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
 # If needed, use the following to download the driver log:
-./download-driver-log.sh ${BATCH_NAME}
+./download_driver_log.sh ${BATCH_NAME}
 
 # -------------------------------------
 # After the run completes, save result data:
