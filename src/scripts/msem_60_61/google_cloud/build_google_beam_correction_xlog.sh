@@ -2,9 +2,6 @@
 
 set -e
 
-ABSOLUTE_SCRIPT=$(readlink -m "$0")
-SCRIPT_DIR=$(dirname "${ABSOLUTE_SCRIPT}")
-
 if (( $# < 1 )); then
   echo "USAGE $0 <wafer id> ...     (e.g. 60)
 "
