@@ -32,6 +32,7 @@
 SLAB_GROUP_SUFFIX="20260918"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
+VM_BASE_DUMP_DIR="/mnt/disks/mongodb_dump_fs/dump/google"
 
 # These scripts live in google_cloud/pipeline while the tools the run instructions reference
 # (e.g. download-driver-log.sh) live in google_cloud, so keep an absolute path to the parent.
@@ -194,3 +195,4 @@ SLAB_GROUP="s${FIRST_SERIAL}_to_s${LAST_SERIAL}_${SLAB_GROUP_SUFFIX}"
 PROJECT_GROUP="w${WAFER}_serial_${FIRST_PROJECT}_to_${LAST_PROJECT}"
 
 RUN_FILE="${OUTPUT_DIR}/run.$(date '+%Y%m%d').${STAGE}.vm${VM_LETTER}.txt"
+RIC_CMD="./run_in_container.sh --vm ${VM_LETTER} --command"
