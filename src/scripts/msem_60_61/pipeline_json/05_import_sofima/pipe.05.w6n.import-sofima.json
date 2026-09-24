@@ -5,13 +5,13 @@
     "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "raw":                { "stackPattern": "^w6._s..._r.._gc_icc_par_asoi_3d$" }
+    "raw":                { "stackPattern": "^w6._s..._r.._gc_bc_par_cc_asoi_3d$" }
   },
   "pipelineSteps": [
     "IMPORT_SOFIMA"
   ],
   "sofima": {
-    "sofimaFieldUri": "gs://janelia-spark-test/warp_flow_precomputed_260907",
+    "sofimaFieldUri": "gs://janelia-spark-test/warp_flow_precomputed_2609??",
     "targetStackSuffix": "_s"
   }
 }
