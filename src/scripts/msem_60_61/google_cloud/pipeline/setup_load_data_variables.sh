@@ -33,7 +33,7 @@ SLAB_GROUP_SUFFIX="20260918"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
 
-# These scripts live in google_cloud/load_data while the tools the run instructions reference
+# These scripts live in google_cloud/pipeline while the tools the run instructions reference
 # (e.g. download-driver-log.sh) live in google_cloud, so keep an absolute path to the parent.
 GOOGLE_CLOUD_DIR=$(cd "${SCRIPT_DIR}/.." && pwd)
 

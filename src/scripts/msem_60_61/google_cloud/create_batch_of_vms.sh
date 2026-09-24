@@ -7,7 +7,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # create_compute_instance_vm.sh.
 #
 # VMs are lettered in IP order (a is the first IP, b is the second, ...), matching the
-# letter to IP mapping that load_data/setup_load_data_variables.sh uses to identify VMs.
+# letter to IP mapping that pipeline/setup_load_data_variables.sh uses to identify VMs.
 
 VM_LETTERS=({a..z})
 IP_PREFIX="10.150.0"
