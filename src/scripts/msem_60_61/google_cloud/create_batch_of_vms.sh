@@ -118,7 +118,7 @@ The following ${NUMBER_OF_VMS} VM(s) will be created:
 "
 
 for (( I=MIN_INDEX; I<=MAX_INDEX; I++ )); do
-  printf "  %s --suffix %s --private-network-ip %s.%d\n" \
+  printf "  %s --suffix aa%s --private-network-ip %s.%d\n" \
          "$(basename "${CREATE_VM_SCRIPT}")" "${VM_LETTERS[I]}" "${IP_PREFIX}" $(( FIRST_IP_OCTET + I ))
 done
 
