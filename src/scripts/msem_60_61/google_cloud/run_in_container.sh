@@ -139,8 +139,10 @@ and have its shell run:
   exit 0
 fi
 
+# this goes to stderr so that stdout has only the output of the command being run,
+# which lets callers capture and parse it (see pipeline/load_data_for_05_pixel_export_run.sh)
 echo "
 Connecting to ${VM_NAME} in ${ZONE} ...
-"
+" >&2
 
 exec gcloud compute ssh "${VM_NAME}" --zone="${ZONE}" --command="${REMOTE_COMMAND}" -- -t
