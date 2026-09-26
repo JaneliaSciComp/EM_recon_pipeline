@@ -5,6 +5,19 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 STAGE="05_pixel_export"
 SLABS_PER_RUN=10
 
+# Pull --downsample-only out of the parameters before sourcing the setup script, which
+# requires exactly the three <wafer> <first serial> <VM letter> values.
+ARG_DOWNSAMPLE_ONLY="false"
+SETUP_ARGS=()
+for ARG in "$@"; do
+  if [ "${ARG}" = "--downsample-only" ]; then
+    ARG_DOWNSAMPLE_ONLY="true"
+  else
+    SETUP_ARGS+=("${ARG}")
+  fi
+done
+set -- "${SETUP_ARGS[@]}"
+
 # shellcheck source=setup_load_data_variables.sh
 source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 
@@ -16,6 +29,9 @@ RENDER_OWNER="hess_wafers_60_61"
 # only the 3d aligned stacks are exported
 EXPORT_STACK_SUFFIX="_asoi_3d"
 
+# keep this in sync with N5_PATH in ../11_run_n5_export.sh
+N5_EXPORT_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render/${PROJECT_GROUP}"
+
 MAX_EXECUTORS=5        #  5 executors for w61_s083_r00 pixel with 80 z layers took 8 hours, 43 minutes
                        #  5 executors for w61_s097_r00 pixel with 75 z layers took 6 hours, 52 minutes
                        #  5 executors for w61_s083_r01 pixel with 80 z layers took 3 hours, 11 minutes
@@ -26,7 +42,7 @@ MAX_EXECUTORS=5        #  5 executors for w61_s083_r00 pixel with 80 z layers to
                        # 40 executors for w61_s076_r00 mask  with 89 z layers took 0 hours, 42 minutes
 
 # ----------------------------------------------------------------------------
-# Ask the VM which stacks need to be exported
+# Ask the VM which stacks need a job
 #
 # The stackIds web service is used instead of ./list-stacks.sh because list-stacks.sh prompts
 # for a project when more than one is loaded, which would hang this script.
@@ -58,20 +74,58 @@ if [ -z "${ALL_STACKS}" ]; then
   exit 1
 fi
 
-EXPORT_STACKS=()
+CANDIDATE_STACKS=()
 while IFS= read -r STACK_NAME; do
   if [ -n "${STACK_NAME}" ]; then
-    EXPORT_STACKS+=("${STACK_NAME}")
+    CANDIDATE_STACKS+=("${STACK_NAME}")
   fi
 done < <(printf '%s\n' "${ALL_STACKS}" | grep -E "${EXPORT_STACK_SUFFIX}\$" | sort)
 
-if (( ${#EXPORT_STACKS[@]} == 0 )); then
+if (( ${#CANDIDATE_STACKS[@]} == 0 )); then
   printf "\nExiting, no %s stacks found in %s on %s\n\n" \
          "${EXPORT_STACK_SUFFIX}" "${PROJECT_GROUP}" "${VM_LABEL}"
   exit 1
 fi
 
-printf "\nfound %d stack(s) to export:\n" "${#EXPORT_STACKS[@]}"
+# ----------------------------------------------------------------------------
+# For downsample only runs, drop the stacks whose pyramids were already built
+#
+# 11_run_n5_export.sh refuses to downsample when s1 exists, and the submissions below are
+# chained with &&, so one already downsampled stack would stop all of the ones after it.
+#
+# Each dataset is checked individually rather than with one wildcard listing of the project
+# group, which would return every export in it.
+
+EXPORT_STACKS=()
+
+if [ "${ARG_DOWNSAMPLE_ONLY}" = "true" ]; then
+
+  printf "\nchecking for datasets that already have an s1 ...\n"
+
+  for STACK in "${CANDIDATE_STACKS[@]}"; do
+    if gcloud storage ls "${N5_EXPORT_URL}/${STACK}___pixel/s1/" 2>/dev/null | grep -q .; then
+      printf "  skipping %s because its s1 already exists\n" "${STACK}"
+    else
+      EXPORT_STACKS+=("${STACK}")
+    fi
+  done
+
+  if (( ${#EXPORT_STACKS[@]} == 0 )); then
+    printf "\nExiting, every %s stack in %s already has an s1\n\n" \
+           "${EXPORT_STACK_SUFFIX}" "${PROJECT_GROUP}"
+    exit 1
+  fi
+
+  printf "\nfound %d stack(s) to downsample:\n" "${#EXPORT_STACKS[@]}"
+
+else
+
+  EXPORT_STACKS=("${CANDIDATE_STACKS[@]}")
+
+  printf "\nfound %d stack(s) to export:\n" "${#EXPORT_STACKS[@]}"
+
+fi
+
 printf "  %s\n" "${EXPORT_STACKS[@]}"
 
 # ----------------------------------------------------------------------------
@@ -80,9 +134,19 @@ printf "  %s\n" "${EXPORT_STACKS[@]}"
 # 11_run_n5_export.sh submits with --async and returns immediately, so the sleeps simply
 # space out the submissions.  Using && means a failed submission stops the ones after it.
 
+if [ "${ARG_DOWNSAMPLE_ONLY}" = "true" ]; then
+  RUN_DESCRIPTION="downsample"
+else
+  RUN_DESCRIPTION="export"
+fi
+
 BATCH_EXPORT_CMD=""
 for STACK in "${EXPORT_STACKS[@]}"; do
-  EXPORT_CMD="./11_run_n5_export.sh ${VM_IP} ${PROJECT_GROUP} ${STACK} ${MAX_EXECUTORS} pixel"
+  # --dataset-suffix is omitted because pixel is its default.
+  EXPORT_CMD="./11_run_n5_export.sh --render-ws-ip ${VM_IP} --stack ${STACK} --max-executors ${MAX_EXECUTORS}"
+  if [ "${ARG_DOWNSAMPLE_ONLY}" = "true" ]; then
+    EXPORT_CMD="${EXPORT_CMD} --downsample-only"
+  fi
   if [ -z "${BATCH_EXPORT_CMD}" ]; then
     BATCH_EXPORT_CMD="${EXPORT_CMD}"
   else
@@ -105,9 +169,9 @@ Run file: ${RUN_FILE}
 #   ${RIC_CMD} './db-restore-collections.sh --pattern \"04b_3d_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
 
 # -------------------------------------
-# Run export jobs:
+# Run ${RUN_DESCRIPTION} jobs:
 
-# Submits ${#EXPORT_STACKS[@]} export jobs, one for each ${EXPORT_STACK_SUFFIX} stack, with ${MAX_EXECUTORS} executors each.
+# Submits ${#EXPORT_STACKS[@]} ${RUN_DESCRIPTION} jobs, one for each ${EXPORT_STACK_SUFFIX} stack, with ${MAX_EXECUTORS} executors each.
 ${BATCH_EXPORT_CMD}
 
 # -------------------------------------
