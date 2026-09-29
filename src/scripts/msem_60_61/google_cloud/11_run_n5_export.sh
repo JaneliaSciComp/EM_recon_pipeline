@@ -9,10 +9,12 @@ ARG_RENDER_WS_IP=""
 ARG_STACK=""
 ARG_PROJECT=""
 ARG_MAX_EXECUTORS="5"
+ARG_SPARK_EXEC_CORES="4"
 ARG_DATASET_SUFFIX="pixel"
 ARG_TIER="premium"
 ARG_STACK_RESOLUTION="8,8,8"
 ARG_SKIP_TIMESTAMP="false"
+ARG_DISABLE_DYNAMIC="false"
 ARG_DOWNSAMPLE_ONLY="false"
 
 usage() {
@@ -24,12 +26,15 @@ USAGE $0 --render-ws-ip <ip> --stack <stack> [options]
   --project          render project (default: derived from the stack name,
                      e.g. w61_s070_r00_... is in w61_serial_070_to_079)
   --max-executors    2 to 500 (default: ${ARG_MAX_EXECUTORS})
+  --spark-exec-cores cores per spark executor, 4, 8, or 16 (default: ${ARG_SPARK_EXEC_CORES})
   --dataset-suffix   pixel or mask (default: ${ARG_DATASET_SUFFIX})
   --tier             premium or standard compute tier (default: ${ARG_TIER}),
                      premium allows up to 24576mb per core instead of 7424mb
   --stack-resolution full scale x,y,z pixel resolution (default: ${ARG_STACK_RESOLUTION}),
                      only used with --downsample-only
   --skip-timestamp   reuse an existing dataset name instead of appending the run time
+  --disable-dynamic  turn off spark dynamic allocation, which keeps all of the executors
+                     for the whole run instead of releasing the idle ones
   --downsample-only  skip the full scale export and only build the scale pyramid for an
                      existing s0 dataset (requires s0 to exist and s1 to not exist)
 
@@ -69,6 +74,10 @@ while [[ $# -gt 0 ]]; do
       ARG_MAX_EXECUTORS="${2:?'--max-executors requires a value'}"
       shift 2
       ;;
+    --spark-exec-cores)
+      ARG_SPARK_EXEC_CORES="${2:?'--spark-exec-cores requires a value'}"
+      shift 2
+      ;;
     --dataset-suffix)
       ARG_DATASET_SUFFIX="${2:?'--dataset-suffix requires a value'}"
       shift 2
@@ -83,6 +92,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-timestamp)
       ARG_SKIP_TIMESTAMP="true"
+      shift
+      ;;
+    --disable-dynamic)
+      ARG_DISABLE_DYNAMIC="true"
       shift
       ;;
     --downsample-only)
@@ -144,6 +157,15 @@ if (( ARG_MAX_EXECUTORS < 2 )) || (( ARG_MAX_EXECUTORS > 500 )); then
   exit 1
 fi
 
+case "${ARG_SPARK_EXEC_CORES}" in
+  4|8|16)
+    ;;
+  *)
+    echo "ERROR: --spark-exec-cores must be 4, 8, or 16 (not '${ARG_SPARK_EXEC_CORES}')"
+    exit 1
+    ;;
+esac
+
 case "${ARG_DATASET_SUFFIX}" in
   pixel) MASK_ARG="" ;;
   mask)  MASK_ARG="--exportMask" ;;
@@ -194,8 +216,6 @@ fi
 #                            Add dataproc.tier=premium to the properties.
 #   with all three        -> Driver compute tier and compute class cannot be set at the same time
 
-SPARK_EXEC_CORES=4 # must be 4, 8, or 16
-
 # these match the per tier values in ../02_run_pipeline.sh
 if [ "${ARG_TIER}" = "premium" ]; then
   SINGLE_CORE_MB=22300 # leave room for spark.executor.memoryOverhead, 22300 + 2230 = 24530 < 24576
@@ -203,11 +223,20 @@ else
   SINGLE_CORE_MB=6700  # leave room for spark.executor.memoryOverhead, 6700 + 670 = 7370 < 7424
 fi
 
-SPARK_EXEC_MEMORY_MB=$(( SPARK_EXEC_CORES * SINGLE_CORE_MB ))
+SPARK_EXEC_MEMORY_MB=$(( ARG_SPARK_EXEC_CORES * SINGLE_CORE_MB ))
+
+# these match the dynamic allocation settings in ../02_run_pipeline.sh
+if [ "${ARG_DISABLE_DYNAMIC}" = "true" ]; then
+  DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=false"
+else
+  DYNAMIC_ALLOCATION="spark.dynamicAllocation.enabled=true,spark.dynamicAllocation.maxExecutors=${ARG_MAX_EXECUTORS}"
+  DYNAMIC_ALLOCATION="${DYNAMIC_ALLOCATION},spark.dynamicAllocation.executorIdleTimeout=120"       # default is 60
+  DYNAMIC_ALLOCATION="${DYNAMIC_ALLOCATION},spark.dynamicAllocation.cachedExecutorIdleTimeout=240" # default is ?
+fi
 
 SPARK_PROPS="dataproc.tier=${ARG_TIER},spark.default.parallelism=240,spark.executor.instances=${ARG_MAX_EXECUTORS}"
-SPARK_PROPS="${SPARK_PROPS},spark.dynamicAllocation.maxExecutors=${ARG_MAX_EXECUTORS}"
-SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
+SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
+SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${ARG_SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
 
 # The 3.0 runtime provides Spark 4.0.x on Java 21 with Scala 2.13.
