@@ -32,14 +32,18 @@ EXPORT_STACK_SUFFIX="_asoi_3d"
 # keep this in sync with N5_PATH in ../11_run_n5_export.sh
 N5_EXPORT_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render/${PROJECT_GROUP}"
 
-MAX_EXECUTORS=5        #  5 executors for w61_s083_r00 pixel with 80 z layers took 8 hours, 43 minutes
-                       #  5 executors for w61_s097_r00 pixel with 75 z layers took 6 hours, 52 minutes
-                       #  5 executors for w61_s083_r01 pixel with 80 z layers took 3 hours, 11 minutes
-                       #  5 executors for w61_s097_r01 pixel with 75 z layers took 2 hours, 38 minutes
-                       # 10 executors for w61_s099_r00 pixel with 82 z layers took 4 hours, 15 minutes
-                       # 40 executors for w61_s081_r00 pixel with 82 z layers took 2 hours,  1 minute
-                       # 10 executors for w61_s122_r00 mask  with 89 z layers took 1 hour,  30 minutes
-                       # 40 executors for w61_s076_r00 mask  with 89 z layers took 0 hours, 42 minutes
+# --------------
+# Pixel Jobs:
+#    5 executors for w61 r00 regions take 7 to 9 hours
+#    5 executors for w61 r01 regions take 2.5 to 3.5 hours
+#
+# Pixel Downsample Jobs:
+#   25 executors for w61 r00 regions take 20 minutes
+#
+# Mask Jobs:
+#   10 executors for w61_s122_r00 mask  with 89 z layers took 1 hour,  30 minutes
+#   40 executors for w61_s076_r00 mask  with 89 z layers took 0 hours, 42 minutes
+MAX_EXECUTORS=5
 
 # ----------------------------------------------------------------------------
 # Ask the VM which stacks need a job
@@ -143,7 +147,7 @@ fi
 BATCH_EXPORT_CMD=""
 for STACK in "${EXPORT_STACKS[@]}"; do
   # --dataset-suffix is omitted because pixel is its default.
-  EXPORT_CMD="./11_run_n5_export.sh --render-ws-ip ${VM_IP} --stack ${STACK} --max-executors ${MAX_EXECUTORS}"
+  EXPORT_CMD="./11_run_n5_export.sh --render-ws-ip ${VM_IP} --stack ${STACK} --max-executors ${MAX_EXECUTORS} --disable-dynamic"
   if [ "${ARG_DOWNSAMPLE_ONLY}" = "true" ]; then
     EXPORT_CMD="${EXPORT_CMD} --downsample-only"
   fi
