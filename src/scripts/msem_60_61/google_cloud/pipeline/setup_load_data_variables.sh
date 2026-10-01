@@ -31,7 +31,7 @@
 # Batch identifier appended to each slab group name (edit this for each round of runs).
 SLAB_GROUP_SUFFIX="20260918"
 
-OUTPUT_DIR="/Users/trautmane/Desktop/msem-2026-09/00-runs"
+OUTPUT_DIR="/Users/trautmane/Desktop/2026-10-msem/00-runs"
 VM_BASE_DUMP_DIR="/mnt/disks/mongodb_dump_fs/dump/google"
 
 # These scripts live in google_cloud/pipeline while the tools the run instructions reference
