@@ -11,7 +11,7 @@ ARG_PROJECT=""
 ARG_MAX_EXECUTORS="5"
 ARG_SPARK_EXEC_CORES="4"
 ARG_DATASET_SUFFIX="pixel"
-ARG_TIER="premium"
+ARG_TIER="standard"
 ARG_STACK_RESOLUTION="8,8,8"
 ARG_SKIP_TIMESTAMP="false"
 ARG_DISABLE_DYNAMIC="false"
@@ -238,6 +238,9 @@ SPARK_PROPS="dataproc.tier=${ARG_TIER},spark.default.parallelism=240,spark.execu
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${ARG_SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
+
+# set SoftRefLRUPolicyMSPerMB=0 to avoid OutOfMemory errors caused by n5-spark 4.1.0 changes (see commit message for details)
+SPARK_PROPS="${SPARK_PROPS},spark.executor.extraJavaOptions=-XX:SoftRefLRUPolicyMSPerMB=0"
 
 # The 3.0 runtime provides Spark 4.0.x on Java 21 with Scala 2.13.
 # It is required (not just preferred) because render jars are now compiled for Java 21 and
