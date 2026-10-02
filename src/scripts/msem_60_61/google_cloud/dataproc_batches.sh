@@ -4,7 +4,7 @@ set -e
 
 # ----------------------------------------------------------------------------
 # Lists the ids of Dataproc batch jobs, most recently created first, and can
-# optionally download the driver log for each one.
+# optionally download the driver or executor logs for each one.
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
@@ -12,6 +12,7 @@ PROJECT="janelia-ibeam"
 REGION="us-east4"
 
 DRIVER_LOG_SCRIPT="${SCRIPT_DIR}/download_driver_log.sh"
+EXECUTOR_LOG_SCRIPT="${SCRIPT_DIR}/download_executor_log.sh"
 
 # ----------------------------------------------------------------------------
 # Parse named parameters
@@ -28,8 +29,10 @@ usage() {
 USAGE $0 [--action <action>] [--batch-id-pattern <pattern>] [--created-after <yyyymmdd>]
           [--created-before <yyyymmdd>] [--status <status>] [--max-items <count>]
 
-  --action            list to just print the matching batch ids, or driver-log to
-                      print them and then be prompted to download each driver log
+  --action            list to just print the matching batch ids, driver-log to
+                      print them and then be prompted to download each driver log,
+                      or executor-log to be prompted to download each batch's executor
+                      logs into a <batch-id>.executor-logs directory
                       (default: ${ARG_ACTION})
   --batch-id-pattern  extended regular expression the batch id must match
   --created-after     only include batches created on or after this date
@@ -46,6 +49,7 @@ Examples:
   $0 --batch-id-pattern '^rds-' --created-after 20260925 --status running
   $0 --created-after 20260920 --created-before 20260925 --max-items 100
   $0 --action driver-log --status failed --created-after 20260925
+  $0 --action executor-log --batch-id-pattern 'test-a' --max-items 1
 "
   exit 1
 }
@@ -121,20 +125,28 @@ if [[ ! "${ARG_MAX_ITEMS}" =~ ^[0-9]+$ ]] || (( ARG_MAX_ITEMS < 1 )); then
   exit 1
 fi
 
+LOG_SCRIPT=""
 case "${ARG_ACTION}" in
   list)
     ;;
   driver-log)
-    if [ ! -x "${DRIVER_LOG_SCRIPT}" ]; then
-      echo "ERROR: ${DRIVER_LOG_SCRIPT} does not exist or is not executable"
-      exit 1
-    fi
+    LOG_SCRIPT="${DRIVER_LOG_SCRIPT}"
+    LOG_DESCRIPTION="driver log"
+    ;;
+  executor-log)
+    LOG_SCRIPT="${EXECUTOR_LOG_SCRIPT}"
+    LOG_DESCRIPTION="executor logs"
     ;;
   *)
-    echo "ERROR: --action must be 'list' or 'driver-log' (not '${ARG_ACTION}')"
+    echo "ERROR: --action must be 'list', 'driver-log', or 'executor-log' (not '${ARG_ACTION}')"
     exit 1
     ;;
 esac
+
+if [ -n "${LOG_SCRIPT}" ] && [ ! -x "${LOG_SCRIPT}" ]; then
+  echo "ERROR: ${LOG_SCRIPT} does not exist or is not executable"
+  exit 1
+fi
 
 # ----------------------------------------------------------------------------
 # Build the server side filter
@@ -197,20 +209,20 @@ fi
 printf '%s\n' "${BATCH_IDS[@]}"
 
 # ----------------------------------------------------------------------------
-# Optionally download each driver log
+# Optionally download each driver or executor log
 #
-# The output file is left unspecified so that download_driver_log.sh uses its
-# <batch-id>.driver.log default in the current directory.
+# The output location is left unspecified so that the download scripts use their
+# <batch-id>.driver.log and <batch-id>.executor-logs defaults in the current directory.
 
-if [ "${ARG_ACTION}" = "driver-log" ]; then
+if [ -n "${LOG_SCRIPT}" ]; then
 
   printf "\n%d batch(es) matched\n" "${#BATCH_IDS[@]}"
 
   for BATCH_ID in "${BATCH_IDS[@]}"; do
     echo
-    read -rp "Download the driver log for ${BATCH_ID}? (y/n): " DOWNLOAD_CONFIRM
+    read -rp "Download the ${LOG_DESCRIPTION} for ${BATCH_ID}? (y/n): " DOWNLOAD_CONFIRM
     if [[ ${DOWNLOAD_CONFIRM} =~ ^[Yy]$ ]]; then
-      "${DRIVER_LOG_SCRIPT}" --batch-id "${BATCH_ID}"
+      "${LOG_SCRIPT}" --batch-id "${BATCH_ID}"
     fi
   done
 
