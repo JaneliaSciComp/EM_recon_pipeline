@@ -13,26 +13,132 @@ set -e
 PROJECT="janelia-ibeam"
 REGION="us-east4"
 
-ARG_BATCH_ID="$1"
-ARG_OUTPUT_FILE="$2"
+ARG_BATCH_ID=""
+ARG_OUTPUT_FILE=""
+ARG_RECENT_BATCH_COUNT=20
 
-if (( $# < 1 )) || (( $# > 2 )); then
-  printf "\nUSAGE: %s <batch-id|pattern> [output-file]
+usage() {
+  echo "
+USAGE $0 [--batch-id <batch-id|pattern>] [--output-file <file>] [--recent-batch-count <n>]
 
-  batch-id     Dataproc batch id (e.g. rp-20260917-214456-rough-w61-s070-to-s074
-               or rex-20260906-084102-w61-s199-r00-gc-icc-par-asoi-3d-pixel)
-               or a pattern to match against the ids of existing batches
-               (e.g. ic2d-w61-s180-to-s189), in which case the most recent
-               matching batch is used
-  output-file  file to write the log to (default: <batch-id>.driver.log)
+  --batch-id     Dataproc batch id (e.g. rp-20260917-214456-rough-w61-s070-to-s074
+                 or rex-20260906-084102-w61-s199-r00-gc-icc-par-asoi-3d-pixel)
+                 or a pattern to match against the ids of existing batches
+                 (e.g. ic2d-w61-s180-to-s189), in which case the most recent
+                 matching batch is used
+                 (default: choose from the --recent-batch-count most recent batches)
+  --output-file  file to write the log to (default: <batch-id>.driver.log)
+  --recent-batch-count
+                 number of recent batches to choose from when --batch-id is not
+                 specified (default: ${ARG_RECENT_BATCH_COUNT})
+  -h, --help     show this message
 
-" "$(basename "$0")"
+Examples:
+
+  $0
+
+  $0 --batch-id rp-20260917-214456-rough-w61-s070-to-s074
+
+  $0 --batch-id 'w61-s199-r00-.*-pixel' --output-file s199.driver.log
+"
   exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+  case "${1}" in
+    --batch-id)
+      ARG_BATCH_ID="${2:?'--batch-id requires a value'}"
+      shift 2
+      ;;
+    --output-file)
+      ARG_OUTPUT_FILE="${2:?'--output-file requires a value'}"
+      shift 2
+      ;;
+    --recent-batch-count)
+      ARG_RECENT_BATCH_COUNT="${2:?'--recent-batch-count requires a value'}"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "ERROR: unrecognized parameter '${1}'"
+      usage
+      ;;
+  esac
+done
+
+if [[ ! "${ARG_RECENT_BATCH_COUNT}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "ERROR: --recent-batch-count must be a positive integer, not '${ARG_RECENT_BATCH_COUNT}'"
+  usage
 fi
 
 # Batch ids start with a submitting script's prefix followed by <yyyymmdd>-<hhmmss>-,
 # e.g. rp- from 02_run_pipeline.sh and rex- from 11_run_n5_export.sh.
 BATCH_ID_PATTERN='^[a-z]+-([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}-'
+
+# Lists the batches in the "<batch-id><tab><state>" lines passed as $1 and sets
+# SELECTED_BATCH_ID to the one the user picks (exits if the user quits).
+#
+# The lines are passed as an argument instead of on stdin because select reads the
+# user's answer from stdin.
+select_batch_id() {
+  local BATCH_LINES="$1"
+  local BATCH_ID BATCH_STATE BATCH_LABEL
+
+  # NOTE: mapfile is not in the bash 3.2 that ships with macOS, so the arrays are built with read
+  local BATCH_IDS=()
+  local BATCH_LABELS=()
+  while IFS=$'\t' read -r BATCH_ID BATCH_STATE; do
+    BATCH_IDS+=("${BATCH_ID}")
+    BATCH_LABELS+=("$(printf '%-75s %s' "${BATCH_ID}" "${BATCH_STATE}")")
+  done <<< "${BATCH_LINES}"
+
+  SELECTED_BATCH_ID=""
+
+  echo
+  PS3=$'\nselect a batch by number (or q to quit): '
+  select BATCH_LABEL in "${BATCH_LABELS[@]}"; do
+    if [ "${REPLY}" = "q" ]; then
+      exit 1
+    elif [ -n "${BATCH_LABEL}" ]; then
+      SELECTED_BATCH_ID="${BATCH_IDS[$(( REPLY - 1 ))]}"
+      break
+    fi
+    echo "'${REPLY}' is not one of the listed numbers"
+  done
+
+  # select also ends when stdin is closed (e.g. ctrl-d) without a selection
+  if [ -z "${SELECTED_BATCH_ID}" ]; then
+    printf "\nExiting, no batch was selected\n\n"
+    exit 1
+  fi
+}
+
+# Without --batch-id, list the most recent batches and let the user pick one.
+if [ -z "${ARG_BATCH_ID}" ]; then
+
+  if [ ! -t 0 ]; then
+    echo "ERROR: --batch-id is required when the script is not run interactively"
+    usage
+  fi
+
+  printf "\nlooking for the %s most recent batches ...\n" "${ARG_RECENT_BATCH_COUNT}"
+
+  RECENT_BATCHES=$(gcloud dataproc batches list \
+                     --region="${REGION}" \
+                     --project="${PROJECT}" \
+                     --sort-by=~createTime \
+                     --limit="${ARG_RECENT_BATCH_COUNT}" \
+                     --format='value(name.basename(), state)')
+
+  if [ -z "${RECENT_BATCHES}" ]; then
+    printf "\nExiting, no batches were found in project %s region %s\n\n" "${PROJECT}" "${REGION}"
+    exit 1
+  fi
+
+  select_batch_id "${RECENT_BATCHES}"
+  ARG_BATCH_ID="${SELECTED_BATCH_ID}"
 
 # Anything that is not a full batch id is treated as a pattern and resolved against the
 # batches that still exist.
@@ -40,32 +146,40 @@ BATCH_ID_PATTERN='^[a-z]+-([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}-'
 # The ListBatches API only supports filtering on batch_id, batch_uuid, state, and create_time
 # (and silently returns nothing for an unsupported field), so the pattern is matched here
 # instead of being passed to gcloud.
-if [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
+elif [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
 
   printf "\nlooking for batches matching '%s' ...\n" "${ARG_BATCH_ID}"
 
+  # The pattern is only matched against the id column so that anchors like 'pixel$' still work
+  # (it is read from the environment because awk -v would interpret backslashes in it).
   # Sort on the <yyyymmdd> and <hhmmss> fields (2 and 3 of the dash delimited id) so that the
-  # most recent match is last even when the matches have different prefixes (rp- and rex-).
-  MATCHING_BATCH_IDS=$(gcloud dataproc batches list \
-                         --region="${REGION}" \
-                         --project="${PROJECT}" \
-                         --format='value(name.basename())' |
-                       grep -E "${ARG_BATCH_ID}" |
-                       sort -t'-' -k2,2 -k3,3) || true
+  # most recent match is first even when the matches have different prefixes (rp- and rex-).
+  MATCHING_BATCHES=$(gcloud dataproc batches list \
+                       --region="${REGION}" \
+                       --project="${PROJECT}" \
+                       --format='value(name.basename(), state)' |
+                     PATTERN="${ARG_BATCH_ID}" awk -F'\t' '$1 ~ ENVIRON["PATTERN"]' |
+                     sort -t'-' -k2,2r -k3,3r) || true
 
-  if [ -z "${MATCHING_BATCH_IDS}" ]; then
+  if [ -z "${MATCHING_BATCHES}" ]; then
     printf "\nExiting, no batch id matches '%s'\n\n" "${ARG_BATCH_ID}"
     exit 1
   fi
 
-  MATCHING_BATCH_COUNT=$(printf '%s\n' "${MATCHING_BATCH_IDS}" | wc -l | tr -d ' ')
+  MATCHING_BATCH_COUNT=$(printf '%s\n' "${MATCHING_BATCHES}" | wc -l | tr -d ' ')
 
-  if (( MATCHING_BATCH_COUNT > 1 )); then
+  if (( MATCHING_BATCH_COUNT == 1 )); then
+    ARG_BATCH_ID=$(printf '%s\n' "${MATCHING_BATCHES}" | cut -f1)
+  elif [ -t 0 ]; then
+    printf "\n%s batches match:\n" "${MATCHING_BATCH_COUNT}"
+    select_batch_id "${MATCHING_BATCHES}"
+    ARG_BATCH_ID="${SELECTED_BATCH_ID}"
+  else
+    # callers that are not interactive get the most recent match
     printf "\n%s batches match, using the most recent one:\n\n" "${MATCHING_BATCH_COUNT}"
-    printf '%s\n' "${MATCHING_BATCH_IDS}" | sed 's/^/  /'
+    printf '%s\n' "${MATCHING_BATCHES}" | cut -f1 | sed 's/^/  /'
+    ARG_BATCH_ID=$(printf '%s\n' "${MATCHING_BATCHES}" | head -1 | cut -f1)
   fi
-
-  ARG_BATCH_ID=$(printf '%s\n' "${MATCHING_BATCH_IDS}" | tail -1)
 
   printf "\nusing batch id %s\n" "${ARG_BATCH_ID}"
 

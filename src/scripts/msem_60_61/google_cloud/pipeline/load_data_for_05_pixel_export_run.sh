@@ -183,7 +183,7 @@ ${BATCH_EXPORT_CMD}
 
 # export batch ids are rex-<launch-time>-<stack name with dashes>-pixel,
 # so a pattern is enough to find the most recent one
-./download_driver_log.sh 'w${WAFER}-s${FIRST_SERIAL}-r00-.*-pixel'
+./download_driver_log.sh --batch-id 'w${WAFER}-s${FIRST_SERIAL}-r00-.*-pixel'
 
 " | tee -a "${RUN_FILE}"
 

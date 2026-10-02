@@ -210,7 +210,7 @@ if [ "${ARG_ACTION}" = "driver-log" ]; then
     echo
     read -rp "Download the driver log for ${BATCH_ID}? (y/n): " DOWNLOAD_CONFIRM
     if [[ ${DOWNLOAD_CONFIRM} =~ ^[Yy]$ ]]; then
-      "${DRIVER_LOG_SCRIPT}" "${BATCH_ID}"
+      "${DRIVER_LOG_SCRIPT}" --batch-id "${BATCH_ID}"
     fi
   done
 
