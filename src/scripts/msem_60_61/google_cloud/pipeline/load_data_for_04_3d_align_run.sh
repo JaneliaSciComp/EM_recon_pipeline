@@ -38,6 +38,8 @@ Run file: ${RUN_FILE}
 # -------------------------------------
 # Run pipeline batch job:
 
+cd ${GOOGLE_CLOUD_DIR}
+
 # 250 executor run for w61-s190-to-s199 (only has r00) took 15 minutes
 #  50 4-core executor runs take 60 minutes to complete and 14 concurrent runs will use 2856 cores (204 cores per run)
 
