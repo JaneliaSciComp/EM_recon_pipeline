@@ -1,0 +1,49 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://localhost:8080/render-ws/v1",
+    "owner" : "hess_wafers_60_61", "project" : "w61_serial_070_to_079",
+    "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
+  },
+  "pipelineStackGroups": {
+    "aligned":            { "stackPattern": "^w6._s..._r.._gc_bc_par_cc_asoi_3d_s$" }
+  },
+  "pipelineSteps": [
+    "CORRECT_INTENSITY"
+  ],
+  "intensityCorrectionSetup": {
+    "distributedSolve" : {
+      "maxAllowedErrorGlobal" : 10.0,
+      "maxIterationsGlobal" : 10000,
+      "maxPlateauWidthGlobal" : 100,
+      "threadsWorker" : 0,
+      "threadsGlobal" : 0,
+      "deriveThreadsUsingSparkConfig" : true
+    },
+    "intensityAdjust" : {
+      "maxAllowedError" : 0.01,
+      "maxIterations" : 10000,
+      "maxPlateauWidth" : 2000,
+      "lambda1" : 0.1,
+      "lambda2" : 0.0,
+      "maxPixelCacheGb" : 10,
+      "renderScale" : 0.1,
+      "zDistance" : {
+        "simpleZDistance" : [
+          0, 1
+        ]
+      },
+      "numCoefficients" : 4,
+      "equilibrationWeight" : 0.0,
+      "cacheRenderedTiles": true,
+      "tetherCrossLayers": true
+    },
+    "targetStack": {
+      "stackSuffix": "3i",
+      "completeStack": true
+    },
+    "alternatingRuns": {
+      "nRuns": 1,
+      "keepIntermediateStacks": false
+    }
+  }
+}
