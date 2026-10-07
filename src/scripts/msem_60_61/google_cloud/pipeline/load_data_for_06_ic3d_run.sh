@@ -40,10 +40,8 @@ ${RIC_CMD} './list-stacks.sh'
 # -------------------------------------
 # Run pipeline batch job:
 
-# Without a blockPartition in ${PIPELINE_JSON}, each stack is solved as one block in a single
-# Spark task, so there is at most one busy executor per stack (10 slabs x regions, about 20 stacks).
-# TODO: replace this with actual timing once a run completes
-#  20 4-core executor runs take ? hours to complete
+#  20  4-core executor runs take 17 hours to complete
+#  20 16-core executor runs take 10 hours to complete
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  20  4  premium  20  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
