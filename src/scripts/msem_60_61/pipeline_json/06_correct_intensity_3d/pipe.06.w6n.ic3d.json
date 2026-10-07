@@ -5,7 +5,7 @@
     "stackIdWithZ" : { "projectPattern": "^w6._serial_..._to_...$", "zValuesPerBatch": 1 }
   },
   "pipelineStackGroups": {
-    "aligned":            { "stackPattern": "^w6._s..._r.._gc_bc_par_cc_asoi_3d_s$" }
+    "aligned":            { "stackPattern": "^w6._s..._r.._gc_bc_par_cc_aso_3d_s$" }
   },
   "pipelineSteps": [
     "CORRECT_INTENSITY"
@@ -40,6 +40,9 @@
     "targetStack": {
       "stackSuffix": "3i",
       "completeStack": true
+    },
+    "blockPartition": {
+      "sizeZ": 100
     },
     "alternatingRuns": {
       "nRuns": 1,
