@@ -5,8 +5,8 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 STAGE="05_pixel_export"
 SLABS_PER_RUN=10
 
-# Pull --downsample-only out of the parameters before sourcing the setup script, which
-# requires exactly the three <wafer> <first serial> <VM letter> values.
+# Pull --downsample-only out of the parameters before sourcing the setup script,
+# which requires exactly the three <wafer> <first serial> <VM letter> values.
 ARG_DOWNSAMPLE_ONLY="false"
 SETUP_ARGS=()
 for ARG in "$@"; do

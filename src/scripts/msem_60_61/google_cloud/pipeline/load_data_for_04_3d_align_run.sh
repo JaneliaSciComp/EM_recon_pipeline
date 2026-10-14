@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-STAGE="04b_3d_align"
+STAGE="04b_3d_align" 
 SLABS_PER_RUN=10
 
 # shellcheck source=setup_load_data_variables.sh
