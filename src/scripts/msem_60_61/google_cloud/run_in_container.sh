@@ -14,7 +14,8 @@ ZONE="us-east4-c"
 # so match on the suffix instead of assuming a core count
 VM_NAME_PREFIX="render-ws-mongodb"
 
-# the VM letter is prefixed with this to form the name suffix (letter a -> suffix aaa)
+# a single VM letter is prefixed with this to form the name suffix (letter a -> suffix aaa),
+# while a three letter --vm value is used as the suffix as is
 VM_SUFFIX_PREFIX="aa"
 
 # ----------------------------------------------------------------------------
@@ -26,9 +27,10 @@ ARG_DRY_RUN="false"
 
 usage() {
   echo "
-USAGE $0 --vm <letter> [--command <command>] [--dry-run]
+USAGE $0 --vm <letter or suffix> [--command <command>] [--dry-run]
 
-  --vm       letter of the VM to connect to (required, e.g. a for the ${VM_SUFFIX_PREFIX}a VM)
+  --vm       letter or three letter suffix of the VM to connect to
+             (required, e.g. a for the ${VM_SUFFIX_PREFIX}a VM or abc for the abc VM)
   --command  command to run inside the container (optional, opens a shell when omitted)
   --dry-run  print the gcloud command instead of running it
 
@@ -73,12 +75,14 @@ done
 # (tr instead of ${ARG_VM,,} because macOS still ships bash 3.2)
 ARG_VM=$(printf '%s' "${ARG_VM}" | tr '[:upper:]' '[:lower:]')
 
-if [[ ! "${ARG_VM}" =~ ^[a-z]$ ]]; then
-  echo "ERROR: --vm must be a single letter from a to z (not '${ARG_VM}')"
+if [[ "${ARG_VM}" =~ ^[a-z]$ ]]; then
+  VM_SUFFIX="${VM_SUFFIX_PREFIX}${ARG_VM}"
+elif [[ "${ARG_VM}" =~ ^[a-z]{3}$ ]]; then
+  VM_SUFFIX="${ARG_VM}"
+else
+  echo "ERROR: --vm must be a single letter or three letters from a to z (not '${ARG_VM}')"
   exit 1
 fi
-
-VM_SUFFIX="${VM_SUFFIX_PREFIX}${ARG_VM}"
 
 # ----------------------------------------------------------------------------
 # Find the VM
