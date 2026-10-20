@@ -89,7 +89,7 @@ FIRST_SERIAL_NUMBER="$2"
 VM_LETTER="$3"
 
 if (( $# != 3 )); then
-  printf "\nUSAGE: %s <wafer> <first serial number> <VM letter>\n\n" "$(basename "$0")"
+  printf "\nUSAGE: %s <wafer> <first serial number> <VM letter or dbg>\n\n" "$(basename "$0")"
   exit 1
 fi
 
@@ -102,35 +102,49 @@ case "${WAFER}" in
     ;;
 esac
 
-VM_IPS=(10.150.0.2  10.150.0.3  10.150.0.4  10.150.0.5  10.150.0.6
-        10.150.0.7  10.150.0.8  10.150.0.9  10.150.0.10 10.150.0.11
-        10.150.0.12 10.150.0.13 10.150.0.14 10.150.0.15 10.150.0.16
-        10.150.0.17 10.150.0.18 10.150.0.19 10.150.0.20 10.150.0.21
-        10.150.0.22 10.150.0.23 10.150.0.24 10.150.0.25 10.150.0.26
-        10.150.0.27)
+# the debug VM is outside the lettered range, so it is checked first
+DEBUG_VM_LETTER="dbg"
+DEBUG_VM_IP="10.150.0.99"
 
-# VMs are lettered in IP order (A is the first IP, B is the second, ...)
-VM_LETTERS=({A..Z})
-VM_LABELS=()
-for I in "${!VM_IPS[@]}"; do
-  VM_LABEL_FOR_INDEX="${VM_LETTERS[I]} - ${VM_IPS[I]}"
-  VM_LABELS+=("${VM_LABEL_FOR_INDEX}")
-  if [[ "${VM_LETTERS[I]}" == "${VM_LETTER}" ]]; then
-    VM_IP="${VM_IPS[I]}"
-    VM_LABEL="${VM_LABEL_FOR_INDEX}"
+if [[ "${VM_LETTER}" == "${DEBUG_VM_LETTER}" ]]; then
+
+  VM_IP="${DEBUG_VM_IP}"
+  VM_LABEL="${DEBUG_VM_LETTER} - ${DEBUG_VM_IP}"
+
+else
+
+  VM_IPS=(10.150.0.2  10.150.0.3  10.150.0.4  10.150.0.5  10.150.0.6
+          10.150.0.7  10.150.0.8  10.150.0.9  10.150.0.10 10.150.0.11
+          10.150.0.12 10.150.0.13 10.150.0.14 10.150.0.15 10.150.0.16
+          10.150.0.17 10.150.0.18 10.150.0.19 10.150.0.20 10.150.0.21
+          10.150.0.22 10.150.0.23 10.150.0.24 10.150.0.25 10.150.0.26
+          10.150.0.27)
+
+  # VMs are lettered in IP order (A is the first IP, B is the second, ...)
+  VM_LETTERS=({A..Z})
+  VM_LABELS=()
+  for I in "${!VM_IPS[@]}"; do
+    VM_LABEL_FOR_INDEX="${VM_LETTERS[I]} - ${VM_IPS[I]}"
+    VM_LABELS+=("${VM_LABEL_FOR_INDEX}")
+    if [[ "${VM_LETTERS[I]}" == "${VM_LETTER}" ]]; then
+      VM_IP="${VM_IPS[I]}"
+      VM_LABEL="${VM_LABEL_FOR_INDEX}"
+    fi
+  done
+
+  if [[ ! ${VM_LETTER} =~ ^[A-Z]$ ]]; then
+    printf "\nExiting, VM letter '%s' is not '%s' or a single upper case letter from A to Z\n\n" \
+           "${VM_LETTER}" "${DEBUG_VM_LETTER}"
+    exit 1
   fi
-done
 
-if [[ ! ${VM_LETTER} =~ ^[A-Z]$ ]]; then
-  printf "\nExiting, VM letter '%s' is not a single upper case letter from A to Z\n\n" "${VM_LETTER}"
-  exit 1
-fi
+  # only letters with a corresponding IP are matched above, so an unset VM_IP means the letter is out of range
+  if [[ -z "${VM_IP}" ]]; then
+    printf "\nExiting, VM letter '%s' is not one of the %d defined VMs (A to %s)\n\n" \
+           "${VM_LETTER}" "${#VM_IPS[@]}" "${VM_LETTERS[${#VM_IPS[@]}-1]}"
+    exit 1
+  fi
 
-# only letters with a corresponding IP are matched above, so an unset VM_IP means the letter is out of range
-if [[ -z "${VM_IP}" ]]; then
-  printf "\nExiting, VM letter '%s' is not one of the %d defined VMs (A to %s)\n\n" \
-         "${VM_LETTER}" "${#VM_IPS[@]}" "${VM_LETTERS[${#VM_IPS[@]}-1]}"
-  exit 1
 fi
 
 if [[ ! ${FIRST_SERIAL_NUMBER} =~ ^[0-9]+$ ]]; then
