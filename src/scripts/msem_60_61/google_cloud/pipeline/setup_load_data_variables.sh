@@ -29,7 +29,7 @@
 # The sourcing script is responsible for BATCH_NAME and anything else stage specific.
 
 # Batch identifier appended to each slab group name (edit this for each round of runs).
-SLAB_GROUP_SUFFIX="20260918"
+SLAB_GROUP_SUFFIX="20261021"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/2026-10-msem/00-runs"
 VM_BASE_DUMP_DIR="/mnt/disks/mongodb_dump_fs/dump/google"
