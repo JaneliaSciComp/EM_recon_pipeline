@@ -54,7 +54,10 @@ Skipping copy to Google storage.
   exit 0
 fi
 
-gcloud storage rsync --recursive "${JANELIA_BC_XLOG_ZARR}" "${GOOGLE_BC_XLOG_ZARR}"
+echo "copying data to Google ..."
+
+# --no-user-output-enabled hides the 'Copying file:...' line printed for every zarr chunk
+gcloud storage rsync --recursive --no-user-output-enabled "${JANELIA_BC_XLOG_ZARR}" "${GOOGLE_BC_XLOG_ZARR}"
 
 echo "confirming that all data was copied to Google ..."
 JANELIA_BC_XLOG_FILE_COUNT=$(find "${JANELIA_BC_XLOG_ZARR}" -type f | wc -l)
