@@ -1,9 +1,9 @@
 """
 For each multi-SEM MFOV, SFOV numbers start at 1 in the center and spiral counter-clockwise out to 91.
-This list supports mapping an SFOV index to its render order
-with the assumption that rendering should occur top-to-bottom, left-to-right within each MFOV.
+These lists map an SFOV index to its render order.
 
-This list was copied from
+RENDER_SFOV_ORDER orders SFOVs top-to-bottom, left-to-right within each MFOV.
+It was copied from
   https://github.com/saalfeldlab/render/blob/newsolver/render-ws-java-client/src/main/java/org/janelia/render/client/TileReorderingClient.java#L155-L165
 """
 
