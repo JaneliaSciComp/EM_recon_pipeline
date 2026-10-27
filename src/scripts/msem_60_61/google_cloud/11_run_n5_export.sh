@@ -166,9 +166,12 @@ case "${ARG_SPARK_EXEC_CORES}" in
     ;;
 esac
 
+# Pixel exports draw MFOVs in reverse order of their MFOV number (e.g. m0038 tiles before m0033 tiles)
+# instead of in tileId order, while tiles within an MFOV are still drawn in tileId order.
+# Mask exports do not need this because the draw order does not change a mask.
 case "${ARG_DATASET_SUFFIX}" in
-  pixel) MASK_ARG="" ;;
-  mask)  MASK_ARG="--exportMask" ;;
+  pixel) MASK_ARG="";             RENDER_ORDER_ARG="--reverseMfovRenderOrder" ;;
+  mask)  MASK_ARG="--exportMask"; RENDER_ORDER_ARG="" ;;
   *)
     echo "ERROR: --dataset-suffix must be 'pixel' or 'mask' (not '${ARG_DATASET_SUFFIX}')"
     exit 1
@@ -290,7 +293,7 @@ else
 
   #ARGS="${ARGS} --minZ 1 --maxZ ${MAX_Z}"
   # ARGS="${ARGS} --minX 84000 --maxX 94000 --minY 70000 --maxY 80000"
-  ARGS="${ARGS} ${MASK_ARG}"
+  ARGS="${ARGS} ${MASK_ARG} ${RENDER_ORDER_ARG}"
 
 fi
 
