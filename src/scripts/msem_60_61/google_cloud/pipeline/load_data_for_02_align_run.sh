@@ -38,7 +38,7 @@ ${RIC_CMD} './db-restore-collections.sh --pattern \"01_match.*s${FIRST_SERIAL}.*
 # -------------------------------------
 # Run pipeline batch job:
 
-# 200 4-core executor run  took  20 minutes to complete for w61-s170-to-s174
+# 300 4-core executor run  took  65 minutes to complete for w61-s075-to-s079 (and 79 minutes for w61-s070-to-s074)
 # 120 4-core executor runs take ~90 minutes to complete and  6 concurrent runs will use 2904 cores (484 cores per run)
 #  20 4-core executor runs take  ~5 hours   to complete and 26 concurrent runs will use 2184 cores ( 84 cores per run)
 
