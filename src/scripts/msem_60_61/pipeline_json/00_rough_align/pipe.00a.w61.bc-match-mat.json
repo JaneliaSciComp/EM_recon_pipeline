@@ -161,7 +161,7 @@
     "prealignedSfovStackSuffix": "_pa",
     "dynamicMfovStackSuffix": "_mat",
     "renderedMfovStackSuffix": "_render",
-    "renderedMfovRunTimestamp": "20261021_163035",
+    "renderedMfovRunTimestamp": "20261027_203749",
     "alignedMfovStackSuffix" : "_align",
     "roughSfovStackSuffix": "_par",
     "minCrossMatchPixelDistance": 1.0,
