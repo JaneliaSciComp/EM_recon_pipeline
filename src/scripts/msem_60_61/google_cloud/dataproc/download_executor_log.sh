@@ -97,15 +97,22 @@ if [ -z "${ARG_BATCH_ID}" ]; then
 fi
 
 # Batch ids start with a submitting script's prefix followed by <yyyymmdd>-<hhmmss>-,
-# e.g. rp- from 02_run_pipeline.sh and rex- from 11_run_n5_export.sh.
-BATCH_ID_PATTERN='^[a-z]+-([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}-'
+# e.g. rp- from 02_run_pipeline.sh, rex- from 11_run_n5_export.sh, or multi-part prefixes
+# like cost-hf- and surface-pass-00- from the hot-knife scripts.
+#
+# Each prefix part must contain a letter or have fewer than 8 digits so that the prefix can
+# never swallow the <yyyymmdd> part (or a later date-like part from a stack name, e.g.
+# ...-20240504-085310-norm-layer), which makes the first <yyyymmdd>-<hhmmss>- the one matched.
+# The id may also end right after <hhmmss> (e.g. downsample-20261104-101500).
+# The date parts are BASH_REMATCH[3], [4], and [5].
+BATCH_ID_PATTERN='^(([a-z0-9]*[a-z][a-z0-9]*|[0-9]{1,7})-)+([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}(-|$)'
 
 if [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
-  echo "ERROR: --batch-id '${ARG_BATCH_ID}' does not start with <prefix>-<yyyymmdd>-<hhmmss>-"
+  echo "ERROR: --batch-id '${ARG_BATCH_ID}' does not start with <prefix>-<yyyymmdd>-<hhmmss>"
   exit 1
 fi
 
-RUN_DATE="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+RUN_DATE="${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
 
 case "${ARG_MIN_SEVERITY}" in
   "")      SEVERITY="" ;;

@@ -74,8 +74,15 @@ if [[ ! "${ARG_RECENT_BATCH_COUNT}" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 # Batch ids start with a submitting script's prefix followed by <yyyymmdd>-<hhmmss>-,
-# e.g. rp- from 02_run_pipeline.sh and rex- from 11_run_n5_export.sh.
-BATCH_ID_PATTERN='^[a-z]+-([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}-'
+# e.g. rp- from 02_run_pipeline.sh, rex- from 11_run_n5_export.sh, or multi-part prefixes
+# like cost-hf- and surface-pass-00- from the hot-knife scripts.
+#
+# Each prefix part must contain a letter or have fewer than 8 digits so that the prefix can
+# never swallow the <yyyymmdd> part (or a later date-like part from a stack name, e.g.
+# ...-20240504-085310-norm-layer), which makes the first <yyyymmdd>-<hhmmss>- the one matched.
+# The id may also end right after <hhmmss> (e.g. downsample-20261104-101500).
+# The date parts are BASH_REMATCH[3], [4], and [5].
+BATCH_ID_PATTERN='^(([a-z0-9]*[a-z][a-z0-9]*|[0-9]{1,7})-)+([0-9]{4})([0-9]{2})([0-9]{2})-[0-9]{6}(-|$)'
 
 # Lists the batches in the "<batch-id><tab><state>" lines passed as $1 and sets
 # SELECTED_BATCH_ID to the one the user picks (exits if the user quits).
@@ -152,14 +159,29 @@ elif [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
 
   # The pattern is only matched against the id column so that anchors like 'pixel$' still work
   # (it is read from the environment because awk -v would interpret backslashes in it).
-  # Sort on the <yyyymmdd> and <hhmmss> fields (2 and 3 of the dash delimited id) so that the
-  # most recent match is first even when the matches have different prefixes (rp- and rex-).
+  # Sort on the first <yyyymmdd>-<hhmmss> parts of the dash delimited id so that the most recent
+  # match is first even when the matches have prefixes with different numbers of parts
+  # (e.g. rex- and cost-hf-).  The awk sort key is built without regex interval expressions
+  # because older awks (e.g. the macOS one) do not support them.
   MATCHING_BATCHES=$(gcloud dataproc batches list \
                        --region="${REGION}" \
                        --project="${PROJECT}" \
                        --format='value(name.basename(), state)' |
-                     PATTERN="${ARG_BATCH_ID}" awk -F'\t' '$1 ~ ENVIRON["PATTERN"]' |
-                     sort -t'-' -k2,2r -k3,3r) || true
+                     PATTERN="${ARG_BATCH_ID}" awk -F'\t' '
+                       $1 ~ ENVIRON["PATTERN"] {
+                         n = split($1, part, "-")
+                         key = ""
+                         for (i = 1; i < n; i++) {
+                           if (length(part[i]) == 8 && part[i] ~ /^[0-9]+$/ &&
+                               length(part[i+1]) == 6 && part[i+1] ~ /^[0-9]+$/) {
+                             key = part[i] part[i+1]
+                             break
+                           }
+                         }
+                         print key "\t" $0
+                       }' |
+                     sort -t$'\t' -k1,1r |
+                     cut -f2-) || true
 
   if [ -z "${MATCHING_BATCHES}" ]; then
     printf "\nExiting, no batch id matches '%s'\n\n" "${ARG_BATCH_ID}"
@@ -186,11 +208,11 @@ elif [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
 fi
 
 if [[ ! "${ARG_BATCH_ID}" =~ ${BATCH_ID_PATTERN} ]]; then
-  printf "\nExiting, batch id '%s' does not start with <prefix>-<yyyymmdd>-<hhmmss>-\n\n" "${ARG_BATCH_ID}"
+  printf "\nExiting, batch id '%s' does not start with <prefix>-<yyyymmdd>-<hhmmss>\n\n" "${ARG_BATCH_ID}"
   exit 1
 fi
 
-RUN_DATE="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+RUN_DATE="${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
 
 # gcloud logging read defaults to --freshness=1d when the filter has no timestamp, which silently
 # returns nothing for older runs, so derive a lower bound from the batch id instead.
