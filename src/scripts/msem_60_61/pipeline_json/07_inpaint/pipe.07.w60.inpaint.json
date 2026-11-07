@@ -1,0 +1,19 @@
+{
+  "multiProject": {
+    "baseDataUrl" : "http://localhost:8080/render-ws/v1",
+    "owner" : "hess_wafers_60_61", "project" : "w60_serial_070_to_079",
+    "stackIdWithZ" : { "projectPattern": "^w60_serial_..._to_...$" }
+  },
+  "pipelineStackGroups": {
+    "intensityCorrected": { "stackPattern": "^w60_s..._r.._gc_bc_par_cc_aso_3d_s3i$" }
+  },
+  "pipelineSteps": [
+    "INPAINT_WAFER_60_61"
+  ],
+  "inpaint": {
+    "n5Path": "gs://janelia-spark-test/hess_wafers_60_61_export",
+    "xlogPath": "gs://janelia-spark-test/library/xlog_wafer_60.zarr",
+    "maxRoiDistance": 10.0,
+    "dryRun": false
+  }
+}
