@@ -31,6 +31,12 @@ Examples:
 
   Import SOFIMA:
     $0  10.150.0.7  05_import_sofima/pipe.05.w6n.import-sofima.json               25  4  premium   25  import-sofima-w61-s070-to-s074  disableDynamic
+
+  3D Correct Intensity:
+    $0  10.150.0.8  06_correct_intensity_3d/pipe.06.w6n.ic3d.json                 20  4  premium   20  ic3d-w61-s070-to-s079           disableDynamic
+
+  Inpaint:
+    $0  10.150.0.8  07_inpaint/pipe.07.w61.inpaint.json                            5  4  standard   5  inpaint-w61-s070-to-s079        disableDynamic
   "
   exit 1
 fi
@@ -104,6 +110,12 @@ SPARK_PROPS="dataproc.tier=${DATAPROC_TIER},spark.default.parallelism=240,spark.
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
+
+# Set SoftRefLRUPolicyMSPerMB=0 so that soft referenced (cached) n5 blocks are released at the next GC after their
+# last use instead of filling the heap.  With n5 4.x, the default policy caused OutOfMemory errors for long running
+# tasks that read many blocks (e.g. downsampling and the pyramid update in the INPAINT_WAFER_60_61 step).
+# See the 1075e37 commit message for details.
+SPARK_PROPS="${SPARK_PROPS},spark.executor.extraJavaOptions=-XX:SoftRefLRUPolicyMSPerMB=0"
 #SPARK_PROPS="${SPARK_PROPS},spark.log.level.org.janelia.alignment.match=WARN"
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
