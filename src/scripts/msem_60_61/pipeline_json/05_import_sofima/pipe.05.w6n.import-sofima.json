@@ -12,7 +12,7 @@
     "REPLACE_FILTERS"
   ],
   "sofima": {
-    "sofimaFieldUri": "gs://janelia-spark-test/warp_flow_precomputed_2610??",
+    "sofimaFieldUri": "gs://janelia-spark-test/warp_flow_precomputed_261101",
     "targetStackSuffix": "_s"
   },
   "filterReplacement": {
