@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 PIPELINE_JSON="06_correct_intensity_3d/pipe.06.w6n.ic3d.json"
 
 RUN_DUMP_DIR="${VM_BASE_DUMP_DIR}/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}"
-RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d_s3i"
+RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern aso_3d_s3i"
 
 BATCH_NAME="ic3d-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 
