@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 PIPELINE_JSON="05_import_sofima/pipe.05.w6n.import-sofima.json"
 
 RUN_DUMP_DIR="${VM_BASE_DUMP_DIR}/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}"
-RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern asoi_3d_s"
+RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern _3d_s"
 
 BATCH_NAME="import-sofima-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 
@@ -28,10 +28,15 @@ cd ${GOOGLE_CLOUD_DIR}
 # -------------------------------------
 # Setup VM:
 
-# Load the 04b_3d_align results (typically takes 1 to 2 minutes, for the dump directories prompt, enter: 1):
+# Load the 04b_3d_align results
+# (typically takes 1 to 2 minutes, for the dump directories prompt, enter: 1):
 ${RIC_CMD} './db-restore-collections.sh --pattern \"04b_3d_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
 
-# Check what is loaded:
+# Load the 02_align results because REPLACE_FILTERS reads each tile's filters from the _aso stack
+# (typically takes 1 to 2 minutes, for the dump directories prompt, enter: 1 2):
+${RIC_CMD} './db-restore-collections.sh --pattern \"02_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
+
+# Check what is loaded (each slab needs _aso and _asoi_3d stacks for every region):
 ${RIC_CMD} './list-stacks.sh'
 
 # -------------------------------------
