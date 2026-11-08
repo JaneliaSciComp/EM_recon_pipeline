@@ -110,12 +110,6 @@ SPARK_PROPS="dataproc.tier=${DATAPROC_TIER},spark.default.parallelism=240,spark.
 SPARK_PROPS="${SPARK_PROPS},spark.executor.cores=${SPARK_EXEC_CORES},spark.executor.memory=${SPARK_EXEC_MEMORY_MB}mb"
 SPARK_PROPS="${SPARK_PROPS},${DYNAMIC_ALLOCATION}"
 SPARK_PROPS="${SPARK_PROPS},spark.dataproc.executor.disk.size=250g"
-
-# Set SoftRefLRUPolicyMSPerMB=0 so that soft referenced (cached) n5 blocks are released at the next GC after their
-# last use instead of filling the heap.  With n5 4.x, the default policy caused OutOfMemory errors for long running
-# tasks that read many blocks (e.g. downsampling and the pyramid update in the INPAINT_WAFER_60_61 step).
-# See the 1075e37 commit message for details.
-SPARK_PROPS="${SPARK_PROPS},spark.executor.extraJavaOptions=-XX:SoftRefLRUPolicyMSPerMB=0"
 #SPARK_PROPS="${SPARK_PROPS},spark.log.level.org.janelia.alignment.match=WARN"
 
 RUN_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
