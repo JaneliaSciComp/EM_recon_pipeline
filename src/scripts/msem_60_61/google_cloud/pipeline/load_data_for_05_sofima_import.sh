@@ -42,9 +42,9 @@ ${RIC_CMD} './list-stacks.sh'
 # -------------------------------------
 # Run pipeline batch job:
 
-#  25 4-core executor runs take 10 minutes to complete and 26 concurrent runs will use 2704 cores (104 cores per run)
+#  20 4-core executor runs take 10 minutes to complete and 26 concurrent runs will use 2184 cores (84 cores per run)
 
-./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  25  4  premium  25  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
+./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  20  4  premium  20  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
 # If needed, use the following to download the driver log:
 ./dataproc/download_driver_log.sh --batch-id ${BATCH_NAME}
