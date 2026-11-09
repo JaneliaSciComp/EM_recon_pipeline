@@ -24,6 +24,7 @@ ARG_OUTPUT_DIR=""
 ARG_MIN_SEVERITY=""
 ARG_AFTER=""
 ARG_BEFORE=""
+ARG_MSG_PATTERN=""
 
 usage() {
   echo "
@@ -37,14 +38,19 @@ USAGE $0 --batch-id <batch-id> [options]
   --after         only download entries at or after this UTC time
   --before        only download entries before this UTC time
                   (times are 'yyyy-mm-dd hh:mm:ss' as printed in all.log, or yyyy-mm-ddThh:mm:ssZ)
+  --msg-pattern   only download entries whose message matches this regular expression
+                  (RE2 syntax, matched anywhere in the message, case sensitive)
   -h, --help      show this message
 
-Large runs can have millions of executor log lines, so use --min-severity or a time window
-to keep the download manageable.
+Large runs can have millions of executor log lines, so use --min-severity, --msg-pattern,
+or a time window to keep the download manageable.  These filters are applied by Cloud Logging,
+so only the matching entries are downloaded.
 
 Examples:
 
   $0 --batch-id rex-20260930-091200-w61-s129-r00-gc-bc-par-cc-asoi-3d-test-a --min-severity warning
+
+  $0 --batch-id rp-20261109-120000-ic3d-w61-s070-to-s079 --msg-pattern 'solveForGlobalCoefficients: exit'
 
   $0 --batch-id rex-20260930-091200-w61-s129-r00-gc-bc-par-cc-asoi-3d-test-a \\
      --after '2026-09-30 13:20:00' --before '2026-09-30 13:35:00'
@@ -76,6 +82,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --before)
       ARG_BEFORE="${2:?'--before requires a value'}"
+      shift 2
+      ;;
+    --msg-pattern)
+      ARG_MSG_PATTERN="${2:?'--msg-pattern requires a value'}"
       shift 2
       ;;
     -h|--help)
@@ -176,6 +186,16 @@ if [ -n "${SEVERITY}" ]; then
  severity>=${SEVERITY}"
 fi
 
+if [ -n "${ARG_MSG_PATTERN}" ]; then
+  # =~ is a Cloud Logging regular expression match (RE2, unanchored).  Inside the quoted
+  # query string, backslashes and double quotes must be escaped, so a pattern like
+  # 'stack=w61_s071\.' reaches RE2 unchanged.
+  QUOTED_MSG_PATTERN="${ARG_MSG_PATTERN//\\/\\\\}"
+  QUOTED_MSG_PATTERN="${QUOTED_MSG_PATTERN//\"/\\\"}"
+  LOG_FILTER="${LOG_FILTER}
+ jsonPayload.message=~\"${QUOTED_MSG_PATTERN}\""
+fi
+
 # Tab separated so that the message (the last field) can contain spaces.
 # The date transform drops the nanoseconds from the raw 2026-09-18T00:22:50.278894893Z value.
 LOG_FORMAT='value(timestamp.date(format="%Y-%m-%d %H:%M:%S"), jsonPayload.executor_id, severity, jsonPayload.message)'
@@ -184,9 +204,10 @@ mkdir -p "${OUTPUT_DIR}/executors"
 RAW_FILE="${OUTPUT_DIR}/raw.tsv"
 TAGGED_FILE="${OUTPUT_DIR}/tagged.tsv"
 
-printf "\nreading executor logs for batch %s (entries at or after %s%s%s) ...\n" \
+printf "\nreading executor logs for batch %s (entries at or after %s%s%s%s) ...\n" \
        "${ARG_BATCH_ID}" "${MIN_TIMESTAMP}" \
-       "${MAX_TIMESTAMP:+, before ${MAX_TIMESTAMP}}" "${SEVERITY:+, severity ${SEVERITY} or higher}"
+       "${MAX_TIMESTAMP:+, before ${MAX_TIMESTAMP}}" "${SEVERITY:+, severity ${SEVERITY} or higher}" \
+       "${ARG_MSG_PATTERN:+, message matching '${ARG_MSG_PATTERN}'}"
 
 gcloud logging read "${LOG_FILTER}" \
   --project="${PROJECT}" \
@@ -281,7 +302,7 @@ if (( DOWNLOADED_LINE_COUNT == 0 )); then
 WARNING: no executor log entries were found for %s
 
   - check the batch id (gcloud dataproc batches list --region=%s --project=%s)
-  - check --min-severity, --after, and --before
+  - check --min-severity, --msg-pattern, --after, and --before
   - Cloud Logging keeps entries for 30 days by default, so older runs may have expired
 
 " "${ARG_BATCH_ID}" "${REGION}" "${PROJECT}"
