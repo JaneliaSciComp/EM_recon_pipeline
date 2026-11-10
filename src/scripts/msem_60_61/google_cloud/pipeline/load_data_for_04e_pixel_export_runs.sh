@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-STAGE="05_pixel_export"
+STAGE="04e_pixel_export"
 SLABS_PER_RUN=10
 
 # Pull --downsample-only out of the parameters before sourcing the setup script,
