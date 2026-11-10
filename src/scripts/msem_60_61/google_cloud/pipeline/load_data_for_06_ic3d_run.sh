@@ -40,10 +40,9 @@ ${RIC_CMD} './list-stacks.sh'
 # -------------------------------------
 # Run pipeline batch job:
 
-#  20  4-core executor runs take 17 hours to complete
-#  20 16-core executor runs take 10 hours to complete
+#  20 16-core executor runs take 12 hours to complete and  9 concurrent runs will use 2916 cores (324 cores per run)
 
-./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  20  4  premium  20  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
+./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  20  16  premium  20  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
 # If needed, use the following to download the driver log:
 ./dataproc/download_driver_log.sh --batch-id ${BATCH_NAME}
@@ -51,7 +50,7 @@ ${RIC_CMD} './list-stacks.sh'
 # -------------------------------------
 # After the run completes, save result data:
 
-# The render collection dump directory is: ${RUN_DUMP_DIR}/render
+# The ic3d render collection dump takes 2 to 3 minutes, dump directory is: ${RUN_DUMP_DIR}/render
 
 # The dump will prompt for confirmation before continuing.
 ${DUMP_DB_CMD} render ${RUN_PARMS}'
