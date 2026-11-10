@@ -146,8 +146,7 @@ fi
 
 BATCH_EXPORT_CMD=""
 for STACK in "${EXPORT_STACKS[@]}"; do
-  # --dataset-suffix is omitted because pixel is its default.
-  EXPORT_CMD="./11_run_n5_export.sh --render-ws-ip ${VM_IP} --stack ${STACK} --max-executors ${MAX_EXECUTORS} --disable-dynamic"
+  EXPORT_CMD="./11_run_n5_export.sh --render-ws-ip ${VM_IP} --stack ${STACK} --max-executors ${MAX_EXECUTORS} --dataset-suffix pixel --disable-dynamic"
   if [ "${ARG_DOWNSAMPLE_ONLY}" = "true" ]; then
     EXPORT_CMD="${EXPORT_CMD} --downsample-only"
   fi
