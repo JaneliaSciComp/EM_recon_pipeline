@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 PIPELINE_JSON="05_import_sofima/pipe.05.w6n.import-sofima.json"
 
 RUN_DUMP_DIR="${VM_BASE_DUMP_DIR}/${STAGE}/${PROJECT_GROUP}/${SLAB_GROUP}"
-RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern _3d_s"
+RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP} --pattern _3d_s_"
 
 BATCH_NAME="import-sofima-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 
