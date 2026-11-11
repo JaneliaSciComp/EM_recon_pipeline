@@ -36,7 +36,7 @@
       "equilibrationWeight" : 0.0,
       "cacheRenderedTiles": true,
       "tetherCrossLayers": true,
-      "maxTilesPerSave": 12000
+      "maxTilesPerSave": 8000
     },
     "targetStack": {
       "stackSuffix": "3i",
