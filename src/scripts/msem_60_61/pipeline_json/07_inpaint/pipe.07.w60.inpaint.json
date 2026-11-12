@@ -12,6 +12,10 @@
   ],
   "inpaint": {
     "n5Path": "gs://janelia-spark-test/hess_wafers_60_61_export",
+    "n5DatasetRoot": "/render",
+    "pixelDatasetSuffix": "___pixel",
+    "maskDatasetSuffix": "___mask",
+    "noPaintDatasetSuffix": "_no_paint",
     "xlogPath": "gs://janelia-spark-test/library/xlog_wafer_60.zarr",
     "maxRoiDistance": 10.0,
     "dryRun": false
