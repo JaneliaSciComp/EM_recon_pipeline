@@ -42,7 +42,8 @@ ${RIC_CMD} './list-stacks.sh'
 # Run pipeline batch job:
 
 # Each stack is inpainted by one task, so 5 4-core executors run all of a project's stacks at once.
-# TODO: add run times once they are known
+
+#  5 4-core executor runs take 6 hours to complete and 26 concurrent runs will use 2184 cores (84 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  5  4  standard  5  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
