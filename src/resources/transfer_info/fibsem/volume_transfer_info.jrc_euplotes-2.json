@@ -8,7 +8,7 @@
         "rows_per_z_layer": 1,
         "columns_per_z_layer": 1,
         "first_dat_name": "Merlin-6262_26-11-03_124715_0-0-0.dat",
-        "last_dat_name": null,
+        "last_dat_name": "Merlin-6262_26-11-12_064041_0-0-0.dat",
         "dat_x_and_y_nm_per_pixel": 6,
         "dat_z_nm_per_pixel": 6,
         "dat_tile_overlap_microns": 2
@@ -52,4 +52,3 @@
     "number_of_dats_converted_per_hour": 20,
     "number_of_preview_workers": 10
 }
-
