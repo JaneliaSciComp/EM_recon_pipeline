@@ -15,6 +15,15 @@ RUN_PARMS="--stage ${STAGE} --project ${PROJECT_GROUP} --slab-group ${SLAB_GROUP
 
 BATCH_NAME="ic3d-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 
+# The 05 import leaves four stacks for each region (_aso, _aso_3d_s, _asoi_3d, and _asoi_3d_s),
+# but only the _aso_3d_s stacks are needed here.  remove-collections.sh selects stacks by their
+# numbers in its sorted list, so the container numbers the stacks the same way it does
+# (stackIds names piped to sort, in the container's locale) and passes the _aso_3d_s numbers to --items.
+# The command is in single quotes here so that it is printed as is and only run in the container
+# (paste joins the numbers instead of tr "\n" because echo turns that backslash into a line break).
+STACK_IDS_URL="http://localhost:8080/render-ws/v1/owner/hess_wafers_60_61/project/${PROJECT_GROUP}/stackIds"
+KEEP_ITEMS='$(curl -s "'"${STACK_IDS_URL}"'" | jq -r ".[].stack" | sort | grep -n "_aso_3d_s$" | cut -d: -f1 | paste -s -d " " -)'
+
 echo "
 # ============================================================================
 # Run $(date)
@@ -28,14 +37,15 @@ cd ${GOOGLE_CLOUD_DIR}
 # -------------------------------------
 # Setup VM:
 
-# Remove the collections from the previous run:
-${RIC_CMD} './remove-collections.sh --db render --method remove --items all'
+# If the 05 import was run on this VM, remove everything except its _aso_3d_s stacks
+# (check the list of stacks to keep before confirming):
+${RIC_CMD} './remove-collections.sh --db render --method keep --items \"${KEEP_ITEMS}\"'
 
-# Load the 05_sofima results (only render collections are dumped for that stage):
-${RIC_CMD} './db-restore-collections.sh --pattern \"05_sofima.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
-
-# Check what is loaded:
-${RIC_CMD} './list-stacks.sh'
+# Otherwise, on a new VM, load the 05_sofima results instead (only render collections are dumped for that stage):
+#   ${RIC_CMD} './db-restore-collections.sh --pattern \"05_sofima.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
+#
+# and check what is loaded:
+#   ${RIC_CMD} './list-stacks.sh'
 
 # -------------------------------------
 # Run pipeline batch job:
