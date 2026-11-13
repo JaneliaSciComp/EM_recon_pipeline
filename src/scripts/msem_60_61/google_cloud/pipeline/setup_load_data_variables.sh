@@ -16,6 +16,9 @@
 #   WAFER  FIRST_SERIAL_NUMBER  VM_LETTER  VM_IP  VM_LABEL  GOOGLE_CLOUD_DIR
 #   FIRST_SERIAL  LAST_SERIAL  FIRST_PROJECT  LAST_PROJECT
 #   SLAB_GROUP  PROJECT_GROUP  RUN_FILE
+#   SLAB_GROUP_SUFFIX  ALIGN_SLAB_GROUP_SUFFIX  SOFIMA_ROUND  SOFIMA_DIR
+#
+# SLAB_GROUP_SUFFIX is SOFIMA_ROUND for the 05 - 07 stages and ALIGN_SLAB_GROUP_SUFFIX otherwise.
 #
 # SLABS_PER_RUN picks the run shape:
 #
@@ -28,8 +31,18 @@
 #
 # The sourcing script is responsible for BATCH_NAME and anything else stage specific.
 
-# Batch identifier appended to each slab group name (edit this for each round of runs).
-SLAB_GROUP_SUFFIX="20261027"
+# Batch identifier appended to each 00 - 04 slab group name (edit this for each round of alignment runs).
+# The 05 sofima import also restores the 02 and 04b dumps with it.
+ALIGN_SLAB_GROUP_SUFFIX="20261027"
+
+# Identifier of the current round of SOFIMA completed stacks: <yyyymmdd><letter>, starting with 'a'
+# for the first round of a day (e.g. 20261113a, 20261113b, 20261114a).  Edit this for each round.
+#
+# The 05 - 07 stages append it to their slab group names (instead of ALIGN_SLAB_GROUP_SUFFIX),
+# so each round's dumps, batches, and run files are kept separate from the others.
+# sofima/sofima_complete_<round>.csv lists the stacks in the round (see load_data_for_05_sofima_import.sh).
+SOFIMA_ROUND="20261113a"
+SOFIMA_DIR="${SCRIPT_DIR}/sofima"
 
 OUTPUT_DIR="/Users/trautmane/Desktop/2026-11-msem/00-runs"
 VM_BASE_DUMP_DIR="/mnt/disks/mongodb_dump_fs/dump/google"
@@ -53,6 +66,22 @@ case "${SLABS_PER_RUN}" in
     printf "\nExiting, SLABS_PER_RUN must be 5, 10, or auto (not '%s') before sourcing %s\n\n" \
            "${SLABS_PER_RUN}" "$(basename "${BASH_SOURCE[0]}")"
     exit 1
+    ;;
+esac
+
+if [[ ! "${SOFIMA_ROUND}" =~ ^[0-9]{8}[a-z]$ ]]; then
+  printf "\nExiting, SOFIMA_ROUND '%s' in %s is not <yyyymmdd><letter> (e.g. 20261113a)\n\n" \
+         "${SOFIMA_ROUND}" "$(basename "${BASH_SOURCE[0]}")"
+  exit 1
+fi
+
+# the 05 - 07 stages are run once for each round of SOFIMA completed stacks
+case "${STAGE}" in
+  05*|06*|07*)
+    SLAB_GROUP_SUFFIX="${SOFIMA_ROUND}"
+    ;;
+  *)
+    SLAB_GROUP_SUFFIX="${ALIGN_SLAB_GROUP_SUFFIX}"
     ;;
 esac
 
