@@ -32,11 +32,10 @@ cd ${GOOGLE_CLOUD_DIR}
 # Remove the collections from the previous run:
 ${RIC_CMD} './remove-collections.sh --db render --method remove --items all'
 
-# Load the 06_ic3d results (the inpaint step only reads the _s3i stacks' z values and first layer tile bounds):
-${RIC_CMD} './db-restore-collections.sh --pattern \"06_ic3d.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
-
-# Check what is loaded (each slab should have an _aso_3d_s3i stack for every region):
-${RIC_CMD} './list-stacks.sh'
+# Load the 06_ic3d results:
+# - the inpaint step only reads the _s3i stacks' z values and first layer tile bounds
+# - list the stacks loaded (each slab should have an _aso_3d_s3i stack for every region)
+${RIC_CMD} './db-restore-collections.sh --pattern \"06_ic3d.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'; ${RIC_CMD} './list-stacks.sh'
 
 # -------------------------------------
 # Run pipeline batch job:
