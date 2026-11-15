@@ -1,18 +1,20 @@
 #!/bin/bash
 
 # ----------------------------------------------------------------------------
-# Lists the exported pixel volumes in Google storage for one render project, e.g. for
+# Lists the exported pixel and mask volumes in Google storage for one render project, e.g. for
 # --project w61_serial_070_to_079:
 #
 #   gs://janelia-spark-test/hess_wafers_60_61_export/render/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_asoi_3d___pixel
 #   gs://janelia-spark-test/hess_wafers_60_61_export/render/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i___pixel
+#   gs://janelia-spark-test/hess_wafers_60_61_export/render/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i___mask
 #
-# Any volume whose name contains ___pixel is listed, including ones renamed by move_exports.sh
+# Any volume whose name contains ___pixel or ___mask is listed, including ones renamed by move_exports.sh
 # (e.g. ..._asoi_3d___pixel_20260925).
 
 # keep this in sync with N5_PATH in 11_run_n5_export.sh
 EXPORT_BASE_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render"
-DATASET_MARKER="___pixel"
+# exports are <stack>___pixel or <stack>___mask, optionally followed by a suffix
+DATASET_MARKER_PATTERN="___(pixel|mask)"
 
 # ----------------------------------------------------------------------------
 # Parse named parameters
@@ -27,7 +29,7 @@ USAGE $0 --project <project> [--levels]
   --project  render project of the exports to list, e.g. w61_serial_070_to_079 (required)
   --levels   also list the scale levels (s0, s1, ...) of each export
 
-Lists every <stack>*${DATASET_MARKER}* volume in
+Lists every <stack>*___pixel* and <stack>*___mask* volume in
 ${EXPORT_BASE_URL}/<project>
 
 Examples:
@@ -86,7 +88,7 @@ fi
 EXPORT_URLS=()
 while IFS= read -r EXPORT_URL; do
   EXPORT_URLS+=("${EXPORT_URL%/}")
-done < <(echo "${PROJECT_LISTING}" | grep -E "/[^/]*${DATASET_MARKER}[^/]*/$" | sort)
+done < <(echo "${PROJECT_LISTING}" | grep -E "/[^/]*${DATASET_MARKER_PATTERN}[^/]*/$" | sort)
 
 if (( ${#EXPORT_URLS[@]} == 0 )); then
   printf "\nno exports found in %s\n\n" "${PROJECT_URL}"
