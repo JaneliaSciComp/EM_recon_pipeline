@@ -117,8 +117,16 @@ WAFER="$1"
 FIRST_SERIAL_NUMBER="$2"
 VM_LETTER="$3"
 
+# A sourcing script with its own options can set USAGE_OPTIONS (appended to the usage line,
+# e.g. "[--downsample-only]") and USAGE_DETAILS (printed below it, e.g. option descriptions
+# and examples) before sourcing this.
 if (( $# != 3 )); then
-  printf "\nUSAGE: %s <wafer> <first serial number> <VM letter or dbg>\n\n" "$(basename "$0")"
+  printf "\nUSAGE: %s <wafer> <first serial number> <VM letter or dbg>%s\n" \
+         "$(basename "$0")" "${USAGE_OPTIONS:+ ${USAGE_OPTIONS}}"
+  if [ -n "${USAGE_DETAILS}" ]; then
+    printf "\n%s\n" "${USAGE_DETAILS}"
+  fi
+  printf "\n"
   exit 1
 fi
 

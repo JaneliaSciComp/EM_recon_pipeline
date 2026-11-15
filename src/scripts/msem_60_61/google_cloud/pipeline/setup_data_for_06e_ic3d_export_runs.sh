@@ -28,12 +28,10 @@ cd ${GOOGLE_CLOUD_DIR}
 # -------------------------------------
 # Setup VM:
 
-# Load the 06_ic3d results (only render collections are dumped for that stage,
-# aso_3d_s3i data load typically takes 1 to 2 minutes):
-${RIC_CMD} './db-restore-collections.sh --pattern \"06_ic3d.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
-
-# and check what is loaded:
-${RIC_CMD} './list-stacks.sh'
+# Load the 06_ic3d results and list the stacks
+# - only render collections are dumped for that stage,
+# - aso_3d_s3i data load typically takes 1 to 2 minutes
+${RIC_CMD} './db-restore-collections.sh --pattern \"06_ic3d.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'; ${RIC_CMD} './list-stacks.sh'
 
 " | tee -a "${RUN_FILE}"
 
