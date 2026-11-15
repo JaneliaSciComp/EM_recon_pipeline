@@ -14,8 +14,9 @@
 # match what was passed in, so a url that does not follow the export conventions is
 # rejected instead of removed.
 #
-# --full-url also accepts other export variants (e.g. ..._aso_3d_s3i___pixel_no_paint),
-# whose dataset suffix is kept when the url is rebuilt.
+# --full-url also accepts other export variants (e.g. ..._aso_3d_s3i___pixel_no_paint)
+# and mask exports (e.g. ..._aso_3d_s3i___mask_20261114-203929), whose dataset suffix is
+# kept when the url is rebuilt.
 
 RENDER_EXP="gs://janelia-spark-test/hess_wafers_60_61_export/render"
 
@@ -25,10 +26,12 @@ STACK_SUFFIX="_gc_bc_par_cc_asoi_3d___pixel"
 # --full-url also accepts other export variants, e.g.
 #   w61_s079_r01_gc_bc_par_cc_aso_3d_s3i___pixel_no_paint
 #   w61_s077_r01_gc_bc_par_cc_aso___pixel_20261110-132805
-# so its dataset name only needs to be <wafer>_s<serial>_r<region>_<variant>___pixel<optional suffix>
+#   w61_s070_r00_gc_bc_par_cc_aso_3d_s3i___mask_20261114-203929
+# so its dataset name only needs to be <wafer>_s<serial>_r<region>_<variant>___<pixel|mask><optional suffix>
 # (the optional suffix may also contain dashes, e.g. a date-time stamp)
-PIXEL_MARKER="___pixel"
-DATASET_NAME_PATTERN="^(w[0-9]+_s[0-9]+_r[0-9]+)(_[A-Za-z0-9_]*${PIXEL_MARKER}[A-Za-z0-9_-]*)$"
+DATASET_MARKER_PATTERN="___(pixel|mask)"
+DATASET_MARKER_DESCRIPTION="___<pixel|mask>"
+DATASET_NAME_PATTERN="^(w[0-9]+_s[0-9]+_r[0-9]+)(_[A-Za-z0-9_]*${DATASET_MARKER_PATTERN}[A-Za-z0-9_-]*)$"
 
 # the stack suffix used to build the url, replaced by the one in --full-url when it is used
 DATASET_SUFFIX="${STACK_SUFFIX}"
@@ -57,7 +60,8 @@ USAGE: $(basename "$0") --stack <raw stack> --level <s level>
                     ${RENDER_EXP}/w61_serial_070_to_079/w61_s071_r00${STACK_SUFFIX}/s1
                     ${RENDER_EXP}/w61_serial_070_to_079/w61_s071_r00${STACK_SUFFIX}
                     ${RENDER_EXP}/w61_serial_070_to_079/w61_s079_r01_gc_bc_par_cc_aso_3d_s3i___pixel_no_paint
-                  other export variants (<stack>_<variant>___pixel<optional suffix>) are only
+                    ${RENDER_EXP}/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i___mask_20261114-203929
+                  other export variants (<stack>_<variant>___<pixel|mask><optional suffix>) are only
                   accepted here, --stack always uses the ${STACK_SUFFIX} suffix
                   an export url must be combined with --all-levels
   --skip-confirm  remove without asking first (e.g. for scripted cleanup), can be added to any form
@@ -129,7 +133,7 @@ if [ -n "${ARG_FULL_URL}" ]; then
       printf "\nExiting, --full-url is an entire export, add --all-levels to remove all of it\n\n"
     else
       printf "\nExiting, --full-url dataset '%s' is not <wafer>_s<serial>_r<region>_<variant>%s<optional suffix>\n\n" \
-             "${DATASET_NAME}" "${PIXEL_MARKER}"
+             "${DATASET_NAME}" "${DATASET_MARKER_DESCRIPTION}"
     fi
     exit 1
   fi
