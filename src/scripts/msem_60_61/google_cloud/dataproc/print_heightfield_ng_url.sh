@@ -9,6 +9,8 @@
 # green line within RADIUS s0 voxels of it:
 #   - in the XZ view, along the heightfield row at y, and
 #   - in the YZ view, along the heightfield column at x.
+# The url opens in the single XZ view (switch the layout to yz or 4panel in neuroglancer to see the
+# YZ line).  It is also the cheapest view to load with --cost, whose blocks are large.
 # The lines are only in those two planes, so stepping the XZ or YZ slice moves off them
 # (run this again with another --x or --y to look somewhere else).
 #
@@ -22,7 +24,13 @@
 # converts them the same way (FlatteningInfo: s0 z = (value + 0.5) * z factor - 0.5).
 # Samples that are not finite are skipped, which leaves a gap in the line.
 #
-# Usage: print_heightfield_ng_url.sh <raw stack> [--x <s0 x>] [--y <s0 y>] [--z <s0 z>]
+# Usage: print_heightfield_ng_url.sh <raw stack> [--x <s0 x>] [--y <s0 y>] [--z <s0 z>] [--cost]
+#
+# With --cost, the cost volume the heightfields were fit to (cost_v4 <stack> s1) is added as a
+# colormapped layer under the line.  Its s1 dataset has its own downsamplingFactors (2, 2, 1),
+# which neuroglancer applies, but no resolution, so neuroglancer would make its voxels 1 nm and
+# shrink the layer 8 times.  The layer transform sets both the input and output dimensions to 8 nm
+# (and has no matrix, which would apply the factors a second time).
 #
 # NOTE: the min heightfield (the top surface) is not drawn because it is always 0:
 #       SparkComputeCostMultiSem gives the first z layer a fixed cost (--topLayerCost 105),
@@ -34,6 +42,7 @@ NG_BASE_URL="https://neuroglancer-demo.appspot.com/#!"
 # keep these in sync with hot-knife RawStack (DEFAULT_IC3D_SUFFIX and the heightfields version)
 IC3D_SUFFIX="_gc_bc_par_cc_aso_3d_s3i"
 HEIGHTFIELDS_GROUP="heightfields_v4"
+COST_GROUP="cost_v4"
 
 # s1 is the heightfield level used for flattening
 S_LEVEL="s1"
@@ -46,18 +55,19 @@ STEP=16
 HF_COLOR="#00ff00"
 
 usage() {
-  printf "\nUSAGE: %s <raw stack> [--x <s0 x>] [--y <s0 y>] [--z <s0 z>]
+  printf "\nUSAGE: %s <raw stack> [--x <s0 x>] [--y <s0 y>] [--z <s0 z>] [--cost]
 
   raw stack  stack name, e.g. w61_s070_r00 or w61-s070-r00
   --x        s0 x to center on (default: center of the stack)
   --y        s0 y to center on (default: center of the stack)
   --z        s0 z to center on (default: center of the stack)
+  --cost     also show the cost volume (low cost is where the surface fit wants to go)
 
 The max heightfield (bottom surface) is drawn in green within %d s0 voxels of the location
 in the XZ and YZ views.
 
 Example:
-  %s w61_s070_r00 --x 60000 --y 20000
+  %s w61_s070_r00 --x 60000 --y 20000 --cost
 
 " "$(basename "$0")" "${RADIUS}" "$(basename "$0")" >&2
   exit 1
@@ -74,12 +84,14 @@ shift
 ARG_X=""
 ARG_Y=""
 ARG_Z=""
+SHOW_COST="false"
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
     --x) ARG_X="${2:?'--x requires a value'}"; shift 2 ;;
     --y) ARG_Y="${2:?'--y requires a value'}"; shift 2 ;;
     --z) ARG_Z="${2:?'--z requires a value'}"; shift 2 ;;
+    --cost) SHOW_COST="true"; shift ;;
     *)
       printf "\nERROR: unrecognized parameter '%s'\n" "${1}" >&2
       usage
@@ -120,6 +132,7 @@ IC3D_STACK="${RAW_STACK}${IC3D_SUFFIX}"
 PIXEL_DATASET="render/${PROJECT}/${IC3D_STACK}___pixel"
 HF_GROUP="${HEIGHTFIELDS_GROUP}/${PROJECT}/${IC3D_STACK}/${S_LEVEL}"
 HF_URL="${N5_PATH}/${HF_GROUP}"
+COST_DATASET="${COST_GROUP}/${PROJECT}/${IC3D_STACK}/${S_LEVEL}"
 
 readAttributes() {
   local DATASET="$1"
@@ -165,6 +178,19 @@ read -r HF_BLOCK_WIDTH HF_BLOCK_HEIGHT <<< "${HF_BLOCK_SIZE}"
 if [ "${HF_DATA_TYPE}" != "float32" ] || [ "${HF_COMPRESSION}" != "gzip" ]; then
   printf "\nExiting, expected float32 gzip heightfields in %s, not %s %s\n\n" "${HF_URL}" "${HF_DATA_TYPE}" "${HF_COMPRESSION}" >&2
   exit 1
+fi
+
+# the cost layer transform has no matrix, so neuroglancer scales it with the dataset's own
+# downsamplingFactors, which have to match the heightfield level for the two to line up
+if [ "${SHOW_COST}" = "true" ]; then
+  COST_ATTRIBUTES=$(readAttributes "${COST_DATASET}") || exit 1
+  COST_FACTORS=$(printf '%s' "${COST_ATTRIBUTES}" | jq -c '.downsamplingFactors // [] | map(. * 1.0)')
+  HF_FACTORS=$(printf '%s' "${HF_ATTRIBUTES}" | jq -c '.downsamplingFactors | map(. * 1.0)')
+  if [ "${COST_FACTORS}" != "${HF_FACTORS}" ]; then
+    printf "\nExiting, %s/%s downsamplingFactors %s do not match the heightfield %s factors %s\n\n" \
+           "${N5_PATH}" "${COST_DATASET}" "${COST_FACTORS}" "${S_LEVEL}" "${HF_FACTORS}" >&2
+    exit 1
+  fi
 fi
 
 # ----------------------------------------------------------------------------
@@ -348,9 +374,20 @@ LINE_X=$(( HF_COLUMN * INT_FACTOR_X + INT_FACTOR_X / 2 ))
 LINE_Y=$(( HF_ROW * INT_FACTOR_Y + INT_FACTOR_Y / 2 ))
 POSITION="[${LINE_X}, ${LINE_Y}, ${S0_Z}]"
 
+# cost is uint8 (0 to 255), drawn with the jet colormap over the pixel layer
+COST_SHADER='#uicontrol invlerp normalized(range=[0, 255])
+#uicontrol float opacity slider(min=0, max=1, default=0.5)
+void main() {
+  emitRGBA(vec4(colormapJet(normalized()), opacity));
+}
+'
+
 NG_STATE=$(jq -c -n \
               --arg exp "${N5_PATH}" \
               --arg pixelDataset "${PIXEL_DATASET}" \
+              --arg costDataset "${COST_DATASET}" \
+              --arg costShader "${COST_SHADER}" \
+              --argjson showCost "${SHOW_COST}" \
               --arg color "${HF_COLOR}" \
               --slurpfile maxLines "${WORK_DIR}/max_lines.json" \
               --argjson position "${POSITION}" '
@@ -366,10 +403,16 @@ NG_STATE=$(jq -c -n \
     "projectionScale": 4096,
     "layers": [
       { "type": "image", "source": "\($exp)/|n5:\($pixelDataset)/", "tab": "source", "name": "pixel" },
+      (if $showCost then
+         { "type": "image",
+           "source": { "url": "\($exp)/|n5:\($costDataset)/", "transform": { "inputDimensions": $dims, "outputDimensions": $dims } },
+           "tab": "rendering", "name": "cost",
+           "shader": $costShader }
+       else empty end),
       lineLayer("hf max"; $maxLines[0])
     ],
     "selectedLayer": { "size": 322, "visible": true, "layer": "hf max" },
-    "layout": "4panel",
+    "layout": "xz",
     "uiControlVisibility": {}
   }') || exit 1
 
