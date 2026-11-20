@@ -30,8 +30,11 @@ MAT_RERUN_BATCH_NAME="rough-mat-w${WAFER}-s${FIRST_SERIAL}-to-s${LAST_SERIAL}"
 # collection name (e.g. hess_wafers_60_61__w61_serial_170_to_179__w61_s175_r00_gc__tile),
 # so the other half of the project's slabs can be skipped instead of being loaded and then removed.
 #
-# A ten slab run wants the whole project, so it needs no exclusion.
-EXCLUDE_PATTERN_ARG=""
+# A ten slab run wants the whole project, so it needs no slab exclusion.
+#
+# When --regions selects some of the slabs' regions, the other regions' stacks are skipped the same way
+# (e.g. --regions r00 skips hess_wafers_60_61__w61_serial_000_to_009__w61_s005_r01_gc__tile).
+EXCLUDE_PATTERN=""
 if (( SLABS_PER_RUN == 5 )); then
 
   # project serials share their first two digits (e.g. 170 to 179), so the excluded half is
@@ -42,9 +45,18 @@ if (( SLABS_PER_RUN == 5 )); then
     EXCLUDED_LAST_DIGITS="[0-4]"   # keeping the second half, so skip the first
   fi
 
-  # double quoted because the restore command is printed inside single quotes
-  EXCLUDE_PATTERN_ARG=" --exclude-pattern \"_s${FIRST_PROJECT:0:2}${EXCLUDED_LAST_DIGITS}_\""
+  EXCLUDE_PATTERN="_s${FIRST_PROJECT:0:2}${EXCLUDED_LAST_DIGITS}_"
 
+fi
+
+if [ -n "${EXCLUDED_REGION_PATTERN}" ]; then
+  EXCLUDE_PATTERN="${EXCLUDE_PATTERN:+${EXCLUDE_PATTERN}|}${EXCLUDED_REGION_PATTERN}"
+fi
+
+# double quoted because the restore command is printed inside single quotes
+EXCLUDE_PATTERN_ARG=""
+if [ -n "${EXCLUDE_PATTERN}" ]; then
+  EXCLUDE_PATTERN_ARG=" --exclude-pattern \"${EXCLUDE_PATTERN}\""
 fi
 
 echo "
@@ -70,11 +82,12 @@ ${RIC_CMD} './db-restore-collections.sh --pattern \"janelia/00_gc/.*s${FIRST_PRO
 # -------------------------------------
 # Run pipeline batch job:
 
+#  50 4-core executor runs take ~12 hours (estimated) and 14 concurrent runs will use 2856 cores (204 cores per run)
 #  60 4-core executor runs take ~11 hours and 12 concurrent runs will use 2928 cores (244 cores per run)
 # 120 4-core executor runs take  ~7 hours and  6 concurrent runs will use 2904 cores (484 cores per run)
 # 400 4-core executor runs take  ~3 hours
 
-./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  60  4  premium  60  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
+./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
 # If needed, use the following to download the driver log:
 ./dataproc/download_driver_log.sh --batch-id ${BATCH_NAME}

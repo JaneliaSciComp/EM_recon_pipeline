@@ -32,7 +32,7 @@ cd ${GOOGLE_CLOUD_DIR}
 ${RIC_CMD} './remove-collections.sh --db match --method remove --items all'
 ${RIC_CMD} './remove-collections.sh --db render --method remove --items all'
 
-# Load the 02_align results (for the dump directories prompt, enter: 1 2):
+# Load the 02_align results (for the dump directories prompt, enter: ${ALIGN_DUMP_SELECTION}):
 ${RIC_CMD} './db-restore-collections.sh --pattern \"02_align.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'
 
 # Check what is loaded:

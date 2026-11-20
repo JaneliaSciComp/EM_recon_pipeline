@@ -28,9 +28,9 @@ Run file: ${RUN_FILE}
 # -------------------------------------
 # Setup VM:
 
-# Typical case: prior 03_correct_intensity run creates 20 _asoi stacks from 20 _aso stacks.
+# Typical case: prior 03_correct_intensity run creates ${STACKS_PER_RUN} _asoi stacks from ${STACKS_PER_RUN} _aso stacks.
 # The _aso stacks can be left in the database for this run, but if you want to remove them run:
-#   ${RIC_CMD} './remove-collections.sh --db render --method remove --items \"1 3 5 7 9 11 13 15 17 19 21 23 25 27 29 31 33 35 37 39\"'
+#   ${RIC_CMD} './remove-collections.sh --db render --method remove --items \"$(itemsForEachStack 2 1)\"'
 
 # To setup new VM (ic2d data load typically takes 1 to 2 minutes), run:
 #   ${RIC_CMD} './db-restore-collections.sh --pattern \"03_ic2d_nc4_hist_rs0p5.*${SERIAL_PATTERN}.*${SLAB_GROUP_SUFFIX}/\"'

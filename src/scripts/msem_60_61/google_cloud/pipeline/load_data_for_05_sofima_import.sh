@@ -157,7 +157,7 @@ cd ${GOOGLE_CLOUD_DIR}
 ${RIC_CMD} './db-restore-collections.sh --pattern \"04b_3d_align.*${SERIAL_PATTERN}.*${ALIGN_SLAB_GROUP_SUFFIX}/\"${EXCLUDE_PARMS}'
 
 # Load the 02_align results for the round's stacks because REPLACE_FILTERS reads each tile's filters from the _aso stack
-# (typically takes 1 to 2 minutes, for the dump directories prompt, enter: 1 2):
+# (typically takes 1 to 2 minutes, for the dump directories prompt, enter: ${ALIGN_DUMP_SELECTION}):
 ${RIC_CMD} './db-restore-collections.sh --pattern \"02_align.*${SERIAL_PATTERN}.*${ALIGN_SLAB_GROUP_SUFFIX}/\"${EXCLUDE_PARMS}'
 
 # Check what is loaded (only the ${#INCLUDED_STACKS[@]} stacks listed above should have _aso and _asoi_3d stacks):

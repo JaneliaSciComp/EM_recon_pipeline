@@ -10,15 +10,33 @@
 #   SLABS_PER_RUN=5
 #   source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 #
-# It parses <wafer> <first serial number> <VM letter> from the sourcing script's parameters,
-# validates them, and derives the variables the run instructions need:
+# It parses <wafer> <first serial number> <VM letter> [--regions <regions>] from the sourcing
+# script's parameters,# validates them, and derives the variables the run instructions need:
 #
 #   WAFER  FIRST_SERIAL_NUMBER  VM_LETTER  VM_IP  VM_LABEL  GOOGLE_CLOUD_DIR
 #   FIRST_SERIAL  LAST_SERIAL  FIRST_PROJECT  LAST_PROJECT
 #   SLAB_GROUP  PROJECT_GROUP  RUN_FILE
 #   SLAB_GROUP_SUFFIX  ALIGN_SLAB_GROUP_SUFFIX  SOFIMA_ROUND  SOFIMA_DIR
+#   SELECTED_REGIONS  EXCLUDED_REGION_PATTERN  STACKS_PER_RUN  ALIGN_DUMP_SELECTION
 #
 # SLAB_GROUP_SUFFIX is SOFIMA_ROUND for the 05 - 07 stages and ALIGN_SLAB_GROUP_SUFFIX otherwise.
+#
+# --regions (00 - 04e stages only) limits a run to some of each slab's regions, e.g. --regions r00 to
+# skip the r01 stacks.  The regions are comma separated and default to every region the slabs have:
+#
+#   SELECTED_REGIONS         the regions being processed (an array, e.g. (r00) or (r00 r01))
+#   EXCLUDED_REGION_PATTERN  collection name pattern for the slabs' other regions (e.g. _r01_),
+#                            empty when every region is selected
+#   STACKS_PER_RUN           SLABS_PER_RUN times the number of selected regions
+#
+# When --regions is given, the selected regions are also added to SLAB_GROUP_SUFFIX
+# (e.g. r00_20261027), so the dumps for a later run of the other regions are kept separate.
+# Pass the same --regions to every 00 - 04e stage for a slab group, because the later stages
+# restore the earlier dumps by that suffix and size their remove-collections.sh item lists by
+# STACKS_PER_RUN.
+#
+# ALIGN_DUMP_SELECTION is what to enter at the dump directories prompt when a whole project's 02_align
+# results are restored ("1" when 00 - 02 ran the project as one 10 slab run, "1 2" for two 5 slab runs).
 #
 # SLABS_PER_RUN picks the run shape:
 #
@@ -94,6 +112,10 @@ esac
 #
 # NOTE: slab 179 has one region but is still processed in the 175 to 179 group of five,
 #       so that group covers nine stacks instead of ten.
+#
+# Runs keep these sizes when --regions selects fewer regions (e.g. 5 r00 stacks for slabs 000 to 004),
+# because the r00 stacks of the early slabs are large enough that ten of them make too much match
+# data for one VM.
 deriveSlabsPerRun() {
   case "${WAFER}" in
     61)
@@ -112,6 +134,37 @@ deriveSlabsPerRun() {
 
 # ----------------------------------------------------------------------------
 # Parse and validate the sourcing script's parameters
+
+# Pull --regions out of the parameters (it can come before, between, or after the other three values).
+# This also replaces the sourcing script's parameters, since a sourced script shares them.
+REGIONS_ARG=""
+POSITIONAL_ARGS=()
+while (( $# > 0 )); do
+  case "${1}" in
+    --regions)
+      if [ -z "${2:-}" ]; then
+        printf "\nExiting, --regions requires a value (e.g. r00 or r00,r01)\n\n"
+        exit 1
+      fi
+      REGIONS_ARG="${2}"
+      shift 2
+      ;;
+    *)
+      POSITIONAL_ARGS+=("${1}")
+      shift
+      ;;
+  esac
+done
+set -- "${POSITIONAL_ARGS[@]}"
+
+# the 05 - 07 stages pick their stacks from the SOFIMA round instead
+case "${STAGE}" in
+  05*|06*|07*)
+    ;;
+  *)
+    USAGE_OPTIONS="[--regions <r00 | r01 | r00,r01>]${USAGE_OPTIONS:+ ${USAGE_OPTIONS}}"
+    ;;
+esac
 
 WAFER="$1"
 FIRST_SERIAL_NUMBER="$2"
@@ -192,6 +245,13 @@ fi
 # force base 10 so that zero padded values (e.g. 070) are not treated as octal
 FIRST_SERIAL_NUMBER=$(( 10#${FIRST_SERIAL_NUMBER} ))
 
+# the 03 - 05 stages restore a whole project's 02_align results, which were dumped once per 00 - 02 run
+if [ "$(deriveSlabsPerRun)" = "10" ]; then
+  ALIGN_DUMP_SELECTION="1"
+else
+  ALIGN_DUMP_SELECTION="1 2"
+fi
+
 # the derivation needs the wafer and the parsed serial number, so it happens after both are known
 # but before the multiple-of check below
 if [ "${SLABS_PER_RUN}" = "auto" ]; then
@@ -203,6 +263,76 @@ if (( FIRST_SERIAL_NUMBER > 410 )) || (( FIRST_SERIAL_NUMBER % SLABS_PER_RUN != 
          "${FIRST_SERIAL_NUMBER}" "${SLABS_PER_RUN}"
   exit 1
 fi
+
+# ----------------------------------------------------------------------------
+# Select the regions
+
+# wafer 61 slabs from 180 on only have r00 (the region counts for wafer 60 are not known yet)
+if [ "${WAFER}" = "61" ] && (( FIRST_SERIAL_NUMBER >= 180 )); then
+  SLAB_REGIONS=(r00)
+else
+  SLAB_REGIONS=(r00 r01)
+fi
+
+if [ -z "${REGIONS_ARG}" ]; then
+
+  SELECTED_REGIONS=("${SLAB_REGIONS[@]}")
+
+else
+
+  case "${STAGE}" in
+    05*|06*|07*)
+      printf "\nExiting, --regions is only for the 00 - 04e stages (the %s stacks come from the SOFIMA round)\n\n" \
+             "${STAGE}"
+      exit 1
+      ;;
+  esac
+
+  SELECTED_REGIONS=()
+  IFS=',' read -r -a REQUESTED_REGIONS <<< "${REGIONS_ARG}"
+  # keep the slabs' region order and drop repeats, so the slab group suffix is the same however they are listed
+  for REGION in "${SLAB_REGIONS[@]}"; do
+    for REQUESTED_REGION in "${REQUESTED_REGIONS[@]}"; do
+      if [ "${REQUESTED_REGION}" = "${REGION}" ]; then
+        SELECTED_REGIONS+=("${REGION}")
+        break
+      fi
+    done
+  done
+  for REQUESTED_REGION in "${REQUESTED_REGIONS[@]}"; do
+    if [[ " ${SLAB_REGIONS[*]} " != *" ${REQUESTED_REGION} "* ]]; then
+      printf "\nExiting, region '%s' is not one of the w%s s%03d slab regions (%s)\n\n" \
+             "${REQUESTED_REGION}" "${WAFER}" "${FIRST_SERIAL_NUMBER}" "${SLAB_REGIONS[*]}"
+      exit 1
+    fi
+  done
+
+  REGION_TAG=$(IFS='_'; echo "${SELECTED_REGIONS[*]}")
+  SLAB_GROUP_SUFFIX="${REGION_TAG}_${SLAB_GROUP_SUFFIX}"
+
+fi
+
+EXCLUDED_REGION_PATTERN=""
+for REGION in "${SLAB_REGIONS[@]}"; do
+  if [[ " ${SELECTED_REGIONS[*]} " != *" ${REGION} "* ]]; then
+    EXCLUDED_REGION_PATTERN="${EXCLUDED_REGION_PATTERN:+${EXCLUDED_REGION_PATTERN}|}_${REGION}_"
+  fi
+done
+
+STACKS_PER_RUN=$(( SLABS_PER_RUN * ${#SELECTED_REGIONS[@]} ))
+
+# Prints the remove-collections.sh --items list for every STEP-th item of a list with STEP items
+# per stack (e.g. itemsForEachStack 2 1 for the first of each stack's two match collections).
+#   STEP    items per stack in the list
+#   OFFSET  position (1 to STEP) of the wanted item within each stack's items
+#   COUNT   number of stacks (defaults to STACKS_PER_RUN)
+itemsForEachStack() {
+  local STEP="$1" OFFSET="$2" COUNT="${3:-${STACKS_PER_RUN}}" ITEMS="" I
+  for (( I = 0; I < COUNT; I++ )); do
+    ITEMS="${ITEMS:+${ITEMS} }$(( I * STEP + OFFSET ))"
+  done
+  echo "${ITEMS}"
+}
 
 # ----------------------------------------------------------------------------
 # Derive the serial and project numbers

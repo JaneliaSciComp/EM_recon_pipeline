@@ -38,8 +38,8 @@ cd ${GOOGLE_CLOUD_DIR}
 # Setup VM:
 
 # Typical case: mfov-as-tile data from 00_par run needs to be removed.
-${RIC_CMD} './remove-collections.sh --db match --method remove --items \"1 3 5 7 9 11 13 15 17 19\"'
-${RIC_CMD} './remove-collections.sh --db render --method keep --items \"6 12 18 24 30 36 42 48 54 60\"'
+${RIC_CMD} './remove-collections.sh --db match --method remove --items \"$(itemsForEachStack 2 1)\"'
+${RIC_CMD} './remove-collections.sh --db render --method keep --items \"$(itemsForEachStack 6 6)\"'
 
 # To setup new VM, run:
 ${RIC_CMD} './db-restore-collections.sh --pattern \"00_par.*s${FIRST_SERIAL}.*${SLAB_GROUP_SUFFIX}/\"'
@@ -52,11 +52,12 @@ ${RIC_CMD} './list-match-collections.sh'
 # Run match pipeline batch job:
 
 #  25 4-core executor runs take  ~6 hours   and 26 concurrent runs will use 2704 cores (104 cores per run)
+#  50 4-core executor runs take  ~3 hours (estimated) and 14 concurrent runs will use 2856 cores (204 cores per run)
 #  60 4-core executor runs take  ~? hours   and 12 concurrent runs will use 2928 cores (244 cores per run)
 # 120 4-core executor runs take ~90 minutes and  6 concurrent runs will use 2904 cores (484 cores per run)
 # 300 4-core executor run  took  40 minutes for w61-s125-to-129
 
-./02_run_pipeline.sh  ${VM_IP}  ${MATCH_PIPELINE_JSON}  60  4  premium  60  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
+./02_run_pipeline.sh  ${VM_IP}  ${MATCH_PIPELINE_JSON}  50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
 # If needed, use the following to download the driver log:
 ./dataproc/download_driver_log.sh --batch-id ${BATCH_NAME}
