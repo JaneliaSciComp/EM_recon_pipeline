@@ -16,6 +16,11 @@
 #     gs://janelia-spark-test/hess_wafers_60_61_export/heightfields_v4/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i
 #     -> gs://janelia-spark-test/hess_wafers_60_61_export/heightfields_v4/old/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i
 #
+#   hf_surface: heightfield surface volumes (with their min and max groups) are moved into the old
+#   directory of the heightfields surface group, e.g.
+#     gs://janelia-spark-test/hess_wafers_60_61_export/heightfields_v4_surface/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i
+#     -> gs://janelia-spark-test/hess_wafers_60_61_export/heightfields_v4_surface/old/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i
+#
 # Google storage has no real directories, so a move copies every object in the volume to the new
 # name and then deletes the original.  The copies happen inside Google storage, but large volumes
 # still take a while.
@@ -43,11 +48,14 @@ RENDER_DATASET_SUFFIX="___pixel"
 # appended to each moved render volume's name
 RENDER_TARGET_SUFFIX="_20260925"
 
-# keep these in sync with hot-knife RawStack (getCostDataset, getHeightfieldsDataset, and DEFAULT_IC3D_SUFFIX)
+# keep these in sync with hot-knife RawStack (getCostDataset, getHeightfieldsDataset,
+# getHeightfieldsSurfaceDataset, and DEFAULT_IC3D_SUFFIX)
 COST_BASE_URL="${EXPORT_BASE_URL}/cost_v4"
 HF_BASE_URL="${EXPORT_BASE_URL}/heightfields_v4"
+HF_SURFACE_BASE_URL="${EXPORT_BASE_URL}/heightfields_v4_surface"
 IC3D_STACK_SUFFIX="_gc_bc_par_cc_aso_3d_s3i"
-# moved cost and heightfields volumes keep their project and stack names under this directory of their group
+# moved cost, heightfields, and heightfields surface volumes keep their project and stack names
+# under this directory of their group
 OLD_DIR="old"
 
 # ----------------------------------------------------------------------------
@@ -63,7 +71,8 @@ usage() {
   echo "
 USAGE $0 --type <type> --region <region> --min-serial <number> --max-serial <number> [--dry-run]
 
-  --type        type of volumes to move, render, cost, or hf (heightfields) (required)
+  --type        type of volumes to move, render, cost, hf (heightfields),
+                or hf_surface (heightfields surface) (required)
   --region      region of the stacks to move, r00 or r01 (required)
   --min-serial  first serial number to move (required)
   --max-serial  last serial number to move (required)
@@ -73,9 +82,10 @@ For --type render, each w${WAFER}_s<serial>_<region>${RENDER_STACK_SUFFIX}${REND
 w${WAFER}_s<serial>_<region>${RENDER_STACK_SUFFIX}${RENDER_DATASET_SUFFIX}${RENDER_TARGET_SUFFIX} in the same project directory under
 ${RENDER_BASE_URL}
 
-For --type cost or hf, each <project>/w${WAFER}_s<serial>_<region>${IC3D_STACK_SUFFIX} volume under
-${COST_BASE_URL} (cost) or
-${HF_BASE_URL} (hf)
+For --type cost, hf, or hf_surface, each <project>/w${WAFER}_s<serial>_<region>${IC3D_STACK_SUFFIX} volume under
+${COST_BASE_URL} (cost),
+${HF_BASE_URL} (hf), or
+${HF_SURFACE_BASE_URL} (hf_surface)
 is moved to the same <project>/<stack> path under the group's ${OLD_DIR} directory
 
 Examples:
@@ -83,6 +93,7 @@ Examples:
   $0 --type render --region r01 --min-serial 70 --max-serial 179
   $0 --type cost --region r00 --min-serial 70 --max-serial 79 --dry-run
   $0 --type hf --region r00 --min-serial 70 --max-serial 79 --dry-run
+  $0 --type hf_surface --region r00 --min-serial 70 --max-serial 79 --dry-run
 "
   exit 1
 }
@@ -127,8 +138,9 @@ case "${ARG_TYPE}" in
   render) STACK_SUFFIX="${RENDER_STACK_SUFFIX}" ;;
   cost)   STACK_SUFFIX="${IC3D_STACK_SUFFIX}"; GROUP_BASE_URL="${COST_BASE_URL}" ;;
   hf)     STACK_SUFFIX="${IC3D_STACK_SUFFIX}"; GROUP_BASE_URL="${HF_BASE_URL}" ;;
+  hf_surface) STACK_SUFFIX="${IC3D_STACK_SUFFIX}"; GROUP_BASE_URL="${HF_SURFACE_BASE_URL}" ;;
   *)
-    echo "ERROR: --type must be render, cost, or hf (not '${ARG_TYPE}')"
+    echo "ERROR: --type must be render, cost, hf, or hf_surface (not '${ARG_TYPE}')"
     exit 1
     ;;
 esac
