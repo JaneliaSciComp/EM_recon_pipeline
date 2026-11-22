@@ -42,9 +42,10 @@ ${RIC_CMD} './list-stacks.sh'
 # Run pipeline batch job:
 
 # 400 4-core executor run  took 2 hours to complete for w61-s170-to-s179
+# 100 4-core executor runs take 3 to 5 hours to complete and  7 concurrent runs will use 2828 cores (404 cores per run)
 #  50 4-core executor runs take 2 to 5 hours to complete and 14 concurrent runs will use 2856 cores (204 cores per run)
 
-./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
+./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  100  4  premium  100  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
 # If needed, use the following to download the driver log:
 ./dataproc/download_driver_log.sh --batch-id ${BATCH_NAME}
