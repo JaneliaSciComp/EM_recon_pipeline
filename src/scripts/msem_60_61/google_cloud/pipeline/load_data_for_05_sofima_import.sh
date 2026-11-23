@@ -17,9 +17,11 @@ source "${SCRIPT_DIR}/setup_load_data_variables.sh"
 # db-restore-collections.sh --exclude-pattern, so the import, its dump, and the 06 - 07 stages
 # that load from that dump never see it.
 
-if [ "${WAFER}" != "61" ]; then
-  printf "\nExiting, the regions of wafer %s slabs are not known yet, so its stacks cannot be selected\n\n" \
-         "${WAFER}"
+# lists every raw stack of the wafer (e.g. stack_name='w61_s070_r00'), so it has each slab's regions
+SLAB_INFO_PATH="$(cd "${SCRIPT_DIR}/../.." && pwd)/slab_info.w${WAFER}.txt"
+
+if [ ! -f "${SLAB_INFO_PATH}" ]; then
+  printf "\nExiting, %s does not exist\n\n" "${SLAB_INFO_PATH}"
   exit 1
 fi
 
@@ -45,18 +47,20 @@ if [ -n "${INVALID_STACKS}" ]; then
   exit 1
 fi
 
-# Every region stack this run could import: wafer 61 slabs before 180 have r00 and r01 regions,
-# the later ones only have r00.  Excluding a stack that does not exist is harmless.
+# Every region stack this run could import: the slab info raw stacks of this run's serials
+# (a read loop instead of mapfile because macOS still ships bash 3.2)
 CANDIDATE_STACKS=()
-for (( SERIAL_NUMBER = FIRST_SERIAL_NUMBER; SERIAL_NUMBER <= LAST_SERIAL_NUMBER; SERIAL_NUMBER++ )); do
-  REGIONS=(r00)
-  if (( SERIAL_NUMBER < 180 )); then
-    REGIONS+=(r01)
-  fi
-  for REGION in "${REGIONS[@]}"; do
-    CANDIDATE_STACKS+=("$(printf 'w%s_s%03d_%s' "${WAFER}" "${SERIAL_NUMBER}" "${REGION}")")
-  done
-done
+while IFS= read -r RAW_STACK; do
+  CANDIDATE_STACKS+=("${RAW_STACK}")
+done < <(grep -oE "stack_name='w${WAFER}_s[0-9]{3}_r[0-9]{2}'" "${SLAB_INFO_PATH}" | cut -d"'" -f2 |
+         awk -v first="${FIRST_SERIAL_NUMBER}" -v last="${LAST_SERIAL_NUMBER}" \
+             '{ serial = substr($0, index($0, "_s") + 2, 3) + 0; if (serial >= first && serial <= last) print }' |
+         sort -u)
+
+if (( ${#CANDIDATE_STACKS[@]} == 0 )); then
+  printf "\nExiting, %s has no s%s to s%s raw stacks\n\n" "${SLAB_INFO_PATH}" "${FIRST_SERIAL}" "${LAST_SERIAL}"
+  exit 1
+fi
 
 INCLUDED_STACKS=()
 EXCLUDED_STACKS=()
@@ -68,14 +72,15 @@ for STACK in "${CANDIDATE_STACKS[@]}"; do
   fi
 done
 
-# A listed stack in this run's serials that is not a candidate has an unexpected region.
+# A listed stack in this run's serials that is not a candidate has a region the slab info does not have.
 # Runs are whole projects (SLABS_PER_RUN=10), so the serials are s<first two digits>0 to 9.
 UNEXPECTED_STACKS=$(printf '%s\n' "${ROUND_STACKS}" |
                     grep -E "^w${WAFER}_s${FIRST_SERIAL:0:2}[0-9]_" |
                     grep -v -x -F -f <(printf '%s\n' "${CANDIDATE_STACKS[@]}"))
 if [ -n "${UNEXPECTED_STACKS}" ]; then
-  printf "\nExiting, %s lists stacks in this run's slabs with unexpected regions:\n%s\n\n" \
-         "${ROUND_FILE}" "$(printf '%s\n' "${UNEXPECTED_STACKS}" | sed 's/^/  /')"
+  printf "\nExiting, %s lists stacks in this run's slabs with regions that are not in %s:\n%s\n\n" \
+         "${ROUND_FILE}" "$(basename "${SLAB_INFO_PATH}")" \
+         "$(printf '%s\n' "${UNEXPECTED_STACKS}" | sed 's/^/  /')"
   exit 1
 fi
 
