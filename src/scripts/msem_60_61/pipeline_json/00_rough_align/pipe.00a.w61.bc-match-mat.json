@@ -27,6 +27,28 @@
     "owner": "hess_wafers_60_61",
     "peakScanJson": "gs://janelia-spark-test/library/hess_wafers_60_61.peak_scan.json",
     "project_to_stack_scans": {
+      "w61_serial_000_to_009": {
+        "w61_s002_r00_gc_bc": [ "scan005" ],
+        "w61_s006_r00_gc_bc": [ "scan006" ],
+        "w61_s007_r00_gc_bc": [ "scan006" ],
+        "w61_s008_r00_gc_bc": [ "scan006" ]
+      },
+      "w61_serial_010_to_019": {
+        "w61_s010_r00_gc_bc": [ "scan004" ]
+      },
+      "w61_serial_020_to_029": {
+        "w61_s022_r00_gc_bc": [ "scan021" ],
+        "w61_s029_r00_gc_bc": [ "scan005" ], "w61_s029_r01_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_040_to_049": {
+        "w61_s043_r00_gc_bc": [ "scan005" ], "w61_s043_r01_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_050_to_059": {
+        "w61_s055_r00_gc_bc": [ "scan005" ], "w61_s055_r01_gc_bc": [ "scan005" ]
+      },
+      "w61_serial_060_to_069": {
+        "w61_s061_r00_gc_bc": [ "scan006" ], "w61_s061_r01_gc_bc": [ "scan006" ]
+      },
       "w61_serial_070_to_079": {
         "w61_s071_r00_gc_bc": [ "scan005" ], "w61_s071_r01_gc_bc": [ "scan005" ],
         "w61_s073_r00_gc_bc": [ "scan005" ], "w61_s073_r01_gc_bc": [ "scan005" ],
@@ -83,6 +105,11 @@
       "w61_serial_190_to_199": {
         "w61_s198_r00_gc_bc": [ "scan005" ],
         "w61_s199_r00_gc_bc": [ "scan005" ]
+      }
+    },
+    "project_to_stack_scan_mfovs": {
+      "w61_serial_010_to_019": {
+        "w61_s010_r00_gc_bc": [ "scan020_m0013" ]
       }
     }
   },
