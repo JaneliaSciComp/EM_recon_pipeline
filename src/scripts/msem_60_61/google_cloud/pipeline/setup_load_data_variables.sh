@@ -158,9 +158,9 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 # the 05 - 07 stages pick their stacks from the SOFIMA round instead,
-# and the 04f stage picks them from its pipeline JSON
+# and the 04f and 04g stages pick them from the 04b pipeline JSON
 case "${STAGE}" in
-  04f*|05*|06*|07*)
+  04f*|04g*|05*|06*|07*)
     ;;
   *)
     USAGE_OPTIONS="[--regions <r00 | r01 | r00,r01>]${USAGE_OPTIONS:+ ${USAGE_OPTIONS}}"
