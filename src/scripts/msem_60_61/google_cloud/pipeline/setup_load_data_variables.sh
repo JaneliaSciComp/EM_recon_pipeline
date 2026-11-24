@@ -157,9 +157,10 @@ while (( $# > 0 )); do
 done
 set -- "${POSITIONAL_ARGS[@]}"
 
-# the 05 - 07 stages pick their stacks from the SOFIMA round instead
+# the 05 - 07 stages pick their stacks from the SOFIMA round instead,
+# and the 04f stage picks them from its pipeline JSON
 case "${STAGE}" in
-  05*|06*|07*)
+  04f*|05*|06*|07*)
     ;;
   *)
     USAGE_OPTIONS="[--regions <r00 | r01 | r00,r01>]${USAGE_OPTIONS:+ ${USAGE_OPTIONS}}"
