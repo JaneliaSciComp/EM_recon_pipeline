@@ -46,7 +46,7 @@ RENDER_BASE_URL="${EXPORT_BASE_URL}/render"
 RENDER_STACK_SUFFIX="_gc_bc_par_cc_asoi_3d"
 RENDER_DATASET_SUFFIX="___pixel"
 # appended to each moved render volume's name
-RENDER_TARGET_SUFFIX="_20260925"
+RENDER_TARGET_SUFFIX="_20261122"
 
 # keep these in sync with hot-knife RawStack (getCostDataset, getHeightfieldsDataset,
 # getHeightfieldsSurfaceDataset, and DEFAULT_IC3D_SUFFIX)
