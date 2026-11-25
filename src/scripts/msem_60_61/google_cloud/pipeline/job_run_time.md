@@ -1,181 +1,139 @@
-# Job Run Time Estimate: w61 Serial Slabs 000 to 069 (r00 and r01)
+# Dataproc Job Run Times for Wafers 60 and 61
 
-Estimated time to run both regions (r00 and r01) of serial slabs 000 to 069 through `00_par_run` to
-`04e_pixel_export_runs` (called stage 05 in the 070 to 199 estimate below), on 14 VMs (`aaa` to `aan`)
-with the executor counts currently set in the `load_data_for_*` scripts (50 for 00 to 04).
-Estimated 2026-11-21.
+Measured run times from the 1,054 render pipeline and export Dataproc batches created between
+2026-10-28 and 2026-11-24 (UTC): w61 serial slabs 070 to 199 (stages 00 to 07), w61 000 to 069
+(stages 00 to 04d), and w60 410 to 412 (stages 00 to 04b).  The hot-knife cost and heightfield
+batches are not included.  Use these to plan future runs.  The earlier estimates that this file
+used to hold are in git history.
 
-## Summary
+## Planning Table
 
-| Approach                                                           | Typical                | Range      |
-|--------------------------------------------------------------------|------------------------|------------|
-| **14 VMs, every half at once, 50 executors (current scripts)**     | **~38 h (1 day 14 h)** | 31 to 43 h |
+Run time is the median batch time from RUNNING to done, with the range in parentheses.
+Cores are executors x executor cores + 4 driver cores.  DCU-h is Dataproc's own usage measure
+(`approximateUsage.milliDcuSeconds`) per slab for pipeline runs and per stack for exports.
 
-The 00 to 02 runs are 5 slabs (5 r00 plus 5 r01 stacks) each, the same shape as the 070 to 179 runs,
-so there are 14 half project runs.  With one run per VM and 50 executors, all 14 run at once in
-2,856 of the 3,000 cores, so 00 to 02 takes about 20 h.
+| Stage (script)                    | Batch size  | Current setting  | Cores | w61 070-179                                 | w61 000-069               | DCU-h (070-179) |
+|-----------------------------------|-------------|------------------|-------|---------------------------------------------|---------------------------|-----------------|
+| 00 par (`00_par_run`)             | 5 slabs     | 50 x 4           | 204   | 9.2 h (7.8-10.5) at 60, 6.0 h at 120        | 16.1 h (12.8-19.5)        | 2,115 per slab  |
+| 00 MAT rerun (optional)           | 5 slabs     | 120 x 4          | 484   | 0.4 h (0.4-1.7)                             | 0.5 h (one run)           | 182 per slab    |
+| 01 match (`01_match_runs`)        | 5 slabs     | 50 x 4           | 204   | 2.0 h (1.5-2.5) at 60, 1.4 h at 120         | 3.9 h (3.4-4.8)           | 447 per slab    |
+| 01 creep (`01_match_runs`)        | 5 slabs     | 10 x 4           | 44    | 0.2 h                                       | 0.3 h                     | 7 per slab      |
+| 02 align (`02_align_run`)         | 5 slabs     | 50 x 4           | 204   | 1.6 h (1.2-2.0) at 60, 1.3 h at 300         | 2.5 h (1.9-2.9)           | 373 per slab    |
+| 03 ic2d (`03_correct_intensity_run`) | 10 slabs | 100 x 4          | 404   | 3.6 h (3.1-4.3) at 50                       | 3.5 h (3.4-4.4)           | 345 per slab    |
+| 04a 3d align (`04a_3d_align_run`) | 10 slabs    | 50 x 4           | 204   | 1.0 h (0.7-1.2)                             | 1.2 h (1.1-1.9)           | 93 per slab     |
+| 04b pixel export, r00             | 1 stack     | 5 x 4            | 24    | 5.3 h (4.4-6.3)                             | 6.4 h (5.0-11.9)          | 169 per stack   |
+| 04b pixel export, r01             | 1 stack     | 5 x 4            | 24    | 1.7 h (0.6-2.4)                             | 2.7 h (2.2-3.2)           | 53 per stack    |
+| 04c remove problem layers         | 10-20 slabs | 2 x 4 standard   | 12    |                                             | under 0.1 h               | 0               |
+| 04d problem export, r00 / r01     | 1 stack     | 10 x 4           | 44    |                                             | 5.2 h (3.1-5.7) / 1.5 h   | 309 / 90 per stack |
+| 05 SOFIMA import (`05_sofima_import`) | 10 slabs | 20 x 4          | 84    | 0.1-0.2 h                                   |                           | 5 per slab      |
+| 06a ic3d (`06a_ic3d_run`)         | 10 slabs    | 20 x 16          | 324   | 11.5 h (9.2-12.6), 9.0 h for r00-only 180-199 |                         | 1,736 per slab  |
+| 06b ic3d pixel export, r00 / r01  | 1 stack     | 5 x 4            | 24    | 6.0 h (4.9-7.8) / 1.6 h (0.6-2.9)           |                           | 192 / 51 per stack |
+| 06b ic3d mask export, r00 / r01   | 1 stack     | 5 x 4            | 24    | 2.0 h (1.7-2.6) / 0.6 h (0.2-0.9)           |                           | 64 / 18 per stack |
+| 07 inpaint (`07_inpaint_run`)     | 10-30 slabs | 5 x 4 per 10 slabs | 24-64 | 5.5 h (10 slabs), 5.7 h (20), 4.9 h (30)  |                           | 17 per slab     |
 
-The 04e exports are the only stage that does not fit in the cores: 7 projects x 20 stacks is
-140 export jobs (3,360 cores).  **Submit the 04e jobs for 6 projects first** (120 jobs, 2,880 cores),
-then the 7th project's when the first r01 exports finish (after about 3 h).  The 7th project then
-finishes about 3 h after the others, which is why 04e takes about 12 h instead of 9 h.
+The 22 `_aso` review exports (`rex-...-aso-pixel`) in the same period took r00 0.8 h at 40 x 4, r01 0.4 h at 30 x 4.
 
-The estimates do not include time to launch runs, overnight gaps, failures, or reruns.
+## Rules of Thumb
 
-## Stage Breakdown
+- **Cores are the limit, not Dataproc capacity.**  Median queue time was 0 to 1 minute for every
+  stage.  The quota is about 3,000 cores, and the peak in use was 2,928 (12 runs of 244 cores on 10-28).
+- **Batches stop after 24 h.**  Every batch has `ttl: 86400s`.  One 06a ic3d run with 20 x 4
+  executors was killed at exactly 24.0 h.  The slowest 00 par run (19.5 h for w61 000-069) was close
+  to the limit, so give large slabs more executors or a larger ttl.
+- **Slab size matters more than anything else.**  In executor-hours, the w61 000-069 runs were
+  1.2 to 1.9 times the 070-179 runs (00 par 1.5, 01 match 1.6, 02 align 1.3, 03 ic2d 1.9,
+  04a 1.2, 04b r00 1.2, 04b r01 1.6).  The w60 410-412 stacks were about 3.5 to 4 times a w61 070-179
+  r00 stack (00 par: 12.0 h at 50 executors for 3 stacks; 04b: 1.4 h at 75 executors per stack).
+- **An r01 export takes about 0.3 times as long as an r00 export** (0.4 for w61 000-069).
+- **More executors help less than linearly**, from the few runs with other settings:
+  - 00 par, 60 to 120: 1.5 times faster.
+  - 01 match, 60 to 120: 1.4 times faster.
+  - 02 align, 60 to 300: only 1.2 times faster, at 4 times the DCU-h.
+  - Exports, 5 to 10: 1.7 times faster for pixel exports and for mask exports.
+- **00 par and 06a ic3d use the most.**  For a two region w61 070-179 slab, all stages together use
+  about 5,700 DCU-h: 00 par 37%, 06a ic3d 31%, 01 match 8%, 02 align 7%, 03 ic2d 6%, exports 10%.
+  The pipeline (`rp-`) batches run on the premium tier and the exports on the standard tier,
+  so compare DCU-h only within a tier.
 
-| Stage                         | Runs              | Cores at once             | Time per run (comment time)       | Time per run (this batch) |
-|-------------------------------|-------------------|---------------------------|-----------------------------------|---------------------------|
-| 00 par, 50 executors          | 14                | 2,856 (14 x 204)          | ~12 h (estimated)                 | ~13.3 h (12.4 to 14.1 h)  |
-| 01 match, 50 executors        | 14                | 2,856                     | ~3 h (estimated)                  | ~3.5 h (3.3 to 3.7 h)     |
-| 01 creep, 10 executors        | 14                | 616 (14 x 44)             | 15 min                            | ~16 min                   |
-| 02 align, 50 executors        | 14                | 2,856                     | ~2 h (estimated)                  | ~2.3 h (2.2 to 2.5 h)     |
-| Dumps and loads for each half |                   | none                      |                                   | ~40 min                   |
-| **00 to 02**                  |                   |                           |                                   | **~20 h (19 to 21 h)**    |
-| 03 ic2d, 50 executors         | 7                 | 1,428 (7 x 204)           | typically 4 to 5 h (2 to 5 h)     | ~4.8 h (2 to 5.7 h)       |
-| 04 3d align, 50 executors     | 7                 | 1,428                     | 60 min                            | ~65 min                   |
-| Dumps and loads for 03 and 04 |                   | none                      |                                   | ~15 min                   |
-| 04e pixel export, 5 executors | 140 jobs (70 r00, 70 r01) | up to 3,000 (125 jobs) | r00 7 to 9 h, r01 2.5 to 3.5 h | ~12 h for the stage (9.5 to 14.3 h) |
-| **Total**                     |                   |                           |                                   | **~38 h (31 to 43 h)**    |
+## Whole Runs
 
-## Assumptions
+Wall time from the first batch starting to the last one finishing (UTC), including failures, reruns,
+launch gaps, and overnight waits.
 
-- **Stack size**: these r00 stacks get larger toward s000 and are much larger than their r01 stacks.
-  The estimate assumes the r00 stacks are 1.0 to 1.2 times the size of the 070 to 199 r00 stacks
-  (1.1 typical), that the r01 stacks are the same size as the 070 to 179 r01 stacks, and that an r01
-  stack takes 0.4 times as long as a 070 to 199 r00 stack (the ratio of the r01 and r00 pixel export times).
-  So each run here is about 1.07 (1.0 to 1.14) times the work of the 070 to 179 run that its comment
-  time is for, and a 04e r00 export takes 1.0 to 1.2 times the 7 to 9 h comment time.
-  If you have run times for any of these slabs, they would be a better basis than this guess.
-- **50 executor times for 00 to 02** have not been measured.  The script comments (~12 h, ~3 h, ~2 h)
-  were interpolated in log-log scale between the measured 25, 60, and 120 executor times.
-- **Cores**: each executor and driver has 4 cores, and the core quota is about 3,000.  Stages 00 to 02
-  leave only about 140 cores for anything else (for example hot-knife or 070 to 199 jobs), so other work
-  started then will make these runs wait.  Stages 03 and 04 leave about 1,570 cores free.
-- **Projects move in step**: all 14 halves start 00 at about the same time, so the 7 projects reach
-  03, 04, and 04e together.
-- **04e jobs** for one project are submitted together by one `load_data_for_04e_pixel_export_runs.sh`
-  line.  Submitting all 7 projects at once would ask for 3,360 cores, so the 7th waits for the first
-  r01 exports to finish (about 3 h), and its r00 exports finish about 3 h after the others.
-- **Dumps** after every run take the times in the script comments (about 13 min after 00 and 21 min
-  after 01), and each 00 and 03 run starts with a 1 to 2 minute load.
+| Run                                          | Start       | End         | Wall time | Notes |
+|----------------------------------------------|-------------|-------------|-----------|-------|
+| w61 070-199, 00 to 04b                       | 10-28 00:42 | 10-31 22:54 | 94 h      | 24 halves for 00 to 02, mostly at 60 executors; 6 failed 00 par runs |
+| w61 070-199, 05 to 07                        | 11-13 21:29 | 11-16 04:02 | 54.5 h    | after earlier 05 and 06a attempts on 070-079 (11-07 to 11-10) |
+| w61 000-069, 00 to 04b first pass            | 11-20 11:09 | 11-22 14:52 | 52 h      | 14 halves at 50 executors |
+| w61 000-069, 04c and 04d                     | 11-23 20:04 | 11-24 09:00 | 13 h      | 14 re-exports at 10 executors |
+| w60 410-412, 00 to 04b                       | 11-23 00:42 | 11-23 21:14 | 20.5 h    | one region, 3 slabs, 50 to 300 executors |
 
-## Not Included
+The w61 000-069 stages, measured as first start to last finish:
 
-- the 05 SOFIMA import and later stages (`load_data_for_05_sofima_import.sh` onward)
-- the optional MFOV-as-tile reruns in `load_data_for_00_par_run.sh`
-- separate downsample-only and mask export passes for 04e
-- time to launch runs, overnight gaps, failures, and reruns
+| Stage               | Batches        | Span   | Estimated on 11-21 |
+|---------------------|----------------|--------|--------------------|
+| 00 par              | 13 (+1 failed) | 19.5 h | 13.3 h per run     |
+| 01 match and creep  | 14 + 14        | 7.7 h  | 3.8 h per run      |
+| 02 align            | 14             | 2.9 h  | 2.3 h per run      |
+| 03 ic2d             | 7              | 4.4 h  | 4.8 h per run      |
+| 04a 3d align        | 7              | 1.9 h  | 65 min per run     |
+| 04b pixel export    | 114            | 11.9 h | 12 h               |
 
----
+The estimate for 00 to 04b was 38 h (31 to 43 h).  It took 52 h, mostly because 00 par took 16 h
+per run instead of 13 h and the slowest run set the pace (19.5 h).  The gaps between stages for dumps,
+loads, and launching added about 3 h.
 
-# Job Run Time Estimate: w61 Serial Slabs 070 to 199
+06a ic3d uses 324 cores per run, so all 13 w61 070-199 projects at once would need 4,212 cores.
+They ran in two waves: 7 starting 11-13 22:19 (10 to 12 h) and 6 starting 11-14 12:09 (9 to 11 h).
 
-Estimated time to run serial slabs 070 to 199 through `00_par_run` to `05_pixel_export_run`
-with 13 VMs (`aaa` to `aam`).  Estimated 2026-10-26.
+## Failures
 
-## Summary
+16 of the 1,054 batches failed or were cancelled.  The long ones cost the most:
 
-| Approach                                                        | Typical               | Range        |
-|-----------------------------------------------------------------|-----------------------|--------------|
-| **Batch each project through all stages on one VM** (with dumps)| **~62 h (2 days 14 h)** | 57.6 to 64.5 h |
-| Start each run as soon as its own inputs are ready (any VM)     | ~62 h (2 days 14 h)   | 57.4 to 64.4 h |
-| Stage by stage (finish a stage for all slabs before the next)   | ~64 h (2 days 16 h)   | 59.3 to 66.3 h |
+- **00 par** (6): five 60 executor runs submitted on 10-29 failed after 7 to 22 h.  Two of them
+  (140-144 and 190-199) failed at the same moment on 10-30 13:43 with `Internal Server Error`.
+  w61 000-004 failed after 16.4 h and was finished with a 30 minute MAT rerun.
+- **06a ic3d** (2): the 20 x 4 run hit the 24 h ttl, and a 20 x 16 run failed after 11.6 h.
+- **05 SOFIMA import** (1): a 25 x 4 run failed after 18.5 h.  Good runs take under 15 minutes.
+- **07 inpaint** (5): one failed at start, and four were cancelled after about 1 h.
+- **03 ic2d** (1, a timeout at start) and **04b export** (1, after 1.4 h).
 
-All three approaches take about the same time.  The differences (about 2 h) are smaller than the
-uncertainty in the run times.
+When planning, allow time to rerun at least one 00 par half, and check long runs well before
+they are expected to finish.
 
-Batching each project through all stages is a good choice because it takes no longer and skips the
-data loads between stages, including the 30 minute match collection loads.  It only works this well if
-**freed cores go to the earliest stage first**: when cores free up, start the next 00 to 02 run before
-starting more 03 to 05 work.  If cores go to whichever project is next in line instead, batching takes
-about 70 h (see below).
+## Not Measured Here
 
-The estimates do not include time to launch runs, overnight gaps, failures, or reruns.
+- Work on the VMs that uses no Dataproc cores: database loads and dumps, launching runs, and the
+  SOFIMA alignment between 04 and 05.  These show up only as gaps between stages.
+- How a single slab would run alone.  Times per slab in the planning table are batch times divided by
+  slab count, not single slab run times.
 
-## Stage Breakdown
+## Updating These Numbers
 
-These are the stage times when each stage runs by itself.  The approaches above overlap them in different ways.
+```bash
+gcloud dataproc batches list --region=us-east4 --project=janelia-ibeam \
+  --filter='create_time>="2026-10-27T00:00:00Z" AND create_time<="2026-11-25T00:00:00Z"' \
+  --limit=unlimited --format=json > dataproc_batches.<date>.json
 
-| Stage                        | Runs                       | At once (limit)              | Time per run (from comments)  | Stage time |
-|------------------------------|----------------------------|------------------------------|-------------------------------|------------|
-| 00 par, 120 executors        | 24                         | 6 (cores: 484 per run)       | ~7 h                          | 28 h       |
-| 01 match, 120 executors      | 24                         | 6 (cores)                    | ~90 min                       | 6 h        |
-| 01 creep, 10 executors       | 24                         | 13 (VMs)                     | 15 min                        | 0.5 h      |
-| 02 align, 120 executors      | 24                         | 6 (cores)                    | ~90 min                       | 6 h        |
-| 03 ic2d, 50 executors        | 13                         | 13 (VMs: 204 cores per run)  | typically 4 to 5 h (2 to 5 h) | ~4.5 h     |
-| 04 3d align, 50 executors    | 13                         | 13 (VMs)                     | 60 min                        | 1 h        |
-| 05 pixel export, 5 executors | 240 jobs (130 r00, 110 r01)| ~125 jobs (cores: 24 per job)| r00 7 to 9 h, r01 2.5 to 3.5 h| ~14 to 18 h|
-| **Compute total**            |                            |                              |                               | **~62 h**  |
+jq -r -f ../dataproc/summarize_batches.jq dataproc_batches.<date>.json > dataproc_batches.<date>.tsv
+```
 
-The 484 core runs in stages 00 to 02 add up to about 40 h of the total, and they are the bottleneck
-for every approach.
+The `create_time` limits are UTC.  Drop the `AND create_time<=...` part to include everything up to now.
 
-## Assumptions
+The TSV has one row per batch with the stage, wafer, slab range, state, queue and run minutes,
+DCU-hours, tier, and executor settings parsed from the batch id and properties.
+The batch id steps map to stages as follows:
 
-- **Run times** come from the comments in the `load_data_for_*` scripts.
-  Where a range is given, the low, typical, and high totals use the low, middle, and high values.
-- **Executor counts** are the ones currently set on the `02_run_pipeline.sh` and
-  `11_run_n5_export.sh` lines in each script.
-  Each executor and each driver has 4 cores, so a 120 executor run uses 484 cores.
-- **Core budget** is about 3,000 cores.
-  Every "N concurrent runs will use ..." comment in the scripts stays below that.
-- **Run sizes**:
-  - Stages 00 to 02 run 5 slabs at a time for serials 070 to 179 (two regions, r00 and r01)
-    and 10 slabs at a time for 180 to 199 (r00 only), so each of those stages has 24 runs.
-  - Stages 03 to 05 run one 10 slab project at a time (070 to 190), so each has 13 runs.
-  - Stage 05 submits one export job per `_asoi_3d` stack: 20 per two region project and
-    10 per one region project.
-- **Data loads** (only needed when a run's data is not already on its VM):
-  - 30 minutes for runs that start from match collections (01 loads the par matches, 02 loads the
-    creep matches), because each run loads about 10 match collections at about 3 minutes each.
-  - 1 to 2 minutes for the other runs.
-- **Dumps** are made after every run in every approach, so that data can be corrected or reviewed later.
-  They take the times given in the script comments (up to about 10 minutes for a match collection).
-- **A run holds its VM** while it loads, computes, and dumps.  Loads and dumps use no Spark cores.
-- **Batched projects** stay on one VM each (13 projects for 13 VMs), and the two 5 slab halves of a
-  two region project run one after the other on that VM during stages 00 to 02.
-- **Removing data** that is no longer needed takes about as long as a short load (1 to 2 minutes).
-
-## Why the Approaches End Up Close
-
-- **Cores, not VMs, limit stages 00 to 02.**  Six 484 core runs use 2,904 of the 3,000 cores,
-  so only 6 runs compute at a time no matter how they are ordered.
-- **Loads and dumps cost little.**  They hold VMs but use no cores, and there are spare VMs during
-  stages 00 to 02.  Including or skipping the dumps changes the estimates by less than 1 h.
-  - Stage by stage, the idle VMs can load the next wave's data while the current wave computes,
-    so only the first wave of each stage waits for its loads.
-  - Batched, the data is already on the VM, so there is nothing to wait for.
-- **Core priority matters most.**  When a cheap task (an ic2d run or a project's exports) takes cores
-  that a 484 core run could have used, only 5 of the 484 core runs fit, and most of the freed cores
-  go unused.  Giving freed cores to the earliest stage first keeps 6 of those runs going, and the
-  cheap stages use the leftover cores as the heavy work winds down.
-
-## Other Options Considered
-
-- **Batching with cores going to the next project in line** (~70 h).  Cheap stages of the first
-  projects take cores from the heavy stages of later ones, which spreads the 40 h of heavy work out.
-  Giving the cheap stages priority, or the project with the most heavy work left, was no better (~67 to 69 h).
-- **Stage by stage for 00 to 02, then batch 03 to 05 per project** (~62 h, the same as stage by stage
-  compute).  This saves only the short 1 to 2 minute loads, because 03 to 05 already move in lockstep.
-- **Change executor counts**:
-  - **00 par with 400 executors** (~3 h per run) fits only one run at a time, which makes stage 00
-    take about 72 h instead of 28 h.
-  - **01 match with 25 executors** (~6 h per run, 13 at once) or **300 executors** (40 min, 2 at once)
-    take about 12 h and 8 h, both slower than 6 h with 120 executors.
-  - **02 align with 200 executors** took 20 minutes for one run (w61-s170-to-s174).  If that holds
-    for the other slab groups, 3 runs at once would bring stage 02 from 6 h down to under 3 h.
-  - **Fewer executors for the heavy stages** might leave room for other stages to overlap, but none of
-    the script comments show how those runs scale with fewer executors.
-- **Stage 05 job order**: starting a few r01 exports before the last r00 exports frees their core slots
-  sooner and could bring stage 05 closer to 11 to 14 h.
-- **A larger core quota**: with about 6,300 cores (13 x 484), every VM could run its own project through
-  all stages with no waiting.  The whole run would then take about 34 h, which is the time for one two
-  region project to finish every stage.
-
-## Not Included
-
-- `load_data_for_05_sofima_import.sh` and `load_data_for_06_ic3d_run.sh`
-- the optional MFOV-as-tile reruns that are commented out in `load_data_for_00_par_run.sh`
-- separate downsample-only and mask export passes for stage 05
-- time to launch runs, overnight gaps, failures, and reruns
+| Batch id step              | Stage                |
+|----------------------------|----------------------|
+| `rough`, `rough-mat`       | 00 par, 00 MAT rerun |
+| `match`, `creep`           | 01                   |
+| `aso`                      | 02                   |
+| `ic2d`                     | 03                   |
+| `a3d`                      | 04a                  |
+| `rex ... asoi-3d-pixel`    | 04b and 04d          |
+| `remove-layers`            | 04c                  |
+| `import-sofima`, `rep-filters` | 05               |
+| `ic3d`                     | 06a                  |
+| `rex ... aso-3d-s3i-pixel`, `-mask` | 06b         |
+| `inpaint`                  | 07                   |
