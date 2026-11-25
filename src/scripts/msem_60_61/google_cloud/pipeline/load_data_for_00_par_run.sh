@@ -82,10 +82,11 @@ ${RIC_CMD} './db-restore-collections.sh --pattern \"janelia/00_gc/.*s${FIRST_PRO
 # -------------------------------------
 # Run pipeline batch job:
 
-#  50 4-core executor runs take ~12 hours (estimated) and 14 concurrent runs will use 2856 cores (204 cores per run)
-#  60 4-core executor runs take ~11 hours and 12 concurrent runs will use 2928 cores (244 cores per run)
-# 120 4-core executor runs take  ~7 hours and  6 concurrent runs will use 2904 cores (484 cores per run)
+#  50 4-core executor runs take ~16 hours (13 to 19.5 for w61-s000-to-s069, 12 for w60-s410-to-s412) and 14 concurrent runs will use 2856 cores (204 cores per run)
+#  60 4-core executor runs take  ~9 hours (8 to 10.5 for w61-s070-to-s179) and 12 concurrent runs will use 2928 cores (244 cores per run)
+# 120 4-core executor runs take  ~6 hours (w61-s070-to-s079) and  6 concurrent runs will use 2904 cores (484 cores per run)
 # 400 4-core executor runs take  ~3 hours
+# 02_run_pipeline.sh stops batches after 24 hours (--ttl=24h), so give larger slabs more executors
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 

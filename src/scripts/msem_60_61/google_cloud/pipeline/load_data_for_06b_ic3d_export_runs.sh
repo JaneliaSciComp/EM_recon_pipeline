@@ -11,7 +11,7 @@ SLABS_PER_RUN=10
 # --jobs picks which exports to submit, so that the long running ones can be run in their own
 # batches while the short ones are cycled through the remaining cores:
 #
-#   long   r00 pixel exports (about 7 hours for w61)
+#   long   r00 pixel exports (about 6 hours for w61)
 #   short  r00 mask, r01 pixel, and r01 mask exports (1 to 2 hours for w61)
 #   all    every pixel and mask export (the default)
 #
@@ -51,7 +51,7 @@ esac
 SCRIPT_NAME=$(basename "$0")
 USAGE_OPTIONS="[--jobs <long | short | all>] [--downsample-only]"
 USAGE_DETAILS="  --jobs             which exports to submit (default: all)
-                       long   r00 pixel exports (about 7 hours for w61)
+                       long   r00 pixel exports (about 6 hours for w61)
                        short  r00 mask, r01 pixel, and r01 mask exports (1 to 2 hours for w61)
                        all    every pixel and mask export
   --downsample-only  only build the scale pyramids, skipping datasets that already have an s1
@@ -88,11 +88,12 @@ EXPORT_STACK_SUFFIX="_aso_3d_s3i"
 N5_EXPORT_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render/${PROJECT_GROUP}"
 
 # --------------
-# _aso_3d_s3i export times with 5 executors (w61 s070 to s108 runs on 2026-11-14):
-#   r00 pixel  about 7 hours
+# _aso_3d_s3i export times with 5 executors (w61 s070 to s199 runs on 2026-11-11 to 2026-11-15):
+#   r00 pixel  about 6 hours (5 to 8)
 #   r00 mask   about 2 hours
-#   r01 pixel  about 2 hours  (r01 volumes are much smaller than r00 volumes)
-#   r01 mask   about 1 hour
+#   r01 pixel  about 1.5 hours (r01 volumes are much smaller than r00 volumes)
+#   r01 mask   under 1 hour
+# With 10 executors, r00 pixel took about 3.5 hours and r00 mask about 1.2 hours.
 #
 # These region differences are consistent for w61, but w60 regions and sizes may differ,
 # so check the long / short split below before using --jobs for w60.

@@ -42,7 +42,8 @@ ${RIC_CMD} './db-restore-collections.sh --pattern \"06_ic3d.*${SERIAL_PATTERN}.*
 
 # Each stack is inpainted by one task, so 5 4-core executors run all of a project's stacks at once.
 
-#  5 4-core executor runs take 6 hours to complete and 26 concurrent runs will use 2184 cores (84 cores per run)
+#  5 4-core executor runs take 5.5 hours to complete for 10 slabs and 125 concurrent runs will use 3000 cores (24 cores per run)
+# 10 4-core executor runs took 5 to 5.5 hours for 20 slabs, and 15 4-core executor runs took 4 to 6 hours for 30 slabs
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  5  4  standard  5  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 

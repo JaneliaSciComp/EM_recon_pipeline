@@ -52,10 +52,12 @@ ${RIC_CMD} './list-match-collections.sh'
 # Run match pipeline batch job:
 
 #  25 4-core executor runs take  ~6 hours   and 26 concurrent runs will use 2704 cores (104 cores per run)
-#  50 4-core executor runs take  ~3 hours (estimated) and 14 concurrent runs will use 2856 cores (204 cores per run)
-#  60 4-core executor runs take  ~? hours   and 12 concurrent runs will use 2928 cores (244 cores per run)
-# 120 4-core executor runs take ~90 minutes and  6 concurrent runs will use 2904 cores (484 cores per run)
+#  50 4-core executor runs take  ~4 hours (3.5 to 5 for w61-s000-to-s069) and 14 concurrent runs will use 2856 cores (204 cores per run)
+#  60 4-core executor runs take  ~2 hours (1.5 to 2.5 for w61-s070-to-s179, 2.8 for 10 slab s180-to-s199) and 12 concurrent runs will use 2928 cores (244 cores per run)
+# 120 4-core executor runs take ~80 minutes (w61-s070-to-s079) and  6 concurrent runs will use 2904 cores (484 cores per run)
+# 150 4-core executor run  took  96 minutes for w61-s000-to-s004
 # 300 4-core executor run  took  40 minutes for w61-s125-to-129
+# 300 4-core executor run  took  55 minutes for w60-s410-to-s412
 
 ./02_run_pipeline.sh  ${VM_IP}  ${MATCH_PIPELINE_JSON}  50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
@@ -75,7 +77,7 @@ ${DUMP_DB_CMD} render ${RUN_PARMS}' && ${DUMP_DB_CMD} match ${RUN_PARMS}'
 # -------------------------------------
 # Run creep correction pipeline batch job:
 
-#  10 4-core executor runs take  15 minutes   and 26 concurrent runs will use 1144 cores (44 cores per run)
+#  10 4-core executor runs take 10 to 17 minutes and 26 concurrent runs will use 1144 cores (44 cores per run)
 #  25 4-core executor run takes same amount of time as 10 4-core executor run because it serially goes
 #                         through each stack and then parallelizes work by z layer
 

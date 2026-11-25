@@ -171,7 +171,7 @@ ${RIC_CMD} './list-stacks.sh'
 # -------------------------------------
 # Run pipeline batch job:
 
-#  20 4-core executor runs take 10 minutes to complete and 26 concurrent runs will use 2184 cores (84 cores per run)
+#  20 4-core executor runs take 7 to 10 minutes to complete and 26 concurrent runs will use 2184 cores (84 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  20  4  premium  20  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 

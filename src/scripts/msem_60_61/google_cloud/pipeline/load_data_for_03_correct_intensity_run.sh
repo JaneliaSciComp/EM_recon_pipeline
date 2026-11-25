@@ -42,8 +42,9 @@ ${RIC_CMD} './list-stacks.sh'
 # Run pipeline batch job:
 
 # 400 4-core executor run  took 2 hours to complete for w61-s170-to-s179
-# 100 4-core executor runs take 3 to 5 hours to complete and  7 concurrent runs will use 2828 cores (404 cores per run)
-#  50 4-core executor runs take 2 to 5 hours to complete and 14 concurrent runs will use 2856 cores (204 cores per run)
+# 200 4-core executor run  took 81 minutes to complete for w60-s410-to-s412
+# 100 4-core executor runs take 3.5 to 4.5 hours to complete (w61-s000-to-s069) and  7 concurrent runs will use 2828 cores (404 cores per run)
+#  50 4-core executor runs take 3 to 4.5 hours to complete (2 for r00 only s180-to-s199) and 14 concurrent runs will use 2856 cores (204 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  100  4  premium  100  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 
@@ -51,7 +52,7 @@ ${RIC_CMD} './list-stacks.sh'
 ./dataproc/download_driver_log.sh --batch-id ${BATCH_NAME}
 
 # -------------------------------------
-# After the run completes (typically 4 to 5 hours), save result data:
+# After the run completes (typically 3.5 to 4.5 hours), save result data:
 
 # The render collection dump takes 3 minutes, dump directory is: ${RUN_DUMP_DIR}/render
 

@@ -41,7 +41,8 @@ Run file: ${RUN_FILE}
 cd ${GOOGLE_CLOUD_DIR}
 
 # 250 executor run for w61-s190-to-s199 (only has r00) took 15 minutes
-#  50 4-core executor runs take 60 minutes to complete and 14 concurrent runs will use 2856 cores (204 cores per run)
+# 250 executor run for w60-s410-to-s412 took 37 minutes
+#  50 4-core executor runs take 60 to 75 minutes to complete (up to 2 hours) and 14 concurrent runs will use 2856 cores (204 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  04_3d_align/pipe.04.w6n.layer-as-tile.json 50  4  premium  50  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 

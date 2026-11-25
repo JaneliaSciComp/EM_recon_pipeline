@@ -83,9 +83,10 @@ STACK_SUFFIXES=("${ASO_SUFFIX}" "${ASOI_3D_SUFFIX}")
 N5_EXPORT_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render"
 
 # same as load_data_for_04b_pixel_export_runs.sh:
-#   5 executors for w61 r00 regions take 7 to 9 hours
-#   5 executors for w61 r01 regions take 2.5 to 3.5 hours
+#   5 executors for w61 r00 regions take 4.5 to 6.5 hours (up to 12 hours for some s000 to s069 regions)
+#   5 executors for w61 r01 regions take 1 to 3 hours
 #  10 executors for w61_s099_r00 pixel with 82 z layers took 4 hours, 15 minutes
+#  10 executors for w61 s000 to s069 r00 pixel took 3 to 5.7 hours, r01 about 1.5 hours
 MAX_EXECUTORS=10
 
 if [ ! -f "${SLAB_INFO_PATH}" ]; then

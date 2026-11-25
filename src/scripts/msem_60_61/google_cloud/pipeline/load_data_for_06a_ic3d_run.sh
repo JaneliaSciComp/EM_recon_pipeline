@@ -50,7 +50,7 @@ ${RIC_CMD} './remove-collections.sh --db render --method keep --items \"${KEEP_I
 # -------------------------------------
 # Run pipeline batch job:
 
-#  20 16-core executor runs take 12 hours to complete and  9 concurrent runs will use 2916 cores (324 cores per run)
+#  20 16-core executor runs take 9 to 12.5 hours to complete (9 for r00 only projects) and  9 concurrent runs will use 2916 cores (324 cores per run)
 
 ./02_run_pipeline.sh  ${VM_IP}  ${PIPELINE_JSON}  20  16  premium  20  ${BATCH_NAME}  disableDynamic | tee -a \"${RUN_FILE}\"
 

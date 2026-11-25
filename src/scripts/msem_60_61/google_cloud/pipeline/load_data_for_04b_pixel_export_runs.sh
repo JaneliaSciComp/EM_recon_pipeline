@@ -34,8 +34,9 @@ N5_EXPORT_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render/${PROJECT
 
 # --------------
 # Pixel Jobs:
-#    5 executors for w61 r00 regions take 7 to 9 hours
-#    5 executors for w61 r01 regions take 2.5 to 3.5 hours
+#    5 executors for w61 r00 regions take 4.5 to 6.5 hours (up to 12 hours for some s000 to s069 regions)
+#    5 executors for w61 r01 regions take 1 to 3 hours
+#   75 executors for w60 r00 regions take 1.4 hours (w60-s410-to-s412)
 #
 # Pixel Downsample Jobs:
 #   25 executors for w61 r00 regions take 20 minutes
