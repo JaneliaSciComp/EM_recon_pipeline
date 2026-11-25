@@ -15,10 +15,11 @@
 #
 # With --select, the surface volumes that exist for the stack are listed and you choose which one to
 # show.  The list has the normal one and any moved to the old directory of the surface group by
-# move_exports.sh --type hf_surface, including ones with a date (and time) suffix, e.g.
+# move_exports.sh --type hf_surface, including ones with a date (and time) suffix or a --suffix value, e.g.
 #   heightfields_v4_surface/w61_serial_070_to_079/<stack>
 #   heightfields_v4_surface/old/w61_serial_070_to_079/<stack>
 #   heightfields_v4_surface/old/w61_serial_070_to_079/<stack>_20261124
+#   heightfields_v4_surface/old/w61_serial_070_to_079/<stack>_20261125_hf4096
 # The list and prompt are written to stderr so that only the url is written to stdout.  The pixel
 # layer always comes from its normal location.  With --cost, the cost layer comes from the same place as
 # the chosen surface (e.g. cost_v4/old/<project>/<stack>_20261124 for the surface above), or if there is no
@@ -128,8 +129,9 @@ COST_LAYER_NAME="cost"
 
 # Lists the stack's volumes in the specified group (e.g. heightfields_v4_surface) and its old directory,
 # and sets CHOSEN_VOLUME to the one chosen (or the only one), e.g. <group>/old/<project>/<stack>_20261124.
-# The normal directory only has <stack> and the old directory can also have <stack>_20261124 or
-# <stack>_20261124_100851 (from move_exports.sh).
+# The normal directory only has <stack> and the old directory can also have <stack>_<suffix>, e.g.
+# <stack>_20261124, <stack>_20261124_100851, or <stack>_20261125_hf4096 (from move_exports.sh, whose
+# --suffix values start with a letter or digit followed by letters, digits, _, ., or -).
 chooseVolume() {
   local GROUP="${1}"
   local KIND="${2}"
@@ -144,7 +146,7 @@ chooseVolume() {
         continue
       fi
       VOLUMES+=("${VOLUME}")
-    done < <(gcloud storage ls "${N5_PATH}/${PARENT}/" 2>/dev/null | grep -E "/${IC3D_STACK}(_[0-9][0-9_]*)?/\$")
+    done < <(gcloud storage ls "${N5_PATH}/${PARENT}/" 2>/dev/null | grep -E "/${IC3D_STACK}(_[A-Za-z0-9][A-Za-z0-9_.-]*)?/\$")
   done
 
   if (( ${#VOLUMES[@]} == 0 )); then
