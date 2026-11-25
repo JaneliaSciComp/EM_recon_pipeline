@@ -1,20 +1,27 @@
 #!/bin/bash
 
 # ----------------------------------------------------------------------------
-# Lists the exported pixel and mask volumes in Google storage for one render project, e.g. for
+# Lists the exported volumes in Google storage for one wafer 60 or 61 render project, e.g. for
 # --project w61_serial_070_to_079:
 #
 #   gs://janelia-spark-test/hess_wafers_60_61_export/render/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_asoi_3d___pixel
 #   gs://janelia-spark-test/hess_wafers_60_61_export/render/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i___pixel
 #   gs://janelia-spark-test/hess_wafers_60_61_export/render/w61_serial_070_to_079/w61_s070_r00_gc_bc_par_cc_aso_3d_s3i___mask
 #
-# Any volume whose name contains ___pixel or ___mask is listed, including ones renamed by move_exports.sh
-# (e.g. ..._asoi_3d___pixel_20260925).
+# or for --project w60_serial_360_to_369:
+#
+#   gs://janelia-spark-test/hess_wafers_60_61_export/render/w60_serial_360_to_369/w60_s360_r00_d20_gc_align___20250320_131555
+#
+# Any volume named <stack>___<dataset suffix> is listed: ___pixel and ___mask exports, ones renamed by
+# move_exports.sh (e.g. ..._asoi_3d___pixel_20260925), and earlier exports (mostly wafer 60) whose
+# dataset suffix is the run time (11_run_n5_export.sh --dataset-suffix, or the run time appended to a
+# name that already existed).
 
 # keep this in sync with N5_PATH in 11_run_n5_export.sh
 EXPORT_BASE_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render"
-# exports are <stack>___pixel or <stack>___mask, optionally followed by a suffix
-DATASET_MARKER_PATTERN="___(pixel|mask)"
+# exports are <stack>___<dataset suffix>, e.g. <stack>___pixel, <stack>___mask, <stack>___pixel_20260925,
+# or <stack>___20250320_131555
+DATASET_MARKER_PATTERN="___[A-Za-z0-9]"
 
 # ----------------------------------------------------------------------------
 # Parse named parameters
@@ -26,15 +33,17 @@ usage() {
   echo "
 USAGE $0 --project <project> [--levels]
 
-  --project  render project of the exports to list, e.g. w61_serial_070_to_079 (required)
+  --project  render project of the exports to list, e.g. w61_serial_070_to_079
+             or w60_serial_360_to_369 (required)
   --levels   also list the scale levels (s0, s1, ...) of each export
 
-Lists every <stack>*___pixel* and <stack>*___mask* volume in
+Lists every <stack>___<dataset suffix> volume (e.g. ___pixel, ___mask, or ___20250320_131555) in
 ${EXPORT_BASE_URL}/<project>
 
 Examples:
   $0 --project w61_serial_070_to_079
   $0 --project w61_serial_070_to_079 --levels
+  $0 --project w60_serial_360_to_369
 "
   exit 1
 }
@@ -66,8 +75,8 @@ done
 # a trailing slash (e.g. from tab completion) is harmless, so drop it
 ARG_PROJECT="${ARG_PROJECT%/}"
 
-if [[ ! "${ARG_PROJECT}" =~ ^w[0-9]+_serial_[0-9]{3}_to_[0-9]{3}$ ]]; then
-  echo "ERROR: --project must look like w61_serial_070_to_079 (not '${ARG_PROJECT}')"
+if [[ ! "${ARG_PROJECT}" =~ ^w6[01]_serial_[0-9]{3}_to_[0-9]{3}$ ]]; then
+  echo "ERROR: --project must look like w61_serial_070_to_079 or w60_serial_360_to_369 (not '${ARG_PROJECT}')"
   exit 1
 fi
 
