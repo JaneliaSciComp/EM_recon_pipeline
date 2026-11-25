@@ -25,18 +25,27 @@
 # name and then deletes the original.  The copies happen inside Google storage, but large volumes
 # still take a while.
 #
-# Each volume is moved in three steps so that the script can safely be rerun after a problem:
-#   1. gcloud storage rsync copies the volume to the target (a rerun only copies what is missing)
+# Each volume is moved in three steps so that the source is only deleted once it has been copied:
+#   1. gcloud storage rsync copies the volume to the target
 #   2. every source object is checked to exist in the target with the same size
-#   3. only then is the source deleted (a rerun after an interrupted delete just finishes it)
+#   3. only then is the source deleted
 #
 # gcloud storage mv is not used because an interrupted mv leaves the volume split between the two
 # names, and rerunning it onto the existing target would nest the volume inside the target.
 #
 # A stack is skipped when neither its volume nor its target exists (e.g. r01 for serials 180 and up),
 # and is reported as already moved when only its target exists.  When a stack's target already exists
-# along with its volume (e.g. a volume moved before was regenerated), the volume is copied into the
-# existing target, so clear out the target first if the two versions should not be mixed.
+# along with its volume (e.g. a volume moved before was regenerated), the volume is moved to a new
+# target named with today's date appended instead (e.g. .../old/w61_serial_070_to_079/<stack>_20261124),
+# or with the date and time if that exists too, so an earlier moved version is never mixed with or
+# overwritten by a later one.  Because of this, a failed move is not resumed by a rerun, see the
+# error messages for how to clean up.
+#
+# Use --suffix to choose the target name instead, e.g. to give the heightfields and heightfields surface
+# volumes of a stack the same suffix.  With --suffix 20261124_082411 the target is always
+# .../old/w61_serial_070_to_079/<stack>_20261124_082411 (or <volume>_20261124_082411 for render, in place
+# of the _20261122 suffix), and the stack fails rather than being moved if that target already
+# exists along with the volume.
 
 EXPORT_BASE_URL="gs://janelia-spark-test/hess_wafers_60_61_export"
 WAFER="61"
@@ -58,6 +67,11 @@ IC3D_STACK_SUFFIX="_gc_bc_par_cc_aso_3d_s3i"
 # under this directory of their group
 OLD_DIR="old"
 
+# appended to a target that already exists (with the time too if the dated target exists),
+# e.g. a volume that was moved before and then regenerated
+DATE_SUFFIX="_$(date +%Y%m%d)"
+DATE_TIME_SUFFIX="_$(date +%Y%m%d_%H%M%S)"
+
 # ----------------------------------------------------------------------------
 # Parse named parameters
 
@@ -66,16 +80,20 @@ ARG_REGION=""
 ARG_MIN_SERIAL=""
 ARG_MAX_SERIAL=""
 ARG_DRY_RUN="false"
+ARG_SUFFIX=""
 
 usage() {
   echo "
-USAGE $0 --type <type> --region <region> --min-serial <number> --max-serial <number> [--dry-run]
+USAGE $0 --type <type> --region <region> --min-serial <number> --max-serial <number> [--suffix <suffix>] [--dry-run]
 
   --type        type of volumes to move, render, cost, hf (heightfields),
                 or hf_surface (heightfields surface) (required)
   --region      region of the stacks to move, r00 or r01 (required)
   --min-serial  first serial number to move (required)
   --max-serial  last serial number to move (required)
+  --suffix      always append _<suffix> to the target name, e.g. 20261124_082411
+                (by default a suffix is only added when the target already exists,
+                using today's date, or the date and time if that exists too)
   --dry-run     print the gcloud copy and remove commands instead of running them
 
 For --type render, each w${WAFER}_s<serial>_<region>${RENDER_STACK_SUFFIX}${RENDER_DATASET_SUFFIX} volume is moved to
@@ -94,6 +112,7 @@ Examples:
   $0 --type cost --region r00 --min-serial 70 --max-serial 79 --dry-run
   $0 --type hf --region r00 --min-serial 70 --max-serial 79 --dry-run
   $0 --type hf_surface --region r00 --min-serial 70 --max-serial 79 --dry-run
+  $0 --type hf --region r00 --min-serial 70 --max-serial 70 --suffix 20261124_082411
 "
   exit 1
 }
@@ -118,6 +137,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --max-serial)
       ARG_MAX_SERIAL="${2:?'--max-serial requires a value'}"
+      shift 2
+      ;;
+    --suffix)
+      ARG_SUFFIX="${2:?'--suffix requires a value'}"
       shift 2
       ;;
     --dry-run)
@@ -168,6 +191,13 @@ fi
 
 if (( MAX_SERIAL > 999 )); then
   echo "ERROR: --max-serial must be less than 1000 (not ${MAX_SERIAL})"
+  exit 1
+fi
+
+# accept the suffix with or without its leading underscore
+ARG_SUFFIX="${ARG_SUFFIX#_}"
+if [ -n "${ARG_SUFFIX}" ] && [[ ! "${ARG_SUFFIX}" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]; then
+  echo "ERROR: --suffix must only have letters, numbers, _, ., and - (not '${ARG_SUFFIX}')"
   exit 1
 fi
 
@@ -238,6 +268,15 @@ for STACK in "${STACKS[@]}"; do
     TARGET_URL="${GROUP_BASE_URL}/${OLD_DIR}/${PROJECT}/${STACK}"
   fi
 
+  # an explicit suffix replaces the render target suffix and is added to the other targets
+  if [ -n "${ARG_SUFFIX}" ]; then
+    if [ "${ARG_TYPE}" = "render" ]; then
+      TARGET_URL="${SOURCE_URL}_${ARG_SUFFIX}"
+    else
+      TARGET_URL="${TARGET_URL}_${ARG_SUFFIX}"
+    fi
+  fi
+
   printf "\n%s\n" "${STACK}"
 
   if ! volumeExists "${SOURCE_URL}"; then
@@ -251,6 +290,32 @@ for STACK in "${STACKS[@]}"; do
     continue
   fi
 
+  # never copy into an earlier moved version: fail with an explicit suffix,
+  # otherwise move a regenerated volume to a new dated target
+  if [ -n "${ARG_SUFFIX}" ] && volumeExists "${TARGET_URL}"; then
+    printf "  ERROR: %s already exists, source was not moved (choose another --suffix)\n" "${TARGET_URL}"
+    FAILED+=("${STACK}")
+    continue
+  elif volumeExists "${TARGET_URL}"; then
+    printf "  %s already exists\n" "${TARGET_URL}"
+    if volumeExists "${TARGET_URL}${DATE_SUFFIX}"; then
+      ADDED_SUFFIX="${DATE_TIME_SUFFIX}"
+    else
+      ADDED_SUFFIX="${DATE_SUFFIX}"
+    fi
+    TARGET_URL="${TARGET_URL}${ADDED_SUFFIX}"
+    if volumeExists "${TARGET_URL}"; then
+      printf "  ERROR: %s also exists, source was not moved\n" "${TARGET_URL}"
+      FAILED+=("${STACK}")
+      continue
+    fi
+    # render targets already have a suffix, so the same --suffix would not give the same name
+    if [ "${ARG_TYPE}" != "render" ]; then
+      printf "  adding suffix %s (use --suffix %s to give the other types the same name)\n" \
+             "${ADDED_SUFFIX}" "${ADDED_SUFFIX#_}"
+    fi
+  fi
+
   if [ "${ARG_DRY_RUN}" = "true" ]; then
     printf "  would run: gcloud storage rsync --recursive %s %s\n" "${SOURCE_URL}" "${TARGET_URL}"
     printf "  would check that every source object is in the target with the same size\n"
@@ -261,16 +326,16 @@ for STACK in "${STACKS[@]}"; do
 
   STACK_START_SECONDS=${SECONDS}
 
-  # 1. copy (a target left by an interrupted run is completed, not nested)
-  if volumeExists "${TARGET_URL}"; then
-    printf "  %s already exists, resuming the copy ...\n" "${TARGET_URL}"
-  else
-    printf "  copying %s\n       to %s ...\n" "${SOURCE_URL}" "${TARGET_URL}"
-  fi
+  # 1. copy (the target does not exist yet, so rsync creates it rather than nesting the volume in it)
+  printf "  copying %s\n       to %s ...\n" "${SOURCE_URL}" "${TARGET_URL}"
+
+  # a rerun after a failed copy or check would move the source to another dated target,
+  # so the partial target needs to be removed before rerunning
+  REMOVE_TARGET_HINT="remove the partial copy with 'gcloud storage rm --recursive ${TARGET_URL}' and rerun"
 
   # --no-user-output-enabled hides the 'Copying ...' line printed for every object
   if ! gcloud storage rsync --recursive --no-user-output-enabled "${SOURCE_URL}" "${TARGET_URL}"; then
-    printf "  ERROR: copy failed, source was not removed, rerun to resume the copy\n"
+    printf "  ERROR: copy failed, source was not removed, %s\n" "${REMOVE_TARGET_HINT}"
     FAILED+=("${STACK}")
     continue
   fi
@@ -285,14 +350,14 @@ for STACK in "${STACKS[@]}"; do
   MISSING_COUNT=$(comm -23 "${SOURCE_LIST}" "${TARGET_LIST}" | wc -l | tr -d ' ')
 
   if (( SOURCE_COUNT == 0 )); then
-    printf "  ERROR: could not list the objects in %s, source was not removed\n" "${SOURCE_URL}"
+    printf "  ERROR: could not list the objects in %s, source was not removed, %s\n" "${SOURCE_URL}" "${REMOVE_TARGET_HINT}"
     FAILED+=("${STACK}")
     continue
   fi
 
   if (( MISSING_COUNT > 0 )); then
-    printf "  ERROR: %d of %d source objects are missing from the target or have a different size, source was not removed\n" \
-           "${MISSING_COUNT}" "${SOURCE_COUNT}"
+    printf "  ERROR: %d of %d source objects are missing from the target or have a different size, source was not removed, %s\n" \
+           "${MISSING_COUNT}" "${SOURCE_COUNT}" "${REMOVE_TARGET_HINT}"
     comm -23 "${SOURCE_LIST}" "${TARGET_LIST}" | head -5 | sed 's/^/    /'
     FAILED+=("${STACK}")
     continue
@@ -305,13 +370,13 @@ for STACK in "${STACKS[@]}"; do
 
   # --no-user-output-enabled hides the 'Removing ...' line printed for every object
   if ! gcloud storage rm --no-user-output-enabled "${SOURCE_URL}/**"; then
-    printf "  ERROR: remove failed, the copy is complete, rerun to finish removing the source\n"
+    printf "  ERROR: remove failed, the copy is complete, finish removing the source with 'gcloud storage rm %s/**' (a rerun would move what is left to another target)\n" "${SOURCE_URL}"
     FAILED+=("${STACK}")
     continue
   fi
 
   if volumeExists "${SOURCE_URL}"; then
-    printf "  ERROR: objects are left in %s, the copy is complete, rerun to finish removing the source\n" "${SOURCE_URL}"
+    printf "  ERROR: objects are left in %s, the copy is complete, finish removing the source with 'gcloud storage rm %s/**' (a rerun would move what is left to another target)\n" "${SOURCE_URL}" "${SOURCE_URL}"
     FAILED+=("${STACK}")
     continue
   fi
