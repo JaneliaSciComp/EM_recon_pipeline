@@ -1,87 +1,68 @@
-# Job Run Time Estimate: w61 Serial Slabs 000 to 069 (r00 Only)
+# Job Run Time Estimate: w61 Serial Slabs 000 to 069 (r00 and r01)
 
-Estimated time to run the r00 stacks of serial slabs 000 to 069 through `00_par_run` to
-`04e_pixel_export_runs` (called stage 05 in the 070 to 199 estimate below), with `--regions r00`.  Estimated 2026-11-20.
-
-The 00, 01, and 02 scripts now launch with 50 executors (for the 14 VM approach).  The 7 VM rows and
-the stage breakdown use the earlier 60 executor setting, so edit the `02_run_pipeline.sh` line if you
-run that way instead.
+Estimated time to run both regions (r00 and r01) of serial slabs 000 to 069 through `00_par_run` to
+`04e_pixel_export_runs` (called stage 05 in the 070 to 199 estimate below), on 14 VMs (`aaa` to `aan`)
+with the executor counts currently set in the `load_data_for_*` scripts (50 for 00 to 04).
+Estimated 2026-11-21.
 
 ## Summary
 
-| Approach                                                              | Typical               | Range      |
-|-----------------------------------------------------------------------|-----------------------|------------|
-| **7 VMs, one per project, halves one after the other (60 executors)** | **~40 h (1 day 16 h)** | 33 to 45 h |
-| Same, with 100 executors for 00 to 02                                 | ~33 h (1 day 9 h)     | 27 to 37 h |
-| 14 VMs (`aaa` to `aan`), every half at once, 50 executors for 00 to 02  | ~28 h (1 day 4 h)     | 23 to 32 h |
+| Approach                                                           | Typical                | Range      |
+|--------------------------------------------------------------------|------------------------|------------|
+| **14 VMs, every half at once, 50 executors (current scripts)**     | **~38 h (1 day 14 h)** | 31 to 43 h |
 
-The 00 to 02 runs are 5 slabs (5 r00 stacks) each, because 10 of these large r00 stacks make too much
-match data for one VM.  So there are 14 half project runs, and since a run holds its VM, the
-number of VMs decides how many of them can run at once:
+The 00 to 02 runs are 5 slabs (5 r00 plus 5 r01 stacks) each, the same shape as the 070 to 179 runs,
+so there are 14 half project runs.  With one run per VM and 50 executors, all 14 run at once in
+2,856 of the 3,000 cores, so 00 to 02 takes about 20 h.
 
-- **7 VMs** run the two halves of each project one after the other, which doubles the 00 to 02 time
-  (about 27 of the 40 h), but uses only about 1,700 cores.
-- **13 VMs are not enough to run every half at once.**  With 13 VMs, the 14th half has to wait for a
-  VM, so its project takes as long as with 7 VMs (~40 h).  At 60 executors only 12 halves fit in the
-  cores anyway (12 x 244 = 2,928).
-- **14 VMs** (with the new `aan` VM) and 50 executors fit all 14 halves at once in
-  2,856 cores, which is the fastest option.
+The 04e exports are the only stage that does not fit in the cores: 7 projects x 20 stacks is
+140 export jobs (3,360 cores).  **Submit the 04e jobs for 6 projects first** (120 jobs, 2,880 cores),
+then the 7th project's when the first r01 exports finish (after about 3 h).  The 7th project then
+finishes about 3 h after the others, which is why 04e takes about 12 h instead of 9 h.
 
 The estimates do not include time to launch runs, overnight gaps, failures, or reruns.
 
-## Stage Breakdown (7 VMs, 60 Executors)
+## Stage Breakdown
 
-| Stage                         | Runs           | Cores at once            | Time per run (comment time)    | Time per run (this batch) |
-|-------------------------------|----------------|--------------------------|--------------------------------|---------------------------|
-| 00 par, 60 executors          | 14 (7 at once) | 1,708 (7 x 244)          | ~11 h                          | ~8.7 h (7.8 to 9.5 h)     |
-| 01 match, 60 executors        | 14 (7 at once) | 1,708                    | not recorded (~2.8 h, see below) | ~2.2 h (2 to 2.4 h)     |
-| 01 creep, 10 executors        | 14 (7 at once) | 308 (7 x 44)             | 15 min                         | ~12 min                   |
-| 02 align, 60 executors        | 14 (7 at once) | 1,708                    | ~2 h                           | ~1.6 h (1.4 to 1.7 h)     |
-| Dumps and loads for each half |                | none                     |                                | ~40 min                   |
-| **00 to 02, both halves**     |                |                          |                                | **~27 h (24 to 29 h)**    |
-| 03 ic2d, 50 executors         | 7              | 1,428 (7 x 204)          | typically 4 to 5 h (2 to 5 h)  | ~3.6 h (1.4 to 4.3 h)     |
-| 04 3d align, 50 executors     | 7              | 1,428                    | 60 min                         | ~50 min                   |
-| 04e pixel export, 5 executors | 70 jobs (r00)  | 1,680 (70 x 24)          | r00 7 to 9 h                   | ~8.8 h (7 to 10.8 h)      |
-| **Total for one project**     |                |                          |                                | **~40 h (33 to 45 h)**    |
+| Stage                         | Runs              | Cores at once             | Time per run (comment time)       | Time per run (this batch) |
+|-------------------------------|-------------------|---------------------------|-----------------------------------|---------------------------|
+| 00 par, 50 executors          | 14                | 2,856 (14 x 204)          | ~12 h (estimated)                 | ~13.3 h (12.4 to 14.1 h)  |
+| 01 match, 50 executors        | 14                | 2,856                     | ~3 h (estimated)                  | ~3.5 h (3.3 to 3.7 h)     |
+| 01 creep, 10 executors        | 14                | 616 (14 x 44)             | 15 min                            | ~16 min                   |
+| 02 align, 50 executors        | 14                | 2,856                     | ~2 h (estimated)                  | ~2.3 h (2.2 to 2.5 h)     |
+| Dumps and loads for each half |                   | none                      |                                   | ~40 min                   |
+| **00 to 02**                  |                   |                           |                                   | **~20 h (19 to 21 h)**    |
+| 03 ic2d, 50 executors         | 7                 | 1,428 (7 x 204)           | typically 4 to 5 h (2 to 5 h)     | ~4.8 h (2 to 5.7 h)       |
+| 04 3d align, 50 executors     | 7                 | 1,428                     | 60 min                            | ~65 min                   |
+| Dumps and loads for 03 and 04 |                   | none                      |                                   | ~15 min                   |
+| 04e pixel export, 5 executors | 140 jobs (70 r00, 70 r01) | up to 3,000 (125 jobs) | r00 7 to 9 h, r01 2.5 to 3.5 h | ~12 h for the stage (9.5 to 14.3 h) |
+| **Total**                     |                   |                           |                                   | **~38 h (31 to 43 h)**    |
 
 ## Assumptions
 
 - **Stack size**: these r00 stacks get larger toward s000 and are much larger than their r01 stacks.
-  The estimate assumes they are 1.0 to 1.2 times the size of the 070 to 199 r00 stacks (1.1 typical),
-  and that an r01 stack there takes 0.4 times as long as an r00 stack (the ratio of the r01 and r00
-  pixel export times).  So:
-  - a 5 r00 stack run is about 0.8 (0.7 to 0.86) times the work of the 5 r00 plus 5 r01 stack runs
-    that the 00 to 02 comment times are for,
-  - a 10 r00 stack project is about 0.8 times the work of the whole two region projects that the
-    03 and 04 comment times are for, and
-  - a 04e r00 export takes 1.0 to 1.2 times the 7 to 9 h comment time.
+  The estimate assumes the r00 stacks are 1.0 to 1.2 times the size of the 070 to 199 r00 stacks
+  (1.1 typical), that the r01 stacks are the same size as the 070 to 179 r01 stacks, and that an r01
+  stack takes 0.4 times as long as a 070 to 199 r00 stack (the ratio of the r01 and r00 pixel export times).
+  So each run here is about 1.07 (1.0 to 1.14) times the work of the 070 to 179 run that its comment
+  time is for, and a 04e r00 export takes 1.0 to 1.2 times the 7 to 9 h comment time.
   If you have run times for any of these slabs, they would be a better basis than this guess.
-- **01 match at 60 executors** has no recorded time ("~? hours" in the script).  The 2.8 h comes from
-  interpolating between the 25 executor (~6 h) and 120 executor (~90 min) times.
-- **Other executor counts** are interpolated the same way between the script comment times (in log-log
-  scale).  None of the 50 or 100 executor times for 00 to 02 have been measured.
-- **Cores**: each executor and driver has 4 cores, and the core quota is about 3,000.  With 7 VMs,
-  about 1,300 cores are left for other work (for example hot-knife or 070 to 199 jobs).  The other two
-  approaches use nearly all of the cores during 00 to 02.
+- **50 executor times for 00 to 02** have not been measured.  The script comments (~12 h, ~3 h, ~2 h)
+  were interpolated in log-log scale between the measured 25, 60, and 120 executor times.
+- **Cores**: each executor and driver has 4 cores, and the core quota is about 3,000.  Stages 00 to 02
+  leave only about 140 cores for anything else (for example hot-knife or 070 to 199 jobs), so other work
+  started then will make these runs wait.  Stages 03 and 04 leave about 1,570 cores free.
+- **Projects move in step**: all 14 halves start 00 at about the same time, so the 7 projects reach
+  03, 04, and 04e together.
+- **04e jobs** for one project are submitted together by one `load_data_for_04e_pixel_export_runs.sh`
+  line.  Submitting all 7 projects at once would ask for 3,360 cores, so the 7th waits for the first
+  r01 exports to finish (about 3 h), and its r00 exports finish about 3 h after the others.
 - **Dumps** after every run take the times in the script comments (about 13 min after 00 and 21 min
   after 01), and each 00 and 03 run starts with a 1 to 2 minute load.
-- **The halves** of a project use the same VM, so the second half starts after the first half's
-  02 dump, and 03 starts after the second half's 02 dump.
-
-## Faster Options
-
-- **100 executors for 00 to 02 with 7 VMs** (7 x 404 = 2,828 cores): each half's 00 to 02 takes about
-  9 h instead of 13 h, saving about 7 h overall.  It leaves no cores for other work during the first
-  ~20 h, and uses more core hours (about 20% more for 00 par).
-- **14 VMs with 50 executors**: every half runs 00 to 02 at once, which takes about 15 h, so the whole
-  batch takes about 28 h.  The 14th VM (`aan`, letter N) runs the half that would otherwise wait.
-
-Time the first runs before relying on either option.
 
 ## Not Included
 
 - the 05 SOFIMA import and later stages (`load_data_for_05_sofima_import.sh` onward)
-- the r01 stacks for these slabs (to be run later with `--regions r01`)
 - the optional MFOV-as-tile reruns in `load_data_for_00_par_run.sh`
 - separate downsample-only and mask export passes for 04e
 - time to launch runs, overnight gaps, failures, and reruns
