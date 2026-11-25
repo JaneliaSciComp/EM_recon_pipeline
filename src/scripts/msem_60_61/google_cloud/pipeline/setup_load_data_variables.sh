@@ -21,7 +21,7 @@
 #
 # SLAB_GROUP_SUFFIX is SOFIMA_ROUND for the 05 - 07 stages and ALIGN_SLAB_GROUP_SUFFIX otherwise.
 #
-# --regions (00 - 04e stages only) limits a run to some of each slab's regions, e.g. --regions r00 to
+# --regions (00 - 04b stages only) limits a run to some of each slab's regions, e.g. --regions r00 to
 # skip the r01 stacks.  The regions are comma separated and default to every region the slabs have:
 #
 #   SELECTED_REGIONS         the regions being processed (an array, e.g. (r00) or (r00 r01))
@@ -31,7 +31,7 @@
 #
 # When --regions is given, the selected regions are also added to SLAB_GROUP_SUFFIX
 # (e.g. r00_20261027), so the dumps for a later run of the other regions are kept separate.
-# Pass the same --regions to every 00 - 04e stage for a slab group, because the later stages
+# Pass the same --regions to every 00 - 04b stage for a slab group, because the later stages
 # restore the earlier dumps by that suffix and size their remove-collections.sh item lists by
 # STACKS_PER_RUN.
 #
@@ -158,9 +158,9 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 # the 05 - 07 stages pick their stacks from the SOFIMA round instead,
-# and the 04f and 04g stages pick them from the 04b pipeline JSON
+# and the 04c and 04d stages pick them from the pipe.04b pipeline JSON
 case "${STAGE}" in
-  04f*|04g*|05*|06*|07*)
+  04c*|04d*|05*|06*|07*)
     ;;
   *)
     USAGE_OPTIONS="[--regions <r00 | r01 | r00,r01>]${USAGE_OPTIONS:+ ${USAGE_OPTIONS}}"
@@ -283,7 +283,7 @@ else
 
   case "${STAGE}" in
     05*|06*|07*)
-      printf "\nExiting, --regions is only for the 00 - 04e stages (the %s stacks come from the SOFIMA round)\n\n" \
+      printf "\nExiting, --regions is only for the 00 - 04b stages (the %s stacks come from the SOFIMA round)\n\n" \
              "${STAGE}"
       exit 1
       ;;

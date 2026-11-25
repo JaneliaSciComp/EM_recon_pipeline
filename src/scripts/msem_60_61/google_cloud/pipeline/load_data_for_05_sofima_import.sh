@@ -91,7 +91,7 @@ if (( ${#INCLUDED_STACKS[@]} == 0 )); then
 fi
 
 # Warn about stacks that were already in another round, since running them again would redo
-# the 12 hour ic3d run and make the 06e export write a second, timestamped dataset.
+# the 12 hour ic3d run and make the 06b export write a second, timestamped dataset.
 REPEATED_STACKS=""
 for OTHER_ROUND_FILE in "${SOFIMA_DIR}"/sofima_complete_*.csv; do
   if [ "${OTHER_ROUND_FILE}" != "${ROUND_FILE}" ]; then

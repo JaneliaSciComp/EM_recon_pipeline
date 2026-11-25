@@ -2,14 +2,14 @@
 
 # ----------------------------------------------------------------------------
 # Prints (and appends to the run file) the instructions for setting up a VM with the
-# 06_ic3d run's mongodb dump, so that load_data_for_06e_ic3d_export_runs.sh can then
+# 06_ic3d run's mongodb dump, so that load_data_for_06b_ic3d_export_runs.sh can then
 # be run against it.
 #
-# Unlike load_data_for_06_ic3d_run.sh, there is no pipeline run or dump here, only the setup.
+# Unlike load_data_for_06a_ic3d_run.sh, there is no pipeline run or dump here, only the setup.
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-STAGE="06e_ic3d_export_setup"
+STAGE="06b_ic3d_export_setup"
 SLABS_PER_RUN=10
 
 # shellcheck source=setup_load_data_variables.sh

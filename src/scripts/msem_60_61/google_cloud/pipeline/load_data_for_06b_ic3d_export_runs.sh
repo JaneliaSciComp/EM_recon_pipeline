@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-STAGE="06e_ic3d_export"
+STAGE="06b_ic3d_export"
 SLABS_PER_RUN=10
 
 # Pull --downsample-only and --jobs out of the parameters before sourcing the setup script,
@@ -16,7 +16,7 @@ SLABS_PER_RUN=10
 #   all    every pixel and mask export (the default)
 #
 # Both sets read from the same loaded VM, so a slab group only needs to be set up once
-# (see setup_data_for_06e_ic3d_export_runs.sh) even when its long and short jobs run at the same time.
+# (see setup_data_for_06b_ic3d_export_runs.sh) even when its long and short jobs run at the same time.
 ARG_DOWNSAMPLE_ONLY="false"
 ARG_JOBS="all"
 SETUP_ARGS=()
@@ -58,7 +58,7 @@ USAGE_DETAILS="  --jobs             which exports to submit (default: all)
 
 Examples:
   # run the long r00 pixel exports and the short exports for s110 to s119 on VM D
-  # (set up the VM once first with setup_data_for_06e_ic3d_export_runs.sh 61 110 D)
+  # (set up the VM once first with setup_data_for_06b_ic3d_export_runs.sh 61 110 D)
   ${SCRIPT_NAME} 61 110 D --jobs long
   ${SCRIPT_NAME} 61 110 D --jobs short
 

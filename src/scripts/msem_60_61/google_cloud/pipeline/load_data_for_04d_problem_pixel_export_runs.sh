@@ -2,11 +2,11 @@
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-STAGE="04g_problem_pixel_export"
+STAGE="04d_problem_pixel_export"
 SLABS_PER_RUN=10
 
 # ----------------------------------------------------------------------------
-# Exports the _asoi_3d stacks that the 04f stage fixed (the ones listed in the tileRemoval
+# Exports the _asoi_3d stacks that the 04c stage fixed (the ones listed in the tileRemoval
 # project_to_stack_scans and project_to_stack_scan_mfovs of pipe.04b.w6n.remove-problem-tiles.json)
 # again, so that SOFIMA can be run with the problem scans and MFOVs removed.
 #
@@ -21,7 +21,7 @@ SLABS_PER_RUN=10
 # dataset that still exists (e.g. w61_s010_r00_gc_bc_par_cc_asoi_3d___pixel_20261124-093012), so this
 # script warns about each stack whose original export is still there.
 #
-# NOTE: like load_data_for_04e_pixel_export_runs.sh --downsample-only, this runs gcloud storage ls,
+# NOTE: like load_data_for_04b_pixel_export_runs.sh --downsample-only, this runs gcloud storage ls,
 #       so it needs gcloud credentials.
 
 # Pull --last-serial out of the parameters before setup_load_data_variables.sh parses the rest
@@ -74,7 +74,7 @@ PIPELINE_JSON_PATH="${MSEM_60_61_DIR}/pipeline_json/${PIPELINE_JSON}"
 # lists every raw stack of the wafer (e.g. stack_name='w61_s070_r00'), so it has each slab's regions
 SLAB_INFO_PATH="${MSEM_60_61_DIR}/slab_info.w${WAFER}.txt"
 
-# the stacks the 04f stage changed, only the _asoi_3d ones are exported
+# the stacks the 04c stage changed, only the _asoi_3d ones are exported
 ASO_SUFFIX="_gc_bc_par_cc_aso"
 ASOI_3D_SUFFIX="_gc_bc_par_cc_asoi_3d"
 STACK_SUFFIXES=("${ASO_SUFFIX}" "${ASOI_3D_SUFFIX}")
@@ -82,7 +82,7 @@ STACK_SUFFIXES=("${ASO_SUFFIX}" "${ASOI_3D_SUFFIX}")
 # keep this in sync with N5_PATH in ../11_run_n5_export.sh
 N5_EXPORT_URL="gs://janelia-spark-test/hess_wafers_60_61_export/render"
 
-# same as load_data_for_04e_pixel_export_runs.sh:
+# same as load_data_for_04b_pixel_export_runs.sh:
 #   5 executors for w61 r00 regions take 7 to 9 hours
 #   5 executors for w61 r01 regions take 2.5 to 3.5 hours
 #  10 executors for w61_s099_r00 pixel with 82 z layers took 4 hours, 15 minutes
@@ -160,7 +160,7 @@ for (( PROJECT_FIRST_NUMBER = FIRST_SERIAL_NUMBER; PROJECT_FIRST_NUMBER < RUN_LA
 done
 
 # ----------------------------------------------------------------------------
-# Check the listed stacks (the same checks as load_data_for_04f_remove_problem_layers.sh)
+# Check the listed stacks (the same checks as load_data_for_04c_remove_problem_layers.sh)
 
 # the "<project> <stack>" lines for the run's projects
 RUN_PROJECT_STACKS=$(printf '%s\n' "${JSON_PROJECT_STACKS}" |
@@ -188,7 +188,7 @@ if (( ${#CANDIDATE_STACKS[@]} == 0 )); then
   exit 1
 fi
 
-# A stack listed under the wrong project would not have been fixed by the 04f stage.
+# A stack listed under the wrong project would not have been fixed by the 04c stage.
 MISPLACED_STACKS=$(printf '%s\n' "${JSON_PROJECT_STACKS}" |
                    awk -v wafer="${WAFER}" -v first="${FIRST_SERIAL_NUMBER}" -v last="${RUN_LAST_SERIAL_NUMBER}" '
                      NF == 2 && index($2, "w" wafer "_s") == 1 {
@@ -236,7 +236,7 @@ fi
 #
 # Only the projects with exported stacks are loaded.  The restore --pattern is read by basic grep,
 # so \( \| \) group the project names, and the slab group must be exactly s<first>_to_s<last>_<suffix>
-# so that the _pre_remove_<date> backups made by the 04f stage (and any region specific slab groups)
+# so that the _pre_remove_<date> backups made by the 04c stage (and any region specific slab groups)
 # are not restored.
 
 # The project of a stack, e.g. w61_serial_010_to_019 for w61_s010_r00_gc_bc_par_cc_asoi_3d

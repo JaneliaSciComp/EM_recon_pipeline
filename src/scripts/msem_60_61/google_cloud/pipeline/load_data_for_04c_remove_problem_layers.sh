@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-STAGE="04f_remove_problem_layers"
+STAGE="04c_remove_problem_layers"
 SLABS_PER_RUN=10
 
 # ----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ SLABS_PER_RUN=10
 # Those steps are written to a post run script next to the run file (with a .post-run.sh suffix instead
 # of .txt), which stops at the first problem and can be run again starting with the group that had it.
 #
-# Later stages (e.g. the 04e exports and the 05 sofima import) restore the original slab group names
+# Later stages (e.g. the 04b and 04d exports and the 05 sofima import) restore the original slab group names
 # with patterns that end in <slab group suffix>/, so they load the fixed dumps and never see the backups.
 # Slab groups without a changed stack are left alone.
 
